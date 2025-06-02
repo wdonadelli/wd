@@ -582,9 +582,14 @@ const wd = (function() {
 
 
 		/*-- Importantes ---------------------------------------------------------*/
-		[data-js-wd-hide]:not([data-js-wd-show]) {
+		/*FIXME o que é isso*/
+		/*[data-js-wd-hide]:not([data-js-wd-show]) {
 			display: none !important;
-		}
+		}*/
+		[data-js-wd-hide] {display: none !important;}
+
+
+
 		[data-js-wd-inert]:not([data-js-wd-mobile]) {
 			overflow:       hidden !important;
 			pointer-events: none   !important;
@@ -1566,11 +1571,8 @@ const wd = (function() {
 						data.value = this.datetime(input);
 					else if (item.value === "item")
 						data.value = [input];
-					else if (item.value === "list") {
-						data.value = [];
-						for (let i = 0; i < input.length; i++)
-							data.value.push(input[i]);
-					}
+					else if (item.value === "list")
+						data.value = Array.prototype.slice.call(input);
 				}
 			}
 			return data;
@@ -3005,7 +3007,7 @@ const wd = (function() {
 						}
 						tree.finish();
 						menu.finish();
-						data = tree.valueOf().replace("<menu>%MENUITEM%</menu>", menu.valueOf());
+						data = tree.valueOf().replace("<menu>%MENUITEM%</menu>", `<menu>${menu.valueOf()}</menu>`);
 					}
 				}
 				catch(e) {
@@ -5692,13 +5694,14 @@ const wd = (function() {
 		},
 		/**. '{boolean show}: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
+			//FIXME por que eu criei [data-js-wd-hide]:not([data-js-wd-show])
 			get: function() {
-				return this.node.hasAttribute("data-js-wd-hide");
+				return !this.node.hasAttribute("data-js-wd-hide");
 			},
 			set: function(x) {
-				if (x === true)
+				if (x === false)
 					this.node.setAttribute("data-js-wd-hide", "");
-				else if (x === false)
+				else if (x === true)
 					this.node.removeAttribute("data-js-wd-hide");
 			}
 		},
@@ -5813,115 +5816,73 @@ const wd = (function() {
 				return this.pages(page, width);
 			}
 		},
-		/**. '{void insertTag(string tag, integer start, integer end)}: Insere uma '{tag} HTML entre os índices '{start} e '{end} do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
-		insertTag: {
-			value: function(tag, start, end) {
-				let init = __Type(start);
-				let last = __Type(end);
-				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
-				init = init.finite ? Math.trunc(init.value) : 0;
-				last = last.finite ? Math.trunc(last.value) : this.node.textContent.length;
-				if (init > last) return;
-
-				let inner = this.node.innerHTML.split("");
-				let index = -1;
-				let open  = false;
-				inner.forEach(function (v,i,a) {
-					if (index > last) return;
-					if (v === "<") {
-						open = true;
-						return;
-					} else if (open && v === ">") {
-						open = false;
-						return;
-					}
-					else if (!open) {
-						index++;
-					} else {
-						return;
-					}
-					if (index === init && index === last)
-						a[i] = "<"+tag+">"+v+"</"+tag+">";
-					else if (index === init || index === last)
-						a[i] = index === init ? "<"+tag+">"+v : v+"</"+tag+">";
-				});
-				this.node.innerHTML = inner.join("");
-				return this.node.innerHTML;
-			}
-		},
-		/**. '{object textMatch(regexp|string search)}: Localiza dentro do conteúdo textual do nó os índices de início e fim de '{search} em um objeto contendo os atributos '{init} e '{last}, retorna ou nulo caso não encontre.**/
-		textMatch: {
-			value: function(search) {
-				const check = __Type(search);
-				if (check.regexp) {
-					let text = this.node.innerText;
-					let list = text.match(search);
-					return list === null ? null : this.textMatch(list[0]);
-				} else if (check.nonempty) {
-					let text = this.node.textContent.toLowerCase();
-					let find = search.trim().toLowerCase();
-					find = find.replace(/([^0-9a-zA-Z ])/gi, "\\$1");
-					find = find.replace(/\s+/gi, "\\s+");
-					let regexp = new RegExp(find, "gi");
-					let match  = text.match(regexp);
-					if (match === null) return null;
-					let init = text.search(regexp);
-					let last = init + match[0].length - 1;
-					return {init: init, last: last};
-				}
-				return null;
-			}
-		},
-		/**. '{void filter(string|regexp search, integer width)}: Exibe os nós filhos que casam com o valor definido em '{search}. O argumento '{width} indica o número mínimo de caracteres a ser informado em '{search} (string). Quando o comprimento de '{search} for menor que o valor absoluto de '{width}, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
+		/**. '{void filter(string|regexp search, integer length)}: Exibe os nós filhos que casam com o valor definido em '{length}. O argumento '{width} indica o número mínimo de caracteres:
+		|search|length|Condição|Descrição|
+		|regexp|-|-|Não aplicável|
+		|string|positivo|search < length|Todos elementos serão exibidos|
+		|string|negativo|search < length|Nenhum elemento será exibido|
+		string|-|search >= length|Elementos que casam serão exibidos|**/
 		filter: {
-			value: function(search, width) {
+			//FIXME não está selecionando a palavra corretamente
+			value: function(search, length) {
 				if (this.node.childElementCount === 0) return;
-				const data  = __Type(search);
-				const check = __Type(width);
-				const child = __Type(this.node.children).value;
-				/*-- avaliando search (string ou regexp) --*/
-				if (data.null || data.undefined)
-					search = "";
-				else if (!data.regexp && !data.chars)
-					search = String(search).trim();
-				else if (data.chars)
-					search = search.trim();
-				/*-- avaliando width (inteiro) quando search for uma string --*/
-				width = check.finite ? Math.trunc(check.value) : 0;
-				let limit = true;
-				if (width !== 0 && !data.regexp) {
-					let len1 = search.length;
-					let len2 = width < 0 ? -width : +width;
-					if (len1 < len2) limit = false;
-				}
+				const test1 = new __Type(search);
+				const test2 = new __Type(length);
+				const child = new __Type(this.node.children);
+				const find  = test1.chars   ? search.trim() : (test1.regexp ? search : "");
+				const width = test2.integer ? test2.value : 0;
+				const chars = test1.regexp || find.length >= Math.abs(width);
 				/*-- looping sobre os filhos --*/
-				child.forEach(function (v,i,a) {
-					let node = __Node(v);
-					/*-- retornando o nó para sua forma original (sem destaque), se for o caso --*/
-					if ("wdFilterInner" in v.dataset) {
-						v.innerHTML = v.dataset.wdFilterInner;
-						delete v.dataset.wdFilterInner;
+				child.value.forEach(function(v,i,a) {
+					/*-- análisar o nó e, se proveniente de filtro anterior, retornar o nó original --*/
+					let swap = "wdFilteredNode" in v;
+					let elem = swap ? v.wdFilteredNode : v;
+					let node = new __Node(elem);
+					if (swap) v.parentElement.replaceChild(elem, v);
+					/*-- quantidade mínima de caracteres não atendida OU nada a buscar --*/
+					if (!chars || (chars && search === "")) {
+						node.show = chars ? true : width > 0;
 					}
-					/*-- verificando limite de caracteres --*/
-					if (!limit) {
-						node.show = width < 0 ? false : true;
-						return;
-					}
-					if (search === "" && width === 0) {
-						node.show = true;
-						return;
-					}
-					/*-- casamento da busca --*/
-					let index = node.textMatch(search);
-					if (index === null) {
-						node.show = false;
-					} else {
-						v.dataset.wdFilterInner = v.innerHTML;
-						node.show = true;
-						node.insertTag("wdtag-mark", index.init, index.last);
+					/*-- buscar casamento textual --*/
+					else {
+						let index = node.textMatch(search);
+						if (index === null) {
+							node.show = false;
+						}
+						else {
+							/*-- criar um clone para substituir o elemento --*/
+							node.show = true;
+							let clone = elem.cloneNode(true);
+							let cnode = new __Node(clone);
+							cnode.insertTag("mark", index.init, index.last);
+							clone.wdFilteredNode = elem;
+							elem.parentElement.replaceChild(clone, elem);
+
+
+						}
 					}
 				});
 				return;
+			}
+		},
+		/**. '{boolean mask(string model)}: Retorna falso se o conteúdo do elemento não corresponder ao modelo da máscara '{model} (ver __String.mask). Caso contrário, definirá o valor do conteúdo conforme definido pela máscara.**/
+		mask: {
+			value: function(model) {
+				/*-- se for um formulário com máscara primitiva, não avaliar --*/
+				if (this.fmask) return true;
+				/*-- se o conteúdo for vazio, não avaliar --*/
+				const val = this.node[!this.form || this.ftext ? "textContent" : "value"];
+				if (val === "") return true;
+				/*-- avaliando máscara --*/
+				const str = new __String(val);
+				const txt = str.mask(model);
+				/*-- validando formulário --*/
+				if (this.form)
+					this.fvalidity = txt === "" ? this._msg.pattern.replace("?", model) : "";
+				/*-- definindo valor da máscara --*/
+				if (txt !== "" && txt !== val)
+					this.node[!this.form || this.ftext ? "textContent" : "value"] = txt;
+				return txt !== "";
 			}
 		},
 		/**. '{void sort(boolean asc)}: Ordena os elementos filhos. O argumento opcional '{asc} define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
@@ -6047,28 +6008,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. '{boolean mask(string model)}: Retorna falso se o conteúdo do elemento não corresponder ao modelo da máscara '{model} (ver __String.mask). Caso contrário, definirá o valor do conteúdo conforme definido pela máscara.**/
-		mask: {
-			value: function(model) {
-				/*-- se for um formulário com máscara primitiva, não avaliar --*/
-				if (this.fmask) return true;
-				/*-- se o conteúdo for vazio, não avaliar --*/
-				const val = this.node[!this.form || this.ftext ? "textContent" : "value"];
-				if (val === "") return true;
-				/*-- avaliando máscara --*/
-				const str = new __String(val);
-				const txt = str.mask(model);
-				/*-- validando formulário --*/
-				if (this.form)
-					this.fvalidity = txt === "" ? this._msg.pattern.replace("?", model) : "";
-				/*-- definindo valor da máscara --*/
-				if (txt !== "" && txt !== val)
-					this.node[!this.form || this.ftext ? "textContent" : "value"] = txt;
-				return txt !== "";
-			}
-		},
-
-		//FIXME descrever
+		/**. '{object highlight(boolean show)}: Exibe ou remove destaque ao elemento.**/
 		highlight: {
 			value: function(show) {
 				if (show === false) {
@@ -6100,9 +6040,214 @@ const wd = (function() {
 				return;
 			}
 		},
+		/**. '{array textNodes()}: Retorna uma lista de nós de texto.**/
+		textNodes: {
+			get: function() {
+				function getTextNode(elem) {
+					const nodes = elem.childNodes;
+					let   list  = [];
+					for (let i = 0; i < nodes.length; i++) {
+						if (nodes[i].nodeType === 3) /*-- texto --*/
+							list.push(nodes[i]);
+						else if (nodes[i].nodeType === 1) /*-- elemento --*/
+							list = list.concat(getTextNode(nodes[i]));
+					}
+					return list;
+				}
+				return getTextNode(this.node);
+			}
+		},
+		/**. '{array textNodesData()}: Retorna uma lista de objetos contendo o nó de texto ('{node}), seu índice inicial ('{init}) e final ('{last}), de forma sequencial, e o comprimento ('{length}) de cada nó.**/
+		textNodesData: {
+			get: function() {
+				const nodes = this.textNodes;
+				const index = [];
+				let size, init = 0;
+				for (let i = 0; i < nodes.length; i++) {
+					size = nodes[i].nodeValue.length;
+					index.push({node: nodes[i], init: init, last: init + size - 1, length: size});
+					init += size;
+				}
+				return index;
+			}
+		},
+		/**. '{object textMatch(regexp|string search)}: Localiza o fragmento '{search} no conteúdo textual e retorna um objeto contendo índices inicial ('{init}) e final ('{last}) da localização dentro de '{textContent} ou nulo caso não encontre.**/
+		textMatch: {
+			value: function(search) {
+				const test = new __Type(search);
+				const view = this.node.innerText;
+				const text = this.node.textContent;
+				let re, find = null;
+				/*-- localizar no texto renderizado --*/
+				if (test.regexp) {
+					find = search.test(view) ? view.match(search)[0] : null;
+				}
+				else if (test.nonempty) {
+					search = search.trim();
+					if (view.indexOf(search) >= 0)
+						find = search;
+					else if (view.toUpperCase().indexOf(search.toUpperCase()) >= 0)
+						find = search.toUpperCase();
+					else if (view.toLowerCase().indexOf(search.toLowerCase()) >= 0)
+						find = search.toLowerCase();
+					else
+						find = null;
+				}
+				/*-- localizar no texto do nó --*/
+				if (find !== null) {
+					re = find.replace(/\s+/g, " ").trim();
+					re = re.replace(/([^0-9a-zA-Z\ ])/gi, "\\$1");
+					re = re.replace(/\s+/g, "\\s+");
+					const regexp = new RegExp(re, "i");
+					const match  = regexp.test(text) ? text.match(regexp)[0] : null;
+					if (match === null) throw new Error("Location of the text fragment.");
+					return {
+						value:  match,
+						init:   text.indexOf(match),
+						last:   text.indexOf(match) + match.length - 1,
+						length: match.length,
+					};
+				}
+				return null;
+			}
+		},
+		//FIXME acabei aqui
+		/**. '{void insertTag(string tag, integer start, integer end)}: Insere uma '{tag} HTML entre os índices '{start} e '{end} do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
+		insertTag: {
+			value: function(tag, start, end) {
+				let init = __Type(start);
+				let last = __Type(end);
+				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
+				init = init.finite ? Math.trunc(init.value) : 0;
+				last = last.finite ? Math.trunc(last.value) : this.node.textContent.length;
+				if (init > last) return;
+
+				let inner = this.node.innerHTML.split("");
+				let index = -1;
+				let open  = false;
+				inner.forEach(function (v,i,a) {
+					if (index > last) return;
+					if (v === "<") {
+						open = true;
+						return;
+					} else if (open && v === ">") {
+						open = false;
+						return;
+					}
+					else if (!open) {
+						index++;
+					} else {
+						return;
+					}
+					if (index === init && index === last)
+						a[i] = "<"+tag+">"+v+"</"+tag+">";
+					else if (index === init || index === last)
+						a[i] = index === init ? "<"+tag+">"+v : v+"</"+tag+">";
+				});
+				this.node.innerHTML = inner.join("");
+				return this.node.innerHTML;
+			}
+		},
 
 
 
+
+
+
+
+
+
+
+
+		/**. '{void select()}: Seleciona o conteúdo do nó.**/
+		select: {
+			value: function() {
+				const select = window.getSelection();
+				const range  = document.createRange();
+				select.removeAllRanges();
+				range.selectNode(this.node);
+				select.addRange(range);
+				return;
+			}
+		},
+
+		select2: {
+			value: function() {
+				const select = window.getSelection();
+				const range  = document.createRange();
+				select.removeAllRanges();
+				range.selectNodeContents(this.node);
+				select.addRange(range);
+				return;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/**. '{vois copy()}: Seleciona o conteúdo do nó.**/
+		copy: {
+			value: function() {
+				this.select();
+				document.execCommand("copy");
+				window.getSelection().removeAllRanges();
+			}
+		},
+
+		copy2: {
+			value: function() {
+				this.select2();
+				document.execCommand("copy");
+				window.getSelection().removeAllRanges();
+			}
+		},
+
+
+
+
+
+
+		/* copiar DOM: elemento ou tudo */
+		/*let data = wd_vtype(value);
+		if (data.type === "dom" && "execCommand" in document) {
+			let element = data.value.length > 0 ? data.value[0] : document.body;
+			let range   = document.createRange();
+			let select  = window.getSelection();
+			select.removeAllRanges();          /* limpar seleção existente */
+			//range.selectNodeContents(element); /* pegar os nós do elemento */
+		//	select.addRange(range);            /* seleciona os nós do elemento */
+			//document.execCommand("copy");      /* copia o texto selecionado */
+			//select.removeAllRanges();          /* limpar seleção novamente */
+			//return true;
+		//}
+		/* copiar valor informado */
+		//if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
+//			navigator.clipboard.writeText(value === null ? "" : value).then(
+	//			function () {/*sucesso*/},
+		//		function () {/*erro*/}
+			//);
+			//return true;
+
+
+		cursor: {
+			value: function(n) {
+				this.select();
+				window.getSelection().collapse(this.node, n);
+			}
+		},
 
 	});
 
@@ -8912,7 +9057,7 @@ const wd = (function() {
 			value: function(search, width) {
 				for (let i = 0; i < this._main.length; i++)
 					this._main[i].filter(search, width);
-				return this
+				return this;
 			}
 		},
 		/**. '{self jump(node spaces)}: Alterna a posição dos nós entre os elementos informados em '{spaces} (ver __Node.jump)**/
@@ -9383,63 +9528,91 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_click(node target, object event, array wdArray)''
-	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
-	Ao definir o atributo, o elemento sofrerá um clique. Se a propriedade opcional '{repeat} for definida, um clique a cada intervalo de tempo definido (em milisegundos, inteiro positivo) será executado enquanto o atributo não sofrer alterações.**/
+	/**#4 Auto Clique
+	''function void data_wd_click(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-click|
+	|Objetivo|Promover eventos de clicagem ao elemento|
+	|Eventos|load wdreload wddataset|
+	|Alvos|Elementos que possam receber click|
+	|Grupos|Único|
+	|Referências|-|
+	span{ }
+	|Propriedades|Tipo|Descrição|
+	|time|integer|Intervalos de tempo, em milissegundos, entre cliques (opcional)|
+	|times|integer|Quantidade de vezes a repetir (opcional)|
+	Observações:
+	- Se '{time} for informado e '{times} não, a repetição ocorrerá indefinidamente;
+	- Se '{times} for informado e '{time} não, a repetição ocorrerá sem intervalo de tempo;
+	- Se nem '{time} e nem '{times} for informado, apenas um clique será executado;**/
 	function data_wd_click(target, event, wdArray) {
-		const data  = wdArray[0];
-		const check = new __Type(data.repeat);
-		const time  = check.finite && check > 0 ? Math.trunc(check.value) : 0;
-		const first = data.id === null;
-		let  action = [];
-		data.id     = first ? String(new Date().valueOf()) : data.id;
-		/*-- tempo não especificado: não repetir --*/
-		if (time === 0)
-			action = ["delWD", "delID", "click"];
-		/*-- wdClick removido entre repetições: sair --*/
-		else if (!("wdClick" in target.dataset))
-			action = ["delID"];
-		/*-- primeiro passo: definir ID e iniciar repetição --*/
-		else if (first)
-			action = ["setID", "click", "again"];
-		/*-- passo 2: mesmo ID (repetir) --*/
-		else if (target.dataset.wdClickId === data.id)
-			action = ["click", "again"];
-		/*-- definindo ações --*/
-		if (action.indexOf("delWD") >= 0 && "wdClick"   in target.dataset)
-			delete target.dataset.wdClick;
-		if (action.indexOf("delID") >= 0 && "wdClickId" in target.dataset)
+		const data = wdArray[0];
+		/*-- não há atributo: apagar identificador da interação --*/
+		if (!("wdClick" in target.dataset)) {
 			delete target.dataset.wdClickId;
-		if (action.indexOf("setID") >= 0)
-			target.dataset.wdClickId = data.id;
-		if (action.indexOf("click") >= 0)
+		}
+		/*-- primeira interação: executar clique e preparar repetições (com ou sem intervalo) --*/
+		else if (event !== data) {
+			const test = {time: new __Type(data.time), times: new __Type(data.times)};
+			data.time  = test.time.integer  && test.time  > 0 ? test.time.value  : 0;
+			data.times = test.times.integer && test.times > 0 ? test.times.value : 0;
+			data.id    = String(new Date().valueOf());
+			/*-- executar clique principal --*/
 			target.click();
-		if (action.indexOf("again") >= 0)
-			window.setTimeout(function() {
-				data_wd_click(target, event, [data]);
-			}, time);
+			/*-- repetir sem intervalo de tempo --*/
+			if (data.time === 0) {
+				while (--data.times > 0)
+					target.click();
+				delete target.dataset.wdClick;
+			}
+			/*-- repetir com intervalo de tempo --*/
+			else {
+				data.times = data.times === 0 ? Infinity : data.times;
+				target.wdClickId = data.id;
+				window.setTimeout(function() {
+					data_wd_click(target, data, [data]);
+				}, data.time);
+			}
+		}
+		/*-- segunda interação: id válido --*/
+		else if (data.id === target.wdClickId) {
+			/*-- com repetições pendentes --*/
+			if (--data.times > 0) {
+				target.click();
+				window.setTimeout(function() {
+					data_wd_click(target, data, [data]);
+				}, data.time);
+			}
+			/*-- sem repetições pendentes --*/
+			else {
+				delete target.wdClickId;
+				delete target.dataset.wdClick;
+			}
+		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_filter(node target, object event, array wdArray)''
-	Função com o propósito de filtrar elementos de acordo com seu conteúdo textual por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-filter|load wdreload wddataset input|Múltiplas|Único|__Node.filter|Elemento que possa receber evento de digitação|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
+	/**#4 Filtro Textual
+	''function void data_wd_filter(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-filter|
+	|Objetivo|Filtrar elementos de acordo com seu conteúdo textual|
+	|Eventos|load wdreload wddataset input|
+	|Alvos|Elementos que possam receber digitação|
+	|Grupos|Único|
+	|Referências|__Node.filter|
+	span{ }
+	|Propriedades|Tipo|Descrição|
 	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
-	|width|integer|Mesmo propósito do argumento de __Node.filter, sendo opcional|
-	O texto a ser pesquisado é obtido pelo conteúdo do texto que contém o argumento.**/
+	|width|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
 	function data_wd_filter(target, event, wdArray) {
 		const data   = wdArray[0];
 		const query  = data.$$ || data.$ || null;
 		const width  = data.width;
 		const node   = new __Node(target);
 		const regexp = /^\/(.+)\/([gim]+)?$/;
-		const value  = target[!node.form || node.ftext ? "textContent" : "value"];
+		const value  = target[node.form && !node.ftext ? "value" : "textContent"];
 		let   search = value;
 		if (regexp.test(search)) {
 			const arg1 = search.replace(regexp, "$1");
