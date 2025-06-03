@@ -6113,39 +6113,66 @@ const wd = (function() {
 		},
 		//FIXME acabei aqui
 		/**. '{void insertTag(string tag, integer start, integer end)}: Insere uma '{tag} HTML entre os índices '{start} e '{end} do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
-		insertTag: {
-			value: function(tag, start, end) {
-				let init = __Type(start);
-				let last = __Type(end);
-				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
-				init = init.finite ? Math.trunc(init.value) : 0;
-				last = last.finite ? Math.trunc(last.value) : this.node.textContent.length;
-				if (init > last) return;
-
-				let inner = this.node.innerHTML.split("");
-				let index = -1;
-				let open  = false;
-				inner.forEach(function (v,i,a) {
-					if (index > last) return;
-					if (v === "<") {
-						open = true;
-						return;
-					} else if (open && v === ">") {
-						open = false;
+		textTag: {
+			value: function(tag, init, last) {
+				const test = {init: new __Type(init), last: new __Type(last)};
+				const data = this.textNodesData;
+				const html = __HTML(tag);
+				const trim = {
+					init: test.init.integer && test.init > 0 ? test.init.value : 0,
+					last: test.last.integer && test.last > 0 ? test.last.value : Infinity
+				}
+				if (trim.init > trim.last) {
+					const aux = trim.init;
+					trim.init = trim.last;
+					trim.last = aux;
+				}
+				/*-- percorrer nós de texto --*/
+				for (let i = 0; i < data.length; i++) {
+					let item  = data[i];
+					let node  = item.node;
+					let text  = node.nodeValue;
+					let elem  = html.cloneNode(false);
+					let group = [];
+					let index;
+					/*-- transformar todo conteúdo --*/ console.log("all");
+					if (trim.init <= item.init && trim.last >= item.last) {
+						group.push({text: text, type: "elem"});
+					}
+					/*-- transformar fim do conteúdo --*/
+					else if (trim.init > item.init && trim.last >= item.last) { console.log("end");
+						index = trim.init - item.init;
+						group.push({text: text.slice(0, index), type: "text"});
+						group.push({text: text.slice(index),    type: "elem"});
+					}
+					/*-- transformar início do conteúdo --*/
+					else if (trim.init <= item.init && trim.last < item.last) { console.log("start");
+						index = item.length - (item.last - trim.last);
+						group.push({text: text.slice(0, index), type: "elem"});
+						group.push({text: text.slice(index),    type: "text"});
+					}
+					/*-- transformar o meio do conteúdo --*/
+					else if (trim.init > item.init && trim.last < item.last) { console.log("middle");
+						index = trim.init - item.init;
+						group.push({text: text.slice(0, index), type: "text"});
+						group.push({text: text.slice(index, index + (item.last - trim.last)), type: "elem"});
+						group.push({text: text.slice(item.length - (item.last - trim.last)), type: "text"});
+					}
+					/*-- encerrar --*/
+					else if (item.init > trim.last) {
 						return;
 					}
-					else if (!open) {
-						index++;
-					} else {
-						return;
+					/*-- adicionar novos nós e excluir o original --*/
+					for (let j = 0; j < group.length; j++) {
+						let string = group[j].text;
+						let isElem = group[j].type === "elem";
+						let value  = isElem ? elem : document.createTextNode(string);
+						if (isElem) elem.textContent = string;
+						node.parentNode.insertBefore(value, node);
 					}
-					if (index === init && index === last)
-						a[i] = "<"+tag+">"+v+"</"+tag+">";
-					else if (index === init || index === last)
-						a[i] = index === init ? "<"+tag+">"+v : v+"</"+tag+">";
-				});
-				this.node.innerHTML = inner.join("");
-				return this.node.innerHTML;
+					node.parentNode.removeChild(node);
+				}
+				return;
 			}
 		},
 
