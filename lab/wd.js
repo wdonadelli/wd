@@ -5816,52 +5816,44 @@ const wd = (function() {
 				return this.pages(page, width);
 			}
 		},
-		/**. '{void filter(string|regexp search, integer length)}: Exibe os nós filhos que casam com o valor definido em '{length}. O argumento '{width} indica o número mínimo de caracteres:
-		|search|length|Condição|Descrição|
+		/**. '{void filter(string|regexp find, integer size)}: Exibe os nós filhos que casam com o valor definido em '{find}. O argumento '{size} indica o número mínimo de caracteres:
+		|find|size|Condição|Descrição|
 		|regexp|-|-|Não aplicável|
 		|string|positivo|search < length|Todos elementos serão exibidos|
 		|string|negativo|search < length|Nenhum elemento será exibido|
 		string|-|search >= length|Elementos que casam serão exibidos|**/
 		filter: {
 			//FIXME não está selecionando a palavra corretamente
-			value: function(search, length) {
-				if (this.node.childElementCount === 0) return;
-				const test1 = new __Type(search);
-				const test2 = new __Type(length);
+			value: function(find, size) {
+				const test  = {find: new __Type(find), size: new __Type(size)}
+				find = test.find.chars  ? find.trim() : (test.find.regexp ? find : "");
+				size = test.size.finite ? test.size.value : 0;
 				const child = new __Type(this.node.children);
-				const find  = test1.chars   ? search.trim() : (test1.regexp ? search : "");
-				const width = test2.integer ? test2.value : 0;
-				const chars = test1.regexp || find.length >= Math.abs(width);
-				/*-- looping sobre os filhos --*/
-				child.value.forEach(function(v,i,a) {
-					/*-- análisar o nó e, se proveniente de filtro anterior, retornar o nó original --*/
-					let swap = "wdFilteredNode" in v;
-					let elem = swap ? v.wdFilteredNode : v;
-					let node = new __Node(elem);
-					if (swap) v.parentElement.replaceChild(elem, v);
-					/*-- quantidade mínima de caracteres não atendida OU nada a buscar --*/
-					if (!chars || (chars && search === "")) {
-						node.show = chars ? true : width > 0;
+				const none  = !test.find.regexp && (find.length < Math.abs(size) || find === "");
+				const elem  = __HTML("mark", {className: "js-wd-mark-text"});
+				const query = this.node.querySelectorAll("mark.js-wd-mark-text");
+				/*-- apagar todos os destaques existentes no nó --*/
+				for (let i = 0; i < query.length; i++)
+					this.tagText(query[i]);
+					/*-- looping sobre os filhos --*/
+				for (let i = 0; i < child.value.length; i++) {
+					let node = new __Node(child.value[i]);
+					/*-- nada a buscar --*/
+					if (!test.find.regexp && size === 0 && find === "") {
+						node.show = true;
+					}
+					/*-- quantidade mínima de caracteres não atendida --*/
+					else if (!test.find.regexp && find.length < Math.abs(size)) {
+						node.show = size > 0;
 					}
 					/*-- buscar casamento textual --*/
 					else {
-						let index = node.textMatch(search);
-						if (index === null) {
-							node.show = false;
-						}
-						else {
-							/*-- criar um clone para substituir o elemento --*/
-							node.show = true;
-							let clone = elem.cloneNode(true);
-							let cnode = new __Node(clone);
-							cnode.insertTag("mark", index.init, index.last);
-							clone.wdFilteredNode = elem;
-							elem.parentElement.replaceChild(clone, elem);
-
-
-						}
+						let index = node.textMatch(find);
+						node.show = index !== null;
+						if (index !== null)
+							node.textTag(elem, index.init, index.last);
 					}
-				});
+				}
 				return;
 			}
 		},
@@ -6071,7 +6063,12 @@ const wd = (function() {
 				return index;
 			}
 		},
-		/**. '{object textMatch(regexp|string search)}: Localiza o fragmento '{search} no conteúdo textual e retorna um objeto contendo índices inicial ('{init}) e final ('{last}) da localização dentro de '{textContent} ou nulo caso não encontre.**/
+		/**. '{object textMatch(regexp|string search)}: Localiza o fragmento '{search} no conteúdo textual e retorna nulo, se não encontrado, ou objeto contendo:
+		|Nome|Tipo|Descrição|
+		|value|string|Valor textual capturado|
+		|length|integer|Comprimento do valor textual|
+		|init|integer|Índice onde inicia a captura|
+		|last|integer|Índice onde u{encerrou} (init+length)|**/
 		textMatch: {
 			value: function(search) {
 				const test = new __Type(search);
@@ -6098,20 +6095,19 @@ const wd = (function() {
 					re = find.replace(/\s+/g, " ").trim();
 					re = re.replace(/([^0-9a-zA-Z\ ])/gi, "\\$1");
 					re = re.replace(/\s+/g, "\\s+");
-					const regexp = new RegExp(re, "i");
+					const regexp = new RegExp(re, "i");console.log(regexp)
 					const match  = regexp.test(text) ? text.match(regexp)[0] : null;
 					if (match === null) throw new Error("Location of the text fragment.");
 					return {
 						value:  match,
 						init:   text.indexOf(match),
-						last:   text.indexOf(match) + match.length - 1,
+						last:   text.indexOf(match) + match.length,
 						length: match.length,
 					};
 				}
 				return null;
 			}
 		},
-		//FIXME acabei aqui
 		/**. '{void insertTag(string tag, integer start, integer end)}: Insere uma '{tag} HTML entre os índices '{start} e '{end} do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		textTag: {
 			value: function(tag, init, last) {
@@ -6134,33 +6130,37 @@ const wd = (function() {
 					let text  = node.nodeValue;
 					let elem  = html.cloneNode(false);
 					let group = [];
-					let index;
-					/*-- transformar todo conteúdo --*/ console.log("all");
-					if (trim.init <= item.init && trim.last >= item.last) {
+					let index = function(x) {return x - item.init;}
+					console.info({trim: trim, item: item, node: node})
+					/*-- encerrado --*/
+					if (item.init > trim.last) { console.log("over");
+						return;
+					}
+					/*-- não iniciado --*/
+					else if (trim.init > item.last) { console.log("wait");
+						continue;
+					}
+					//FIXME continuar daqui as condições
+
+					/*-- transformar todo conteúdo --*/
+					else if (trim.init <= item.init && trim.last >= item.last) { console.log("all");
 						group.push({text: text, type: "elem"});
 					}
 					/*-- transformar fim do conteúdo --*/
 					else if (trim.init > item.init && trim.last >= item.last) { console.log("end");
-						index = trim.init - item.init;
-						group.push({text: text.slice(0, index), type: "text"});
-						group.push({text: text.slice(index),    type: "elem"});
+						group.push({text: text.slice(0, index(trim.init)), type: "text"});
+						group.push({text: text.slice(index(trim.init)),    type: "elem"});
 					}
 					/*-- transformar início do conteúdo --*/
 					else if (trim.init <= item.init && trim.last < item.last) { console.log("start");
-						index = item.length - (item.last - trim.last);
-						group.push({text: text.slice(0, index), type: "elem"});
-						group.push({text: text.slice(index),    type: "text"});
+						group.push({text: text.slice(0, index(trim.last)), type: "elem"});
+						group.push({text: text.slice(index(trim.last)),    type: "text"});
 					}
 					/*-- transformar o meio do conteúdo --*/
 					else if (trim.init > item.init && trim.last < item.last) { console.log("middle");
-						index = trim.init - item.init;
-						group.push({text: text.slice(0, index), type: "text"});
-						group.push({text: text.slice(index, index + (item.last - trim.last)), type: "elem"});
-						group.push({text: text.slice(item.length - (item.last - trim.last)), type: "text"});
-					}
-					/*-- encerrar --*/
-					else if (item.init > trim.last) {
-						return;
+						group.push({text: text.slice(0, index(trim.init)), type: "text"});
+						group.push({text: text.slice(index(trim.init), index(trim.last)), type: "elem"});
+						group.push({text: text.slice(index(trim.last)), type: "text"});
 					}
 					/*-- adicionar novos nós e excluir o original --*/
 					for (let j = 0; j < group.length; j++) {
@@ -6171,6 +6171,16 @@ const wd = (function() {
 						node.parentNode.insertBefore(value, node);
 					}
 					node.parentNode.removeChild(node);
+				}
+				return;
+			}
+		},
+		/**. '{void tagText(node elem)}: Transforme o elemento filho '{elem} em nó de texto.**/
+		tagText: {
+			value: function(elem) {
+				if (this.node.contains(elem)) {
+					const text = document.createTextNode(elem.textContent);
+					elem.parentElement.replaceChild(text, elem);
 				}
 				return;
 			}
