@@ -624,6 +624,12 @@ const wd = (function() {
 			border-bottom: thin dashed rgb(128, 128, 128) !important;
 		}
 
+		.js-wd-mark-text {
+			background-color: lime !important;
+			color: black !important;
+		}
+}
+
 
 
 
@@ -3422,12 +3428,9 @@ const wd = (function() {
 	Construtor para manipulação de textos. O argumento '{input} define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		input = String(input).normalize();
-		const chars = [];
-		for (let i of input) chars.push(i);
+		input = String(input).normalize("NFC");
 		Object.defineProperties(this, {
 			_value:  {value: input},
-			_chars:  {value: chars},
 			_parser: {value: new __Parser(input)}
 		});
 	}
@@ -3439,17 +3442,24 @@ const wd = (function() {
 		/**. '{string toString()}: Retorna o valor de entrada sem espaços extras.**/
 		toString: {value: function() {return this.clear(true, false);}},
 		/**. '{string length}: Retorna a quantidade de caracteres.**/
-		length: {get: function() {return this._chars.length;}},
-		/**. '{string chars}: Retorna uma cópia da lista de caracteres.**/
-		chars: {get: function() {return this._chars.slice();}},
+		length: {get: function() {return this._value.length;}},
 		/**. '{string upper}: Retorna caixa alta.**/
-		upper: {get: function() {return this.valueOf().toUpperCase();}},
+		upper: {get: function() {return this._value.toUpperCase();}},
 		/**. '{string lower}: Retorna caixa baixa.**/
-		lower: {get: function() {return this.valueOf().toLowerCase();}},
+		lower: {get: function() {return this._value.toLowerCase();}},
+		/**. '{string like}: Retorna o conteúdo textual para fins de comparação por equivalência.**/
+		like: {get: function() {return this._value.normalize("NFKC");}},
+		/**. '{string near}: Como o '{like}, mas sem acento.**/
+		near: {
+			get: function() {
+				const re = /[\u0300-\u036f]/g
+				return this._value.normalize("NFKD").replace(re, "").normalize("NFKC");
+			}
+		},
 		/**. '{string toggle}: Inverte a caixa.**/
 		toggle: {
 			get: function() {
-				const list = this.chars;
+				const list = this._value.split("");
 				let char, upper, lower;
 				for (let i = 0; i < list.length; i++) {
 					char  = list[i];
@@ -3463,7 +3473,7 @@ const wd = (function() {
 		/**. '{string captalize}: Caixa alta na primeira letra de cada palavra apenas.**/
 		capitalize: {
 			get: function() {
-				const list = this.chars;
+				const list = this._value.split("");
 				let char, space;
 				for (let i = 0; i < list.length; i++) {
 					char  = list[i];
@@ -4732,11 +4742,11 @@ const wd = (function() {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
 				const list = this._value.slice();
-				const test = __Type(type);
+				const test = new __Type(type);
 				for (let i = 0; i < list.length; i++) {
 					try {
 						let value = f(list[i]);
-						let check = __Type(value);
+						let check = new __Type(value);
 						if (test.chars && type in check)
 							list[i] = check[type] ? check.value : null;
 						else
@@ -4899,17 +4909,17 @@ const wd = (function() {
 					}
 					/*-- string/node --*/
 					else if (A.string || A.node) {
-						let aval = (A.node ? a.textContent : a).toLowerCase();
-						let bval = (B.node ? b.textContent : b).toLowerCase();
-						avalue = new __String(aval).clear();
-						bvalue = new __String(bval).clear();
+						let aval = new __String(A.node ? a.innerText : a);
+						let bval = new __String(B.node ? b.innerText : b);
+						avalue = aval.near.toUpperCase().trim();
+						bvalue = bval.near.toUpperCase().trim();
 					}
 					/*-- valores não específicos --*/
 					else {
 						avalue = a;
 						bvalue = b;
 					}
-					return avalue > bvalue ? 1 : -1;
+					return avalue === bvalue ? 0 : (avalue > bvalue ? 1 : -1);
 				});
 				/*-- retornando com ordem definida --*/
 				if (asc === false || asc === true)
@@ -5831,10 +5841,10 @@ const wd = (function() {
 				const child = new __Type(this.node.children);
 				const none  = !test.find.regexp && (find.length < Math.abs(size) || find === "");
 				const elem  = __HTML("mark", {className: "js-wd-mark-text"});
-				const query = this.node.querySelectorAll("mark.js-wd-mark-text");
+				const query = new __Type(this.node.querySelectorAll("mark.js-wd-mark-text"));
 				/*-- apagar todos os destaques existentes no nó --*/
-				for (let i = 0; i < query.length; i++)
-					this.tagText(query[i]);
+				for (let i = 0; i < query.value.length; i++)
+					this.tagText(query.value[i]);
 					/*-- looping sobre os filhos --*/
 				for (let i = 0; i < child.value.length; i++) {
 					let node = new __Node(child.value[i]);
@@ -5863,7 +5873,7 @@ const wd = (function() {
 				/*-- se for um formulário com máscara primitiva, não avaliar --*/
 				if (this.fmask) return true;
 				/*-- se o conteúdo for vazio, não avaliar --*/
-				const val = this.node[!this.form || this.ftext ? "textContent" : "value"];
+				const val = this.node[!this.form || this.ftext ? "innerText" : "value"];
 				if (val === "") return true;
 				/*-- avaliando máscara --*/
 				const str = new __String(val);
@@ -5873,7 +5883,7 @@ const wd = (function() {
 					this.fvalidity = txt === "" ? this._msg.pattern.replace("?", model) : "";
 				/*-- definindo valor da máscara --*/
 				if (txt !== "" && txt !== val)
-					this.node[!this.form || this.ftext ? "textContent" : "value"] = txt;
+					this.node[!this.form || this.ftext ? "innerText" : "value"] = txt;
 				return txt !== "";
 			}
 		},
@@ -5897,13 +5907,13 @@ const wd = (function() {
 				const args = [];
 				let j = -1;
 				while (++j < arguments.length) {
-					let check = __Type(arguments[j]);
+					let check = new __Type(arguments[j]);
 					if (!check.finite || Math.trunc(check.value) === 0) continue;
 					args.push(Math.trunc(check.value));
 				}
 				if (args.length === 0) return this.sort();
 				/*-- iniciando ordenação --*/
-				let child = __Type(this.node.children).value;
+				let child = new __Type(this.node.children).value;
 				child.sort(function(a, b) {
 					/*-- definindo variáveis --*/
 					let maxA  = a.childElementCount - 1;
@@ -5917,10 +5927,10 @@ const wd = (function() {
 						/*-- checar se o valor do índice está dentro da quantidade de filhos --*/
 						if (index > maxA && index > maxB) continue;
 						/*-- se válido, checar se valores são diferentes --*/
-						let textA = index > maxA ? "" : a.children[index].textContent.toLowerCase();
-						let textB = index > maxB ? "" : b.children[index].textContent.toLowerCase();
-						let typeA = __Type(__String(textA).clear().trim());
-						let typeB = __Type(__String(textB).clear().trim());
+						let textA = index > maxA ? "" : a.children[index].innerText.toLowerCase();
+						let textB = index > maxB ? "" : b.children[index].innerText.toLowerCase();
+						let typeA = new __Type(__String(textA).near.trim());
+						let typeB = new __Type(__String(textB).near.trim());
 						/*-- se forem iguais, passar para a próxima regra --*/
 						if (typeA.value === typeB.value) continue;
 						/*-- caso contrário, definir ordenamento --*/
@@ -6072,15 +6082,21 @@ const wd = (function() {
 		textMatch: {
 			value: function(search) {
 				const test = new __Type(search);
-				const view = this.node.innerText;
-				const text = this.node.textContent;
+				let view = this.node.innerText;
+				let text = this.node.textContent;
 				let re, find = null;
 				/*-- localizar no texto renderizado --*/
 				if (test.regexp) {
 					find = search.test(view) ? view.match(search)[0] : null;
 				}
 				else if (test.nonempty) {
-					search = search.trim();
+					//FIXME ajustar isso aqui
+
+
+					//search = search.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD").trim();
+					//view   = view.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD");
+					//text   = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD");
+					console.log({s: search, v: view, i: view.indexOf(search)})
 					if (view.indexOf(search) >= 0)
 						find = search;
 					else if (view.toUpperCase().indexOf(search.toUpperCase()) >= 0)
@@ -6092,10 +6108,11 @@ const wd = (function() {
 				}
 				/*-- localizar no texto do nó --*/
 				if (find !== null) {
+					console.log(find)
 					re = find.replace(/\s+/g, " ").trim();
 					re = re.replace(/([^0-9a-zA-Z\ ])/gi, "\\$1");
 					re = re.replace(/\s+/g, "\\s+");
-					const regexp = new RegExp(re, "i");console.log(regexp)
+					const regexp = new RegExp(re, "i");
 					const match  = regexp.test(text) ? text.match(regexp)[0] : null;
 					if (match === null) throw new Error("Location of the text fragment.");
 					return {
@@ -6131,36 +6148,30 @@ const wd = (function() {
 					let elem  = html.cloneNode(false);
 					let group = [];
 					let index = function(x) {return x - item.init;}
-					console.info({trim: trim, item: item, node: node})
-					/*-- encerrado --*/
-					if (item.init > trim.last) { console.log("over");
-						return;
-					}
-					/*-- não iniciado --*/
-					else if (trim.init > item.last) { console.log("wait");
+					/*-- não iniciado ou encerrado --*/
+					if (trim.init > item.last || trim.last < item.init) {
+						if (trim.last < item.init) return;
 						continue;
 					}
-					//FIXME continuar daqui as condições
-
-					/*-- transformar todo conteúdo --*/
-					else if (trim.init <= item.init && trim.last >= item.last) { console.log("all");
-						group.push({text: text, type: "elem"});
-					}
-					/*-- transformar fim do conteúdo --*/
-					else if (trim.init > item.init && trim.last >= item.last) { console.log("end");
-						group.push({text: text.slice(0, index(trim.init)), type: "text"});
-						group.push({text: text.slice(index(trim.init)),    type: "elem"});
-					}
-					/*-- transformar início do conteúdo --*/
-					else if (trim.init <= item.init && trim.last < item.last) { console.log("start");
-						group.push({text: text.slice(0, index(trim.last)), type: "elem"});
-						group.push({text: text.slice(index(trim.last)),    type: "text"});
-					}
-					/*-- transformar o meio do conteúdo --*/
-					else if (trim.init > item.init && trim.last < item.last) { console.log("middle");
+					/*-- totalmente contido --*/
+					else if (trim.init > item.init && trim.last < item.last) {
 						group.push({text: text.slice(0, index(trim.init)), type: "text"});
 						group.push({text: text.slice(index(trim.init), index(trim.last)), type: "elem"});
 						group.push({text: text.slice(index(trim.last)), type: "text"});
+					}
+					/*-- totalmente ocupado --*/
+					else if (trim.init <= item.init && trim.last >= item.last) {
+						group.push({text: text, type: "elem"});
+					}
+					/*-- parcialmente contido à direita --*/
+					else if (trim.init > item.init && trim.last >= item.last) {
+						group.push({text: text.slice(0, index(trim.init)), type: "text"});
+						group.push({text: text.slice(index(trim.init)),    type: "elem"});
+					}
+					/*-- parcialmente contido à esquerda --*/
+					else if (trim.init <= item.init && trim.last < item.last) {
+						group.push({text: text.slice(0, index(trim.last)), type: "elem"});
+						group.push({text: text.slice(index(trim.last)),    type: "text"});
 					}
 					/*-- adicionar novos nós e excluir o original --*/
 					for (let j = 0; j < group.length; j++) {
@@ -6179,8 +6190,11 @@ const wd = (function() {
 		tagText: {
 			value: function(elem) {
 				if (this.node.contains(elem)) {
-					const text = document.createTextNode(elem.textContent);
-					elem.parentElement.replaceChild(text, elem);
+					const text = elem.textContent.length === 0 ? null : document.createTextNode(elem.textContent);
+					if (text === null)
+						elem.remove	(elem);
+					else
+						elem.parentElement.replaceChild(text, elem);
 				}
 				return;
 			}
@@ -8604,8 +8618,6 @@ const wd = (function() {
 		constructor: {value: WDstring},
 		/**. '{integer length}: Retorna a quantidade de caracteres.**/
 		length: {get: function() {return this._main.length;}},
-		/**. '{array chars}: Retorna um array de caracteres.**/
-		chars: {get: function() {return this._main.chars;}},
 		/**. '{string upper}: Retorna caixa alta.**/
 		upper: {get: function() {return this._main.upper;}},
 		/**. '{string lower}: Retorna caixa baixa.**/
