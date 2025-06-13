@@ -1543,12 +1543,13 @@ const wd = (function() {
 			HTMLElement:                {type: "node",     value: "item"},
 			SVGElement:                 {type: "node",     value: "item"},
 			MathMLElement:              {type: "node",     value: "item"},
-			NodeList:                   {type: "node",     value: "list"},
-			HTMLCollection:             {type: "node",     value: "list"},
-			HTMLAllCollection:          {type: "node",     value: "list"},
-			HTMLOptionsCollection:      {type: "node",     value: "list"},
-			HTMLFormControlsCollection: {type: "node",     value: "list"},
+			NodeList:                   {type: "node",     value: "nodes"},
+			HTMLCollection:             {type: "node",     value: "nodes"},
+			HTMLAllCollection:          {type: "node",     value: "nodes"},
+			HTMLOptionsCollection:      {type: "node",     value: "nodes"},
+			HTMLFormControlsCollection: {type: "node",     value: "nodes"},
 		},
+		//FIXME NodeList pode conter textNode que precisam ser eliminados da lista
 		datetime: function(date) {
 			return __DATETIME.iso({
 				Y: Math.abs(date.getFullYear()), P: date.getFullYear() < 0 ? -1 : 1,
@@ -1577,8 +1578,10 @@ const wd = (function() {
 						data.value = this.datetime(input);
 					else if (item.value === "item")
 						data.value = [input];
-					else if (item.value === "list")
-						data.value = Array.prototype.slice.call(input);
+					else if (item.value === "nodes")
+						data.value = Array.prototype.slice.call(input).filter(function(v,i,a) {
+							return v.nodeType === 1;
+						});
 				}
 			}
 			return data;
@@ -3426,6 +3429,7 @@ const wd = (function() {
 	/**#3 Caracteres
 	''constructor object __String(string input)''
 	Construtor para manipulação de textos. O argumento '{input} define o texto de entrada.**/
+	/*-- https://symbl.cc/pt/unicode-table/ --*/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
 		input = String(input).normalize("NFC");
@@ -3439,16 +3443,25 @@ const wd = (function() {
 		constructor: {value: __String},
 		/**. '{string valueOf()}: Retorna o valor de entrada.**/
 		valueOf: {value: function() {return this._value;}},
-		/**. '{string toString()}: Retorna o valor de entrada sem espaços extras.**/
-		toString: {value: function() {return this.clear(true, false);}},
+		/**. '{string toString()}: Retorna o valor de entrada.**/
+		toString: {value: function() {return this._value;}},
 		/**. '{string length}: Retorna a quantidade de caracteres.**/
 		length: {get: function() {return this._value.length;}},
-		/**. '{string upper}: Retorna caixa alta.**/
+		/**. '{string upper}: Retorna o valor de entrada em caixa alta.**/
 		upper: {get: function() {return this._value.toUpperCase();}},
-		/**. '{string lower}: Retorna caixa baixa.**/
+		/**. '{string lower}: Retorna o valor de entrada em caixa baixa.**/
 		lower: {get: function() {return this._value.toLowerCase();}},
+		/**. '{string lean}: Retorna o valor de entrada em linha sem espaços extras.**/
+		lean: {get: function() {return this._value.replace(/\s+/g, " ").trim();}},
 		/**. '{string like}: Retorna o conteúdo textual para fins de comparação por equivalência.**/
 		like: {get: function() {return this._value.normalize("NFKC");}},
+		/**. '{string clean}: Retorna o valor de entrada sem o intervalo unicode \u0300-\u036f.**/
+		clean: {
+			get: function() {
+				const re = /[\u0300-\u036f]/g;
+				return this._value.normalize("NFD").replace(re, "").normalize("NFC");
+			}
+		},
 		/**. '{string near}: Como o '{like}, mas sem acento.**/
 		near: {
 			get: function() {
@@ -3459,28 +3472,22 @@ const wd = (function() {
 		/**. '{string toggle}: Inverte a caixa.**/
 		toggle: {
 			get: function() {
-				const list = this._value.split("");
-				let char, upper, lower;
-				for (let i = 0; i < list.length; i++) {
-					char  = list[i];
-					upper = char.toUpperCase();
-					lower = char.toLowerCase();
-					list[i] = char === upper ? lower : upper;
-				}
-				return list.join("");
+				const chars = this._value.split("");
+				chars.forEach(function(v,i,a) {
+					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
+				});
+				return chars.join("");
 			}
-		},
+			},
 		/**. '{string captalize}: Caixa alta na primeira letra de cada palavra apenas.**/
 		capitalize: {
 			get: function() {
-				const list = this._value.split("");
-				let char, space;
-				for (let i = 0; i < list.length; i++) {
-					char  = list[i];
-					space = i === 0 || (/\s/).test(list[i-1]);
-					list[i] = space ? char.toUpperCase() : char.toLowerCase()
-				}
-				return list.join("");
+				const chars = this._value.split("");
+				chars.forEach(function(v,i,a) {
+					let space = i === 0 || (/\s/).test(a[i-1]);
+					a[i] = space ? v.toUpperCase() : v.toLowerCase();
+				});
+				return chars.join("");
 			}
 		},
 		/**. '{string clear(boolean white, boolean accent)}: Limpa espaços desnecessários ou acentos. O argumento '{white}, se diferente de falso, limpa os espaços extras e o argumento '{accent}, se diferente de falso, remove os acentos.**/
@@ -3517,7 +3524,7 @@ const wd = (function() {
 					code: caracteres manipuladores
 					ok:   condição do casamento da máscara
 			  -------------------------------------------------*/
-			  const char = this.valueOf().split("");
+			  const char = this._value.split("");
 				const mask = String(model).split("");
 				const code = "#@*%";
 				let c = 0, m = -1, ok = true, base = [];
@@ -3571,35 +3578,43 @@ const wd = (function() {
 		/**. '{string dash}: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
 		dash: {
 			get: function() {
-				let value = this.clear().replace(/\ +/g, "-").split("");
-				value.forEach(function (v,i,a) {
-					/* eliminar caracteres não permitidos */
-					if (!(/[a-zA-Z0-9_.:\-]/).test(v)) a[i] = "";
-					/* adicionar traço antes de maiúsculas e inverter caixa */
-					else if (/[A-Z]/.test(v)) a[i] = "-"+v.toLowerCase();
+				const chars = this.clean.trim().replace(/\s+/g, "-").split("");
+				const trash = /[^a-zA-Z0-9_.:\-]/;
+				const upper = /[A-Z]/;
+				/*-- eliminar caracteres proibidos e adicionar traço se maiúsculo --*/
+				chars.forEach(function (v,i,a) {
+					a[i] = trash.test(v) ? "" : (upper.test(v) ? "-"+v.toLowerCase() : v);
 				});
-				value = value.join("").replace(/\-+/g, "-");
-				return value.replace(/^\-+/, "").replace(/\-+$/, "");
+				return chars.join("").replace(/\-+/g, "-").replace(/^\-+/, "").replace(/\-+$/, "");
 			}
 		},
 		/**. '{string camel}: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
 		camel: {
 			get: function() {
-				const value = this.dash.split("-");
-				value.forEach(function (v,i,a) {
-					if (i !== 0) {
-						let dot = v.split("");
-						dot[0] = dot[0].toUpperCase();
-						a[i] = dot.join("");
-					}
+				const chars = this.dash.split("-");
+				chars.forEach(function (v,i,a) {
+					a[i] = i === 0 ? v : v[0].toUpperCase()+v.slice(1);
 				});
-				return value.join("");
+				return chars.join("");
 			}
 		},
 		/**. '{matrix csv}: Retorna uma matriz (array) a partir de uma string CSV.**/
 		csv: {get: function() {return this._parser.csvTable.tableValues.matrixCSV.get();}},
 		/**. '{object json}: Retorna objeto JSON a partir de uma string nesse formato.**/
 		json: {get: function() {return this._parser.stringJSON.get();}},
+
+
+		chain: {
+			value: function(name) {
+				//FIXME
+				const data = Object.getOwnPropertyDescriptor(__String.prototype, name);
+				const test = new __Type(typeof data === "object" ? data.get : null);
+				return test.function ? new __String(this[name]) : this;
+			}
+
+
+		},
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -6059,15 +6074,25 @@ const wd = (function() {
 				return getTextNode(this.node);
 			}
 		},
-		/**. '{array textNodesData()}: Retorna uma lista de objetos contendo o nó de texto ('{node}), seu índice inicial ('{init}) e final ('{last}), de forma sequencial, e o comprimento ('{length}) de cada nó.**/
+		/**. '{array textNodesData()}: Retorna uma lista de objetos contendo as seguintes propriedades:
+		|nome|Descrição|
+		|node|O nó textual|
+		|text|O texto normalizado em NFC|
+		|init|O primeiro índice em relação ao primeiro caracteres do primeiro nó|
+		|last|O último índice em relação ao primeiro caracteres do primeiro nó|
+		|size|O tamanho de '{text}|**/
 		textNodesData: {
 			get: function() {
 				const nodes = this.textNodes;
 				const index = [];
-				let size, init = 0;
+				const re    = /[\u0300-\u036f]/g;
+				let node, text, size, last, init = 0;
 				for (let i = 0; i < nodes.length; i++) {
-					size = nodes[i].nodeValue.length;
-					index.push({node: nodes[i], init: init, last: init + size - 1, length: size});
+					node = nodes[i];
+					text = node.nodeValue.normalize("NFC");
+					size = text.length;
+					last = init + size - 1;
+					index.push({node: node, text: text, init: init, last: last, size: size});
 					init += size;
 				}
 				return index;
@@ -6082,21 +6107,15 @@ const wd = (function() {
 		textMatch: {
 			value: function(search) {
 				const test = new __Type(search);
-				let view = this.node.innerText;
-				let text = this.node.textContent;
+				const view = this.node.innerText.replace(/\u00A0/g, " ").normalize("NFC");
+				const text = this.node.textContent.replace(/\u00A0/g, " ").normalize("NFC");
 				let re, find = null;
 				/*-- localizar no texto renderizado --*/
 				if (test.regexp) {
 					find = search.test(view) ? view.match(search)[0] : null;
 				}
 				else if (test.nonempty) {
-					//FIXME ajustar isso aqui
-
-
-					//search = search.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD").trim();
-					//view   = view.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD");
-					//text   = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKD");
-					console.log({s: search, v: view, i: view.indexOf(search)})
+					search = search.replace(/\u00A0/g, " ").normalize("NFC");
 					if (view.indexOf(search) >= 0)
 						find = search;
 					else if (view.toUpperCase().indexOf(search.toUpperCase()) >= 0)
@@ -6108,7 +6127,6 @@ const wd = (function() {
 				}
 				/*-- localizar no texto do nó --*/
 				if (find !== null) {
-					console.log(find)
 					re = find.replace(/\s+/g, " ").trim();
 					re = re.replace(/([^0-9a-zA-Z\ ])/gi, "\\$1");
 					re = re.replace(/\s+/g, "\\s+");
@@ -9024,7 +9042,28 @@ const wd = (function() {
 			}
 		},
 		/**. '{self display(string action)}: Organiza a exibição dos elementos filhos conforme argumento '{action}. Quanto ao elemento:
-		|Valor|Descrição|
+		|Alvo|Ação|Descrição|
+		|me|show|Exibirá o elemento|
+		|me|hide|Ocultará o elemento|
+		|me|toggle|Alternará a exibição do elemento|
+		|me|full|Alternará a exibição do elemento em tela cheia|
+		|sibling|show|Exibirá os elementos irmãos|
+		|sibling|hide|Ocultará os elementos irmãos|
+		|sibling|toggle|Alternará a exibição dos elementos irmãos|
+		|child|asc|Ordenará os elemento filhos em ordem crescente|
+		|child|desc|Ordenará os elemento filhos em ordem decrescente|
+		|child|sort|Alternará a order dos elemento filhos|
+
+
+		span{ }
+		|Ação|Descrição|
+		|+N|Exibirá o filho avançando N posições do elemento atual (ciclo infinito)|
+		|-N|exibe o filho retrocedendo N posições do elemento atual (ciclo infinito)|
+		|N-M|intervalo de filhos a exibir, índices inicial e final|
+		|N:D|organiza os filhos por grupos de D elementos, onde N representa o índice do grupo|
+		|+N:D|avança N grupos de filhos organizados em grupos de D elementos|
+		|-N:D|retrocede N grupos de filhos organizados em grupos de D elementos|
+		. quanto ao element:
 		|show|exibe o elemento|
 		|hide|oculta o elemento|
 		|toogle|alterna a exibição do elemento|
@@ -9654,11 +9693,11 @@ const wd = (function() {
 	span{ }
 	|Propriedades|Tipo|Descrição|
 	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
-	|width|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
+	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
 	function data_wd_filter(target, event, wdArray) {
 		const data   = wdArray[0];
 		const query  = data.$$ || data.$ || null;
-		const width  = data.width;
+		const size   = data.size;
 		const node   = new __Node(target);
 		const regexp = /^\/(.+)\/([gim]+)?$/;
 		const value  = target[node.form && !node.ftext ? "value" : "textContent"];
@@ -9669,11 +9708,26 @@ const wd = (function() {
 			search = new RegExp(arg1, arg2);
 		}
 		if (query !== null)
-			WD(query).filter(search, width);
+			WD(query).filter(search, size);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
+	/**#4 Filtro Textual
+	''function void data_wd_filter(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-filter|
+	|Objetivo|Filtrar elementos de acordo com seu conteúdo textual|
+	|Eventos|load wdreload wddataset input|
+	|Alvos|Elementos que possam receber digitação|
+	|Grupos|Único|
+	|Referências|__Node.filter|
+	span{ }
+	|Propriedades|Tipo|Descrição|
+	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
+	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
+
+
 	/**''function void data_wd_display(node target, object event, array wdArray)''
 	Função com o propósito de definir exibições por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
@@ -9689,6 +9743,107 @@ const wd = (function() {
 		});
 		return;
 	};
+
+
+	function data_wd_builder(target, event, wdArray) {
+		const data = wdArray[0];
+		const type = String(data.type).toUpperCase();
+		const rule = Array.isArray(data.rule) ? data.rule : [];
+		const time = new Date().valueOf();
+		/*-- TABS ----------------------------------------------------------------*/
+		//{type: tabs; rule: [{$: elem; label: tabName},...], orientation: vertical|horizontal}
+		if (type === "TABS") {
+			/*-- verificando dados --*/
+			const tabs = rule.filter(function(v,i,a) {
+				if (!(new __Type(v).object))         return false;
+				if (!(new __Type(v.$).node))         return false;
+				if (!(new __Type(v.label).nonempty)) return false;
+				return true;
+			});
+			if (tabs.length === 0) return;
+			/*-- definindo propriedades dos elementos --*/
+			__HTML(target, {innerHTML: "", className: "wd-builder-tabs", tabindex: "-1"});
+			const tabList = __HTML("div", {
+				tabindex: "-1",
+				"aria-orientation": data.orientation === "vertical" ? "vertical" : "horizontal",
+				role: "tablist",
+
+			});
+			target.appendChild(tabList);
+			tabs.forEach(function(v,i,a) {
+				const id    = new __Type(v.$.id).nonempty ? v.$.id : `panel_${time}_${i}`;
+				v.tab = __HTML("button", {
+					type: "button",
+					id: `tab_${time}_${i}`,
+					tabindex: i === 0 ? "0" : "-1",
+					textContent: v.label.trim(),
+					role: "tab",
+					"aria-controls": id,
+					"aria-selected": i === 0 ? "true" : "false",
+				});
+				v.panel = __HTML(v.$, {
+					id: id,
+					tabindex: "0",
+					role: "tabpanel",
+					"aria-labelledby": v.tab.id,
+				});
+				const panel = new __Node(v.$);
+				panel.show = i === 0 ? true : false;
+				tabList.appendChild(v.tab);
+				target.appendChild(v.panel);
+				/*-- Eventos --*/
+				v.tab.addEventListener("click", function(ev) {
+					if (ev.which === 1) {
+						ev.preventDefault();
+						const main  = ev.target.parentElement.parentElement;
+						const find  = ev.target.getAttribute("aria-controls");
+						const tabs  = new __Type(main.querySelectorAll(`[role="tablist"] > [role="tab"]`));
+						const panel = new __Type(main.querySelectorAll(`[role="tabpanel"]`));
+						tabs.value.forEach(function(v,i,a) {
+							const active = v === ev.target;
+							v.setAttribute("aria-selected", active ? "true" : "false")
+							v.setAttribute("tabindex", active ? "0" : "-1")
+							if (active) v.focus();
+						});
+						panel.value.forEach(function(v,i,a) {
+							const node = new __Node(v);
+							node.show = v.id === find;
+						});
+					}
+					return;
+				}, false);
+				v.tab.addEventListener("keydown", function(ev) {
+					const vert = ev.target.parentElement.getAttribute("aria-orientation") === "vertical";
+					const re   = vert ? /^(Arrow(Down|Up)|Home|End)$/i: /^(Arrow(Right|Left)|Home|End)$/i;
+					if (re.test(ev.key)) {
+						ev.preventDefault();
+						const tabs  = new __Type(ev.target.parentElement.children);
+						const list  = tabs.value;
+						const size  = list.length;
+						const index = list.indexOf(ev.target);
+						if ((vert && ev.key === "ArrowDown") || (!vert && ev.key === "ArrowRight"))
+							list[(index + 1)%size].click();
+						else if ((vert && ev.key === "ArrowUp") || (!vert && ev.key === "ArrowLeft"))
+							list[(index + size - 1)%size].click();
+						else if (ev.key === "Home" || ev.key === "End")
+							list[ev.key === "Home" ? 0 : size - 1].click();
+					}
+					return;
+				}, false);
+			});
+		}
+		/*-- SLIDER --------------------------------------------------------------*/
+		return;
+	};
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wd_mask(node target, object event, array wdArray)''
@@ -10383,28 +10538,30 @@ const wd = (function() {
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "[data-wd-repeat]", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
-				{name: "[data-wd-load]",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
-				{name: "[data-wd-chart]",  call: data_wd_chart,  kill: true,  bind: {}},
-				{name: "[data-wd-code]",   call: data_wd_code,   kill: true,  bind: {}},
-				{name: "[data-wd-click]",  call: data_wd_click,  kill: false, bind: {}},
-				{name: "[data-wd-filter]", call: data_wd_filter, kill: false, bind: {}},
-				{name: "[data-wd-mask]",   call: data_wd_mask,   kill: false, bind: {}},
-				{name: "[data-wd-device]", call: data_wd_device, kill: false, bind: {}},
-				{name: null,               call: data_wd_hash,   kill: false, bind: {}}
+				{name: "[data-wd-repeat]",  call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-load]",    call: data_wd_load,    kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-chart]",   call: data_wd_chart,   kill: true,  bind: {}},
+				{name: "[data-wd-code]",    call: data_wd_code,    kill: true,  bind: {}},
+				{name: "[data-wd-click]",   call: data_wd_click,   kill: false, bind: {}},
+				{name: "[data-wd-filter]",  call: data_wd_filter,  kill: false, bind: {}},
+				{name: "[data-wd-mask]",    call: data_wd_mask,    kill: false, bind: {}},
+				{name: "[data-wd-device]",  call: data_wd_device,  kill: false, bind: {}},
+				{name: "[data-wd-builder]", call: data_wd_builder, kill: true,  bind: {}},
+				{name: null,                call: data_wd_hash,    kill: false, bind: {}}
 			]
 		},
 		wddataset: {
 			target: document, preventDefault: false, extra: "wddatasetList",
 			data: [
-				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
-				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
-				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
-				{name: "wdCode",   call: data_wd_code,   kill: true,  bind: {}},
-				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {id: null}},
-				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {}},
-				{name: "wdMask",  call: data_wd_mask,    kill: false, bind: {}},
-				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
+				{name: "wdRepeat",  call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
+				{name: "wdLoad",    call: data_wd_load,    kill: true,  bind: {headers: {}}},
+				{name: "wdChart",   call: data_wd_chart,   kill: true,  bind: {}},
+				{name: "wdCode",    call: data_wd_code,    kill: true,  bind: {}},
+				{name: "wdClick",   call: data_wd_click,   kill: false, bind: {id: null}},
+				{name: "wdFilter",  call: data_wd_filter,  kill: false, bind: {}},
+				{name: "wdMask",    call: data_wd_mask,    kill: false, bind: {}},
+				{name: "wdDevice",  call: data_wd_device,  kill: false, bind: {}},
+				{name: "wdBuilder", call: data_wd_builder, kill: true,  bind: {}},
 			]
 		},
 		resize: {
