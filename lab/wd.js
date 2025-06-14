@@ -5724,42 +5724,36 @@ const wd = (function() {
 				return !this.node.hasAttribute("data-js-wd-hide");
 			},
 			set: function(x) {
-				if (x === false)
-					this.node.setAttribute("data-js-wd-hide", "");
-				else if (x === true)
-					this.node.removeAttribute("data-js-wd-hide");
+				if      (x === false) this.node.setAttribute("data-js-wd-hide", "");
+				else if (x === true)  this.node.removeAttribute("data-js-wd-hide");
 			}
 		},
-		/**. '{void only(boolean reverse)}: Exibe o nó e esconde os irmãos. Se '{reverse} for verdadeiro, inverte-se o resultado.**/
+		/**. '{void only(boolean hide)}: Exibe o nó e esconde os irmãos ou, se '{hide} for verdadeiro, o contrário.**/
 		only: {
-			value: function(reverse) {
-				const nodes = __Type(this.node.parentElement.children).value;
-				for (let i = 0; i < nodes.length; i++) {
-				  const data = __Node(nodes[i]);
-					data.show = nodes[i] === this.node ? (reverse !== true) : (reverse === true);
-				}
+			value: function(hide) {
+				const elem = this.node;
+				const data = new __Type(elem.parentElement.children);
+				data.value.forEach(function(v,i,a) {
+					const node = new __Node(v);
+					node.show = v === elem ? (hide !== true) : (hide === true);
+				});
 			}
 		},
-		/**. '{void childs(integer init, integer last)}: Define o intervalo de nós filhos a ser exibido entre o índice inicial ('{init}) e final ('{last}). Utilize um número negativo para indicar o último elemento.**/
-		childs: {
+		/**. '{void slice(number init, number last)}: Define o intervalo de nós filhos a ser exibido entre o índice inicial ('{init}) e final ('{last}), como no método '{Array.slice}.**/
+		slice: {
 			value: function (init, last) {
-				const child = __Type(this.node.children).value;
-				const width = child.length - 1;
-				const data1 = __Type(init);
-				const data2 = __Type(last);
-				init = data1.number ? (data1 < 0 ? width : data1.value) : -Infinity;
-				last = data2.number ? (data2 < 0 ? width : data2.value) : +Infinity;
-				if (init > last) {
-					let aux = init;
-					init = last;
-					last = aux;
-				}
-				for (let i = 0; i < child.length; i++) {
-					const node = __Node(child[i]);
-					node.show  = i >= init && i <= last;
-				}
+				const child = new __Type(this.node.children);
+				const check = {init: new __Type(init), last: new __Type(last)};
+				for (let i in check) check[i] = check[i].number ? check[i].value : undefined;
+				const show = child.value.slice(check.init, check.last);
+				child.value.forEach(function(v,i,a) {
+					const node = new __Node(v);
+					node.show = show.indexOf(v) >= 0;
+				});
 			}
 		},
+
+		//FIXME apagar: isso seria usado para carrossel e pages
 		/**. '{array groups(boolean child)}: Retorna uma lista de objetos contendo os intervalos (propriedades '{init} e '{last}) dos elementos visíveis. Se o argumento '{child} for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
@@ -5783,10 +5777,11 @@ const wd = (function() {
 				return groups;
 			}
 		},
-		/**. '{void walk(integer n=1)}: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento '{n} indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
+		//FIXME apagar: isso seria usado para carrossel
+		/**. '{void walk(integer n=1)}: Exibe um único nó filho avançando ou retrocedendo '{n} posições entre os irmãos. O argumento '{n} indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				if (this.node.childElementCount < 2) return this.childs(0, 0);
+				if (this.node.childElementCount < 2) return this.slice(0, 0);
 				const data   = __Type(n);
 				const childs = this.node.childElementCount;
 				const delta  = data.finite ? Math.trunc(data.value) : 1;
@@ -5796,49 +5791,23 @@ const wd = (function() {
 					active = groups.length === 0 ? -1 : groups[groups.length - 1].last;
 				let next   = (active + delta)%childs;
 				if (next < 0) next = childs + next;
-				this.childs(next, next);
+				this.slice(next, next);
 			}
 		},
-		/**. '{void pages(number index, number width)}: Agrupa os nós filhos em grupos de certo comprimento. O argumento '{index} define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade. O argumento '{width} é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
-		pages: {
-			value: function(index, width) {
-				if (this.node.childElementCount < 2) return this.childs(0,0);
-				/* definindo o tamanho da página */
-				const length = this.node.childElementCount;
-				const check1 = __Type(width);
-				width = !check1.finite || check1 <= 0 || check1 > length ? length : check1.value;
-				if (width < 1) width = Math.round(width * length);
-				width = Math.trunc(width) < 1 ? 1 : Math.trunc(width);
-				/* definindo a quantidade de páginas */
-				let pages = Math.trunc(Math.abs(length/width)) + (length%width === 0 ? 0 : 1);
-				/* definindo a página */
-				let check2 = __Type(index);
-				index = check2.number ? Math.trunc(check2.value) : 0;
-				/* páginas certas */
-				if (check2.finite) {
-					let page = index < 0 ? (pages - 1) : (index > (pages - 1) ? (pages - 1) : index);
-					let init = page * width;
-					let last = init + width - 1;
-					this.childs(init, last);
-					return;
-				}
-				/* caminhar nas páginas */
-				let groups = this.groups(true);
-				/* sem uma sequência única de elementos visíveis, exibir a primeira página */
-				if (groups.length < 1 || groups.length > 1)
-					return this.pages(0, width);
-				let init = groups[0].init;
-				let last = groups[0].last;
-				/* se todos os elementos estiverem visíveis, exibir a primeira página */
-				if (init === 0 && last === (length - 1))
-					return this.pages(0, width);
-				/* se o primeiro elemento visível não for o início de uma página, exibir a primeira página */
-				if (init % width !== 0)
-					return this.pages(0, width);
-				/* caso contrário, retornar a página seguinte ou anterior */
-				let page = init / width + (index < 0 ? -1 : +1);
-				if (page < 0) page = 0;
-				return this.pages(page, width);
+		/**. '{integer page(integer size, integer page)}: Organiza os nós filhos em grupos ('{page}) de determinado tamanho ('{size}) e retornar o valor da última página.**/
+		page: {
+			value: function(size, page) {
+				/*-- checando argumentos --*/
+				const checkA = new __Type(size);
+				const checkB = new __Type(page);
+				size = (checkA.integer && checkA > 0 ? checkA.value : 1);
+				page = (checkB.integer && checkB > 0 ? checkB.value : 1) - 1;
+				/*-- definindo o grupo --*/
+				const init = page * size;
+				const last = init + size;
+				const line = this.node.childElementCount;
+				this.slice(init, last);
+				return Math.trunc(line/size) + (line%size > 0 ? 1 : 0);
 			}
 		},
 		/**. '{void filter(string|regexp find, integer size)}: Exibe os nós filhos que casam com o valor definido em '{find}. O argumento '{size} indica o número mínimo de caracteres:
@@ -5902,62 +5871,62 @@ const wd = (function() {
 				return txt !== "";
 			}
 		},
-		/**. '{void sort(boolean asc)}: Ordena os elementos filhos. O argumento opcional '{asc} define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
+		/**. '{void sort(boolean asc)}: Ordena os elementos filhos. O argumento '{asc} define a classificação, se verdadeiro ascendente, se falso descendente e, se ausemte, o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
-				if (this.node.childElementCount === 0) return;
-				let node  = this.node;
-				const child = __Type(this.node.children).value;
-				const sort  = __Array(child).sort(asc);
-				for (let i = 0; i < sort.length; i++)
-				  this.node.appendChild(sort[i]);
+				const node  = this.node;
+				const child = new __Type(node.children);
+				const array = new __Array(child.value);
+				array.sort(asc).forEach(function(v,i,a) {node.appendChild(v);});
 				return;
 			}
 		},
-		/**. '{void tsort(integer order...)}: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos '{order} definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
+		/**. '{void tsort(integer order...)}: Ordena colunas de tabelas. Os argumentos '{order} definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente. O método deverá ser aplicado sobre o agrupador de linhas**/
 		tsort: {
 			value: function() {
-				if (this.node.childElementCount === 0) return;
 				/*-- acertando argumentos --*/
 				const args = [];
-				let j = -1;
-				while (++j < arguments.length) {
-					let check = new __Type(arguments[j]);
-					if (!check.finite || Math.trunc(check.value) === 0) continue;
-					args.push(Math.trunc(check.value));
+				const rule = [];
+				for (let i = 0; i < arguments.length; i++) {
+					let data = new __Type(arguments[i]);
+					if (data.integer && data.value !== 0 && args.indexOf(data.value) < 0) {
+						args.push(data.value);
+						rule.push({asc: data.value > 0, col: Math.abs(data.value) - 1});
+					}
 				}
-				if (args.length === 0) return this.sort();
-				/*-- iniciando ordenação --*/
-				let child = new __Type(this.node.children).value;
-				child.sort(function(a, b) {
-					/*-- definindo variáveis --*/
-					let maxA  = a.childElementCount - 1;
-					let maxB  = b.childElementCount - 1;
-					/*-- looping pelas regras de ordenação (argumentos) --*/
-					let i = -1;
-					while (++i < args.length) {
-						/*-- obtendo ordenação (value) e coluna (index) --*/
-						let value = args[i];
-						let index = Math.abs(value) - 1;
-						/*-- checar se o valor do índice está dentro da quantidade de filhos --*/
-						if (index > maxA && index > maxB) continue;
-						/*-- se válido, checar se valores são diferentes --*/
-						let textA = index > maxA ? "" : a.children[index].innerText.toLowerCase();
-						let textB = index > maxB ? "" : b.children[index].innerText.toLowerCase();
-						let typeA = new __Type(__String(textA).near.trim());
-						let typeB = new __Type(__String(textB).near.trim());
-						/*-- se forem iguais, passar para a próxima regra --*/
+				/*-- ordernar linhas --*/
+				const desc = new __Type(this.node.children);
+				const rows = desc.value;
+				rows.sort(function(a, b) {
+					/*-- definindo quantidade de colunas em cada linha a comparar --*/
+					const maxA  = a.childElementCount - 1;
+					const maxB  = b.childElementCount - 1;
+					/*-- looping pelas regras de ordenação --*/
+					for (let i = 0; i < rule.length; i++) {
+						let col = rule[i].col;
+						let asc = rule[i].asc;
+						/*-- índice das colunas informadas não constam na linha --*/
+						if (col > maxA && col > maxB) continue;
+						/*-- obter os valores para comparação --*/
+						let dataA = col > maxA ? "" : a.children[col].innerText.toLowerCase();
+						let dataB = col > maxB ? "" : b.children[col].innerText.toLowerCase();
+						let textA = new __String(dataA);
+						let textB = new __String(dataB);
+						let typeA = new __Type(textA.near.trim());
+						let typeB = new __Type(textB.near.trim());
+						/*-- se os valores forem iguais, passar para a próxima regra --*/
 						if (typeA.value === typeB.value) continue;
 						/*-- caso contrário, definir ordenamento --*/
-						let sort = __Array(typeA.value, typeB.value).sort(value >= 0);
+						let list = new __Array(typeA.value, typeB.value);
+						let sort = list.sort(asc);
 						return sort[0] === typeA.value ? -1 : +1;
 					}
-					/*-- se não atender os requisitos, retornar o valor padrão --*/
+					/*-- se nenhuma ordenação for encontrada --*/
 					return 0;
 				});
-				/*-- reordenando filhos --*/
-				let node = this.node;
-				child.forEach(function(v,i,a) {node.appendChild(v);});
+				/*-- reordenar elementos --*/
+				for (let i = 0; i < rows.length; i++)
+					this.node.appendChild(rows[i]);
 			}
 		},
 		/**. '{void jump(node list)}: O nó será adicionado aos elementos na ordem definida em '{list} a cada chamada do método. O argumento '{list} é uma lista de nós que acomodará o elemento.**/
@@ -8961,10 +8930,8 @@ const wd = (function() {
 	Construtor genérico para manipulação de nós HTML. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDnode(input, data) {
 		WDmain.call(this, input, data);
-		const node = this._data.value;
-		const main = [];
-		for (let i = 0; i < node.length; i++)
-			main.push(new __Node(node[i]));
+		const main = this._data.value.slice();
+		main.forEach(function(v,i,a) {a[i] = new __Node(v);});
 		Object.defineProperties(this, {
 			_main:  {value: main},
 			_array: {value: new __Array(main)}
@@ -9041,6 +9008,29 @@ const wd = (function() {
 				return this;
 			}
 		},
+		/**. '{self show(boolean visible)}: Exibe os elementos, exceto se '{visible} for falso.**/
+		show: {
+			value: function(visible) {
+				for (let i = 0; i < this._main.length; i++)
+					this._main[i].show = visible !== false;
+				return this;
+			}
+		},
+		/**. '{self slice(integer init, integer last)}: Fatia os elementos filhos Exibe os elementos, exceto se '{visible} for falso.**/
+		slice: {
+			value: function(init, last) {
+				for (let i = 0; i < this._main.length; i++)
+					this._main[i].slice(init, last);
+				return this;
+			}
+		},
+
+
+
+
+
+
+
 		/**. '{self display(string action)}: Organiza a exibição dos elementos filhos conforme argumento '{action}. Quanto ao elemento:
 		|Alvo|Ação|Descrição|
 		|me|show|Exibirá o elemento|
@@ -9103,7 +9093,7 @@ const wd = (function() {
 					/*-- intervalo de filhos --*/
 					else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
 						const val = action.split("-");
-						node.childs(val[0] === "*" ? -1 : val[0], val[1] === "*" ? -1 : val[1]);
+						node.slice(val[0] === "*" ? -1 : val[0], val[1] === "*" ? -1 : val[1]);
 					}
 					/*-- agrupamento de nós --*/
 					else if ((/^([+-]?\d+|\*)\:(\d+|0?\.\d+)$/).test(action)) {
@@ -9140,6 +9130,19 @@ const wd = (function() {
 				return this;
 			}
 		},
+
+
+		show2: {
+			value: function(init, last) {
+				const data1 = new __Type(init);
+				const data2 = new __Type(last);
+				const child = data1.number || data2.number;
+
+			}
+		},
+
+
+
 		/**. '{self filter(any search, integer width)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __Node.filter)**/
 		filter: {
 			value: function(search, width) {
@@ -9157,6 +9160,12 @@ const wd = (function() {
 				return this;
 			}
 		},
+
+
+
+
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
