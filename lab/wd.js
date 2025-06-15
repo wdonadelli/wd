@@ -5798,16 +5798,17 @@ const wd = (function() {
 		page: {
 			value: function(size, page) {
 				/*-- checando argumentos --*/
-				const checkA = new __Type(size);
-				const checkB = new __Type(page);
-				size = (checkA.integer && checkA > 0 ? checkA.value : 1);
-				page = (checkB.integer && checkB > 0 ? checkB.value : 1) - 1;
+				const data = {size: new __Type(size), page: new __Type(page)};
+				for (let i in data)
+					data[i] = data[i].integer && data[i] > 0 ? data[i].value : 1;
 				/*-- definindo o grupo --*/
-				const init = page * size;
-				const last = init + size;
-				const line = this.node.childElementCount;
+				const len = this.node.childElementCount;
+				const max = Math.trunc(len/data.size) + (len%data.size > 0 ? 1 : 0);
+				data.page = (data.page > max ? max : data.page) - 1;
+				const init = data.page * data.size;
+				const last = init + data.size;
 				this.slice(init, last);
-				return Math.trunc(line/size) + (line%size > 0 ? 1 : 0);
+				return max;
 			}
 		},
 		/**. '{void filter(string|regexp find, integer size)}: Exibe os nós filhos que casam com o valor definido em '{find}. O argumento '{size} indica o número mínimo de caracteres:
@@ -9008,11 +9009,36 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. '{self show(boolean visible)}: Exibe os elementos, exceto se '{visible} for falso.**/
-		show: {
-			value: function(visible) {
-				for (let i = 0; i < this._main.length; i++)
-					this._main[i].show = visible !== false;
+		/**. '{self display(string act)}: Exibe os elementos conforme especificado:
+		|Ação|Descrição|
+		|show|Exibe o elemento|
+		|hide|Esconde o elemento|
+		|toggle|Alterna a exibição do elemento|
+		|full|Alterna a exibição do elemento em tela cheia|
+		|alone|Exibe o elemento e esconde os nós irmãos|
+		|missing|Esconde o elemento e exibe os nós irmãos|
+		|all|Exibe o elemento e os nós irmãos|
+		|none|Esconde o elemento e os nós irmãos|
+		|asc|Ordena os nós filhos em ordem ascendente|
+		|desc|Ordena os nós filhos em ordem descendente|
+		|sort|Alterna a ordenação dos nós filhos|**/
+		display: {
+			value: function(act) {
+				act = String(act).toLowerCase();
+				for (let i = 0; i < this._main.length; i++) {
+					if (act === "show" || act === "hide" || act === "toggle")
+						this._main[i].show = act === "toggle" ? !this._main[i].show : act === "show";
+					else if (act === "alone" || act === "missing")
+						this._main[i].only(act === "missing");
+					else if (act === "all" || act === "none")
+						this.display(act === "all" ? "missing" : "alone").display(act === "all" ? "show" : "hide");
+					else if (act === "sort" || act === "asc" || act === "desc")
+						this._main[i].sort(act === "sort" ? null : act === "asc");
+					else if (act === "full") {
+						this._main[i].show = true;
+						this._main[i].full();
+					}
+				}
 				return this;
 			}
 		},
@@ -9032,43 +9058,7 @@ const wd = (function() {
 
 
 		/**. '{self display(string action)}: Organiza a exibição dos elementos filhos conforme argumento '{action}. Quanto ao elemento:
-		|Alvo|Ação|Descrição|
-		|me|show|Exibirá o elemento|
-		|me|hide|Ocultará o elemento|
-		|me|toggle|Alternará a exibição do elemento|
-		|me|full|Alternará a exibição do elemento em tela cheia|
-		|sibling|show|Exibirá os elementos irmãos|
-		|sibling|hide|Ocultará os elementos irmãos|
-		|sibling|toggle|Alternará a exibição dos elementos irmãos|
-		|child|asc|Ordenará os elemento filhos em ordem crescente|
-		|child|desc|Ordenará os elemento filhos em ordem decrescente|
-		|child|sort|Alternará a order dos elemento filhos|
-
-
-		span{ }
 		|Ação|Descrição|
-		|+N|Exibirá o filho avançando N posições do elemento atual (ciclo infinito)|
-		|-N|exibe o filho retrocedendo N posições do elemento atual (ciclo infinito)|
-		|N-M|intervalo de filhos a exibir, índices inicial e final|
-		|N:D|organiza os filhos por grupos de D elementos, onde N representa o índice do grupo|
-		|+N:D|avança N grupos de filhos organizados em grupos de D elementos|
-		|-N:D|retrocede N grupos de filhos organizados em grupos de D elementos|
-		. quanto ao element:
-		|show|exibe o elemento|
-		|hide|oculta o elemento|
-		|toogle|alterna a exibição do elemento|
-		|full|exibe o elemento em tela cheia|
-		. Quanto aos irmãos:
-		|Valor|Descrição|
-		|ahead|exibe o elemento e oculta os irmãos|
-		|behind|oculta o elemento e exibe os irmãos|
-		|all|exibe o elemento e seus irmãos|
-		|none|oculta o elemento e seus irmãos|
-		. Quanto aos filhos:
-		|Valor|Descrição|
-		|asc|ordena os elemento filhos em ordem crescente|
-		|desc|ordena os elemento filhos em ordem decrescente|
-		|sort|alterana a order dos elemento filhos|
 		. Quanto à organização dos filhos:
 		|Valor|Descrição|
 		|+N|exibe o filho avançando N posições do elemento atual (ciclo infinito)|
@@ -9081,7 +9071,7 @@ const wd = (function() {
 		|Valor|Descrição|
 		|[+N&verbar;-M&verbar;...]|ordena os filhos com base no valor dos netos na ordem especificada e conforme sinais (positivos ascendentes, negativos descendentes).|
 		. Onde N e M são números inteiros e D pode ser inteiro ou decimal. Para representar o último índice, utilizar o caractere asterisco.**/
-		display: {
+		display2: {
 			value: function(action) {
 				action = String(action).replace(/\s+/g, "").toLowerCase();
 				for (let i = 0; i < this._main.length; i++) {
@@ -9110,36 +9100,12 @@ const wd = (function() {
 							val[j]  = (val[j][0] === "-" ? -1 : +1) + Number(val[j]);
 						node.tsort.apply(node, val);
 					}
-					/*-- exibições do elemento --*/
-					else {
-						switch(action) {
-							case "show":   {node.show = true;                   break;}
-							case "hide":   {node.show = false;                  break;}
-							case "toggle": {node.show = !node.show;             break;}
-							case "ahead":  {node.only();                        break;}
-							case "behind": {node.only(true);                    break;}
-							case "full":   {node.full();                        break;}
-							case "all":    {node.only(true); node.show = true;  break;}
-							case "none":   {node.only();     node.show = false; break;}
-							case "asc":    {node.sort(true);                    break;}
-							case "desc":   {node.sort(false);                   break;}
-							case "sort":   {node.sort();                        break;}
-						}
-					}
+
 				}
 				return this;
 			}
 		},
 
-
-		show2: {
-			value: function(init, last) {
-				const data1 = new __Type(init);
-				const data2 = new __Type(last);
-				const child = data1.number || data2.number;
-
-			}
-		},
 
 
 
@@ -9160,12 +9126,6 @@ const wd = (function() {
 				return this;
 			}
 		},
-
-
-
-
-
-
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -9754,94 +9714,90 @@ const wd = (function() {
 	};
 
 
-	function data_wd_builder(target, event, wdArray) {
-		const data = wdArray[0];
-		const type = String(data.type).toUpperCase();
-		const rule = Array.isArray(data.rule) ? data.rule : [];
-		const time = new Date().valueOf();
-		/*-- TABS ----------------------------------------------------------------*/
+	function data_wd_tabs(target, event, wdArray) {
 		//{type: tabs; rule: [{$: elem; label: tabName},...], orientation: vertical|horizontal}
-		if (type === "TABS") {
+		const data = wdArray[0];
+		const tabs = Array.isArray(data.tabs) ? data.tabs : [];
+		const time = new Date().valueOf();
+		const list = __HTML("div", {
+			tabindex: "-1",
+			"aria-orientation": data.orientation === "vertical" ? "vertical" : "horizontal",
+			role: "tablist",
+		});
+		/*-- limpando container principal e adicionando lista de tabs --*/
+		__HTML(target, {
+			innerHTML: "",
+			dataset: {wdBuilder: "tabs"},
+			tabindex: "-1"
+		});
+		target.appendChild(list);
+		/*-- analisando abas --*/
+		tabs.forEach(function(v,i,a) {
 			/*-- verificando dados --*/
-			const tabs = rule.filter(function(v,i,a) {
-				if (!(new __Type(v).object))         return false;
-				if (!(new __Type(v.$).node))         return false;
-				if (!(new __Type(v.label).nonempty)) return false;
-				return true;
+			const check = {data: new __Type(v), panel: new __Type(v.$), label: new __Type(v.label)};
+			if (!check.data.object) return;
+			if (!check.panel.node) return;
+			if (check.label.empty) return;
+			if (target.contains(v.panel)) return;
+			/*-- construir abas --*/
+			const id = v.$.id.trim() !== "" ? v.$.id : `panel_${time}_${i}`;
+			v.tab = __HTML("button", {
+				type: "button",
+				id: `tab_${time}_${i}`,
+				tabindex: i === 0 ? "0" : "-1",
+				textContent: v.label.trim(),
+				role: "tab",
+				"aria-controls": id,
+				"aria-selected": i === 0 ? "true" : "false",
 			});
-			if (tabs.length === 0) return;
-			/*-- definindo propriedades dos elementos --*/
-			__HTML(target, {innerHTML: "", className: "wd-builder-tabs", tabindex: "-1"});
-			const tabList = __HTML("div", {
-				tabindex: "-1",
-				"aria-orientation": data.orientation === "vertical" ? "vertical" : "horizontal",
-				role: "tablist",
-
+			v.panel = __HTML(v.$, {
+				id: id,
+				tabindex: "0",
+				role: "tabpanel",
+				"aria-labelledby": v.tab.id,
 			});
-			target.appendChild(tabList);
-			tabs.forEach(function(v,i,a) {
-				const id    = new __Type(v.$.id).nonempty ? v.$.id : `panel_${time}_${i}`;
-				v.tab = __HTML("button", {
-					type: "button",
-					id: `tab_${time}_${i}`,
-					tabindex: i === 0 ? "0" : "-1",
-					textContent: v.label.trim(),
-					role: "tab",
-					"aria-controls": id,
-					"aria-selected": i === 0 ? "true" : "false",
-				});
-				v.panel = __HTML(v.$, {
-					id: id,
-					tabindex: "0",
-					role: "tabpanel",
-					"aria-labelledby": v.tab.id,
-				});
-				const panel = new __Node(v.$);
-				panel.show = i === 0 ? true : false;
-				tabList.appendChild(v.tab);
-				target.appendChild(v.panel);
-				/*-- Eventos --*/
-				v.tab.addEventListener("click", function(ev) {
-					if (ev.which === 1) {
-						ev.preventDefault();
-						const main  = ev.target.parentElement.parentElement;
-						const find  = ev.target.getAttribute("aria-controls");
-						const tabs  = new __Type(main.querySelectorAll(`[role="tablist"] > [role="tab"]`));
-						const panel = new __Type(main.querySelectorAll(`[role="tabpanel"]`));
-						tabs.value.forEach(function(v,i,a) {
-							const active = v === ev.target;
-							v.setAttribute("aria-selected", active ? "true" : "false")
-							v.setAttribute("tabindex", active ? "0" : "-1")
-							if (active) v.focus();
-						});
-						panel.value.forEach(function(v,i,a) {
-							const node = new __Node(v);
-							node.show = v.id === find;
-						});
-					}
-					return;
-				}, false);
-				v.tab.addEventListener("keydown", function(ev) {
-					const vert = ev.target.parentElement.getAttribute("aria-orientation") === "vertical";
-					const re   = vert ? /^(Arrow(Down|Up)|Home|End)$/i: /^(Arrow(Right|Left)|Home|End)$/i;
-					if (re.test(ev.key)) {
-						ev.preventDefault();
-						const tabs  = new __Type(ev.target.parentElement.children);
-						const list  = tabs.value;
-						const size  = list.length;
-						const index = list.indexOf(ev.target);
-						if ((vert && ev.key === "ArrowDown") || (!vert && ev.key === "ArrowRight"))
-							list[(index + 1)%size].click();
-						else if ((vert && ev.key === "ArrowUp") || (!vert && ev.key === "ArrowLeft"))
-							list[(index + size - 1)%size].click();
-						else if (ev.key === "Home" || ev.key === "End")
-							list[ev.key === "Home" ? 0 : size - 1].click();
-					}
-					return;
-				}, false);
-			});
-		}
-		/*-- SLIDER --------------------------------------------------------------*/
+			WD(v.panel).display(i === 0 ? "show" : "hide");
+			list.appendChild(v.tab);
+			target.appendChild(v.panel);
+			/*-- vincular eventos --*/
+			v.tab.addEventListener("click", function(ev) {
+				if (ev.which === 1) {
+					ev.preventDefault();
+					const main  = ev.target.parentElement.parentElement;
+					const find  = ev.target.getAttribute("aria-controls");
+					const tabs  = new __Type(main.querySelectorAll(`[role="tablist"] > [role="tab"]`));
+					const panel = new __Type(main.querySelectorAll(`[role="tabpanel"]`));
+					tabs.value.forEach(function(v,i,a) {
+						const active = v === ev.target;
+						v.setAttribute("aria-selected", active ? "true" : "false")
+						v.setAttribute("tabindex", active ? "0" : "-1")
+						if (active) v.focus();
+					});
+					panel.value.forEach(function(v,i,a) {
+						WD(v).display(v.id === find ? "show" : "hide");
+					});
+				}
+				return;
+			}, false);
+			v.tab.addEventListener("keydown", function(ev) {
+				const vert = ev.target.parentElement.getAttribute("aria-orientation") === "vertical";
+				const re   = vert ? /^(Arrow(Down|Up)|Home|End)$/i: /^(Arrow(Right|Left)|Home|End)$/i;
+				if (re.test(ev.key)) {
+					ev.preventDefault();
+					const tabs  = new __Type(ev.target.parentElement.children);
+					const list  = tabs.value;
+					const size  = list.length;
+					const index = list.indexOf(ev.target);
+					if ((vert && ev.key === "ArrowDown") || (!vert && ev.key === "ArrowRight"))
+						list[(index + 1)%size].click();
+					else if ((vert && ev.key === "ArrowUp") || (!vert && ev.key === "ArrowLeft"))
+						list[(index + size - 1)%size].click();
+					else if (ev.key === "Home" || ev.key === "End")
+						list[ev.key === "Home" ? 0 : size - 1].click();
+				}
+				return;
+			}, false);
+		});
 		return;
 	};
 
@@ -10547,30 +10503,30 @@ const wd = (function() {
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "[data-wd-repeat]",  call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
-				{name: "[data-wd-load]",    call: data_wd_load,    kill: true,  bind: {headers: {}}},
-				{name: "[data-wd-chart]",   call: data_wd_chart,   kill: true,  bind: {}},
-				{name: "[data-wd-code]",    call: data_wd_code,    kill: true,  bind: {}},
-				{name: "[data-wd-click]",   call: data_wd_click,   kill: false, bind: {}},
-				{name: "[data-wd-filter]",  call: data_wd_filter,  kill: false, bind: {}},
-				{name: "[data-wd-mask]",    call: data_wd_mask,    kill: false, bind: {}},
-				{name: "[data-wd-device]",  call: data_wd_device,  kill: false, bind: {}},
-				{name: "[data-wd-builder]", call: data_wd_builder, kill: true,  bind: {}},
-				{name: null,                call: data_wd_hash,    kill: false, bind: {}}
+				{name: "[data-wd-repeat]", call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-load]",   call: data_wd_load,    kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-chart]",  call: data_wd_chart,   kill: true,  bind: {}},
+				{name: "[data-wd-code]",   call: data_wd_code,    kill: true,  bind: {}},
+				{name: "[data-wd-click]",  call: data_wd_click,   kill: false, bind: {}},
+				{name: "[data-wd-filter]", call: data_wd_filter,  kill: false, bind: {}},
+				{name: "[data-wd-mask]",   call: data_wd_mask,    kill: false, bind: {}},
+				{name: "[data-wd-device]", call: data_wd_device,  kill: false, bind: {}},
+				{name: "[data-wd-tabs]",   call: data_wd_tabs, kill: true,  bind: {}},
+				{name: null,               call: data_wd_hash,    kill: false, bind: {}}
 			]
 		},
 		wddataset: {
 			target: document, preventDefault: false, extra: "wddatasetList",
 			data: [
-				{name: "wdRepeat",  call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
-				{name: "wdLoad",    call: data_wd_load,    kill: true,  bind: {headers: {}}},
-				{name: "wdChart",   call: data_wd_chart,   kill: true,  bind: {}},
-				{name: "wdCode",    call: data_wd_code,    kill: true,  bind: {}},
-				{name: "wdClick",   call: data_wd_click,   kill: false, bind: {id: null}},
-				{name: "wdFilter",  call: data_wd_filter,  kill: false, bind: {}},
-				{name: "wdMask",    call: data_wd_mask,    kill: false, bind: {}},
-				{name: "wdDevice",  call: data_wd_device,  kill: false, bind: {}},
-				{name: "wdBuilder", call: data_wd_builder, kill: true,  bind: {}},
+				{name: "wdRepeat", call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
+				{name: "wdLoad",   call: data_wd_load,    kill: true,  bind: {headers: {}}},
+				{name: "wdChart",  call: data_wd_chart,   kill: true,  bind: {}},
+				{name: "wdCode",   call: data_wd_code,    kill: true,  bind: {}},
+				{name: "wdClick",  call: data_wd_click,   kill: false, bind: {id: null}},
+				{name: "wdFilter", call: data_wd_filter,  kill: false, bind: {}},
+				{name: "wdMask",   call: data_wd_mask,    kill: false, bind: {}},
+				{name: "wdDevice", call: data_wd_device,  kill: false, bind: {}},
+				{name: "wdTabs",   call: data_wd_tabs, kill: true,  bind: {}},
 			]
 		},
 		resize: {
