@@ -2506,23 +2506,18 @@ const wd = (function() {
 				return this.arrayWD;
 			}
 		},
-		/**. '{object wdArray}: Transforma notação wd em um array de objetos.
-		. A notação é semelhante a JSON com as seguintes diferenças:
-		- o nome das propriedades do objeto não contem aspas;
-		- o nome das propriedades do objeto podem conter apenas caracteres alfanuméricos, traços e sublinhados;
-		- as propriedades do objeto são separadas por ponto e vírgula;
+		/**. '{object wdArray}: Transforma notação wd em um array de objetos semelhante a notação JSON exceto pelo seguinte:
+		- o nome das propriedades do objeto não contem aspas e são compostos de caracteres alfanuméricos, traços e sublinhados;
+		- por padrão, todos os valores são strings, exceto números, i{null}, i{true} e i{false}.
 		- strings são delimitadas por aspas simples;
-		- uma aspa simples dentro da string é representadas por duas aspas simples em sequência;
-		- expressão regulares são permitidas em objetos e arrays;
+		- a aspa simples dentro da string é representada por duas aspas simples em sequência;
+		- são permitidos como valores expressões regulares, seletores CSS de elementos e funções do escopo de window;
+		- valores inválidos ou vazios para expressões regulares, seletores CSS e funções assumem o valor nulo;
 		- a notação para expressão regular é semelhante à primitiva, os escapes devem ser duplos;
-		- um erro na expressão regular tornará seu valor nulo;
-		- funcões dentro do escopo de window, definidas com i{var} e function', são permitidas em objetos e arrays;
-		- para referenciar a função, seu nome deve estar entre parenteses;
-		- se a função não for encontrada, seu valor será nulo; e
-		- por padrão, todos os valores são strings, exceto números, null, true e false.
-		. Há dois nomes de propriedades especiais, &dollar; e &dollar;&dollar;. Seus valores representam um seletor CSS que recuperará o elemento ou a lista de elementos, respectivamente. Se não encontrado elementos, um NodeList vazio será definido.
-		. O valor sempre será um array de objetos. Se o array conter apenas um item, não é preciso adicionar os caracteres de abertura e fechamento do objeto.
-		. É possível fazer referência a um array de objetos definido no escopo de window informando o caractere &num; seguido do nome da variável.**/
+		- para referenciar função, definidas com i{var} ou i{function}, informe seu nome entre parenteses;
+		- seletores CSS são alocados entre parênteses com os símbolos $ (elemento) ou $$ (lista) antecedendo a abertura;
+		- se o array principal conter apenas um objeto, não é preciso adicionar as chaves inicial e final do objeto.
+		. É possível referenciar um array de objetos no escopo de window informando o caractere # seguido do nome da variável.**/
 		wdArray: {
 			get: function() {
 				if ("wdArray" in this._saved)
@@ -2531,7 +2526,7 @@ const wd = (function() {
 				try {
 					if (this._check.string) {
 						const note = this._data.normalize().trim();
-						/*----------------------------------------------------------------*/
+						/*-- Referência para uma variável --------------------------------*/
 						if ((/^\#.+$/).test(note)) {
 							let list  = window[note.replace("#", "")];
 							let check = new __Type(list);
@@ -2543,9 +2538,11 @@ const wd = (function() {
 							this._saved["wdArray"] = list;
 							return this.wdArray;
 						}
-						/*----------------------------------------------------------------*/
+						/*-- Ajustando o código e definindo verificações -----------------*/
 						const code = [
-							note[0] === "{" ? "[" : "[{", note,	note.slice(-1) === "}" ? "]" : "}]"
+							note[0]        === "{" ? "[" : "[{",
+							note,
+							note.slice(-1) === "}" ? "]" : "}]"
 						].join("").split("");
 						const last = code.length;
 						let tag, val, txt;
@@ -2554,13 +2551,13 @@ const wd = (function() {
 						const tree = new __Tree();
 						tree.xml = true;
 						tree.open("wd");
-						/*----------------------------------------------------------------*/
+						/*-- Circulando pelo código --------------------------------------*/
 						while (index < last) {
 							if (++count > 2*last) throw new Error("Many recursions.");
 							val = code[index];
 							tag = tree.level;
 							txt = code.slice(index).join("");
-							/*--------------------------------------------------------------*/
+							/*-- Tag externa (array) ---------------------------------------*/
 							if (tag === "wd") {
 								if (index === 0)
 									tree.add("[").open("array");
@@ -2568,7 +2565,7 @@ const wd = (function() {
 									tree.close();
 								index += index === 0 ? 1 : last;
 							}
-							/*--------------------------------------------------------------*/
+							/*-- Array -----------------------------------------------------*/
 							else if (tag === "array") {
 								let reItem = /^\s*(\S)/;
 								let reNext = /^\s*(\,\s*\]|\,|\])/;
@@ -2585,21 +2582,22 @@ const wd = (function() {
 								}
 								switch(rate) {
 									case null: {throw new Error("wdArray - invalid array notation.");}
-									case ",":  {tree.add(", "); break;}
-									case "]":  {tree.close().add("]"); break;}
-									case "[":  {tree.add("[").open("array");  break;}
-									case "{":  {tree.add("{").open("object"); break;}
-									case "/":  {tree.open("regexp");   walk--; break;}
-									case "'":  {tree.open("string");   walk--; break;}
-									case "(":  {tree.open("function"); walk--; break;}
-									default:   {tree.open("item");     walk--;}
+									case ",": {tree.add(", "); break;}
+									case "]": {tree.close().add("]"); break;}
+									case "[": {tree.add("[").open("array");  break;}
+									case "{": {tree.add("{").open("object"); break;}
+									case "/": {tree.open("regexp");   walk--; break;}
+									case "'": {tree.open("string");   walk--; break;}
+									case "(": {tree.open("function"); walk--; break;}
+									case "$": {tree.open("node");     walk--; break;}
+									default:  {tree.open("item");     walk--;}
 								}
 								index += walk;
 							}
-							/*--------------------------------------------------------------*/
+							/*-- Object ----------------------------------------------------*/
 							else if (tag === "object") {
-								let reName = /^\s*([a-z0-9_\-]+|\$\$?)\s*\:\s*(\S)/i;
-								let reNext = /^\s*(\;\s*\}|\;|\})/;
+								let reName = /^\s*([a-z0-9_\-]+)\s*\:\s*(\S)/i;
+								let reNext = /^\s*(\,\s*\}|\,|\})/;
 								rate = null;
 								if (reNext.test(txt)) {
 									find = txt.match(reNext);
@@ -2613,24 +2611,24 @@ const wd = (function() {
 									walk = find[0].length;
 									tree.add(`"${name}": `);
 								}
-
 								switch(rate) {
 									case null: {throw new Error("wdArray - invalid object notation.");}
-									case ";":  {tree.add(", "); break;}
+									case ",":  {tree.add(", "); break;}
 									case "}":  {tree.close().add("}"); break;}
 									case "{":  {tree.add("{").open("object"); break;}
 									case "[":  {tree.add("[").open("array");  break;}
 									case "/":  {tree.open("regexp");   walk--; break;}
 									case "'":  {tree.open("string");   walk--; break;}
 									case "(":  {tree.open("function"); walk--; break;}
+									case "$":  {tree.open("node");     walk--; break;}
 									default:   {tree.open("value");    walk--;}
 								}
 								index += walk;
 							}
-							/*--------------------------------------------------------------*/
-							else if (tag === "item" || tag === "value") {
+							/*-- Item (array) ou Value (object) ----------------------------*/
+							else if (tag === "value" || tag === "item") {
 								let lang = /^(true|false|null)$/;
-								let div  = tag === "item" ? /^[^,\]]+/ : /^[^;}]+/;
+								let div  = tag === "item" ? /^[^,\]]+/ : /^[^,}]+/;
 								find = txt.match(div);
 								rate = find === null ? null : find[0].trim();
 								test = new __Type(rate);
@@ -2646,20 +2644,19 @@ const wd = (function() {
 									tree.add(JSON.stringify(`${rate}`)).close(tag);
 								index += walk;
 							}
-							/*--------------------------------------------------------------*/
+							/*-- Function --------------------------------------------------*/
 							else if (tag === "function") {
-								let reName = /^\(([^)]+)\)/
+								let reName = /^\(([^)]+)\)/;
 								find = txt.match(reName);
 								rate = find === null ? null : find[0].replace(reName, "$1").trim();
 								walk = find === null ? last : find[0].length;
-								test = new __Type(window[rate]);
 								if (rate === null)
 									throw new Error("wdArray - invalid function notation.");
 								else
 									tree.add(JSON.stringify(`@function:${rate}`)).close();
 								index += walk;
 							}
-							/*--------------------------------------------------------------*/
+							/*-- String ----------------------------------------------------*/
 							else if (tag === "string") {
 								rate = [];
 								find = false;
@@ -2676,7 +2673,7 @@ const wd = (function() {
 								}
 								tree.add(JSON.stringify(rate.join(""))).close();
 							}
-							/*--------------------------------------------------------------*/
+							/*-- RegExp ----------------------------------------------------*/
 							else if (tag === "regexp") {
 								rate = [];
 								find = false;
@@ -2698,7 +2695,38 @@ const wd = (function() {
 								tree.add(JSON.stringify(text)).close();
 								index += prop.flag.length;
 							}
+							/*-- Nodes ----------------------------------------------------*/
+							else if (tag === "node") {
+								let reNode = /^\$\$?\(/;
+								/*-- não inicia no formato $( ou $$( - retorna para item ou value --*/
+								if (!reNode.test(txt)) {
+									tree.close();
+									tree.open(tree.level === "array" ? "item" : "value");
+								}
+								else {
+									let all = txt.slice(0,2) === "$$";
+									rate    = [];
+									find    = 1;
+									index  += all ? 2 : 1;
+									let char, str = false;
+									while(++index < last && find > 0) {
+										char = code[index];
+										if (!str) {
+											str   = char === "'";
+											find += char === "(" ? 1 : (char === ")" ? -1 : 0);
+											rate.push(str ? "\"" : (find > 0 ? char : ""));
+										}
+										else {
+											str = char !== "'";
+											rate.push(!str ? "\"" : char);
+										}
+									}
+									let query = all ?  "nodes" : "nodcaracteres alfanuméricos, traços e sublinhadose";
+									tree.add(JSON.stringify(`@${query}:${rate.join("")}`)).close();
+								}
+							}
 						}
+
 						/*--------------------------------------------------------------*/
 						tree.finish();
 						let json = JSON.parse(tree.toString());
@@ -2710,25 +2738,34 @@ const wd = (function() {
 									item[i] = parse(item[i]);
 							}
 							else if (check.object) {
-								for (let i in item) {
-									if (i === "$" || i === "$$")
-										item[i] = new __Query(item[i])[i];
-									else
-										item[i] = parse(item[i]);
-								}
+								for (let i in item)
+									item[i] = parse(item[i]);
 							}
 							else if (check.string) {
-								if ((/^\@function\:(.*)$/).test(item)) {
-									let name   = item.replace(/^\@function\:(.*)$/, "$1");
+								let reExtra = {
+									function: /^\@function\:(.*)$/,
+									regexp:   /^\@regexp\(([gim]*)\)\:(.*)$/,
+									node:     /^\@(nodes?)\:(.*)$/
+								};
+								if (reExtra.function.test(item)) {
+									let name   = item.replace(reExtra.function, "$1");
 									let method = typeof window[name] === "function";
 									item = method ? window[name] : null;
 								}
-								else if ((/^\@regexp\(([gim]*)\)\:(.*)$/).test(item)) {
-									let re   = /^\@regexp\(([gim]*)\)\:(.*)$/;
-									let main = item.replace(re, "$2");
-									let flag = item.replace(re, "$1");
+								else if (reExtra.regexp.test(item)) {
+									let main = item.replace(reExtra.regexp, "$2");
+									let flag = item.replace(reExtra.regexp, "$1");
 									try      {item = new RegExp(main, flag);}
 									catch(e) {item = null;}
+								}
+								else if (reExtra.node.test(item)) {
+									let len  = item.replace(reExtra.node, "$1");
+									let css  = item.replace(reExtra.node, "$2");
+									let name = len === "nodes" ? "querySelectorAll" : "querySelector";
+									try      {item = document[name](css);}
+									catch(e) {item = null;}
+									let test = new __Type(item);
+									item = test.node && test.value.length > 0 ? item : null;
 								}
 							}
 							return item;
@@ -9531,6 +9568,51 @@ const wd = (function() {
 		return;
 	};
 
+
+
+
+	/**#4 Atribuição de Valores
+	''function void data_wd_set(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-set|
+	|Objetivo|Define propriedades e atributos e executa métodos.|
+	|Eventos|click|
+	|Alvos|Elementos que possar receber cliques|
+	|Grupos|Múltiplos|
+	|Referências|__Node.attribute|
+	Observações:
+	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
+	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
+	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
+	function data_wd_tools(target, event, wdArray) {
+		/*-- looping sobre os grupos --*/
+		wdArray.forEach(function(group,i,a) {
+			const query = group.$$ || group.$ || target;
+			const tools = WD(query);
+			/*-- looping pelos métodos --*/
+			for (let method in group) {
+				let check1 = new __Type(tools[method]);
+				let check2 = new __Type(group[method]);
+				console.log(check1.type, check2.type, group[method],query)
+				if (check1.function && check2.array)
+					tools[method].apply(tools, group[method]);
+			}
+		});
+		//FIXME alterar wdArray para incorporar função querySlector: "{query: $${div > loko}; node: [$${div} , ${div}]; }"
+
+
+		return;
+	};
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**#4 Gráficos 2D
 	''function void data_wd_chart(node target, object event, array wdArray)''
@@ -10559,12 +10641,13 @@ const wd = (function() {
 		click: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
-				{name: "wdSend",    call: data_wd_send,      kill: false, bind: {headers: {}}},
-				{name: "wdSet",     call: data_wd_set,       kill: false, bind: {}},
-				{name: "wdDisplay", call: data_wd_display,   kill: false, bind: {}},
-				{name: "wdEdit",    call: data_wd_edit,      kill: false, bind: {}},
-				{name: "wdJump",    call: data_wd_jump,      kill: false, bind: {}},
-				{name: null,        call: __FLOAT.escape,    kill: false, bind: {}}//FIXME vincular esse trigger a um float fecha sem abrir
+				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
+				{name: "wdTools",   call: data_wd_tools,   kill: false, bind: {}},
+				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}},
+				{name: "wdSet",     call: data_wd_set,     kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
+				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
+				{name: "wdJump",    call: data_wd_jump,    kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
+				{name: null,        call: __FLOAT.escape,  kill: false, bind: {}},//FIXME vincular esse trigger a um float fecha sem abrir
 				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
 		},
