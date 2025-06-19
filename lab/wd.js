@@ -2721,7 +2721,7 @@ const wd = (function() {
 											rate.push(!str ? "\"" : char);
 										}
 									}
-									let query = all ?  "nodes" : "nodcaracteres alfanuméricos, traços e sublinhadose";
+									let query = all ?  "nodes" : "node";
 									tree.add(JSON.stringify(`@${query}:${rate.join("")}`)).close();
 								}
 							}
@@ -6109,8 +6109,8 @@ const wd = (function() {
 		|Nome|Tipo|Descrição|
 		|value|string|Valor textual capturado|
 		|length|integer|Comprimento do valor textual|
-		|init|integer|Índice onde inicia a captura|
-		|last|integer|Índice onde u{encerrou} (init+length)|**/
+		|init|integer|Índice inicial da captura|
+		|last|integer|Índice final da captura|**/
 		textMatch: {
 			value: function(search) {
 				const test = new __Type(search);
@@ -6143,7 +6143,7 @@ const wd = (function() {
 					return {
 						value:  match,
 						init:   text.indexOf(match),
-						last:   text.indexOf(match) + match.length,
+						last:   text.indexOf(match) + match.length - 1,
 						length: match.length,
 					};
 				}
@@ -6157,8 +6157,8 @@ const wd = (function() {
 				const data = this.textNodesData;
 				const html = __HTML(tag);
 				const trim = {
-					init: test.init.integer && test.init > 0 ? test.init.value : 0,
-					last: test.last.integer && test.last > 0 ? test.last.value : Infinity
+					init: test.init.integer && test.init >= 0 ? test.init.value : 0,
+					last: test.last.integer && test.last >= 0 ? test.last.value : Infinity
 				}
 				if (trim.init > trim.last) {
 					const aux = trim.init;
@@ -6172,31 +6172,31 @@ const wd = (function() {
 					let text  = node.nodeValue;
 					let elem  = html.cloneNode(false);
 					let group = [];
-					let index = function(x) {return x - item.init;}
+					let index = function(trim) {return trim - item.init;}
 					/*-- não iniciado ou encerrado --*/
-					if (trim.init > item.last || trim.last < item.init) {
+					if (trim.init > item.last || trim.last < item.init) { console.log("não iniciado ou encerrado")
 						if (trim.last < item.init) return;
 						continue;
 					}
-					/*-- totalmente contido --*/
-					else if (trim.init > item.init && trim.last < item.last) {
+					/*-- totalmente contido: text+node+text --*/
+					else if (trim.init > item.init && trim.last < item.last) { console.log("totalmente contido")
 						group.push({text: text.slice(0, index(trim.init)), type: "text"});
-						group.push({text: text.slice(index(trim.init), index(trim.last)), type: "elem"});
-						group.push({text: text.slice(index(trim.last)), type: "text"});
+						group.push({text: text.slice(index(trim.init), index(trim.last)+1), type: "elem"});
+						group.push({text: text.slice(index(trim.last)+1), type: "text"});
 					}
-					/*-- totalmente ocupado --*/
-					else if (trim.init <= item.init && trim.last >= item.last) {
+					/*-- totalmente ocupado: node --*/
+					else if (trim.init <= item.init && trim.last >= item.last) { console.log("totalmente ocupado")
 						group.push({text: text, type: "elem"});
 					}
-					/*-- parcialmente contido à direita --*/
-					else if (trim.init > item.init && trim.last >= item.last) {
+					/*-- parcialmente contido à direita: text+node --*/
+					else if (trim.init > item.init && trim.last >= item.last) { console.log("parcialmente contido à direita")
 						group.push({text: text.slice(0, index(trim.init)), type: "text"});
 						group.push({text: text.slice(index(trim.init)),    type: "elem"});
 					}
-					/*-- parcialmente contido à esquerda --*/
-					else if (trim.init <= item.init && trim.last < item.last) {
-						group.push({text: text.slice(0, index(trim.last)), type: "elem"});
-						group.push({text: text.slice(index(trim.last)),    type: "text"});
+					/*-- parcialmente contido à esquerda: node+text --*/
+					else if (trim.init <= item.init && trim.last < item.last) { console.log("parcialmente contido à esquerda")
+						group.push({text: text.slice(0, index(trim.last)+1), type: "elem"});
+						group.push({text: text.slice(index(trim.last)+1),    type: "text"});
 					}
 					/*-- adicionar novos nós e excluir o original --*/
 					for (let j = 0; j < group.length; j++) {
@@ -9371,18 +9371,18 @@ const wd = (function() {
 	|Referências|__Request.send, __Node.submit|
 	span{ }
 	|Propriedades|Tipo|Descrição|
-	|$ ou $$|string|Seletor CSS dos campos de formulário a serem enviados|
+	|query|string|Seletor CSS dos campos de formulário a serem enviados|
 	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos.|
 	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
 	Observações:
-	- Demais propriedades seguem a mesma definição de __Request.send;
-	- O valor da propriedade i{body} será definido pelo conteúdo dos campos de formulários (ver i{$}/i{$$}); e
+	- Demais propriedades seguem a definição de __Request.send, exceto i{body}, que será definido por '{query}; e
 	- O disparador deve estar contido no escopo de '{window} utilizando-se de '{var} ou '{function}.**/
 	function data_wd_send(target, event, wdArray) {
-		let data, query, submit, trigger, head;
+		let test, data, query, submit, trigger, head;
 		for (let i = 0; i < wdArray.length; i++) {
 			data    = wdArray[i];
-			query   = data["$$"] || data["$"] || document.body;
+			test    = new __Type(data.query);
+			query   = test.node ? data.query : document.body;
 			trigger = data.trigger;
 			submit  = WD(query).submit(data.url, data.method, data.noValidate);
 			/*-- cabeçalho --*/
@@ -9409,10 +9409,8 @@ const wd = (function() {
 	|Alvos|Campos do elemento formulário|
 	|Grupos|Único|
 	|Referências|__Request.send, __Node.submit|
-	span{ }
-	Observações:
-	- Mecanismo semelhante à função '{data_wd_send} com diferenças nas propriedades;
-	- A propriedade i{$/$$} não se aplica, o conteúdo de i{body} é definido pelos campo atrelados ao formulário;
+	Mecanismo semelhante à função '{data_wd_send} com as seguintes observações:
+	- A propriedade query não se aplica, o conteúdo de i{body} é definido pelos campos vinculados ao formulário;
 	- A propriedade i{url} é definida pelo atributo i{action} do formulário;
 	- A propriedade i{method} é definida pelo atributo i{method} do formulário;
 	- A propriedade i{noValidate} é definida pelo atributo i{noValidate} do formulário; e
@@ -9424,7 +9422,8 @@ const wd = (function() {
 		const html  = {method: null,	enctype: null, action: null, noValidate: null};
 		const enter = (function(){
 			const elem = document.activeElement;
-			const node = new __Node(__Type(elem).node ? elem : form);
+			const test = new __Type(elem);
+			const node = new __Node(test.node ? elem : form);
 			const type = /^(image|submit)$/;
 			return elem.form !== form || !type.test(node.ftype) ? null : elem;
 		})();
@@ -9451,8 +9450,7 @@ const wd = (function() {
 		if (html.action     !== null) data.url = html.action;
 		if (html.enctype    !== null) data.headers.set("content-type", html.enctype);
 		if (html.noValidate !== null) data.noValidate = html.noValidate;
-		data["$$"] = query;
-		if ("$" in data) delete data["$"];
+		data.query = query;
 		return data_wd_send(target, event, [data]);
 	}
 
@@ -9471,7 +9469,7 @@ const wd = (function() {
 	|serialization|string|Comportamento da serialização outer/innerHTML/Text (__Node.attribute)|
 	span{ }
 	Observações:
-	- Se o arquivo for CSV e a propriedade inner/outerHTML, uma tabela com dados será adicionada ao documento;
+	- Se o arquivo for CSV e a propriedade for inner/outerHTML, uma tabela com dados será adicionada ao documento;
 	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz (array de duas dimensões) de dados;
 	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a ´{value}.**/
 	function data_wd_load(target, event, wdArray) {
@@ -9522,9 +9520,7 @@ const wd = (function() {
 	|Grupos|Único|
 	|Referências|__Node.repeat|
 	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{type}.
-	Observações:
-	- Os arquivos permitidos devem estar em formato CSV ou JSON;
-	- Para formato JSON, a serialização deve ser um array de objetos contendo os parâmetros;**/
+	Os arquivos permitidos devem estar em formato CSV ou JSON (array de objetos);	**/
 	function data_wd_repeat(target, event, wdArray) {
 		const data   = wdArray[0];
 		data.type    = "text";
@@ -9545,73 +9541,36 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Atribuição de Valores
-	''function void data_wd_set(node target, object event, array wdArray)''
+	''function void data_wd_tools(node target, object event, array wdArray)''
 	|Disparador|Descrição|
-	|Atributo|data-wd-set|
-	|Objetivo|Define propriedades e atributos e executa métodos.|
+	|Atributo|data-wd-tools|
+	|Objetivo|Define ações aos elementos definidos por meio dos métodos de WDnode.|
 	|Eventos|click|
 	|Alvos|Elementos que possar receber cliques|
 	|Grupos|Múltiplos|
-	|Referências|__Node.attribute|
+	|Referências|__Node|
+	span{ }
 	Observações:
-	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
-	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
-	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
-	function data_wd_set(target, event, wdArray) {
-		wdArray.forEach(function(v,i,a) {
-			const query = v.$$ || v.$ || target;
-			const nodes = WD(query);
-			if ( "$" in v) delete v["$"];
-			if ("$$" in v) delete v["$$"];
-			nodes.set(v);
-		});
-		return;
-	};
-
-
-
-
-	/**#4 Atribuição de Valores
-	''function void data_wd_set(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-set|
-	|Objetivo|Define propriedades e atributos e executa métodos.|
-	|Eventos|click|
-	|Alvos|Elementos que possar receber cliques|
-	|Grupos|Múltiplos|
-	|Referências|__Node.attribute|
-	Observações:
-	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
-	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
-	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
+	- as ações serão aplicadas aos elementos definidos pela propriedade '{query} (seletor CSS de elementos);
+	- se '{query} estiver ausente no grupo, terá como valor o próprio elemento; e
+	- os argumentos dos métodos devem ser informados em arrays.**/
 	function data_wd_tools(target, event, wdArray) {
 		/*-- looping sobre os grupos --*/
 		wdArray.forEach(function(group,i,a) {
-			const query = group.$$ || group.$ || target;
+			const test  = new __Type(group.query);
+			const query = test.node ? group.query : target;
 			const tools = WD(query);
+			console.log({query: query, type: tools.type})
 			/*-- looping pelos métodos --*/
 			for (let method in group) {
 				let check1 = new __Type(tools[method]);
 				let check2 = new __Type(group[method]);
-				console.log(check1.type, check2.type, group[method],query)
 				if (check1.function && check2.array)
 					tools[method].apply(tools, group[method]);
 			}
 		});
-		//FIXME alterar wdArray para incorporar função querySlector: "{query: $${div > loko}; node: [$${div} , ${div}]; }"
-
-
 		return;
 	};
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Gráficos 2D
@@ -9626,16 +9585,15 @@ const wd = (function() {
 	Observações:
 	- As propriedades do atributo têm a mesma estrutura do argumento do método __Table.plot;
 	- O gráfico gerado substituirá o conteúdo do alvo;
-	- A fonte de dados, opcional, é especificada por meio da propriedade '{source}, que aceita os valores "node" e "file";
-	- O valor "file" define a fonte de dados em um arquivo CSV ou JSON (array de duas dimensões);
-	- No caso de fonte externa, as propriedades de i{data_wd_send}, exceto i{trigger} e i{text}, são necessárias;
-	- O valor "node" define a fonte de dados num elemento HTML identificado pela propriedade '{$};
+	- A fonte de dados (opcional), é especificada por meio da propriedade '{source};
+	- '{source} pode ser um elemento HTML (nó) ou o caminho (string) para um arquivo CSV ou JSON (array de duas dimensões);
+	- No caso de fonte externa, as propriedades de i{data_wd_send}, exceto i{trigger} e i{type}, são aceitas;
 	- O elemento poderá ser uma tabela, um campo de formulário ou elemento com conteúdo textual;
 	- No caso de formulário ou conteúdo textual, o formato do conteúdo deverá ser em CSV.**/
 	function data_wd_chart(target, event, wdArray) {
-		const data  = wdArray[0];
-		const query = data.$ || null;
-		const plot  = function (input) {
+		const data = wdArray[0];
+		const test = new __Type(data.source);
+		const plot = function (input) {
 			const table = new __Table(input);
 			const svg   = table.plot(data);
 			if (svg !== null) {
@@ -9644,18 +9602,20 @@ const wd = (function() {
 			}
 		}
 		/*-- elemento HTML como fonte de dados --*/
-		if (data.source === "node" && query !== null) {
-			const node  = new __Node(query);
+		if (test.node && test.value.length > 0) {
+			const elem  = test.value[0];
+			const node  = new __Node(elem);
 			const form  = node.form && !node.ftext;
-			const input = form ? query.value : (node.tag === "table" ? query : query.innerText);
-			plot(input)
+			const input = form ? elem.value : (node.tag === "table" ? elem : elem.textContent);
+			plot(input);
 		}
 		/*-- arquivo CSV/JSON como fonte de dados --*/
-		else if (data.source === "file" && typeof data.url === "string") {
+		else if (test.nonempty) {
+			data.url     = data.source;
 			data.type    = "table";
 			data.trigger = function(x) {
-				if (x.ok && x.response !== null)
-					plot(x.response);
+				if (x.done)
+					plot(x.ok && x.response !== null ? x.response : undefined);
 			};
 			data_wd_send(target, event, [data]);
 		}
@@ -9743,29 +9703,28 @@ const wd = (function() {
 	|Referências|__Node.filter|
 	span{ }
 	|Propriedades|Tipo|Descrição|
-	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
+	|query|string|Seletor CSS que define os elementos que terão seus filhos filtrados|
 	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
 	function data_wd_filter(target, event, wdArray) {
 		const data   = wdArray[0];
-		const query  = data.$$ || data.$ || null;
+		const query  = WD(data.query);
 		const size   = data.size;
 		const node   = new __Node(target);
 		const regexp = /^\/(.+)\/([gim]+)?$/;
-		const value  = target[node.form && !node.ftext ? "value" : "textContent"];
-		let   search = value;
-		if (regexp.test(search)) {
-			const arg1 = search.replace(regexp, "$1");
-			const arg2 = search.replace(regexp, "$2");
-			search = new RegExp(arg1, arg2);
-		}
-		if (query !== null)
-			WD(query).filter(search, size);
+		const value  = target[node.form && !node.ftext ? "value" : "innerText"];
+		const search = !regexp.test(value) ? value : (function() {
+			const arg1 = value.replace(regexp, "$1");
+			const arg2 = value.replace(regexp, "$2");
+			return new RegExp(arg1, arg2);
+		})();
+		if (query.type === "node")
+			query.filter(search, size);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Filtro Textual
-	''function void data_wd_filter(node target, object event, array wdArray)''
+	/**#4 Filtro Textual FIXME continuar a partir daqui a arrumar a descrição e trocar $$ por propriedade
+	''function void data_wd_tabs(node target, object event, array wdArray)''
 	|Disparador|Descrição|
 	|Atributo|data-wd-filter|
 	|Objetivo|Filtrar elementos de acordo com seu conteúdo textual|
@@ -9777,24 +9736,6 @@ const wd = (function() {
 	|Propriedades|Tipo|Descrição|
 	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
 	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
-
-
-	/**''function void data_wd_display(node target, object event, array wdArray)''
-	Função com o propósito de definir exibições por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|$ ou $$|node|Seletor CSS que define os elementos alvos da ação (se não informado, será o próprio elemento)|
-	|action|integer|Mesmo propósito do argumento de __Node.display|**/
-	function data_wd_display(target, event, wdArray) {
-		wdArray.forEach(function (v,i,a) {
-			const query = v.$$ || v.$ || target;
-			WD(query).display(v.action);
-		});
-		return;
-	};
-
 
 	function data_wd_tabs(target, event, wdArray) {
 		//{type: tabs; rule: [{$: elem; label: tabName},...], orientation: vertical|horizontal}
@@ -10065,20 +10006,6 @@ const wd = (function() {
 
 
 
-/*----------------------------------------------------------------------------*/
-	/**''function void data_wd_jump(node target, object event, array wdArray)''
-	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|click|Único|Única|__Node.jump|Elemento que possa receber click|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|$$|node|Seletor CSS que define a lista de containers que receberão o elemento a cada salto (click)|**/
-	function data_wd_jump(target, event, wdArray) {
-		const data  = wdArray[0];
-		const query = data.$$ || data.$ || null;
-		if (query !== null) WD(target).jump(query);
-		return;
-	}
 
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wd_move(node target, object event, array wdArray)''
@@ -10644,9 +10571,6 @@ const wd = (function() {
 				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
 				{name: "wdTools",   call: data_wd_tools,   kill: false, bind: {}},
 				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}},
-				{name: "wdSet",     call: data_wd_set,     kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
-				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
-				{name: "wdJump",    call: data_wd_jump,    kill: false, bind: {}},//FIXME excluir após implantar data-wd-tools
 				{name: null,        call: __FLOAT.escape,  kill: false, bind: {}},//FIXME vincular esse trigger a um float fecha sem abrir
 				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
