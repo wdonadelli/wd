@@ -31,9 +31,13 @@ const wd = (function() {
 	#0 Menu
 	#3 Mecanismos de Controle
 
-	''node function __HTML(string/node tag, object attr, string ns)''
-	Cria e/ou define os atributos/propriedades do elemento definindo em '{tag}, que pode ser uma string com o nome do elemento ou um elemento pripriamente dito. O argumento '{attr} conterá os atributos**/
-	function __HTML(tag, attr, ns) {
+	''node function __HTML(string/node tag, object attr, string uri)''
+	Cria e/ou define os atributos/propriedades do elemento ou retona nulo em caso de inconsistências.
+	|Argumento|Descrição|
+	|tag|Nome da tag do elemento a criar ou o elemento HTML a ser trabalhado|
+	|attr|Propriedades ou atributos, nessa ordem, do elemento|
+	|uri|Namespace URI para um elemento qualificado|**/
+	function __HTML(tag, attr, uri) {
 		function type(input) {
 			const type = typeof input;
 			if (type !== "object")            return type;
@@ -43,20 +47,16 @@ const wd = (function() {
 			if (input instanceof HTMLElement) return "node";
 			return "object";
 		}
-		function create(tag, ns) {
-			ns = String(ns).toUpperCase();
-			switch(ns) {
-				case "SVG":   return document.createElementNS("https://www.w3.org/2000/svg", tag);
-				case "XHTML": return document.createElementNS("https://www.w3.org/1999/xhtml", tag);
-				default:      return document.createElement(tag);
-			}
+		function create(tag, uri) {
+			const re = /^https?\:\/\/.+/i;
+			return re.test(uri) ? document.createElementNS(uri, tag) : document.createElement(tag);
 		}
 		/*-- analisando dados --*/
 		const tTag  = type(tag);
 		const valid = tTag === "string" || tTag === "node";
 		const prop  = valid && type(attr) === "object" ? attr : {};
-		const node  = valid ? (tTag === "node" ? tag : create(tag, ns)) : null;
-		/*-- definindo atributos --*/
+		const node  = valid ? (tTag === "node" ? tag : create(tag, uri)) : null;
+		/*-- definindo prorpiedades e atributos, nessa ordem --*/
 		for (let name in prop) {
 			let value  = prop[name];
 			let tValue = type(value);
@@ -77,6 +77,37 @@ const wd = (function() {
 		}
 		return node;
 	};
+
+/*----------------------------------------------------------------------------*/
+	/**''object function __DOM(object html, node parent)''
+	Cria uma estrutura de elementos HTML e retorna o argumento '{html} acrescido da propriedade '{node} (elemento) ou retorna nulo em caso de inconsistência.
+	O argumento opcional '{parent} diz que o elemento trabalhado será filho dele.
+	As propriedades do argumento '{html} têm os mesmos nomes dos argumentos de '{__HTML} acrescidos de:
+	|Pripriedade|Tipo|Descrição|
+	|trigger|object|Define os eventos (nome) e seus disparadores (valor)|
+	|child|array|Lista de objetos contendo as propriedades dos elementos filho (argumento '{html})|**/
+	function __DOM(html, parent) {
+		/*-- contruindo o nó principal --*/
+		const data = typeof html === "object" ? html : {};
+		data.node  = __HTML(data.tag, data.attr, data.uri);
+		if (data.node === null) return null;
+		/*-- adicionando disparadores --*/
+		if (typeof data.trigger === "object") {
+			for (let event in data.trigger)
+				__HTML(data.node, {addEventListener: [event, data.trigger[event], false]});
+		}
+		/*-- adicionando elemento ao pai, se for um nó --*/
+		if (typeof parent === "object" && parent instanceof HTMLElement)
+			parent.appendChild(data.node)
+		/*-- criando e adicionando filhos --*/
+		if (Array.isArray(data.child)) {
+			for (let i = 0; i < data.child.length; i++) {
+				if (typeof data.child[i] === "object")
+					__DOM(data.child[i], data.node);
+			}
+		}
+		return data;
+	}
 
 /*----------------------------------------------------------------------------*/
 	/**''const string __VERSION''
@@ -178,10 +209,8 @@ const wd = (function() {
     .js-wd-style.js-wd-button:focus  {outline: 2px solid rgb(0, 50, 200) !important;}
     .js-wd-style.js-wd-button:active {background-color: rgb(200,200,200) !important; }
 
-		/*-- Janela Flutuante ----------------------------------------------------*/
-
-		/*-- Base (janela básica) --*/
-		[data-js-wd-float] {
+		/*-- Janelas -------------------------------------------------------------*/
+		.js-wd-window {
 			position: fixed !important;
 			display:   flex !important;
 			margin:       0 !important;
@@ -190,29 +219,26 @@ const wd = (function() {
 			height:    auto !important;
 			overflow:  auto !important;
 		}
-
-		/*-- Frame --*/
-		[data-js-wd-float="frame"] {
+		/*-- FRAME --*/
+		.js-wd-window.js-wd-window-frame {
 			bottom: 0.5em !important;
 			left:   0.5em !important;
 			right:  0.5em !important;
 			flex-direction: column !important;
 			max-height: calc(100vh - 1em) !important;
-			z-index: var(--var-js-wd-z-index-2);
+			z-index: var(--var-js-wd-z-index-2) !important;
 		}
 		@media screen and (min-width: 768px) {
-			[data-js-wd-float="frame"] {width: 25vw !important;}
+			.js-wd-window.js-wd-window-frame {width: 25vw !important;}
 		}
-
-		/*-- Float --*/
-		[data-js-wd-float="float"] {
-			max-height: 90vh !important;
-			max-width:  30vw !important;
+		/*-- FLOAT --*/
+		.js-wd-window.js-wd-window-float {
+			max-height: 50vh !important;
+			max-width:  50vw !important;
 			z-index: var(--var-js-wd-z-index-1);
 		}
-
-		/*-- modal --*/
-		[data-js-wd-float="modal"] {
+		/*-- MODAL --*/
+		.js-wd-window.js-wd-window-modal {
 			top:    0 !important;
 			left:   0 !important;
 			right:  0 !important;
@@ -223,50 +249,68 @@ const wd = (function() {
 			background-color: rgba(50,50,50,0.7) !important;
 			z-index: var(--var-js-wd-z-index-3);
 		}
-		[data-js-wd-float="modal"] > *:not(*:first-child) {display: none !important;}
-		[data-js-wd-float="modal"][data-js-wd-float-place="n"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="ne"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="nw"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-n,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-ne,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-nw {
 			align-items: flex-start !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="s"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="sw"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="se"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-s,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-sw,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-se {
 			align-items: flex-end !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="w"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="nw"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="sw"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-w,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-nw,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-sw {
 			justify-content: flex-start !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="e"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="se"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="ne"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-e,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-se,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-ne {
 			justify-content: flex-end !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="left"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="right"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-left,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-right {
 			align-items: stretch !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="top"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="bottom"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-top,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-bottom {
 			flex-direction: column !important;
 			align-items: stretch !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="left"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="top"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-left,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-top {
 			justify-content: flex-start !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="right"],
-		[data-js-wd-float="modal"][data-js-wd-float-place="bottom"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-right,
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-bottom {
 			justify-content: flex-end !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="full"] {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-full {
 			align-items: stretch !important;
 		}
-		[data-js-wd-float="modal"][data-js-wd-float-place="full"] > * {
+		.js-wd-window.js-wd-window-modal.js-wd-window-modal-full > * {
 			flex-grow: 1 !important;
 		}
+		/*-- INERT/FREEZE --*/
+		.js-wd-window-freeze {overflow: hidden !important;}
+		[data-js-wd-inert] {
+			overflow:       hidden !important;
+			pointer-events: none   !important;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 
@@ -720,18 +764,125 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __FLOAT''
-	Administra containers para janelas modais, quadro ou flutuantes.**/
-	const __FLOAT = {
+	/**''const object __WINDOW''
+	Administra containers para janelas modais, em quadro ou flutuantes.**/
+	const __WINDOW = {
 		/**. '{array heap}: Registra informações sobre os quadros.**/
 		heap: [],
-		/**. '{node frame}: Quadro para agrupamento de alertas.**/
-		frame: document.createElement("ASIDE"),
-		/**. '{node modal}: Quadro para agrupamento de diálogos.**/
-		modal: document.createElement("ASIDE"),
-		/**. '{node float}: Quadro para agrupamento de elementos flutuantes.**/
-		float: document.createElement("ASIDE"),
-		/**. '{void append(node node, object options)}: Agrega elementos aos quadros. O argumento '{node} refere-se ao elemento a ser agregado e o argumento '{options} define as características do elemento:
+		/**. '{object window}: Registra as janelas.**/
+		window: {
+			modal: document.createElement("ASIDE"),
+			frame: document.createElement("ASIDE"),
+			float: document.createElement("ASIDE"),
+		},
+		/**. '{void add(object heap)}: Renderiza o elemento.**/
+		add: function(heap) {
+			const local = heap.type === "modal" ? ` js-wd-window-${heap.type}-${heap.local}` : "";
+			const back  = this.window[heap.type];
+			__DOM({
+				tag:   back,
+				attr:  {
+					className: `js-wd-window js-wd-window-${heap.type}${local}`,
+					tabIndex:  "-1"
+				},
+				child: [{
+					tag:  heap.node,
+					attr: {
+						tabIndex: "-1",
+						"aria-modal": heap.type === "modal" ? "true" : "false",
+					}
+				}],
+			}, document.body);
+			/*-- arrumando particularidades de estilos --*/
+			if (heap.node.style.display === "none")
+				heap.node.style.display = null;
+			if (heap.node.style.visibility === "hidden")
+				heap.node.style.visibility = null;
+			/*-- arrumando posicionamento de float --*/
+			if (heap.type === "float") {
+				const styles = window.getComputedStyle(heap.node, null);
+				const width  = Number(styles.width.replace(/\D+$/, ""));
+				const height = Number(styles.height.replace(/\D+$/, ""));
+				const screen = {x: window.innerWidth, y: window.innerHeight};
+				const x = heap.x < 0 ? 0 : (heap.x > screen.x ? screen.x : heap.x);
+				const y = heap.y < 0 ? 0 : (heap.y > screen.y ? screen.y : heap.y);
+				back.style.top   = (y > screen.y/2 ? y - height : y) + "px";
+				back.style.left  = (x > screen.x/2 ? x - width  : x) + "px";
+			}
+			/*-- ir para o primeiro elemento focável --*/
+			if (heap.type === "modal" || heap.type === "frame") {
+				const query = heap.node.querySelectorAll("*");
+				for (let i = 0; i < query.length; i++) {
+					if (query[i].tabIndex >= 0) {
+						query[i].focus();
+						break;
+					}
+				}
+				this.inert(true);
+			}
+			return;
+		},
+		/**. '{void update()}: Administra a pilha.**/
+		update: function() {
+			const multiple = {modal: false, frame: true, float: false};
+			const children = {modal: [], frame: [], float: []};
+			const inert    = {modal: true, frame: false, float: true};
+			/*-- analizando heap --*/
+			for (let i = 0; i < this.heap.length; i++) {
+				if (this.heap[i] === null) continue;
+				let heap = this.heap[i];
+				let open = multiple[heap.type] || children[heap.type].length === 0;
+				/*-- adicionar novo elemento à janela --*/
+				if (!heap.added && open) {
+					heap.added = true;
+					this.add(heap);
+					//FIXME falta implantar o inert, a tecla esc e o click fora de float
+				}
+				/*-- contabilizando elementos adicionados à janela --*/
+				if (heap.added) {
+					children[heap.type].push(heap.node);
+				}
+			}
+			/*-- checando divergência nas janelas --*/
+			for (let type in children) {
+				let list   = children[type];
+				let window = this.window[type];
+				let child  = window.children;
+				/*-- erro de quantidade --*/
+				if (!multiple[type] && list.length > 1)
+					throw new Error(`Number of elements greater than that allowed in "${type}"`);
+				/*-- remover elementos alienígenas da janela --*/
+				if (child.length !== list.length) {
+					for (let i = 0; i < child.length; i++) {
+						if (list.indexOf(child[i]) < 0)
+							child[i].remove();
+					}
+				}
+				/*-- recolocar na janela os elementos sequestrados --*/
+				for (let i = 0; i < list.length; i++) {
+					if (list[i].parentElement !== window)
+						window.appendChild(list[i]);
+				}
+				/*-- apagar ou realocar janela --*/
+				if (window.childElementCount === 0)
+					window.remove();
+				else if (window.parentElement !== document.body)
+					document.body.appendChild(window);
+			}
+			return;
+		},
+
+
+
+
+
+
+
+
+
+
+	//FIXME reescrever isso aqui, a função close agora retorna 3 elementos tem as propriedades x, y, e local
+		/**. '{integer append(node node, object options)}: Agrega elementos aos quadros e retorna o identificador do elemento adicionado. O argumento '{node} refere-se ao elemento a ser agregado e o argumento '{options} define as características do elemento:
 		|Nome|Tipo|Valores|Descrição|
 		|type|string|float (padrão), modal ou frame|Define o tipo de quadro|
 		|place|string|ver adiante|Posicionamento do nó no quadro|
@@ -745,38 +896,51 @@ const wd = (function() {
 		. Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
 		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.**/
 		append: function(node, options) {
-			if (node === document.body) return;
 			const data  = typeof options === "object" ? options : {};
-			const query = node.querySelectorAll("*");
-			const type  = /^(float|frame|modal)$/i;
-			const place = {
-				modal: /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i,
-				float: /^(\d+\,\d+)$/i,
-				frame: /xxxxx/
-			};
-			data.type   = type.test(data.type) ? data.type.toLowerCase()  : "float";
-			data.place  = place[data.type].test(data.place) ? data.place.toLowerCase() : "0,0";
-			data.close  = typeof data.close === "function" ? data.close : null;
-			data.node   = node;
-			data.back   = this[data.type];
-			data.back.appendChild(data.node);
+			const type  = /^(modal|float|frame)$/;
+			const local = /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/;
+			/*-- pre ajuste --*/
+			data.type  = String(data.type).toLowerCase().replace(/\s+/g, "");
+			data.place = String(data.place).toLowerCase().replace(/\s+/g, "");
+			/*-- definindo heap --*/
+			data.type  = type.test(data.type)   ? data.type  : "frame";
+			data.local = local.test(data.local) ? data.local : "center";
+			data.x     = isFinite(data.x) ? Number(data.x) : 0;
+			data.y     = isFinite(data.y) ? Number(data.y) : 0;
+			data.close = typeof data.close === "function" ? data.close : null;
+			data.node  = __HTML(node);
+			data.added = false;
+			if (data.node === document.body || data.node === null) return;
+			/*-- remover, se já existir em alguma janela, e adicionar à pilha --*/
+			this.remove(data.node, true);
 			this.heap.push(data);
-			return this.update();
+			this.update();
+			return this.heap.length - 1;
 		},
-		/**. '{void remove(node node)}: Remove o nó do quadro que o armazena.**/
-		remove: function(node) {
-			this.heap = this.heap.filter(function(v,i,a) {
-				if (v.node === node) {
-					v.node.remove();
-					if (v.close !== null) v.close(true);
-					return false;
+		/**. '{integer remove(node node)}: Remove o nó do quadro que o armazena e retorna seu id.**/
+		remove: function(node, escape) {
+			for (let i = 0; i < this.heap.length; i++) {
+				if (this.heap[i] === null) continue;
+				if (this.heap[i].node === node) {
+					this.heap[i].node.remove();
+					if (this.heap[i].close !== null)
+						this.heap[i].close(i, this.heap[i].node, escape !== true);
+					this.heap[i] = null;
+					this.update();
+					return i;
 				}
-				return true;
-			});
-			return this.update();
+			}
 		},
+
+
+
+
+
+
+
+
 		/**. '{void update()}: Atualiza as informações dos quadros contra manipulações externas.**/
-		update: function() {
+		update2: function() {
 			const names = ["modal", "frame", "float"];
 			let back, child, node, type;
 			for (let i = 0; i < names.length; i++) {
@@ -840,7 +1004,7 @@ const wd = (function() {
 				const last = this.heap[this.heap.length - 1];
 				if (last.type !== "frame") {
 					const root  = last.back.firstElementChild;
-					const query = root.querySelectorAll("*");
+					const query = root.data.x     = isFinite(data.x) ? Number(x) : 0;querySelectorAll("*");
 					for (let i = 0; i < query.length; i++) {
 						if (query[i].tabIndex >= 0) {
 							query[i].focus();
@@ -904,8 +1068,8 @@ const wd = (function() {
 		},
 		/**. '{void escape()}: Disparador a ser chamado quando for utilizado método alternativo de fechamento da janela.**/
 		escape: function(target, event, wdArray) {
-			const float  = __FLOAT.float;
-			const modal  = __FLOAT.modal;
+			const float  = __WINDOW.float;
+			const modal  = __WINDOW.modal;
 			const type   = float.childElementCount > 0 ? "float" : (modal.childElementCount > 0 ? "modal" : null);
 			const back   = type === null ? null : (type === "float" ? float : modal);
 			const node   = back === null ? null : back.firstElementChild;
@@ -920,7 +1084,7 @@ const wd = (function() {
 			}
 			if (remove) {
 				node.remove();
-				__FLOAT.update();
+				__WINDOW.update();
 			}
 			return;
 		},
@@ -938,7 +1102,7 @@ const wd = (function() {
 			/*-- Disparadores de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
 				__PROGRESS.count++;
-				__FLOAT.append(ev.target, {type: "frame"});
+				__WINDOW.append(ev.target, {type: "frame"});
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
@@ -946,7 +1110,7 @@ const wd = (function() {
 				__PROGRESS.count = __PROGRESS.count < 1 ? 0 : (__PROGRESS.count - 1);
 				window.setTimeout(function () {
 					if (__PROGRESS.count < 1) {
-						__FLOAT.remove(ev.target);
+						__WINDOW.remove(ev.target);
 						ev.target.removeAttribute("value");
 					}
 					return;
@@ -1060,7 +1224,7 @@ const wd = (function() {
 					let id  = btn.dataset.jsWdSignalId;
 					delete btn.dataset.jsWdSignalId;
 					btn.addEventListener("click", function(ev) {
-						__FLOAT.remove(main);
+						__WINDOW.remove(main);
 						if (info.trigger !== null)
 							info.trigger(info.id, id);
 						return;
@@ -1069,7 +1233,7 @@ const wd = (function() {
 						focus = btn;
 				}
 				/*-- Renderizando diálogo --*/
-				__FLOAT.append(main, {
+				__WINDOW.append(main, {
 					type: "modal",
 					close: function(result) {
 						if (info.trigger !== null && !result)
@@ -1084,9 +1248,9 @@ const wd = (function() {
 				main.querySelector(".js-wd-signal-fire").remove();
 				const kill = main.querySelector(".js-wd-signal-kill");
 				kill.addEventListener("click", function(ev) {
-					return __FLOAT.remove(main);
+					return __WINDOW.remove(main);
 				}, false);
-				__FLOAT.append(main, {type: "frame", close: function() {
+				__WINDOW.append(main, {type: "frame", close: function() {
 					if (info.trigger !== null) info.trigger(info.id, null);
 				}});
 				if (info.time > 0)
@@ -9264,10 +9428,11 @@ const wd = (function() {
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
 			HTML:     {value: __HTML},
+			DOM:      {value: __DOM},
 			LANG:     {value: __LANG},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
-			FLOAT:    {value: __FLOAT},
+			WINDOW:   {value: __WINDOW},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
 			STYLE:    {value: __STYLE},
@@ -10571,7 +10736,7 @@ const wd = (function() {
 				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
 				{name: "wdTools",   call: data_wd_tools,   kill: false, bind: {}},
 				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}},
-				{name: null,        call: __FLOAT.escape,  kill: false, bind: {}},//FIXME vincular esse trigger a um float fecha sem abrir
+				{name: null,        call: __WINDOW.escape,  kill: false, bind: {}},//FIXME vincular esse trigger a um float fecha sem abrir
 				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
 		},
@@ -10680,7 +10845,7 @@ const wd = (function() {
 		keydown: {
 			target: window, preventDefault: false,
 			data: [
-				{name: null, call: __FLOAT.escape, kill: false, bind: {}}
+				{name: null, call: __WINDOW.escape, kill: false, bind: {}}
 			],
 		},
 	};
