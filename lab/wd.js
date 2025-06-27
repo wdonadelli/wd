@@ -212,18 +212,16 @@ const wd = (function() {
 		/*-- Janelas -------------------------------------------------------------*/
 		.js-wd-window {
 			position: fixed !important;
-			display:   flex !important;
-			margin:       0 !important;
-			padding:      0 !important;
-			width:     auto !important;
-			height:    auto !important;
-			overflow:  auto !important;
+			margin:  0 !important;
+			padding: 0 !important;
+			overflow-y: auto !important;
 		}
 		/*-- FRAME --*/
 		.js-wd-window.js-wd-window-frame {
 			bottom: 0.5em !important;
 			left:   0.5em !important;
 			right:  0.5em !important;
+			display: flex !important;
 			flex-direction: column !important;
 			max-height: calc(100vh - 1em) !important;
 			z-index: var(--var-js-wd-z-index-2) !important;
@@ -233,8 +231,6 @@ const wd = (function() {
 		}
 		/*-- FLOAT --*/
 		.js-wd-window.js-wd-window-float {
-			max-height: 50vh !important;
-			max-width:  50vw !important;
 			z-index: var(--var-js-wd-z-index-1);
 		}
 		/*-- MODAL --*/
@@ -243,6 +239,7 @@ const wd = (function() {
 			left:   0 !important;
 			right:  0 !important;
 			bottom: 0 !important;
+			display: flex !important;
 			flex-direction: row !important;
 			justify-content: center !important;
 			align-items: center !important;
@@ -840,6 +837,7 @@ const wd = (function() {
 				attr:  {
 					className: `js-wd-window js-wd-window-${heap.type}${local}`,
 					tabIndex:  "-1",
+					style: ""
 				},
 				child: [{
 					tag:  heap.node,
@@ -856,19 +854,36 @@ const wd = (function() {
 				heap.node.style.visibility = null;
 			/*-- arrumando posicionamento de float --*/
 			if (heap.type === "float") {
-
-				//FIXME arrumar isso aqui para mudar o ponto somente quando o lado direito ficar fora da tela
-				const styles = window.getComputedStyle(heap.node, null);
-				const width  = Number(styles.width.replace(/\D+$/, ""));
-				const height = Number(styles.height.replace(/\D+$/, ""));
-				const screen = {x: window.innerWidth, y: window.innerHeight};
-				const x = heap.x < 0 ? 0 : (heap.x > screen.x ? screen.x : heap.x);
-				const y = heap.y < 0 ? 0 : (heap.y > screen.y ? screen.y : heap.y);
-				back.style.top   = (y > screen.y/2 ? y - height : y) + "px";
-				back.style.left  = (x > screen.x/2 ? x - width  : x) + "px";
+				const style = window.getComputedStyle(heap.node, null);
+				const padd  = Math.min(window.screen.width, window.screen.height) * 0.01;
+				const size  = {
+					/*-- tamanho do elemento (width/height) --*/
+					w: Number(style.width.replace(/\D+$/, "")),
+					h: Number(style.height.replace(/\D+$/, "")),
+					/*-- tamanho da tela (Vertical/Horizontal) --*/
+					H: window.innerWidth,
+					V: window.innerHeight,
+					/*-- bordas (left/right/top/bottom) --*/
+					l: padd, r: window.innerWidth  - padd,
+					t: padd, b: window.innerHeight - padd,
+					/*-- posição --*/
+					x: heap.x, y: heap.y,
+				};
+				/*-- limitações horizontais (abrir em direção ao maior espaço) --*/
+				size.w = size.w > size.H/4 ? size.H/4 : size.w;
+				size.x = size.x < size.l ? size.l : (size.x > size.r ? size.r : size.x);
+				size.px = (size.x + size.w > size.r) && (size.x - size.l > size.r - size.x) ? "right" : "left";
+				back.style[size.px] = (size.px === "left" ? size.x : size.H - size.x)+"px";
+				back.style.width = (size.w)+"px";
+				/*-- limitações verticais (abrir em direção ao maior espaço) --*/
+				size.y  = size.y < size.t ? size.t : (size.y > size.b ? size.b : size.y);
+				size.py = (size.y + size.h > size.b) && (size.y - size.t > size.b - size.y) ? "bottom" : "top"; //FIXME ainda está errado
+				size.mh = size.py === "top" ? (size.b - size.y) : (size.y - size.t);
+				back.style[size.py]  = (size.py === "top" ? size.y : size.V - size.y)+"px";
+				back.style.maxHeight = (size.mh)+"px";
+				console.log({y: size.y, h: size.h, py: size.py, mh: size.mh, V: size.V})
 			}
 			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
-			//FIXME não está funcionando para float com auto focus
 			if (heap.type === "modal" || heap.type === "float") {
 				let query = null;
 				const autofocus = heap.node.querySelector("[autofocus]");
@@ -987,9 +1002,6 @@ const wd = (function() {
 			this.heap.push(data);
 			this.update();
 			return data.id;
-
-			//FIXME mudar o ID
-
 		},
 		/**. '{integer remove(node node, boolean escape)}: Remove o nó do quadro que o armazena e retorna seu id. O argumento '{escape} deve ser verdadeiro quando o elemento for realocado para outra janela ou fechado.**/
 		remove: function(node, escape) {
@@ -1014,6 +1026,39 @@ const wd = (function() {
 			}
 			return id;
 		},
+
+
+
+		handler: function(ev) {
+			//FIXME erro ao fixar a abertura de janela com click (fechar sem abrir): adicionar e remover o evento ao body dinamicamente?
+			console.log("-----------------------------", {
+				type: ev.type,
+				target: ev.target,
+				modal: this.window.modal.firstElementChild,
+				float: this.window.float.firstElementChild,
+			});
+			/*-- chancando existência de elementos que necessitam de eventos --*/
+			let win;
+			if (this.window.float.childElementCount > 0)
+				win = "float";
+			else if (this.window.modal.childElementCount > 0)
+				win = "modal";
+			else return;
+			ev.preventDefault();
+			/*-- se o evento aconteceu dentro do elemento --*/
+			const inwin = this.window[win].contains(ev.target);
+			const child = this.window[win].firstElementChild;
+			/*-- analisando evento --*/
+			if (ev.type === "keydown") {
+				if (ev.key === "Escape" || (ev.key === "Tab" && win === "float"))
+					return this.remove(child, true);
+			}
+			else if (ev.type === "click" && !inwin) {
+				return this.remove(child, true);
+			}
+			return;
+		},
+
 
 
 
