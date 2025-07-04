@@ -84,7 +84,7 @@ const wd = (function() {
 	O argumento opcional '{parent} diz que o elemento trabalhado será filho dele.
 	As propriedades do argumento '{html} têm os mesmos nomes dos argumentos de '{__HTML} acrescidos de:
 	|Pripriedade|Tipo|Descrição|
-	|trigger|object|Define os eventos (nome) e seus disparadores (valor)|
+	|listener|array|Uma lista de grupos de argumentos (array) para o método '{addEventListener}|
 	|child|array|Lista de objetos contendo as propriedades dos elementos filho (argumento '{html})|**/
 	function __DOM(html, parent) {
 		/*-- contruindo o nó principal --*/
@@ -92,13 +92,12 @@ const wd = (function() {
 		data.node  = __HTML(data.tag, data.attr, data.uri);
 		if (data.node === null) return null;
 		/*-- adicionando disparadores --*/
-		if (typeof data.trigger === "object") {
-			for (let event in data.trigger)
-				__HTML(data.node, {addEventListener: [event, data.trigger[event], false]});
+		if (Array.isArray(data.listener)) {console.log("entrou 1");
+			for (let i = 0; i < data.listener.length; i++) {
+				if (Array.isArray(data.listener[i]))
+					__HTML(data.node, {addEventListener: data.listener[i]});
+			}
 		}
-		/*-- adicionando elemento ao pai, se for um nó --*/
-		if (typeof parent === "object" && parent instanceof HTMLElement)
-			parent.appendChild(data.node)
 		/*-- criando e adicionando filhos --*/
 		if (Array.isArray(data.child)) {
 			for (let i = 0; i < data.child.length; i++) {
@@ -106,6 +105,9 @@ const wd = (function() {
 					__DOM(data.child[i], data.node);
 			}
 		}
+		/*-- adicionando elemento ao pai, se for um nó --*/
+		if (typeof parent === "object" && parent instanceof HTMLElement)
+			parent.appendChild(data.node)
 		return data;
 	}
 
@@ -290,12 +292,20 @@ const wd = (function() {
 			flex-grow: 1 !important;
 		}
 		/*-- FREEZE/INERT --*/
-		body.js-wd-window-freeze, body.js-wd-window-freeze :not(.js-wd-window) {
-			overflow: hidden !important;
-		}
-		[data-js-wd-inert] {
+		body.js-wd-window-inert > :not(.js-wd-window),
+		body.js-wd-window-inert > :not(.js-wd-window) * {
 			pointer-events: none !important;
 		}
+		body.js-wd-window-freeze,
+		body.js-wd-window-freeze > :not(.js-wd-window),
+		body.js-wd-window-freeze > :not(.js-wd-window) * {
+			overflow: hidden !important;
+		}
+
+
+
+
+
 
 
 
@@ -383,7 +393,7 @@ const wd = (function() {
 			flex-direction: column !important;
 			padding: 0.5em !important;
 		}
-		@media screen and (min-width: 768px) {
+		@media screen and (min-width: 768containspx) {
 			.js-wd-signal-fire {
 				flex-direction: row !important;
 				justify-content: space-evenly !important;
@@ -557,7 +567,7 @@ const wd = (function() {
 		[data-wd-encoding="line"]::after {content: " " !important;}
 		[data-wd-encoding-lines] [data-wd-encoding="line"]::before {
 			display: inline-block !important;
-			position: absolute !important;
+			position: absolute !important;contains
 			top: 0;
 			padding: 0 0.2em 0 0 !important;
 			text-align: right !important;
@@ -588,7 +598,7 @@ const wd = (function() {
 		[data-wd-encoding-lines="2"] [data-wd-encoding="text"] {
 			padding-left: 3em !important;
 		}
-		[data-wd-encoding-lines="3"] [data-wd-encoding="line"]::before {
+		[data-wd-encoding-lines="3"] [datcontainsa-wd-encoding="line"]::before {
 			left: -4em !important;
 			width: 4em !important;
 		}
@@ -754,206 +764,239 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __WINDOW''
-	Administra containers para janelas modais, em quadro ou flutuantes.**/
-	const __WINDOW = {
-		/**. '{integer heap}: Controla o identificador das janelas.**/
-		id: new Date().valueOf(),
-		/**. '{array heap}: Registra informações sobre os quadros.**/
-		heap: [],
-		/**. '{object window}: Registra as janelas.**/
-		window: {
-			modal: document.createElement("ASIDE"),
-			frame: document.createElement("ASIDE"),
-			float: document.createElement("ASIDE"),
-		},
-		/**. '{void freeze(boolean add)}: Adiciona ou remove o congelamento de rolagem ao documento exceto nas janelas.**/
-		freeze: function(add) {
-			add = add !== false;
-			const css  = "js-wd-window-freeze";
-			const list = document.body.className.replace(/\s+/g, " ").split(" ");
-			const find = list.indexOf(css) >= 0;
-			if (add && !find)
-				document.body.className += ` ${css}`;
-			else if (!add && find)
-				document.body.className = list.filter(function(v,i,a) {return v !== css;}).join("");
-			return;
-		},
-		/**. '{void inert(boolean add)}: Adiciona ou remove inércia ao documento exceto nas janelas.**/
-		inert: function(add) {
-			if (!("inert" in document.body)) return inertAlt(add);
-			add = add !== false;
-			const list = document.body.children;
-			const none = [this.window.modal, this.window.frame, this.window.float];
-			for (let i = 0; i < list.length; i++)
-				list[i].inert = none.indexOf(list[i]) < 0 && add;
-			document.body.inert = false;
-			return;
-		},
-		/**. '{void inertAlt(boolean run)}: Uma alternativa ao '{inert}.**/
-		inertAlt: function (add) {
-			add = add !== false;
-			const attr  = "data-js-wd-inert";
-			/*-- antes de adicionar, excluir os existentes --*/
-			if (add && document.querySelectorAll(`[${attr}]`).length > 0)
-				this.inertAlt(false);
-			/*-- buscar elementos para remover ou incluir --*/
-			const query = document.querySelectorAll(add ? "body *" : `[${attr}]`);
-			const list  = Array.prototype.slice.call(query);
-			const none  = [this.window.modal, this.window.frame, this.window.float];
-			for (let i = 0; i < list.length; i++) {
-				let node = list[i];
-				if (add) {
-					if (node.tabIndex < 0 || none.indexOf(node) >= 0)
-						continue;
-					if (none[0].contains(node) || none[1].contains(node) || none[2].contains(node))
-						continue;
-					let data   = {};
-					data.has   = node.hasAttribute("tabindex");
-					data.value = data.has ? node.getAttribute("tabindex") : node.tabIndex;
-					node.setAttribute("tabindex", "-1");
-					node.setAttribute(attr, JSON.stringify(data));
+	/**''const object __ARIA''
+	Agrupa ações de acessibilidade.**/
+	const __ARIA = {
+		/**. '{boolean focus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
+		focus: function(node, force) {
+			/*-- localizando por autofocus --*/
+			const auto = node.querySelectorAll("[autofocus]");
+			for (let i = 0; i < auto.length; i++) {
+				if (auto[i].tabIndex >= 0) {
+					auto[i].focus();
+					return true;
 				}
-				else {
-					let data = node.getAttribute(attr);
-					node.removeAttribute(attr);
+			}
+			/*-- localizando por focáveis --*/
+			const all = node.querySelectorAll("*");
+			for (let i = 0; i < all.length; i++) {
+				if (all[i].tabIndex >= 0) {
+					all[i].focus();
+					return true;
+				}
+			}
+			/*-- forçando focus --*/
+			if (force === true && all.length > 0) {
+				const elem = auto.length > 0 ? auto[0] : all[0];
+				elem.setAttribute("tabindex", auto.length > 0 ? "0" : "-1");
+				elem.focus();
+				return true;
+			}
+			return false;
+		},
+		/**. '{void inert(node node, boolean add)}: Define o nó '{node} como inerte ou defaz a ação se '{add} for falso.**/
+		inert: function(node, add) {
+			add = add !== false;
+			/*-- verificando se trata de um elemento HTML --*/
+			if (typeof node !== "object" || !(node instanceof HTMLElement) || !document.body.contains(node))
+				return;
+			/*-- propriedade padrão --*/
+			if ("inertdd" in node) {
+				document.body.inert = false;
+				node.inert = add;
+			}
+			/*-- método alternativo --*/
+			else {
+				const attr = "data-js-wd-inert";
+				const has  = node.hasAttribute(attr);
+				document.body.removeAttribute(attr);
+				/*-- adicionando (se receber foco) --*/
+				if (add && !has && node.tabIndex >= 0) {
+					const json = {};
+					json.has   = node.hasAttribute("tabindex");
+					json.value = json.has ? node.getAttribute("tabindex") : node.tabIndex;
+					node.setAttribute("tabindex", "-1");
+					node.setAttribute(attr, JSON.stringify(json));
+				}
+				/*-- removendo (se conter o atributo) --*/
+				else if (!add && has) {
 					try {
-						let json = JSON.parse(data);
+						const json = JSON.parse(node.getAttribute(attr));
 						if (json.has)
 							node.setAttribute("tabindex", json.value);
 						else
 							node.removeAttribute("tabindex");
 					}
 					catch(e) {}
+					node.removeAttribute(attr);
 				}
-			}
-		},
-		/**. '{void addScreen(object heap)}: Renderiza o elemento.**/
-		addScreen: function(heap) {
-			const local = heap.type === "modal" ? ` js-wd-window-${heap.type}-${heap.local}` : "";
-			const back  = this.window[heap.type];
-			__DOM({
-				tag:   back,
-				attr:  {
-					className: `js-wd-window js-wd-window-${heap.type}${local}`,
-					tabIndex:  "-1",
-					style: ""
-				},
-				child: [{
-					tag:  heap.node,
-					attr: {
-						tabIndex: "-1",
-						"aria-modal": heap.type === "modal" ? "true" : "false",
-					}
-				}],
-			}, document.body);
-			/*-- arrumando particularidades de estilos --*/
-			if (heap.node.style.display === "none")
-				heap.node.style.display = null;
-			if (heap.node.style.visibility === "hidden")
-				heap.node.style.visibility = null;
-			/*-- arrumando posicionamento de float --*/
-			if (heap.type === "float") {
-				const style = window.getComputedStyle(heap.node, null);
-				const padd  = Math.min(window.screen.width, window.screen.height) * 0.01;
-				const size  = {
-					/*-- tamanho do elemento (width/height) --*/
-					w: Number(style.width.replace(/\D+$/, "")),
-					h: Number(style.height.replace(/\D+$/, "")),
-					/*-- tamanho da tela (Vertical/Horizontal) --*/
-					H: window.innerWidth,
-					V: window.innerHeight,
-					/*-- bordas (left/right/top/bottom) --*/
-					l: padd, r: window.innerWidth  - padd,
-					t: padd, b: window.innerHeight - padd,
-					/*-- posição --*/
-					x: heap.x, y: heap.y,
-				};
-				/*-- limitações horizontais (abrir em direção ao maior espaço) --*/
-				size.w = size.w > size.H/4 ? size.H/4 : size.w;
-				size.x = size.x < size.l ? size.l : (size.x > size.r ? size.r : size.x);
-				size.px = (size.x + size.w > size.r) && (size.x - size.l > size.r - size.x) ? "right" : "left";
-				back.style[size.px] = (size.px === "left" ? size.x : size.H - size.x)+"px";
-				back.style.width = (size.w)+"px";
-				/*-- limitações verticais (abrir em direção ao maior espaço) --*/
-				size.y  = size.y < size.t ? size.t : (size.y > size.b ? size.b : size.y);
-				size.py = (size.y + size.h > size.b) && (size.y - size.t > size.b - size.y) ? "bottom" : "top"; //FIXME ainda está errado
-				size.mh = size.py === "top" ? (size.b - size.y) : (size.y - size.t);
-				back.style[size.py]  = (size.py === "top" ? size.y : size.V - size.y)+"px";
-				back.style.maxHeight = (size.mh)+"px";
-				console.log({y: size.y, h: size.h, py: size.py, mh: size.mh, V: size.V})
-			}
-			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
-			if (heap.type === "modal" || heap.type === "float") {
-				let query = null;
-				const autofocus = heap.node.querySelector("[autofocus]");
-				if (autofocus !== null) {
-					query = autofocus;
-					if (query.tabIndex < 0) query.tabIndex = 0;
-				}
-				else {
-					const withfocus = heap.node.querySelectorAll("*");
-					for (let i = 0; i < withfocus.length; i++) {
-						if (withfocus[i].tabIndex >= 0) {
-							query = withfocus[i];
-							break;
-						}
-					}
-				}
-				if (query !== null) query.focus();
 			}
 			return;
 		},
+
+
+
+
+
+
+
+
+
+
+
+	}
+/*----------------------------------------------------------------------------*/
+	/**''const object __WINDOW''
+	Administra containers para janelas modais, em quadro ou flutuantes.**/
+	const __WINDOW = {
+		/**. '{integer heap}: Controla o identificador das janelas.**/
+		id: Math.trunc(100*Math.random()),
+		/**. '{array heap}: Registra informações sobre os quadros.**/
+		heap: [],
+		/**. '{object packs}: Registra os elementos empacotadores de janela.**/
+		packs: {
+			modal: {multiple: 0, inert: 1, freeze: 0, escape: 1, node: __HTML("DIV")},
+			float: {multiple: 0, inert: 1, freeze: 1, escape: 1, node: __HTML("DIV")},
+			frame: {multiple: 1, inert: 0, freeze: 0, escape: 0, node: __HTML("DIV")},
+		},
+		/**. '{boolean contains(node node)}: Retorna verdadeiro se o nó está contido nas janelas.**/
+		contains: function(node) {
+			for (let i in this.window)
+				if (node === this.window[i] || this.window[i].contains(node))
+					return true;
+			return false;
+		},
+
+
+		//FIXME será que continuo com isso
+		bodyClass: function(css, add) {
+			add = add !== false;
+			const list = document.body.className.replace(/\s+/g, " ").split(" ").sort();
+			const find = list.indexOf(css) >= 0;
+			if (add && !find)
+				document.body.className += ` ${css}`;
+			else if (!add && find)
+				document.body.className = list.filter(function(v,i,a) {return v !== css;}).join(" ");
+			return;
+		},
+		//FIXME mudar isso aqui para wheel touch over ou simplemente ignorar...
+		/**. '{void freeze(boolean add)}: Adiciona ou remove o congelamento de rolagem ao documento exceto nas janelas.**/
+		freeze: function(add) {
+			return this.bodyClass("js-wd-window-freeze", add);
+		},
+
+
+
+
+		/**. '{void setPosition(node node, integer x, integer y)}: Acerta o posicionamento da janela float.**/
+		setPosition: function(node, x, y) {
+			const back = this.packs.float.node;
+			const base = {w: window.screen.width, h: window.screen.height};
+			const area = {w: window.innerWidth,   h: window.innerHeight};
+			const padd = Math.min(base.w, base.h) / 100;
+			const pack = Math.max(base.w, base.h) / 4;
+			const edge = {l: padd, r: area.w - padd, t: padd, b: area.h - padd};
+			const dots = {
+				x: x < edge.l ? edge.l : (x > edge.r ? edge.r : x),
+				y: y < edge.t ? edge.t : (y > edge.b ? edge.b : y),
+			};
+			const size = {
+				rect: function() {
+					const data = node.getBoundingClientRect();
+					this.w = data.width;
+					this.h = data.height;
+				}
+			};
+			size.rect();
+			/*-- horizontal --*/ //FIXME arrumar isso aqui para qualquer tamanho de nó
+			back.style.width = (size.w > pack ? pack : size.w)+"px";
+			size.rect();
+			size.px = (dots.x + size.w > edge.r) && (dots.x - edge.l > edge.r - dots.x) ? "right" : "left";
+			back.style[size.px] = (size.px === "left" ? dots.x : area.w - dots.x)+"px";
+			/*-- vertical --*/
+			size.py = (dots.y + size.h > edge.b) && (dots.y - edge.t > edge.b - dots.y) ? "bottom" : "top";
+			back.style[size.py]  = (size.py === "top" ? dots.y : area.h - dots.y)+"px";
+			back.style.maxHeight = (size.py === "top" ? (edge.b - dots.y) : (dots.y - edge.t))+"px";
+			return;
+		},
+		/**. '{void show(object heap)}: Renderiza o elemento.**/
+		show: function(heap) {
+			const css1 = `js-wd-window js-wd-window-${heap.type}`;
+			const css2 = heap.type === "modal" ? `js-wd-window-${heap.type}-${heap.local}` : "";
+			const aria = heap.type === "modal" ? "true" : "false"
+			__DOM({
+				tag:   this.packs[heap.type].node,
+				attr:  {className: `${css1} ${css2}`, tabIndex:  -1, style: ""},
+				child: [{tag:  heap.node, attr: {tabIndex: -1, "aria-modal": aria}}],
+			}, document.body);
+			/*-- arrumando particularidades de estilos --*/
+			const ignore = {display: "none", visibility: "hidden"};
+			const styles = window.getComputedStyle(heap.node, null);
+			for (let i in ignore) {
+				if (styles[i] === ignore[i])
+					heap.node.style[i] = null;
+			}
+			/*-- arrumando posicionamento de float --*/
+			if (heap.type === "float")
+				this.setPosition(heap.node, heap.x, heap.y);
+			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
+			if (heap.type === "modal" || heap.type === "float")
+				__ARIA.focus(heap.node, true);
+			return;
+		},
+
+
+
+
+
 		/**. '{void update()}: Administra a pilha.**/
 		update: function() {
-			const multiple = {modal: false, frame: true, float: false};
-			const children = {modal: [], frame: [], float: []};
-			const inert    = {modal: true, frame: false, float: true};
-			/*-- analizando heap --*/
-			for (let i = 0; i < this.heap.length; i++) {
-				let heap = this.heap[i];
-				let open = multiple[heap.type] || children[heap.type].length === 0;
-				/*-- adicionar novo elemento à janela --*/
-				if (!heap.added && open) {
-					heap.added = true;
-					this.addScreen(heap);
-					//FIXME a tecla esc e o click fora de float
+			/*-- zerar a contagem de filhos --*/
+			for (let name in this.packs)
+				this.packs[name].child = [];
+			/*-- analisando a pilha --*/
+			this.heap.forEach(function(heap,i,a) {
+				const pack = this.packs[heap.type];
+				const push = pack.child.length === 0 || data.multiple === 1;
+				/*-- renderizar nós aguardando na fila --*/
+				if (heap.status === "INACTIVE" && push) {
+					heap.status = "ACTIVE"
+					this.show(heap);
+					//FIXME inert e freeze?
 				}
-				/*-- contabilizando elementos adicionados à janela --*/
-				if (heap.added) {
-					children[heap.type].push(heap.node);
+				/*-- registrar nós renderizados --*/
+				if (heap.status === "ACTIVE") {
+					pack.child.push(heap.node);
+					/*-- realocar se necessário os nós sequestrados --*/
+					if (heap.node.parentElement !== pack.node)
+						this.show(heap);
 				}
-			}
-			/*-- checando divergência nas janelas --*/
-			for (let type in children) {
-				let list   = children[type];
-				let window = this.window[type];
-				let child  = window.children;
-				/*-- erro de quantidade --*/
-				if (!multiple[type] && list.length > 1)
-					throw new Error(`Number of elements greater than that allowed in "${type}"`);
-				/*-- remover elementos alienígenas da janela --*/
-				if (child.length !== list.length) {
+			}, this);
+			/*-- analisando os empacotadores --*/
+			for (let name in this.packs) {
+				let pack = this.packs[name];
+				/*-- fechar empacotadores vazios --*/
+				if (pack.child.length === 0) {
+					if (pack.node.parentElement !== null)
+						pack.node.remove();
+						//FIXME inert e freeze?
+					if (pack.node.childElementCount > 0)
+						pack.node.innerHTML = "";
+				}
+				/*-- remover nós alienígenas dos empacotadores --*/
+				if (pack.node.childElementCount !== pack.child.length) {
+					let child = pack.node.children;
 					for (let i = 0; i < child.length; i++) {
-						if (list.indexOf(child[i]) < 0)
-							child[i].remove();
+						if (pack.child.indexOf(child[j]) < 0)
+							child[j].remove();
 					}
 				}
-				/*-- recolocar na janela os elementos sequestrados --*/
-				for (let i = 0; i < list.length; i++) {
-					if (list[i].parentElement !== window)
-						window.appendChild(list[i]);
-				}
-				/*-- apagar ou realocar janela --*/
-				if (window.childElementCount === 0)
-					window.remove();
-				else if (window.parentElement !== document.body)
-					document.body.appendChild(window);
+				/*-- realocar empacotador, se necessário --*/
+				if (pack.node.parentElement !== null && pack.node.parentElement !== document.body)
+					document.node.appenChild(pack.node);
 			}
-			/*-- inerte e congelado --*/
-			const add = this.window.modal.childElementCount > 0 || this.window.float.childElementCount > 0;
-			this.inert(add);
-			this.freeze(this.window.float.childElementCount > 0);
+			//const focus = `[tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
+			//this.inert(add);
 			return;
 		},
 
@@ -979,24 +1022,28 @@ const wd = (function() {
 		|Fechamento|Não|Esc|Esc, Tab e clique|
 		|Objetivo|Alerta|Diálogo|Menu|
 		. Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
-		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.**/
+		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.
+
+		STATUS>: "INACTIVE ACTIVE CLOSED IGNORED CANCELED"
+
+		**/
 		append: function(node, options) {
 			const data  = typeof options === "object" ? options : {};
 			const type  = /^(modal|float|frame)$/;
 			const local = /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/;
-			/*-- pre ajuste --*/
+			/*-- pré ajustes --*/
 			data.type  = String(data.type).toLowerCase().replace(/\s+/g, "");
 			data.place = String(data.place).toLowerCase().replace(/\s+/g, "");
-			/*-- definindo heap --*/
-			data.type  = type.test(data.type)   ? data.type  : "frame";
-			data.local = local.test(data.local) ? data.local : "center";
-			data.x     = isFinite(data.x) ? Number(data.x) : 0;
-			data.y     = isFinite(data.y) ? Number(data.y) : 0;
-			data.close = typeof data.close === "function" ? data.close : null;
 			data.node  = __HTML(node);
-			data.id    = ++this.id;
-			data.added = false;
-			if (data.node === document.body || data.node === null) return;
+			if (data.node === null || data.node === document.body) return;
+			/*-- definindo heap --*/
+			data.type   = type.test(data.type)   ? data.type  : "frame";
+			data.local  = local.test(data.local) ? data.local : "center";
+			data.x      = isFinite(data.x) ? Number(data.x) : 0;
+			data.y      = isFinite(data.y) ? Number(data.y) : 0;
+			data.close  = typeof data.close === "function" ? data.close : null;//FIXME mudar isso para listener?
+			data.id     = ++this.id;
+			data.status = "INACTIVE";
 			/*-- remover, se já existir em alguma janela, e adicionar à pilha --*/
 			this.remove(data.node, true);
 			this.heap.push(data);
@@ -1006,30 +1053,23 @@ const wd = (function() {
 		/**. '{integer remove(node node, boolean escape)}: Remove o nó do quadro que o armazena e retorna seu id. O argumento '{escape} deve ser verdadeiro quando o elemento for realocado para outra janela ou fechado.**/
 		remove: function(node, escape) {
 			let id = null;
-			/*-- localizar elemento na pilha --*/
-			for (let i = 0; i < this.heap.length; i++) {
-				if (this.heap[i].node === node) {
-					id = this.heap[i].id;
-					/*-- remover o elemento do documento --*/
-					this.heap[i].node.remove();
-					/*-- executar a função atrelada --*/
-					if (this.heap[i].close !== null)
-						this.heap[i].close(id, this.heap[i].node, escape === true);
-					/*-- atualizar valor da pilha --*/
-					this.heap[i] = null;
+			this.heap = this.heap.filter(function(heap,i,a) {
+				if (heap.node === node) {
+					id = heap.id;
+					heap.node.remove();
+					if (heap.close !== null)
+						heap.close(id, heap.node, escape === true);
+					this.update();
+					return false;
 				}
-			}
-			/*-- limpar pilha e retornar --*/
-			if (id !== null) {
-				this.heap = this.heap.filter(function(v,i,a) {return v !== null;});
-				this.update();
-			}
+				return true;
+			}, this);
 			return id;
 		},
 
 
 
-		handler: function(ev) {
+		handleEvent: function(ev) {
 			//FIXME erro ao fixar a abertura de janela com click (fechar sem abrir): adicionar e remover o evento ao body dinamicamente?
 			console.log("-----------------------------", {
 				type: ev.type,
@@ -9567,6 +9607,7 @@ const wd = (function() {
 			DATETIME: {value: __DATETIME},
 			NUMBER:   {value: __NUMBER},
 			OBJECT:   {value: __OBJECT},
+			ARIA:     {value: __ARIA},
 		});
 	}
 
