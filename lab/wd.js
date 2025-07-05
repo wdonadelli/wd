@@ -165,6 +165,19 @@ const wd = (function() {
 		@keyframes js-wd-animation-shrink {
 			from {transform: scale(1);} to {transform: scale(0);}
 		}
+		/*-- Geral ---------------------------------------------------------------*/
+		[data-js-wd-inert] {
+			opacity: 0.5 !important;
+			cursor: default !important;
+			pointer-events: none !important;
+			-ms-user-select: none !important;
+			-webkit-user-select: none !important;
+			user-select: none !important;
+		}
+		[inert] {opacity: 0.5 !important;}
+
+
+
 
 
 		/*font-family: Verdana, sans-serif */
@@ -291,16 +304,7 @@ const wd = (function() {
 		.js-wd-window.js-wd-window-modal.js-wd-window-modal-full > * {
 			flex-grow: 1 !important;
 		}
-		/*-- FREEZE/INERT --*/
-		body.js-wd-window-inert > :not(.js-wd-window),
-		body.js-wd-window-inert > :not(.js-wd-window) * {
-			pointer-events: none !important;
-		}
-		body.js-wd-window-freeze,
-		body.js-wd-window-freeze > :not(.js-wd-window),
-		body.js-wd-window-freeze > :not(.js-wd-window) * {
-			overflow: hidden !important;
-		}
+
 
 
 
@@ -767,8 +771,13 @@ const wd = (function() {
 	/**''const object __ARIA''
 	Agrupa ações de acessibilidade.**/
 	const __ARIA = {
-		/**. '{boolean focus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
-		focus: function(node, force) {
+		/**. '{boolean isHTML(node node)}: Retorna verdadeiro se o nó é um elemento HTML.**/
+		isHTML: function(node) {
+			return typeof node === "object" && node instanceof HTMLElement && node.nodeType === 1;
+		},
+		/**. '{boolean setFocus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
+		setFocus: function(node, force) {
+			if (!this.isHTML(node)) return false;
 			/*-- localizando por autofocus --*/
 			const auto = node.querySelectorAll("[autofocus]");
 			for (let i = 0; i < auto.length; i++) {
@@ -794,43 +803,66 @@ const wd = (function() {
 			}
 			return false;
 		},
+		/**. '{void hideFocus(node node, boolean add)}: Método para tirar o nó do fluxo natural se '{add} for verdadeiro. Se falso, reestabelecerá o fluxo, caso contrário, aplicará falso a todos os nós do elemento.**/
+		hideFocus: function(node, add) {
+			const attr = "data-js-wd-flux";
+			const has  = node.hasAttribute(attr);
+			/*-- adicionando (se receber foco ou for editável) --*/
+			if (add === true && !has && (node.tabIndex >= 0 || node.isContentEditable)) {
+				const json = {tab: node.getAttribute("tabindex"), edit: node.isContentEditable};
+				node.removeAttribute("contenteditable");
+				node.setAttribute("tabindex", "-1");
+				node.setAttribute(attr, JSON.stringify(json));
+			}
+			/*-- removendo (se conter o atributo) --*/
+			else if (add === false && has) {
+				try {
+					const json = JSON.parse(node.getAttribute(attr));
+					if (json.tab !== null)
+						node.setAttribute("tabindex", json.tab);
+					else
+						node.removeAttribute("tabindex");
+					if (json.edit)
+						node.setAttribute("contenteditable", "true");
+				} catch(e) {}
+				node.removeAttribute(attr);
+			}
+			/*-- remover o método de todos os filhos do nó --*/
+			else {
+				const query = node.querySelectorAll(`[${attr}]`);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], false);
+			}
+			return;
+		},
+		/**. '{void fakeInert(node node, boolean add)}: Método alternativo para deixar o nó inerte.**/
+		fakeInert: function(node, add) {
+			const has  = node.hasAttribute("data-js-wd-inert");
+			if (add && !has) {
+				node.setAttribute("data-js-wd-inert", "");
+				node.setAttribute("aria-hidden", "true");
+				this.hideFocus(node, add);
+				const focus = `[contenteditable], [tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
+				const query = node.querySelectorAll(focus);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], true);
+			}
+			else if (!add && has) {
+				node.removeAttribute("data-js-wd-inert");
+				node.removeAttribute("aria-hidden");
+				this.hideFocus(node, add);
+				this.hideFocus(node);
+			}
+			return;
+		},
 		/**. '{void inert(node node, boolean add)}: Define o nó '{node} como inerte ou defaz a ação se '{add} for falso.**/
 		inert: function(node, add) {
+			if (!this.isHTML(node)) return;
 			add = add !== false;
-			/*-- verificando se trata de um elemento HTML --*/
-			if (typeof node !== "object" || !(node instanceof HTMLElement) || !document.body.contains(node))
-				return;
-			/*-- propriedade padrão --*/
-			if ("inertdd" in node) {
-				document.body.inert = false;
+			if ("inert" in node)
 				node.inert = add;
-			}
-			/*-- método alternativo --*/
-			else {
-				const attr = "data-js-wd-inert";
-				const has  = node.hasAttribute(attr);
-				document.body.removeAttribute(attr);
-				/*-- adicionando (se receber foco) --*/
-				if (add && !has && node.tabIndex >= 0) {
-					const json = {};
-					json.has   = node.hasAttribute("tabindex");
-					json.value = json.has ? node.getAttribute("tabindex") : node.tabIndex;
-					node.setAttribute("tabindex", "-1");
-					node.setAttribute(attr, JSON.stringify(json));
-				}
-				/*-- removendo (se conter o atributo) --*/
-				else if (!add && has) {
-					try {
-						const json = JSON.parse(node.getAttribute(attr));
-						if (json.has)
-							node.setAttribute("tabindex", json.value);
-						else
-							node.removeAttribute("tabindex");
-					}
-					catch(e) {}
-					node.removeAttribute(attr);
-				}
-			}
+			else
+				this.fakeInert(node, add);
 			return;
 		},
 
@@ -855,39 +887,10 @@ const wd = (function() {
 		heap: [],
 		/**. '{object packs}: Registra os elementos empacotadores de janela.**/
 		packs: {
-			modal: {multiple: 0, inert: 1, freeze: 0, escape: 1, node: __HTML("DIV")},
-			float: {multiple: 0, inert: 1, freeze: 1, escape: 1, node: __HTML("DIV")},
-			frame: {multiple: 1, inert: 0, freeze: 0, escape: 0, node: __HTML("DIV")},
+			modal: {multiple: 0, inert: 1, freeze: 0, escape: 1, child: [], node: __HTML("DIV")},
+			float: {multiple: 0, inert: 0, freeze: 1, escape: 1, child: [], node: __HTML("DIV", {addEventListener: ["scroll", (ev) => ev.preventDefault(), {passive: false}]})},
+			frame: {multiple: 1, inert: 0, freeze: 0, escape: 0, child: [], node: __HTML("DIV")},
 		},
-		/**. '{boolean contains(node node)}: Retorna verdadeiro se o nó está contido nas janelas.**/
-		contains: function(node) {
-			for (let i in this.window)
-				if (node === this.window[i] || this.window[i].contains(node))
-					return true;
-			return false;
-		},
-
-
-		//FIXME será que continuo com isso
-		bodyClass: function(css, add) {
-			add = add !== false;
-			const list = document.body.className.replace(/\s+/g, " ").split(" ").sort();
-			const find = list.indexOf(css) >= 0;
-			if (add && !find)
-				document.body.className += ` ${css}`;
-			else if (!add && find)
-				document.body.className = list.filter(function(v,i,a) {return v !== css;}).join(" ");
-			return;
-		},
-		//FIXME mudar isso aqui para wheel touch over ou simplemente ignorar...
-		/**. '{void freeze(boolean add)}: Adiciona ou remove o congelamento de rolagem ao documento exceto nas janelas.**/
-		freeze: function(add) {
-			return this.bodyClass("js-wd-window-freeze", add);
-		},
-
-
-
-
 		/**. '{void setPosition(node node, integer x, integer y)}: Acerta o posicionamento da janela float.**/
 		setPosition: function(node, x, y) {
 			const back = this.packs.float.node;
@@ -908,7 +911,7 @@ const wd = (function() {
 				}
 			};
 			size.rect();
-			/*-- horizontal --*/ //FIXME arrumar isso aqui para qualquer tamanho de nó
+			/*-- horizontal --*/ //FIXME arrumar isso aqui para qualquer tamanho de nó limitado a tela
 			back.style.width = (size.w > pack ? pack : size.w)+"px";
 			size.rect();
 			size.px = (dots.x + size.w > edge.r) && (dots.x - edge.l > edge.r - dots.x) ? "right" : "left";
@@ -941,7 +944,7 @@ const wd = (function() {
 				this.setPosition(heap.node, heap.x, heap.y);
 			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
 			if (heap.type === "modal" || heap.type === "float")
-				__ARIA.focus(heap.node, true);
+				__ARIA.setFocus(heap.node, true);
 			return;
 		},
 
@@ -951,6 +954,8 @@ const wd = (function() {
 
 		/**. '{void update()}: Administra a pilha.**/
 		update: function() {
+			/*-- obtendo conteúdo das janelas para fins de vincular ouvinte --*/
+			const oldChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
 			/*-- zerar a contagem de filhos --*/
 			for (let name in this.packs)
 				this.packs[name].child = [];
@@ -995,8 +1000,14 @@ const wd = (function() {
 				if (pack.node.parentElement !== null && pack.node.parentElement !== document.body)
 					document.node.appenChild(pack.node);
 			}
-			//const focus = `[tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
-			//this.inert(add);
+			/*-- des/vincular ouvinte --*/
+
+			const newChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
+			console.log({old: oldChild, new: newChild})
+			if (!oldChild && newChild)
+				this.trigger(true);
+			else if (oldChild && !newChild)
+				this.trigger(false);
 			return;
 		},
 
@@ -1028,27 +1039,27 @@ const wd = (function() {
 
 		**/
 		append: function(node, options) {
-			const data  = typeof options === "object" ? options : {};
+			const heap  = typeof options === "object" ? options : {};
 			const type  = /^(modal|float|frame)$/;
 			const local = /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/;
 			/*-- pré ajustes --*/
-			data.type  = String(data.type).toLowerCase().replace(/\s+/g, "");
-			data.place = String(data.place).toLowerCase().replace(/\s+/g, "");
-			data.node  = __HTML(node);
-			if (data.node === null || data.node === document.body) return;
+			heap.type  = String(heap.type).toLowerCase().replace(/\s+/g, "");
+			heap.place = String(heap.place).toLowerCase().replace(/\s+/g, "");
+			heap.node  = __HTML(node);
+			if (heap.node === null || heap.node === document.body) return;
 			/*-- definindo heap --*/
-			data.type   = type.test(data.type)   ? data.type  : "frame";
-			data.local  = local.test(data.local) ? data.local : "center";
-			data.x      = isFinite(data.x) ? Number(data.x) : 0;
-			data.y      = isFinite(data.y) ? Number(data.y) : 0;
-			data.close  = typeof data.close === "function" ? data.close : null;//FIXME mudar isso para listener?
-			data.id     = ++this.id;
-			data.status = "INACTIVE";
+			heap.type   = type.test(heap.type)   ? heap.type  : "frame";
+			heap.local  = local.test(heap.local) ? heap.local : "center";
+			heap.x      = isFinite(heap.x) ? Number(heap.x) : 0;
+			heap.y      = isFinite(heap.y) ? Number(heap.y) : 0;
+			heap.close  = typeof heap.close === "function" ? heap.close : null;//FIXME mudar isso para listener?
+			heap.id     = ++this.id;
+			heap.status = "INACTIVE";
 			/*-- remover, se já existir em alguma janela, e adicionar à pilha --*/
-			this.remove(data.node, true);
-			this.heap.push(data);
+			this.remove(heap.node, true);
+			this.heap.push(heap);
 			this.update();
-			return data.id;
+			return heap.id;
 		},
 		/**. '{integer remove(node node, boolean escape)}: Remove o nó do quadro que o armazena e retorna seu id. O argumento '{escape} deve ser verdadeiro quando o elemento for realocado para outra janela ou fechado.**/
 		remove: function(node, escape) {
@@ -1059,42 +1070,57 @@ const wd = (function() {
 					heap.node.remove();
 					if (heap.close !== null)
 						heap.close(id, heap.node, escape === true);
-					this.update();
 					return false;
 				}
 				return true;
 			}, this);
+			if (id !== null) this.update();
 			return id;
 		},
 
 
 
 		handleEvent: function(ev) {
-			//FIXME erro ao fixar a abertura de janela com click (fechar sem abrir): adicionar e remover o evento ao body dinamicamente?
-			console.log("-----------------------------", {
-				type: ev.type,
-				target: ev.target,
-				modal: this.window.modal.firstElementChild,
-				float: this.window.float.firstElementChild,
-			});
-			/*-- chancando existência de elementos que necessitam de eventos --*/
-			let win;
-			if (this.window.float.childElementCount > 0)
-				win = "float";
-			else if (this.window.modal.childElementCount > 0)
-				win = "modal";
-			else return;
-			ev.preventDefault();
-			/*-- se o evento aconteceu dentro do elemento --*/
-			const inwin = this.window[win].contains(ev.target);
-			const child = this.window[win].firstElementChild;
-			/*-- analisando evento --*/
-			if (ev.type === "keydown") {
-				if (ev.key === "Escape" || (ev.key === "Tab" && win === "float"))
-					return this.remove(child, true);
+			/*-- congelar janela float --*/
+			if ((ev.type === "wheel" || ev.type === "touchmove") && this.packs.float.child.length > 0) {
+				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target))
+					return ev.preventDefault();
+				if (ev.target === document.body)
+					return ev.preventDefault();
 			}
-			else if (ev.type === "click" && !inwin) {
-				return this.remove(child, true);
+			/*-- escapar janela float com clique fora --*/
+			if (ev.type === "click" && this.packs.float.child.length > 0) {
+				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target)) {
+					ev.preventDefault();
+					return this.remove(this.packs.float.child[0], true);
+				}
+			}
+			/*-- escapar janela float ou modal com Esc --*/
+			if (ev.type === "keydown" && ev.key === "Escape") {
+				if (this.packs.float.child.length > 0) {
+					ev.preventDefault();
+					return this.remove(this.packs.float.child[0], true);
+				}
+				if (this.packs.modal.child.length > 0) {
+					ev.preventDefault();
+					return this.remove(this.packs.modal.child[0], true);
+				}
+			}
+			return;
+		},
+
+		trigger: function(add) {
+			if (add === true) {
+				document.addEventListener("wheel",     this, {passive: false});
+				document.addEventListener("touchmove", this, {passive: false});
+				document.addEventListener("click",     this, false);
+				document.addEventListener("keydown",   this, false)
+			}
+			else {
+				document.removeEventListener("wheel",     this, {passive: false});
+				document.removeEventListener("touchmove", this, {passive: false});
+				document.removeEventListener("click",     this, false);
+				document.removeEventListener("keydown",   this, false)
 			}
 			return;
 		},
@@ -1103,159 +1129,6 @@ const wd = (function() {
 
 
 
-
-
-
-
-		/**. '{void update()}: Atualiza as informações dos quadros contra manipulações externas.**/
-		update2: function() {
-			const names = ["modal", "frame", "float"];
-			let back, child, node, type;
-			for (let i = 0; i < names.length; i++) {
-				/*-- fundo --*/
-				type  = names[i];
-				back  = this[type];
-				child = back.children;
-				if (back.className !== "js-wd-style")
-					back.className = "js-wd-style";Array.prototype.slice.call(query)
-				if (back.tabIndex >= 0)
-					back.tabIndex = -1;
-				if (back.dataset.jsWdFloat !== type)
-					back.dataset.jsWdFloat = type;
-				if (back.childElementCount > 0 && back.parentElement !== document.body)
-					document.body.appendChild(back);
-				if (back.childElementCount < 1 && back.parentElement !== null)
-					back.remove();
-				while (type === "float" && back.childElementCount > 1)
-					back.firstElementChild.remove();
-				/*-- nós --*/
-				for (let j = 0; j < child.length; j++) {
-					node = child[j];
-					if (node.tabIndex >= 0)
-						node.tabIndex = -1;
-					if (node.getAttribute("aria-modal") !== (type === "modal" ? "true" : "false"))
-						node.setAttribute("aria-modal", type === "modal" ? "true" : "false");
-					if (node.style.display === "none")
-						node.style.display = null;
-					if (node.style.visibility === "hidden")
-						node.style.visibility = null;
-				}
-			}
-			/*-- reconfigurando heap --*/
-			this.heap = this.heap.filter(function(v,i,a) {
-				if (v.node.parentElement !== v.back) {
-					if (v.close !== null) v.close(false);
-					return false;Array.prototype.slice.call(query)
-				} else {
-					/*-- redefinindo o posicionamento --*/
-					if (v.node === v.back.firstElementChild)
-						v.back.dataset.jsWdFloatPlace = v.place;
-					if (v.type === "float") {
-						const wh = v.node.getBoundingClientRect();
-						const xy = v.place.split(",");
-						const x  = Number(xy[0]);
-						const y  = Number(xy[1]);
-						if (y > (window.innerHeight/2))
-							v.back.style.top = (y - wd.height)+"px";
-						else
-							v.back.style.top = (y)+"px";
-						if (x > (window.innerWidth/2))
-							v.back.style.left = (x - wh.width)+"px";
-						else
-							v.back.style.left = (x)+"px";
-					}
-					return true;
-				}
-			});
-			/*-- focalizar primeiro filho com autofocus --*/
-			if (this.heap.length > 0) {
-				const last = this.heap[this.heap.length - 1];
-				if (last.type !== "frame") {
-					const root  = last.back.firstElementChild;
-					const query = root.data.x     = isFinite(data.x) ? Number(x) : 0;querySelectorAll("*");
-					for (let i = 0; i < query.length; i++) {
-						if (query[i].tabIndex >= 0) {
-							query[i].focus();
-							break;
-						}
-					}
-				}
-			}
-			return this.setBack();
-		},
-		/**. '{void setBack()}: Estabelece a condição do plano de fundo.**/
-		setBack2: function() {
-			const child  = document.body.children;
-			const inert  = this.modal.childElementCount > 0;
-			const freeze = inert || this.float.childElementCount > 0;
-			const forget = [this.float, this.frame, this.modal];
-			/*-- congelamento de body --*/
-			if (freeze)
-				document.body.setAttribute("data-js-wd-freeze", "");
-			else
-				document.body.removeAttribute("data-js-wd-freeze");
-			/*-- definindo inercia --*/
-			for (let i = 0; i < child.length; i++)
-				if (forget.indexOf(child[i]) < 0)
-					this.inert(child[i], inert)
-			return;
-		},
-		/**. '{void inert(node node, boolean force)}: Define o elemento node e seus filhos como inertes conforme valor  do argumento i{force} (padrão é verdadeiro).**/
-		inert2: function(node, force) {
-			force = force !== false;
-			/*-- padrão --*/
-			if ("inert" in node && typeof node.inert === "boolean") {
-				node.inert = force;
-				return;
-			}
-			/*-- alternativo FIXME só fazer o looping para o tabindex >= 0 o CSS pode aplicar a todos internos --*/
-			//FIXME quando tem um texto muito grande a tela volta ao início ao congelar a barra de rolagem
-			const attr  = "data-js-wd-inert";
-			const query = node.querySelectorAll("*");
-			const list  = Array.prototype.slice.call(query);
-			list.push(node);
-			let has, index, tab;
-			for (let i = 0; i < list.length; i++) {
-				if (force && !list[i].hasAttribute(attr)) {
-					has   = list[i].hasAttribute("tabindex");
-					index = list[i].tabIndex;
-					tab   = (has ? "tabindex=" : "=")+String(index);
-					list[i].setAttribute(attr, tab);
-					list[i].tabIndex = -1;
-				}
-				else if (!force && list[i].hasAttribute(attr)) {
-					tab   = list[i].getAttribute(attr);
-					has   = (/^tabindex\=/i).test(tab);
-					index = Number(tab.split("=")[1]);
-					list[i].removeAttribute(attr);
-					if (has) list[i].tabIndex = index;
-					else     list[i].removeAttribute("tabindex");
-				}
-			}
-			return;
-		},
-		/**. '{void escape()}: Disparador a ser chamado quando for utilizado método alternativo de fechamento da janela.**/
-		escape: function(target, event, wdArray) {
-			/*const float  = __WINDOW.float;
-			const modal  = __WINDOW.modal;
-			const type   = float.childElementCount > 0 ? "float" : (modal.childElementCount > 0 ? "modal" : null);
-			const back   = type === null ? null : (type === "float" ? float : modal);
-			const node   = back === null ? null : back.firstElementChild;
-			let remove = false;
-			if (node !== null) {
-				if (type === "float" && event.type === "click")
-					remove = target === null ? true : !float.contains(target);
-				else if (type === "float" && event.type === "keydown")
-					remove = (/^(Tab|Escape)$/i).test(event.key);
-				else if (type === "modal" && event.type === "keydown")
-					remove = (/^(Escape)$/i).test(event.key);
-			}
-			if (remove) {
-				node.remove();
-				__WINDOW.update();
-			}
-			return;*/
-		},
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -10905,8 +10778,6 @@ const wd = (function() {
 				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
 				{name: "wdTools",   call: data_wd_tools,   kill: false, bind: {}},
 				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}},
-				{name: null,        call: __WINDOW.escape,  kill: false, bind: {}},//FIXME vincular esse trigger a um float fecha sem abrir
-				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
 		},
 		input: {
@@ -11013,9 +10884,7 @@ const wd = (function() {
 		},
 		keydown: {
 			target: window, preventDefault: false,
-			data: [
-				{name: null, call: __WINDOW.escape, kill: false, bind: {}}
-			],
+			data: [],
 		},
 	};
 
