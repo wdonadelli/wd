@@ -29,118 +29,22 @@ const wd = (function() {
 	/**#1 Biblioteca JavaScript
 	#2 Documentação para Manutenção
 	#0 Menu
-	#3 Mecanismos de Controle
-
-	''node function __HTML(string/node tag, object attr, string uri)''
-	Cria e/ou define os atributos/propriedades do elemento ou retona nulo em caso de inconsistências.
-	|Argumento|Descrição|
-	|tag|Nome da tag do elemento a criar ou o elemento HTML a ser trabalhado|
-	|attr|Propriedades ou atributos, nessa ordem, do elemento|
-	|uri|Namespace URI para um elemento qualificado|**/
-	function __HTML(tag, attr, uri) {
-		function type(input) {
-			const type = typeof input;
-			if (type !== "object")            return type;
-			if (input === null)               return "null";
-			if (Array.isArray(input))         return "array";
-			if (input instanceof RegExp)      return "regexp";
-			if (input instanceof HTMLElement) return "node";
-			return "object";
-		}
-		function create(tag, uri) {
-			const re = /^https?\:\/\/.+/i;
-			return re.test(uri) ? document.createElementNS(uri, tag) : document.createElement(tag);
-		}
-		/*-- analisando dados --*/
-		const tTag  = type(tag);
-		const valid = tTag === "string" || tTag === "node";
-		const prop  = valid && type(attr) === "object" ? attr : {};
-		const node  = valid ? (tTag === "node" ? tag : create(tag, uri)) : null;
-		/*-- definindo prorpiedades e atributos, nessa ordem --*/
-		for (let name in prop) {
-			let value  = prop[name];
-			let tValue = type(value);
-			let tProp  = type(node[name]);
-			/*-- propriedade --*/
-			if (name in node) {
-				if (tValue === "array" && tProp === "function")
-					node[name].apply(node, value);
-				else if (tValue === "object")
-					for (let i in value) node[name][i] = value[i];
-				else
-					node[name] = value;
-			}
-			/*-- atributo --*/
-			else {
-				(value === null ? node.removeAttribute(name) : node.setAttribute(name, value));
-			}
-		}
-		return node;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''object function __DOM(object html, node parent)''
-	Cria uma estrutura de elementos HTML e retorna o argumento '{html} acrescido da propriedade '{node} (elemento) ou retorna nulo em caso de inconsistência.
-	O argumento opcional '{parent} diz que o elemento trabalhado será filho dele.
-	As propriedades do argumento '{html} têm os mesmos nomes dos argumentos de '{__HTML} acrescidos de:
-	|Pripriedade|Tipo|Descrição|
-	|listener|array|Uma lista de grupos de argumentos (array) para o método '{addEventListener}|
-	|child|array|Lista de objetos contendo as propriedades dos elementos filho (argumento '{html})|**/
-	function __DOM(html, parent) {
-		/*-- contruindo o nó principal --*/
-		const data = typeof html === "object" ? html : {};
-		data.node  = __HTML(data.tag, data.attr, data.uri);
-		if (data.node === null) return null;
-		/*-- adicionando disparadores --*/
-		if (Array.isArray(data.listener)) {console.log("entrou 1");
-			for (let i = 0; i < data.listener.length; i++) {
-				if (Array.isArray(data.listener[i]))
-					__HTML(data.node, {addEventListener: data.listener[i]});
-			}
-		}
-		/*-- criando e adicionando filhos --*/
-		if (Array.isArray(data.child)) {
-			for (let i = 0; i < data.child.length; i++) {
-				if (typeof data.child[i] === "object")
-					__DOM(data.child[i], data.node);
-			}
-		}
-		/*-- adicionando elemento ao pai, se for um nó --*/
-		if (typeof parent === "object" && parent instanceof HTMLElement)
-			parent.appendChild(data.node)
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	/**''const string __VERSION''
-	Registra a versão da biblioteca.**/
+	#3 Constantes
+	|Nome|Tipo|Descrição|
+	|__VERSION|string|Registra a versão da biblioteca|
+	|__UNDERMAINTENANCE|boolean|Se verdadeiro, libera em WD métodos em teste e imprime cascata de disparadores|
+	|__MIME|Object|Tipos a{MIME}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"] úteis|
+	|__STYLE|string|Folha de estilos básica da biblioteca|**/
 	const __VERSION = "WD JS v5.0.0";
-
-/*----------------------------------------------------------------------------*/
-	/**''const boolean __UNDERMAINTENANCE''
-	Se verdadeiro, libera métodos para teste em WD e imprime cascata de eventos.**/
 	const __UNDERMAINTENANCE = true;
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __MIME''
-	Registra alguns a{MIME types}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types" target="_blank"] úteis à biblioteca.**/
 	const __MIME = {
-		/*-- texto --*/
 		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
 		"text/xml":    "xml", "text/html": "html", "text/javascript": "js",
-		/*-- aplicações --*/
 		"application/octet-stream": "default",
 		"application/json": "json", "application/javascript": "js",
 		"application/xml":   "xml",
-		/*-- imagens --*/
 		"image/svg+xml": "svg",
 	};
-
-/*----------------------------------------------------------------------------*/
-	/**''const string __STYLE''
-	Estilos da biblioteca.**/
-
-	//FIXME aprender sobre flex para deixar frame e modal nessa condição
 	const __STYLE = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
@@ -306,24 +210,6 @@ const wd = (function() {
 		}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 
 		/*-- Signal: box --*/
@@ -475,34 +361,12 @@ const wd = (function() {
 		[data-wd-grid] [aria-sort="descending"]:before {content: "\\2191 " !important;}
 		[data-wd-grid] [aria-sort="ascending"]:before  {content: "\\2193 " !important;}
 
-
-
-
-
-
 		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
 			cursor: pointer !important;
 		}
 
-
-
-
-
 		/*-- data-wd-float --------------------------------------------------------*/
 		[data-wd-float] {cursor: context-menu !important;}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 		[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden !important;}
@@ -510,13 +374,6 @@ const wd = (function() {
 		svg .js-wd-chart-hide {display: none !important;}
 		@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline !important;}}
 		wd-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
-
-
-
-
-
-
-
 
 
 		/*-- Códificação ---------------------------------------------------------*/
@@ -644,8 +501,6 @@ const wd = (function() {
 		}*/
 		[data-js-wd-hide] {display: none !important;}
 
-
-
 		[data-js-wd-cursor="move"],    [data-js-wd-cursor="move"]    * {cursor:     grab !important;}
 		[data-js-wd-cursor="moving"],  [data-js-wd-cursor="moving"]  * {cursor:     move !important;}
 		[data-js-wd-cursor="drag"],    [data-js-wd-cursor="drag"]    * {cursor:     grab !important;}
@@ -676,686 +531,45 @@ const wd = (function() {
 			background-color: lime !important;
 			color: black !important;
 		}
-}
-
-
-
-
-
-
 		`;
-
-
-
-
-
-//TODO
-
-
-
 			//"*::backdrop {background-color: white;}",
 			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 			//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
-			/*-- barra de progresso --*/
-		/**. '{void builder()}: Cria o elemento i{style} com o CSS da biblioteca e o adiciona à página.**/
+/*============================================================================*/
 
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __DEVICE''
-	Checa alterações da tela atribuida a um tipo de dispositivo.**/
-	const __DEVICE = {
-		/**. '{string _device}: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
-		_device: null,
-		/**. '{array _devices}: Registra uma lista de dispositivos em ordem decrescente de tamanho.**/
-		_devices: [
-				{name: "desktop", size: 768},
-				{name: "tablet",  size: 600},
-				{name: "phone",   size: 0}
-			],
-		/**. '{integer width}: Retorna o tamanho da tela.**/
-		get width() {return window.innerWidth;},
-		/**. '{string device}: Retorna o tipo de dispositivo**/
-		get device() {
-			const width  = this.width;
-			for (let i = 0; i < this._devices.length; i++)
-				if (width >= this._devices[i].size) return this._devices[i].name;
-		},
-		/**. '{boolean mobile}: Informa se dispositivo não é do tamanho desktop.**/
-		get mobile() {return this.device !== "desktop";},
-		/**. '{boolean change}: Informa se o dispositivo foi alterado desde a última consulta.**/
-		get changeDevice() {
-			const device = this.device;
-			if (this._device !== device) {
-				this._device = device;
-				return true;
-			}
-			return false;
-		}
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __LANG''
+	/**#3 Tipologia
+	''const object __LANG''
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
-		/**. '{regexp re}: Retorna a expressão regular que verifica o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
+		/**. '{regexp re}: Expressão regular para o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
 		re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e seus ascendentes, se houver.**/
+		/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e ascendentes.**/
 		node: function(elem) {
-			let lang = [];
+			let list, lang = [];
 			while (elem !== null) {
 				if (elem.hasAttribute("lang")) {
-					let list = elem.lang.replace(/\s+/g, " ").trim().split(" ");
+					list = elem.lang.replace(/\s+/g, " ").split(" ");
 					lang = lang.concat(list);
 				}
 				elem = elem.parentElement;
 			}
 			return lang;
 		},
-		/**. '{array user}: Define ou retorna a cadeia de linguagens definida no corpo do documento.**/
+		/**. '{string user}: Define ou retorna a cadeia de linguagens definida no corpo do documento.**/
 		set user(x) {
-			if (typeof x !== "string")
+			x = typeof x === "string" ? x.replace(/\s+/g, " ").trim() : null;
+			if (x === null)
 				document.body.removeAttribute("lang");
-			const lang = String(x).replace(/\s+/g, " ").trim();
-			document.body.setAttribute("lang", lang);
+			else if (this.re.test(x))
+				document.body.setAttribute("lang", x);
 		},
 		get user() {
-			return document.body.getAttribute("lang");
+			return document.body.hasAttribute("lang") ? document.body.getAttribute("lang") : "";
 		},
 		/**. '{array value}: Define ou retorna a cadeia de linguagens estabelecidas.**/
 		get value() {
 			return this.node(document.body).concat(navigator.languages, ["en"]);
 		},
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __ARIA''
-	Agrupa ações de acessibilidade.**/
-	const __ARIA = {
-		/**. '{boolean isHTML(node node)}: Retorna verdadeiro se o nó é um elemento HTML.**/
-		isHTML: function(node) {
-			return typeof node === "object" && node instanceof HTMLElement && node.nodeType === 1;
-		},
-		/**. '{boolean setFocus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
-		setFocus: function(node, force) {
-			if (!this.isHTML(node)) return false;
-			/*-- localizando por autofocus --*/
-			const auto = node.querySelectorAll("[autofocus]");
-			for (let i = 0; i < auto.length; i++) {
-				if (auto[i].tabIndex >= 0) {
-					auto[i].focus();
-					return true;
-				}
-			}
-			/*-- localizando por focáveis --*/
-			const all = node.querySelectorAll("*");
-			for (let i = 0; i < all.length; i++) {
-				if (all[i].tabIndex >= 0) {
-					all[i].focus();
-					return true;
-				}
-			}
-			/*-- forçando focus --*/
-			if (force === true && all.length > 0) {
-				const elem = auto.length > 0 ? auto[0] : all[0];
-				elem.setAttribute("tabindex", auto.length > 0 ? "0" : "-1");
-				elem.focus();
-				return true;
-			}
-			return false;
-		},
-		/**. '{void hideFocus(node node, boolean add)}: Método para tirar o nó do fluxo natural se '{add} for verdadeiro. Se falso, reestabelecerá o fluxo, caso contrário, aplicará falso a todos os nós do elemento.**/
-		hideFocus: function(node, add) {
-			const attr = "data-js-wd-flux";
-			const has  = node.hasAttribute(attr);
-			/*-- adicionando (se receber foco ou for editável) --*/
-			if (add === true && !has && (node.tabIndex >= 0 || node.isContentEditable)) {
-				const json = {tab: node.getAttribute("tabindex"), edit: node.isContentEditable};
-				node.removeAttribute("contenteditable");
-				node.setAttribute("tabindex", "-1");
-				node.setAttribute(attr, JSON.stringify(json));
-			}
-			/*-- removendo (se conter o atributo) --*/
-			else if (add === false && has) {
-				try {
-					const json = JSON.parse(node.getAttribute(attr));
-					if (json.tab !== null)
-						node.setAttribute("tabindex", json.tab);
-					else
-						node.removeAttribute("tabindex");
-					if (json.edit)
-						node.setAttribute("contenteditable", "true");
-				} catch(e) {}
-				node.removeAttribute(attr);
-			}
-			/*-- remover o método de todos os filhos do nó --*/
-			else {
-				const query = node.querySelectorAll(`[${attr}]`);
-				for (let i = 0; i < query.length; i++)
-					this.hideFocus(query[i], false);
-			}
-			return;
-		},
-		/**. '{void fakeInert(node node, boolean add)}: Método alternativo para deixar o nó inerte.**/
-		fakeInert: function(node, add) {
-			const has  = node.hasAttribute("data-js-wd-inert");
-			if (add && !has) {
-				node.setAttribute("data-js-wd-inert", "");
-				node.setAttribute("aria-hidden", "true");
-				this.hideFocus(node, add);
-				const focus = `[contenteditable], [tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
-				const query = node.querySelectorAll(focus);
-				for (let i = 0; i < query.length; i++)
-					this.hideFocus(query[i], true);
-			}
-			else if (!add && has) {
-				node.removeAttribute("data-js-wd-inert");
-				node.removeAttribute("aria-hidden");
-				this.hideFocus(node, add);
-				this.hideFocus(node);
-			}
-			return;
-		},
-		/**. '{void inert(node node, boolean add)}: Define o nó '{node} como inerte ou defaz a ação se '{add} for falso.**/
-		inert: function(node, add) {
-			if (!this.isHTML(node)) return;
-			add = add !== false;
-			if ("inert" in node)
-				node.inert = add;
-			else
-				this.fakeInert(node, add);
-			return;
-		},
-
-
-
-
-
-
-
-
-
-
-
-	}
-/*----------------------------------------------------------------------------*/
-	/**''const object __WINDOW''
-	Administra containers para janelas modais, em quadro ou flutuantes.**/
-	const __WINDOW = {
-		/**. '{integer heap}: Controla o identificador das janelas.**/
-		id: Math.trunc(100*Math.random()),
-		/**. '{array heap}: Registra informações sobre os quadros.**/
-		heap: [],
-		/**. '{object packs}: Registra os elementos empacotadores de janela.**/
-		packs: {
-			modal: {multiple: 0, inert: 1, freeze: 0, escape: 1, child: [], node: __HTML("DIV")},
-			float: {multiple: 0, inert: 0, freeze: 1, escape: 1, child: [], node: __HTML("DIV", {addEventListener: ["scroll", (ev) => ev.preventDefault(), {passive: false}]})},
-			frame: {multiple: 1, inert: 0, freeze: 0, escape: 0, child: [], node: __HTML("DIV")},
-		},
-		/**. '{void setPosition(node node, integer x, integer y)}: Acerta o posicionamento da janela float.**/
-		setPosition: function(node, x, y) {
-			const back = this.packs.float.node;
-			const base = {w: window.screen.width, h: window.screen.height};
-			const area = {w: window.innerWidth,   h: window.innerHeight};
-			const padd = Math.min(base.w, base.h) / 100;
-			const pack = Math.max(base.w, base.h) / 4;
-			const edge = {l: padd, r: area.w - padd, t: padd, b: area.h - padd};
-			const dots = {
-				x: x < edge.l ? edge.l : (x > edge.r ? edge.r : x),
-				y: y < edge.t ? edge.t : (y > edge.b ? edge.b : y),
-			};
-			const size = {
-				rect: function() {
-					const data = node.getBoundingClientRect();
-					this.w = data.width;
-					this.h = data.height;
-				}
-			};
-			size.rect();
-			/*-- horizontal --*/ //FIXME arrumar isso aqui para qualquer tamanho de nó limitado a tela
-			back.style.width = (size.w > pack ? pack : size.w)+"px";
-			size.rect();
-			size.px = (dots.x + size.w > edge.r) && (dots.x - edge.l > edge.r - dots.x) ? "right" : "left";
-			back.style[size.px] = (size.px === "left" ? dots.x : area.w - dots.x)+"px";
-			/*-- vertical --*/
-			size.py = (dots.y + size.h > edge.b) && (dots.y - edge.t > edge.b - dots.y) ? "bottom" : "top";
-			back.style[size.py]  = (size.py === "top" ? dots.y : area.h - dots.y)+"px";
-			back.style.maxHeight = (size.py === "top" ? (edge.b - dots.y) : (dots.y - edge.t))+"px";
-			return;
-		},
-		/**. '{void show(object heap)}: Renderiza o elemento.**/
-		show: function(heap) {
-			const css1 = `js-wd-window js-wd-window-${heap.type}`;
-			const css2 = heap.type === "modal" ? `js-wd-window-${heap.type}-${heap.local}` : "";
-			const aria = heap.type === "modal" ? "true" : "false"
-			__DOM({
-				tag:   this.packs[heap.type].node,
-				attr:  {className: `${css1} ${css2}`, tabIndex:  -1, style: ""},
-				child: [{tag:  heap.node, attr: {tabIndex: -1, "aria-modal": aria}}],
-			}, document.body);
-			/*-- arrumando particularidades de estilos --*/
-			const ignore = {display: "none", visibility: "hidden"};
-			const styles = window.getComputedStyle(heap.node, null);
-			for (let i in ignore) {
-				if (styles[i] === ignore[i])
-					heap.node.style[i] = null;
-			}
-			/*-- arrumando posicionamento de float --*/
-			if (heap.type === "float")
-				this.setPosition(heap.node, heap.x, heap.y);
-			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
-			if (heap.type === "modal" || heap.type === "float")
-				__ARIA.setFocus(heap.node, true);
-			return;
-		},
-
-
-
-
-
-		/**. '{void update()}: Administra a pilha.**/
-		update: function() {
-			/*-- obtendo conteúdo das janelas para fins de vincular ouvinte --*/
-			const oldChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
-			/*-- zerar a contagem de filhos --*/
-			for (let name in this.packs)
-				this.packs[name].child = [];
-			/*-- analisando a pilha --*/
-			this.heap.forEach(function(heap,i,a) {
-				const pack = this.packs[heap.type];
-				const push = pack.child.length === 0 || data.multiple === 1;
-				/*-- renderizar nós aguardando na fila --*/
-				if (heap.status === "INACTIVE" && push) {
-					heap.status = "ACTIVE"
-					this.show(heap);
-					//FIXME inert e freeze?
-				}
-				/*-- registrar nós renderizados --*/
-				if (heap.status === "ACTIVE") {
-					pack.child.push(heap.node);
-					/*-- realocar se necessário os nós sequestrados --*/
-					if (heap.node.parentElement !== pack.node)
-						this.show(heap);
-				}
-			}, this);
-			/*-- analisando os empacotadores --*/
-			for (let name in this.packs) {
-				let pack = this.packs[name];
-				/*-- fechar empacotadores vazios --*/
-				if (pack.child.length === 0) {
-					if (pack.node.parentElement !== null)
-						pack.node.remove();
-						//FIXME inert e freeze?
-					if (pack.node.childElementCount > 0)
-						pack.node.innerHTML = "";
-				}
-				/*-- remover nós alienígenas dos empacotadores --*/
-				if (pack.node.childElementCount !== pack.child.length) {
-					let child = pack.node.children;
-					for (let i = 0; i < child.length; i++) {
-						if (pack.child.indexOf(child[j]) < 0)
-							child[j].remove();
-					}
-				}
-				/*-- realocar empacotador, se necessário --*/
-				if (pack.node.parentElement !== null && pack.node.parentElement !== document.body)
-					document.node.appenChild(pack.node);
-			}
-			/*-- des/vincular ouvinte --*/
-
-			const newChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
-			console.log({old: oldChild, new: newChild})
-			if (!oldChild && newChild)
-				this.trigger(true);
-			else if (oldChild && !newChild)
-				this.trigger(false);
-			return;
-		},
-
-
-
-
-
-
-
-
-
-
-	//FIXME reescrever isso aqui, a função close agora retorna 3 elementos tem as propriedades x, y, e local
-		/**. '{integer append(node node, object options)}: Agrega elementos aos quadros e retorna o identificador do elemento adicionado. O argumento '{node} refere-se ao elemento a ser agregado e o argumento '{options} define as características do elemento:
-		|Nome|Tipo|Valores|Descrição|
-		|type|string|float (padrão), modal ou frame|Define o tipo de quadro|
-		|place|string|ver adiante|Posicionamento do nó no quadro|
-		|close|function|-|Função a ser chamada ao fechar o nó|
-		Quanto às características dos quadro, tem-se:
-		|Característica|frame|modal|float|
-		|Acondicionamento|Em fila|Em camada|Individual|
-		|Fundo|Transparente-localizado|Opaco-Tela-Inerte|Ausente-Tela|
-		|Fechamento|Não|Esc|Esc, Tab e clique|
-		|Objetivo|Alerta|Diálogo|Menu|
-		. Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
-		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.
-
-		STATUS>: "INACTIVE ACTIVE CLOSED IGNORED CANCELED"
-
-		**/
-		append: function(node, options) {
-			const heap  = typeof options === "object" ? options : {};
-			const type  = /^(modal|float|frame)$/;
-			const local = /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/;
-			/*-- pré ajustes --*/
-			heap.type  = String(heap.type).toLowerCase().replace(/\s+/g, "");
-			heap.place = String(heap.place).toLowerCase().replace(/\s+/g, "");
-			heap.node  = __HTML(node);
-			if (heap.node === null || heap.node === document.body) return;
-			/*-- definindo heap --*/
-			heap.type   = type.test(heap.type)   ? heap.type  : "frame";
-			heap.local  = local.test(heap.local) ? heap.local : "center";
-			heap.x      = isFinite(heap.x) ? Number(heap.x) : 0;
-			heap.y      = isFinite(heap.y) ? Number(heap.y) : 0;
-			heap.close  = typeof heap.close === "function" ? heap.close : null;//FIXME mudar isso para listener?
-			heap.id     = ++this.id;
-			heap.status = "INACTIVE";
-			/*-- remover, se já existir em alguma janela, e adicionar à pilha --*/
-			this.remove(heap.node, true);
-			this.heap.push(heap);
-			this.update();
-			return heap.id;
-		},
-		/**. '{integer remove(node node, boolean escape)}: Remove o nó do quadro que o armazena e retorna seu id. O argumento '{escape} deve ser verdadeiro quando o elemento for realocado para outra janela ou fechado.**/
-		remove: function(node, escape) {
-			let id = null;
-			this.heap = this.heap.filter(function(heap,i,a) {
-				if (heap.node === node) {
-					id = heap.id;
-					heap.node.remove();
-					if (heap.close !== null)
-						heap.close(id, heap.node, escape === true);
-					return false;
-				}
-				return true;
-			}, this);
-			if (id !== null) this.update();
-			return id;
-		},
-
-
-
-		handleEvent: function(ev) {
-			/*-- congelar janela float --*/
-			if ((ev.type === "wheel" || ev.type === "touchmove") && this.packs.float.child.length > 0) {
-				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target))
-					return ev.preventDefault();
-				if (ev.target === document.body)
-					return ev.preventDefault();
-			}
-			/*-- escapar janela float com clique fora --*/
-			if (ev.type === "click" && this.packs.float.child.length > 0) {
-				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target)) {
-					ev.preventDefault();
-					return this.remove(this.packs.float.child[0], true);
-				}
-			}
-			/*-- escapar janela float ou modal com Esc --*/
-			if (ev.type === "keydown" && ev.key === "Escape") {
-				if (this.packs.float.child.length > 0) {
-					ev.preventDefault();
-					return this.remove(this.packs.float.child[0], true);
-				}
-				if (this.packs.modal.child.length > 0) {
-					ev.preventDefault();
-					return this.remove(this.packs.modal.child[0], true);
-				}
-			}
-			return;
-		},
-
-		trigger: function(add) {
-			if (add === true) {
-				document.addEventListener("wheel",     this, {passive: false});
-				document.addEventListener("touchmove", this, {passive: false});
-				document.addEventListener("click",     this, false);
-				document.addEventListener("keydown",   this, false)
-			}
-			else {
-				document.removeEventListener("wheel",     this, {passive: false});
-				document.removeEventListener("touchmove", this, {passive: false});
-				document.removeEventListener("click",     this, false);
-				document.removeEventListener("keydown",   this, false)
-			}
-			return;
-		},
-
-
-
-
-
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __PROGRESS''
-	Registra a barra de progresso das requisições da biblioteca.**/
-	const __PROGRESS = {
-		/**. '{integer count}: Contador de ações em progresso.**/
-		count: 0,
-		/**. '{node bar}: Barra de progresso.**/
-		bar: (function() {
-			const bar = document.createElement("PROGRESS");
-			/*-- Disparadores de abertura de processo --*/
-			bar.addEventListener("wdprogressopen", function(ev) {
-				__PROGRESS.count++;
-				__WINDOW.append(ev.target, {type: "frame"});
-				return;
-			}, false);
-			/*-- Disparador de fechamento de processo --*/
-			bar.addEventListener("wdprogressclose", function(ev) {
-				__PROGRESS.count = __PROGRESS.count < 1 ? 0 : (__PROGRESS.count - 1);
-				window.setTimeout(function () {
-					if (__PROGRESS.count < 1) {
-						__WINDOW.remove(ev.target);
-						ev.target.removeAttribute("value");
-					}
-					return;
-				}, 50);
-				return;
-			}, false);
-			/*-- Disparador de definição de valor --*/
-			bar.addEventListener("wdprogressset", function(ev) {}, false);
-			/*-- retornando a barra de progresso --*/
-			return bar;
-		})(),
-		/**. '{object openEvent}: Evento de abertura da barra de progresso.**/
-		openEvent:  new CustomEvent("wdprogressopen"),
-		/**. '{object closeEvent}: Evento de fechamento da barra de progresso.**/
-		closeEvent: new CustomEvent("wdprogressclose"),
-		/**. '{object setEvent}: Evento de definição da barra de progresso.**/
-		setEvent:   new CustomEvent("wdprogressset"),
-		/**. '{void open()}: Abre a barra de progresso.**/
-		open: function()  {
-			this.bar.dispatchEvent(this.openEvent);
-			return;
-		},
-		/**. '{void close()}: Fecha a barra de progresso.**/
-		close: function() {
-			this.bar.dispatchEvent(this.closeEvent);
-			return;
-		},
-		/**. '{void set(integer value)}: Define o valor da barra de progresso pelo seu argumento.**/
-		set: function(value) {
-			value = Number(value);
-			if (isNaN(value))
-				this.bar.removeAttribute("value");
-			else
-				this.bar.value = value < 0 ? 0 : (value > 1 ? 1 : value);
-			this.bar.dispatchEvent(this.setEvent);
-			return;
-		}
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''const object __SIGNAL''
-	Renderiza mensagens e notificações.**/
-	const __SIGNAL = {
-		/**. '{integer id}: Controla o id da caixa de mensagem.**/
-		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0, notify: 0},
-		/**. '{node builder(object data)}: Retorna a caixa de alerta ou diálogo conforme especificado em i{data} (ver '{signal}).**/
-		buider: function(data) {
-			const time = `<time datetime="${data.iso}">${data.date}</time>`;
-			const num  = this.id[data.type]++;
-			const id   = `js_wd_signal_${data.type}_${num}`;
-			const aria = {head: `${id}_head`, body: `${id}_body`, node: `${id}_node`};
-			const role = data.type === "dialog" ? "alertdialog" : "alert";
-			const move = role === "alert" ? "" : `data-wd-move="{$:'#${id}'}"`;
-			const main = __HTML("div", {
-				id: id, role: role, dataset: {jsWdSignal: data.type},
-				"aria-labelledby": aria.head, "aria-describedby": aria.body,
-				innerHTML: `<button class="js-wd-signal-kill js-wd-style" type="button" >&times;</button>
-				<div class="js-wd-signal-head" id="${aria.head}" ${move} >${data.head === null ? time : data.head}</div>
-				<div class="js-wd-signal-body" id="${aria.body}" >${data.body}</div>
-				<div class="js-wd-signal-node" id="${aria.node}"></div>
-				<div class="js-wd-signal-fire"></div>`
-			});
-			/*-- DEFINIÇÕES --------------------------------------------------------*/
-			main.setAttribute("aria-describedby", data.body === null ? aria.node : aria.body);
-			if (data.body === null)
-				main.querySelector(".js-wd-signal-body").remove();
-			if (data.node === null)
-				main.querySelector(".js-wd-signal-node").remove();
-			else
-				main.querySelector(".js-wd-signal-node").appendChild(data.node);
-			const fire = main.querySelector(".js-wd-signal-fire");
-			for (let i in data.actions) {
-				let btn = __HTML("button", {
-					textContent: data.actions[i].replace(/\*$/, ""), type: "button",
-					class: "js-wd-style js-wd-button", autofocus: (/\*$/).test(data.actions[i]),
-					dataset: {jsWdSignalId: i}
-				});
-				fire.appendChild(btn);
-				//FIXME isso será eliminado após a criação do atributo data-wd-key
-				btn.addEventListener("keydown", function(ev) {
-					const keys = {
-						next: /^(ArrowRight|ArrowDown)$/i,
-						previus: /^(ArrowLeft|ArrowUp)$/i,
-						first: /^(Home)$/i,
-						last: /^(End)$/i
-					};
-					const child = ev.target.parentElement.children;
-					if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
-						ev.target.nextElementSibling.focus();
-					else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
-						ev.target.previousElementSibling.focus();
-					else if (keys.first.test(ev.key))
-						child[0].focus();
-					else if (keys.last.test(ev.key))
-						child[child.length - 1].focus();
-					return;
-				}, false);
-			}
-			return main;
-		},
-		/**. '{void alert(object info)}: Ver método i{signal}.**/
-		alert: function(info) {
-			const main = this.buider(info);
-			/*----------------------------------------------------------------------*/
-			if (info.type === "dialog") {
-				main.querySelector(".js-wd-signal-kill").remove();
-				const buttons = main.querySelector(".js-wd-signal-fire").children;
-				let   focus   = null;
-				for (let i = 0; i < buttons.length; i++) {
-					let btn = buttons[i];
-					let id  = btn.dataset.jsWdSignalId;
-					delete btn.dataset.jsWdSignalId;
-					btn.addEventListener("click", function(ev) {
-						__WINDOW.remove(main);
-						if (info.trigger !== null)
-							info.trigger(info.id, id);
-						return;
-					}, false);
-					if (focus === null && btn.autofocus)
-						focus = btn;
-				}
-				/*-- Renderizando diálogo --*/
-				__WINDOW.append(main, {
-					type: "modal",
-					close: function(result) {
-						if (info.trigger !== null && !result)
-							info.trigger(info.id, null);
-						return;
-					}
-				});
-				if (focus !== null) focus.focus();
-			}
-			/*----------------------------------------------------------------------*/
-			else {
-				main.querySelector(".js-wd-signal-fire").remove();
-				const kill = main.querySelector(".js-wd-signal-kill");
-				kill.addEventListener("click", function(ev) {
-					return __WINDOW.remove(main);
-				}, false);
-				__WINDOW.append(main, {type: "frame", close: function() {
-					if (info.trigger !== null) info.trigger(info.id, null);
-				}});
-				if (info.time > 0)
-					window.setTimeout(function() {kill.click();}, info.time);
-			}
-			/*----------------------------------------------------------------------*/
-			return;
-		},
-		/**. '{void notify(object data)}: Ver método i{signal}.**/
-		notify: function (data) {
-			const title  = data.head === null ? data.date : data.head;
-			const config = {
-				lang: __LANG.value,
-				body: data.body === null ? data.node.innerText : data.body,
-				tag:  data.id   === null ? "" : data.id
-			};
-			if (Notification.permission === "denied")
-				return;
-			if (Notification.permission === "granted")
-				new Notification(title, config);
-			else
-				Notification.requestPermission().then(function(x) {
-					if (x === "granted") new Notification(title, config);
-				});
-			return;
-		},
-		/**. '{void signal(object data)}: Define mensagens de alerta, caixas de diálogo ou notificações conforme definido em '{data}:
-		|Nome|Tipo|Descrição|
-		|type|string|Indica o tipo de interação (notificação, alerta ou diálogo).|
-		|head|string|Define o título da interação.|
-		|body|string|Define a mensagem da interação.|
-		|node|Node|Define um elemento HTML a ser exibido após a mensagem (notificação e diálogo).|
-		|id|string|Identificador da interação.|
-		|trigger|function|Define a função a ser chamada após o fechamento (notificação e diálogo).|
-		|actions|object|Define os botões de resposta do u{diálogo}.|
-		|time|integer|Duração da mensagem de u{alerta} em milissegundos.|
-		. As propriedades '{body} ou '{node} precisam ser informadas. Os seguintes valores de '{type} são possíveis:
-		|Valor|Interação|
-		|notify|Exibe uma notificação.|
-		|warn|Exibe uma caixa de u{alerta} de advertência.|
-		|error|Exibe uma caixa de u{alerta} de erro.|
-		|info|Exibe uma caixa de u{alerta} de informação.|
-		|ok|Exibe uma caixa de u{alerta} de sucesso.|
-		|dialog|Exibe uma caixa de u{diálogo}.|
-		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do texto do botão para focá-lo ao abrir o diálogo.
-		. A função '{trigger} receberá como argumentos os identificadores da interação e do botão de ação definidos nas propriedades '{id} e '{actions}, respectivamente. Se a caixa for fechada sem definir uma ação, o respectivo argumento será nulo.**/
-		signal: function(data) {
-			data       = typeof data === "object" ? data : {};
-			const time = new Date();
-			const info = {
-				type:    data.type in this.id ? data.type : "info",
-				id:      "id"   in data ? data.id   : null,
-				head:    "head" in data ? data.head : null,
-				body:    "body" in data ? data.body : null,
-				node:    typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null,
-				actions: typeof data.actions === "object"   ? data.actions : {OK: "OK*"},
-				trigger: typeof data.trigger === "function" ? data.trigger : null,
-				time:    typeof data.time    === "number"   ? Math.trunc(data.time) : 0,
-				iso:     time.toISOString(),
-				date:    time.toLocaleString(__LANG.value)
-			};
-			if (info.body !== null || info.node !== null)
-				info.type === "notify" ? this.notify(info) : this.alert(info);
-		}
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -1392,7 +606,6 @@ const wd = (function() {
 			s:   "([0-5]?[0-9]|[0-5]?[0-9]\\.[0-9][0-9]?[0-9]?)",
 			ss:  "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
 			p:   "([AP]M)", P: "([\\+\\-]?)"
-
 		},
 		/**. '{array templates}: Registra os modelos de tempo e suas configurações.**/
 		templates: [
@@ -1423,8 +636,7 @@ const wd = (function() {
 			{re: null, H: "$1", m: "$2",                   type: "time", model: "H:mm"},
 			{re: null, h: "$1", m: "$2", s: "$3", p: "$4", type: "time", model: "h:mm:ss p"},
 			{re: null, h: "$1", m: "$2", p: "$3",          type: "time", model: "h:mm p"},
-
-//week	WWYYYY	01, 2010 (semana de 01-54)
+			//week	WWYYYY	01, 2010 (semana de 01-54)
 		],
 		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
 		names: function(lang) {
@@ -1734,9 +946,9 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __OBJECT''
-	Estabelece as regras para identificação de objetos conhecidos.**/
-	const __OBJECT = {
+/**''const object __TYPE''
+	Estabelece as regras para identificação dos tipos básicos e seus valores.**/
+	const __TYPE = {
 		/**. '{object instances}: Lista de instâncias conhecidas para identificação do tipo de objeto.**/
 		instances: {
 			String:                     {type: "string",   value: "valueOf"},
@@ -1754,11 +966,11 @@ const wd = (function() {
 			HTMLOptionsCollection:      {type: "node",     value: "nodes"},
 			HTMLFormControlsCollection: {type: "node",     value: "nodes"},
 		},
-		//FIXME NodeList pode conter textNode que precisam ser eliminados da lista
+		/**. '{object datetime(object date)}: Retorna os valores numéricos de '{Date} (P, Y, M, D, d, H, m, s e type).**/
 		datetime: function(date) {
 			return __DATETIME.iso({
 				Y: Math.abs(date.getFullYear()), P: date.getFullYear() < 0 ? -1 : 1,
-				M: date.getMonth() + 1, D: date.getDate(),       d: date.getDay() + 1,
+				M: date.getMonth() + 1, D: date.getDate(),    d: date.getDay() + 1,
 				H: date.getHours(),     m: date.getMinutes(), type: "datetime",
 				s: date.getSeconds()+(date.getMilliseconds()/1000),
 			});
@@ -1793,28 +1005,12 @@ const wd = (function() {
 		}
 	};
 
-/*============================================================================*/
-	/**#3 Eventos Customizados
-	''{const object wdDatasetEvent''
-	Evento a ser disparado ao definir o atributo HTML i{dataset} pela ferramenta da biblioteca (ver __Node).**/
-	const wdDatasetEvent = new CustomEvent("wddataset", {detail: null, bubbles: true});
 /*----------------------------------------------------------------------------*/
-	/**''const object wdReloadEvent''
-	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
-	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
-/*----------------------------------------------------------------------------*/
-	/**''const object wdResizeEvent''
-	Evento a ser disparado ao alterar as dimensões da tela.**/
-	const wdResizeEvent = new CustomEvent("wdresize", {detail: null, bubbles: true});
-
-/*============================================================================*/
-	/**#3 Administração de Dados
-	#4 Tipologia
-	''constructor object __Type(any  input)''
+	/**''constructor object __Type(any  input)''
 	Construtor para identificação do tipo de dado informado em '{input}.**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
-		let find = __OBJECT.test(input);
+		let find = __TYPE.test(input);
 		let char = find.type === "string";
 		let data = {type: find.type, value: find.value};
 		/*-- checando valores em string --*/
@@ -1831,7 +1027,6 @@ const wd = (function() {
 		if (data.type === "number" && isNaN(data.value)) {
 			data.type = "NaN";
 		}
-
 		Object.defineProperties(this, {
 			_input: {value: input},
 			_char:  {value: char},
@@ -1916,6 +1111,777 @@ const wd = (function() {
 			}
 		}
 	});
+
+/*============================================================================*/
+	/**#3 Controladores Dinâmicos
+	/**''const object __DEVICE''
+	Checa alterações da tela atribuida a um tipo de dispositivo.**/
+	const __DEVICE = {
+		/**. '{string log}: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
+		log: null,
+		/**. '{object devices}: Registra a lista de nomes dos dispositivos e suas características.**/
+		devices: {
+			phone:   {min: 0,   max: 600},
+			tablet:  {min: 600, max: 768},
+			desktop: {min: 768, max: Infinity},
+		},
+		/**. '{integer width}: Retorna o tamanho da tela atual.**/
+		get width() {return window.innerWidth;},
+		/**. '{string device}: Retorna o nome do dispositivo vigente.**/
+		get device() {
+			const width = this.width;
+			for (let name in this.devices) {
+				if (width >= this.devices[name].min && width < this.devices[name].max)
+					return name;
+			}
+		},
+		/**. '{boolean mobile}: Informa se dispositivo não é do tamanho desktop.**/
+		get mobile() {return this.device !== "desktop";},
+		/**. '{boolean change}: Informa se o dispositivo foi alterado desde a última consulta.**/
+		get changeDevice() {
+			const device = this.device;
+			if (this.log !== device) {
+				this.log = device;
+				return true;
+			}
+			return false;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador que provoca o evento '{wddataset} para os nós que contêm o atributo '{data-wd-device} a cada mudança de dispositivo (vincular ao evento '{rezise} de '{window}).**/
+		handleEvent: function(ev) {
+			if (this.changeDevice) {
+				const query = document.querySelectorAll("[data-wd-device]");
+				const event = new CustomEvent("wddataset", {detail: {data: "wdDevice"}, bubbles: false});
+				for (let i = 0; i < query.length; i++)
+					query[i].dispatchEvent(event);
+			}
+			return;
+		}
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**''const object __HASH''
+	Ajusta margens e posição do elementos ancorados na tela.**/
+	const __HASH = {
+		/**. '{array fixed}: Retorna uma lista de nós com posicionamento fixo a '{body}.**/
+		get fixed() {
+			const query = Array.prototype.slice.call(document.querySelectorAll("body > *"));
+			return query.filter(function(node,i,a) {
+				const style = window.getComputedStyle(node, null);
+				return style.position === "fixed";
+			});
+		},
+		/**. '{array full}: Retorna uma lista de objetos contendo dados ('{top bottom left right width height}) dos nós fixos caso eles ocupem completamente alguma das laterais de '{body}. A propriedade '{side} indicará o lateral ocupada.**/
+		get full() {
+			const width  = window.innerWidth;
+			const height = window.innerHeight;
+			const list   = [];
+			this.fixed.forEach(function(node,i,a) {
+				const data = node.getBoundingClientRect();
+				/*-- horizontal --*/
+				if (data.left === 0 && data.right === width)
+					data.side = data.top === 0 ? "top" : (data.bottom === height ? "bottom" : null);
+				/*-- vertical --*/
+				else if (data.top === 0 && data.bottom === height)
+					data.side = data.left === 0 ? "left" : (data.right === width ? "right" : null);
+				if (data.side !== null) list.push(data);
+			});
+			return list;
+		},
+		/**. '{object max}: Retorna os maiores dados encontrados para cada lateral ocupada completamente advinda de '{full}.**/
+		get max() {
+			const size = {top: 0, bottom: 0, left: 0, right: 0};
+			const look = {top: "height", bottom: "height", left: "width", right: "width"};
+			const data = {top: null, bottom: null, left: null, right: null};
+			this.full.forEach(function(item,i,a) {
+				if (item[look[item.side]] > size[item.side]) {
+					size[item.side] = item[look[item.side]];
+					data[item.side] = item;
+				}
+			});
+			return data;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{resize}, '{hashchange} e '{wdreload}.**/
+		handleEvent: function(ev) {
+			const data = this.max;
+			const body = window.getComputedStyle(document.body, null);
+			const side = {marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0};
+			/*-- obter dados das margnes de body --*/
+			for (let i in side)
+				side[i] = Number(body[i].replace(/\D+$/, ""));
+			/*-- acertar margens de body --*/
+			for (let i in data) {
+				if (data[i] !== null) {
+					if      (i === "top"    && data[i].height > side.marginTop)
+						document.body.style.marginTop    = `${data[i].height}px`;
+					else if (i === "bottom" && data[i].height > side.marginBottom)
+						document.body.style.marginBottom = `${data[i].height}px`;
+					else if (i === "left"   && data[i].width  > side.marginLeft)
+						document.body.style.marginLeft   = `${data[i].width}px`;
+					else if (i === "right"  && data[i].width  > side.marginRight)
+						document.body.style.marginRight  = `${data[i].width}px`;
+				}
+			}
+			/*-- acertar posicionamento do hash --*/
+			if ((ev.type === "wdreload" || ev.type === "hashchange") && data.top !== null) {
+				const hash  = window.location.hash;
+				const query = hash === "" ? null : document.querySelector(hash);
+				if (query !== null) {
+					window.scrollTo(0, query.offsetTop - side.marginTop);
+				}
+			}
+			return;
+		}
+	};
+
+/*----------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/**#3 Mecanismos de Controle
+
+	''node function __HTML(string/node tag, object attr, string uri)''
+	Cria e/ou define os atributos/propriedades do elemento ou retona nulo em caso de inconsistências.
+	|Argumento|Descrição|
+	|tag|Nome da tag do elemento a criar ou o elemento HTML a ser trabalhado|
+	|attr|Propriedades ou atributos, nessa ordem, do elemento|
+	|uri|Namespace URI para um elemento qualificado|**/
+	function __HTML(tag, attr, uri) {
+		function type(input) {
+			const type = typeof input;
+			if (type !== "object")            return type;
+			if (input === null)               return "null";
+			if (Array.isArray(input))         return "array";
+			if (input instanceof RegExp)      return "regexp";
+			if (input instanceof HTMLElement) return "node";
+			return "object";
+		}
+		function create(tag, uri) {
+			const re = /^https?\:\/\/.+/i;
+			return re.test(uri) ? document.createElementNS(uri, tag) : document.createElement(tag);
+		}
+		/*-- analisando dados --*/
+		const tTag  = type(tag);
+		const valid = tTag === "string" || tTag === "node";
+		const prop  = valid && type(attr) === "object" ? attr : {};
+		const node  = valid ? (tTag === "node" ? tag : create(tag, uri)) : null;
+		/*-- definindo prorpiedades e atributos, nessa ordem --*/
+		for (let name in prop) {
+			let value  = prop[name];
+			let tValue = type(value);
+			let tProp  = type(node[name]);
+			/*-- propriedade --*/
+			if (name in node) {
+				if (tValue === "array" && tProp === "function")
+					node[name].apply(node, value);
+				else if (tValue === "object")
+					for (let i in value) node[name][i] = value[i];
+				else
+					node[name] = value;
+			}
+			/*-- atributo --*/
+			else {
+				(value === null ? node.removeAttribute(name) : node.setAttribute(name, value));
+			}
+		}
+		return node;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**''object function __DOM(object html, node parent)''
+	Cria uma estrutura de elementos HTML e retorna o argumento '{html} acrescido da propriedade '{node} (elemento) ou retorna nulo em caso de inconsistência.
+	O argumento opcional '{parent} diz que o elemento trabalhado será filho dele.
+	As propriedades do argumento '{html} têm os mesmos nomes dos argumentos de '{__HTML} acrescidos de:
+	|Pripriedade|Tipo|Descrição|
+	|listener|array|Uma lista de grupos de argumentos (array) para o método '{addEventListener}|
+	|child|array|Lista de objetos contendo as propriedades dos elementos filho (argumento '{html})|**/
+	function __DOM(html, parent) {
+		/*-- contruindo o nó principal --*/
+		const data = typeof html === "object" ? html : {};
+		data.node  = __HTML(data.tag, data.attr, data.uri);
+		if (data.node === null) return null;
+		/*-- adicionando disparadores --*/
+		if (Array.isArray(data.listener)) {console.log("entrou 1");
+			for (let i = 0; i < data.listener.length; i++) {
+				if (Array.isArray(data.listener[i]))
+					__HTML(data.node, {addEventListener: data.listener[i]});
+			}
+		}
+		/*-- criando e adicionando filhos --*/
+		if (Array.isArray(data.child)) {
+			for (let i = 0; i < data.child.length; i++) {
+				if (typeof data.child[i] === "object")
+					__DOM(data.child[i], data.node);
+			}
+		}
+		/*-- adicionando elemento ao pai, se for um nó --*/
+		if (typeof parent === "object" && parent instanceof HTMLElement)
+			parent.appendChild(data.node)
+		return data;
+	}
+
+
+/*----------------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------------*/
+	/**''const object __ARIA''
+	Agrupa ações de acessibilidade.**/
+	const __ARIA = {
+		/**. '{boolean isHTML(node node)}: Retorna verdadeiro se o nó é um elemento HTML.**/
+		isHTML: function(node) {
+			return typeof node === "object" && node instanceof HTMLElement && node.nodeType === 1;
+		},
+		/**. '{boolean setFocus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
+		setFocus: function(node, force) {
+			if (!this.isHTML(node)) return false;
+			/*-- localizando por autofocus --*/
+			const auto = node.querySelectorAll("[autofocus]");
+			for (let i = 0; i < auto.length; i++) {
+				if (auto[i].tabIndex >= 0) {
+					auto[i].focus();
+					return true;
+				}
+			}
+			/*-- localizando por focáveis --*/
+			const all = node.querySelectorAll("*");
+			for (let i = 0; i < all.length; i++) {
+				if (all[i].tabIndex >= 0) {
+					all[i].focus();
+					return true;
+				}
+			}
+			/*-- forçando focus --*/
+			if (force === true && all.length > 0) {
+				const elem = auto.length > 0 ? auto[0] : all[0];
+				elem.setAttribute("tabindex", auto.length > 0 ? "0" : "-1");
+				elem.focus();
+				return true;
+			}
+			return false;
+		},
+		/**. '{void hideFocus(node node, boolean add)}: Método para tirar o nó do fluxo natural se '{add} for verdadeiro. Se falso, reestabelecerá o fluxo, caso contrário, aplicará falso a todos os nós do elemento.**/
+		hideFocus: function(node, add) {
+			const attr = "data-js-wd-flux";
+			const has  = node.hasAttribute(attr);
+			/*-- adicionando (se receber foco ou for editável) --*/
+			if (add === true && !has && (node.tabIndex >= 0 || node.isContentEditable)) {
+				const json = {tab: node.getAttribute("tabindex"), edit: node.isContentEditable};
+				node.removeAttribute("contenteditable");
+				node.setAttribute("tabindex", "-1");
+				node.setAttribute(attr, JSON.stringify(json));
+			}
+			/*-- removendo (se conter o atributo) --*/
+			else if (add === false && has) {
+				try {
+					const json = JSON.parse(node.getAttribute(attr));
+					if (json.tab !== null)
+						node.setAttribute("tabindex", json.tab);
+					else
+						node.removeAttribute("tabindex");
+					if (json.edit)
+						node.setAttribute("contenteditable", "true");
+				} catch(e) {}
+				node.removeAttribute(attr);
+			}
+			/*-- remover o método de todos os filhos do nó --*/
+			else {
+				const query = node.querySelectorAll(`[${attr}]`);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], false);
+			}
+			return;
+		},
+		/**. '{void fakeInert(node node, boolean add)}: Método alternativo para deixar o nó inerte.**/
+		fakeInert: function(node, add) {
+			const has  = node.hasAttribute("data-js-wd-inert");
+			if (add && !has) {
+				node.setAttribute("data-js-wd-inert", "");
+				node.setAttribute("aria-hidden", "true");
+				this.hideFocus(node, add);
+				const focus = `[contenteditable], [tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
+				const query = node.querySelectorAll(focus);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], true);
+			}
+			else if (!add && has) {
+				node.removeAttribute("data-js-wd-inert");
+				node.removeAttribute("aria-hidden");
+				this.hideFocus(node, add);
+				this.hideFocus(node);
+			}
+			return;
+		},
+		/**. '{void inert(node node, boolean add)}: Define o nó '{node} como inerte ou defaz a ação se '{add} for falso.**/
+		inert: function(node, add) {
+			if (!this.isHTML(node)) return;
+			add = add !== false;
+			if ("inert" in node)
+				node.inert = add;
+			else
+				this.fakeInert(node, add);
+			return;
+		},
+
+
+
+
+
+
+
+
+
+
+
+	}
+/*----------------------------------------------------------------------------*/
+	/**''const object __WINDOW''
+	Administra containers para janelas modais, em quadro ou flutuantes.**/
+	const __WINDOW = {
+		/**. '{integer heap}: Controla o identificador das janelas.**/
+		id: Math.trunc(100*Math.random()),
+		/**. '{array heap}: Registra informações sobre os quadros.**/
+		heap: [],
+		/**. '{object packs}: Registra os elementos empacotadores de janela.**/
+		packs: {
+			modal: {multiple: 0, inert: 1, freeze: 0, escape: 1, child: [], node: __HTML("DIV")},
+			float: {multiple: 0, inert: 0, freeze: 1, escape: 1, child: [], node: __HTML("DIV", {addEventListener: ["scroll", (ev) => ev.preventDefault(), {passive: false}]})},
+			frame: {multiple: 1, inert: 0, freeze: 0, escape: 0, child: [], node: __HTML("DIV")},
+		},
+		/**. '{void setPosition(node node, integer x, integer y)}: Acerta o posicionamento da janela float.**/
+		setPosition: function(node, x, y) {
+			const back = this.packs.float.node;
+			const base = {w: window.screen.width, h: window.screen.height};
+			const area = {w: window.innerWidth,   h: window.innerHeight};
+			const padd = Math.min(base.w, base.h) / 100;
+			const pack = Math.max(base.w, base.h) / 4;
+			const edge = {l: padd, r: area.w - padd, t: padd, b: area.h - padd};
+			const dots = {
+				x: x < edge.l ? edge.l : (x > edge.r ? edge.r : x),
+				y: y < edge.t ? edge.t : (y > edge.b ? edge.b : y),
+			};
+			const size = {
+				rect: function() {
+					const data = node.getBoundingClientRect();
+					this.w = data.width;
+					this.h = data.height;
+				}
+			};
+			size.rect();
+			/*-- horizontal --*/ //FIXME arrumar isso aqui para qualquer tamanho de nó limitado a tela
+			back.style.width = (size.w > pack ? pack : size.w)+"px";
+			size.rect();
+			size.px = (dots.x + size.w > edge.r) && (dots.x - edge.l > edge.r - dots.x) ? "right" : "left";
+			back.style[size.px] = (size.px === "left" ? dots.x : area.w - dots.x)+"px";
+			/*-- vertical --*/
+			size.py = (dots.y + size.h > edge.b) && (dots.y - edge.t > edge.b - dots.y) ? "bottom" : "top";
+			back.style[size.py]  = (size.py === "top" ? dots.y : area.h - dots.y)+"px";
+			back.style.maxHeight = (size.py === "top" ? (edge.b - dots.y) : (dots.y - edge.t))+"px";
+			return;
+		},
+		/**. '{void show(object heap)}: Renderiza o elemento.**/
+		show: function(heap) {
+			const css1 = `js-wd-window js-wd-window-${heap.type}`;
+			const css2 = heap.type === "modal" ? `js-wd-window-${heap.type}-${heap.local}` : "";
+			const aria = heap.type === "modal" ? "true" : "false"
+			__DOM({
+				tag:   this.packs[heap.type].node,
+				attr:  {className: `${css1} ${css2}`, tabIndex:  -1, style: ""},
+				child: [{tag:  heap.node, attr: {tabIndex: -1, "aria-modal": aria}}],
+			}, document.body);
+			/*-- arrumando particularidades de estilos --*/
+			const ignore = {display: "none", visibility: "hidden"};
+			const styles = window.getComputedStyle(heap.node, null);
+			for (let i in ignore) {
+				if (styles[i] === ignore[i])
+					heap.node.style[i] = null;
+			}
+			/*-- arrumando posicionamento de float --*/
+			if (heap.type === "float")
+				this.setPosition(heap.node, heap.x, heap.y);
+			/*-- ir para o primeiro elemento focável dentro do elemento (o próprio não pode) --*/
+			if (heap.type === "modal" || heap.type === "float")
+				__ARIA.setFocus(heap.node, true);
+			return;
+		},
+
+
+		/**. '{void update()}: Administra a pilha.**/
+		update: function() {
+			/*-- obtendo conteúdo das janelas para fins de vincular ouvinte --*/
+			const oldChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
+			/*-- zerar a contagem de filhos --*/
+			for (let name in this.packs)
+				this.packs[name].child = [];
+			/*-- analisando a pilha --*/
+			this.heap.forEach(function(heap,i,a) {
+				const pack = this.packs[heap.type];
+				const push = pack.child.length === 0 || data.multiple === 1;
+				/*-- renderizar nós aguardando na fila --*/
+				if (heap.status === "INACTIVE" && push) {
+					heap.status = "ACTIVE"
+					this.show(heap);
+					//FIXME inert e freeze?
+				}
+				/*-- registrar nós renderizados --*/
+				if (heap.status === "ACTIVE") {
+					pack.child.push(heap.node);
+					/*-- realocar se necessário os nós sequestrados --*/
+					if (heap.node.parentElement !== pack.node)
+						this.show(heap);
+				}
+			}, this);
+			/*-- analisando os empacotadores --*/
+			for (let name in this.packs) {
+				let pack = this.packs[name];
+				/*-- fechar empacotadores vazios --*/
+				if (pack.child.length === 0) {
+					if (pack.node.parentElement !== null)
+						pack.node.remove();
+						//FIXME inert e freeze?
+					if (pack.node.childElementCount > 0)
+						pack.node.innerHTML = "";
+				}
+				/*-- remover nós alienígenas dos empacotadores --*/
+				if (pack.node.childElementCount !== pack.child.length) {
+					let child = pack.node.children;
+					for (let i = 0; i < child.length; i++) {
+						if (pack.child.indexOf(child[j]) < 0)
+							child[j].remove();
+					}
+				}
+				/*-- realocar empacotador, se necessário --*/
+				if (pack.node.parentElement !== null && pack.node.parentElement !== document.body)
+					document.node.appenChild(pack.node);
+			}
+			/*-- des/vincular ouvinte --*/
+
+			const newChild = this.packs.modal.child.length + this.packs.float.child.length > 0;
+			console.log({old: oldChild, new: newChild})
+			if (!oldChild && newChild)
+				this.trigger(true);
+			else if (oldChild && !newChild)
+				this.trigger(false);
+			return;
+		},
+
+
+
+
+
+
+
+
+
+
+	//FIXME reescrever isso aqui, a função close agora retorna 3 elementos tem as propriedades x, y, e local
+		/**. '{integer append(node node, object options)}: Agrega elementos aos quadros e retorna o identificador do elemento adicionado. O argumento '{node} refere-se ao elemento a ser agregado e o argumento '{options} define as características do elemento:
+		|Nome|Tipo|Valores|Descrição|
+		|type|string|float (padrão), modal ou frame|Define o tipo de quadro|
+		|place|string|ver adiante|Posicionamento do nó no quadro|
+		|close|function|-|Função a ser chamada ao fechar o nó|
+		Quanto às características dos quadro, tem-se:
+		|Característica|frame|modal|float|
+		|Acondicionamento|Em fila|Em camada|Individual|
+		|Fundo|Transparente-localizado|Opaco-Tela-Inerte|Ausente-Tela|
+		|Fechamento|Não|Esc|Esc, Tab e clique|
+		|Objetivo|Alerta|Diálogo|Menu|
+		. Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
+		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.
+
+		STATUS>: "INACTIVE ACTIVE CLOSED IGNORED CANCELED"
+
+		**/
+		append: function(node, options) {
+			const heap  = typeof options === "object" ? options : {};
+			const type  = /^(modal|float|frame)$/;
+			const local = /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/;
+			/*-- pré ajustes --*/
+			heap.type  = String(heap.type).toLowerCase().replace(/\s+/g, "");
+			heap.place = String(heap.place).toLowerCase().replace(/\s+/g, "");
+			heap.node  = __HTML(node);
+			if (heap.node === null || heap.node === document.body) return;
+			/*-- definindo heap --*/
+			heap.type   = type.test(heap.type)   ? heap.type  : "frame";
+			heap.local  = local.test(heap.local) ? heap.local : "center";
+			heap.x      = isFinite(heap.x) ? Number(heap.x) : 0;
+			heap.y      = isFinite(heap.y) ? Number(heap.y) : 0;
+			heap.close  = typeof heap.close === "function" ? heap.close : null;//FIXME mudar isso para listener?
+			heap.id     = ++this.id;
+			heap.status = "INACTIVE";
+			/*-- remover, se já existir em alguma janela, e adicionar à pilha --*/
+			this.remove(heap.node, true);
+			this.heap.push(heap);
+			this.update();
+			return heap.id;
+		},
+		/**. '{integer remove(node node, boolean escape)}: Remove o nó do quadro que o armazena e retorna seu id. O argumento '{escape} deve ser verdadeiro quando o elemento for realocado para outra janela ou fechado.**/
+		remove: function(node, escape) {
+			let id = null;
+			this.heap = this.heap.filter(function(heap,i,a) {
+				if (heap.node === node) {
+					id = heap.id;
+					heap.node.remove();
+					if (heap.close !== null)
+						heap.close(id, heap.node, escape === true);
+					return false;
+				}
+				return true;
+			}, this);
+			if (id !== null) this.update();
+			return id;
+		},
+
+
+
+		handleEvent: function(ev) {
+			/*-- congelar janela float --*/
+			if ((ev.type === "wheel" || ev.type === "touchmove") && this.packs.float.child.length > 0) {
+				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target))
+					return ev.preventDefault();
+				if (ev.target === document.body)
+					return ev.preventDefault();
+			}
+			/*-- escapar janela float com clique fora --*/
+			if (ev.type === "click" && this.packs.float.child.length > 0) {
+				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target)) {
+					ev.preventDefault();
+					return this.remove(this.packs.float.child[0], true);
+				}
+			}
+			/*-- escapar janela float ou modal com Esc --*/
+			if (ev.type === "keydown" && ev.key === "Escape") {
+				if (this.packs.float.child.length > 0) {
+					ev.preventDefault();
+					return this.remove(this.packs.float.child[0], true);
+				}
+				if (this.packs.modal.child.length > 0) {
+					ev.preventDefault();
+					return this.remove(this.packs.modal.child[0], true);
+				}
+			}
+			return;
+		},
+
+		trigger: function(add) {
+			if (add === true) {
+				document.addEventListener("wheel",     this, {passive: false});
+				document.addEventListener("touchmove", this, {passive: false});
+				document.addEventListener("click",     this, false);
+				document.addEventListener("keydown",   this, false)
+			}
+			else {
+				document.removeEventListener("wheel",     this, {passive: false});
+				document.removeEventListener("touchmove", this, {passive: false});
+				document.removeEventListener("click",     this, false);
+				document.removeEventListener("keydown",   this, false)
+			}
+			return;
+		},
+
+
+
+
+
+	};
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**''const object __SIGNAL''
+	Renderiza mensagens e notificações.**/
+	const __SIGNAL = {
+		/**. '{integer id}: Controla o id da caixa de mensagem.**/
+		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0, notify: 0},
+		/**. '{node builder(object data)}: Retorna a caixa de alerta ou diálogo conforme especificado em i{data} (ver '{signal}).**/
+		buider: function(data) {
+			const time = `<time datetime="${data.iso}">${data.date}</time>`;
+			const num  = this.id[data.type]++;
+			const id   = `js_wd_signal_${data.type}_${num}`;
+			const aria = {head: `${id}_head`, body: `${id}_body`, node: `${id}_node`};
+			const role = data.type === "dialog" ? "alertdialog" : "alert";
+			const move = role === "alert" ? "" : `data-wd-move="{$:'#${id}'}"`;
+			const main = __HTML("div", {
+				id: id, role: role, dataset: {jsWdSignal: data.type},
+				"aria-labelledby": aria.head, "aria-describedby": aria.body,
+				innerHTML: `<button class="js-wd-signal-kill js-wd-style" type="button" >&times;</button>
+				<div class="js-wd-signal-head" id="${aria.head}" ${move} >${data.head === null ? time : data.head}</div>
+				<div class="js-wd-signal-body" id="${aria.body}" >${data.body}</div>
+				<div class="js-wd-signal-node" id="${aria.node}"></div>
+				<div class="js-wd-signal-fire"></div>`
+			});
+			/*-- DEFINIÇÕES --------------------------------------------------------*/
+			main.setAttribute("aria-describedby", data.body === null ? aria.node : aria.body);
+			if (data.body === null)
+				main.querySelector(".js-wd-signal-body").remove();
+			if (data.node === null)
+				main.querySelector(".js-wd-signal-node").remove();
+			else
+				main.querySelector(".js-wd-signal-node").appendChild(data.node);
+			const fire = main.querySelector(".js-wd-signal-fire");
+			for (let i in data.actions) {
+				let btn = __HTML("button", {
+					textContent: data.actions[i].replace(/\*$/, ""), type: "button",
+					class: "js-wd-style js-wd-button", autofocus: (/\*$/).test(data.actions[i]),
+					dataset: {jsWdSignalId: i}
+				});
+				fire.appendChild(btn);
+				//FIXME isso será eliminado após a criação do atributo data-wd-key
+				btn.addEventListener("keydown", function(ev) {
+					const keys = {
+						next: /^(ArrowRight|ArrowDown)$/i,
+						previus: /^(ArrowLeft|ArrowUp)$/i,
+						first: /^(Home)$/i,
+						last: /^(End)$/i
+					};
+					const child = ev.target.parentElement.children;
+					if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
+						ev.target.nextElementSibling.focus();
+					else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
+						ev.target.previousElementSibling.focus();
+					else if (keys.first.test(ev.key))
+						child[0].focus();
+					else if (keys.last.test(ev.key))
+						child[child.length - 1].focus();
+					return;
+				}, false);
+			}
+			return main;
+		},
+		/**. '{void alert(object info)}: Ver método i{signal}.**/
+		alert: function(info) {
+			const main = this.buider(info);
+			/*----------------------------------------------------------------------*/
+			if (info.type === "dialog") {
+				main.querySelector(".js-wd-signal-kill").remove();
+				const buttons = main.querySelector(".js-wd-signal-fire").children;
+				let   focus   = null;
+				for (let i = 0; i < buttons.length; i++) {
+					let btn = buttons[i];
+					let id  = btn.dataset.jsWdSignalId;
+					delete btn.dataset.jsWdSignalId;
+					btn.addEventListener("click", function(ev) {
+						__WINDOW.remove(main);
+						if (info.trigger !== null)
+							info.trigger(info.id, id);
+						return;
+					}, false);
+					if (focus === null && btn.autofocus)
+						focus = btn;
+				}
+				/*-- Renderizando diálogo --*/
+				__WINDOW.append(main, {
+					type: "modal",
+					close: function(result) {
+						if (info.trigger !== null && !result)
+							info.trigger(info.id, null);
+						return;
+					}
+				});
+				if (focus !== null) focus.focus();
+			}
+			/*----------------------------------------------------------------------*/
+			else {
+				main.querySelector(".js-wd-signal-fire").remove();
+				const kill = main.querySelector(".js-wd-signal-kill");
+				kill.addEventListener("click", function(ev) {
+					return __WINDOW.remove(main);
+				}, false);
+				__WINDOW.append(main, {type: "frame", close: function() {
+					if (info.trigger !== null) info.trigger(info.id, null);
+				}});
+				if (info.time > 0)
+					window.setTimeout(function() {kill.click();}, info.time);
+			}
+			/*----------------------------------------------------------------------*/
+			return;
+		},
+		/**. '{void notify(object data)}: Ver método i{signal}.**/
+		notify: function (data) {
+			const title  = data.head === null ? data.date : data.head;
+			const config = {
+				lang: __LANG.value,
+				body: data.body === null ? data.node.innerText : data.body,
+				tag:  data.id   === null ? "" : data.id
+			};
+			if (Notification.permission === "denied")
+				return;
+			if (Notification.permission === "granted")
+				new Notification(title, config);
+			else
+				Notification.requestPermission().then(function(x) {
+					if (x === "granted") new Notification(title, config);
+				});
+			return;
+		},
+		/**. '{void signal(object data)}: Define mensagens de alerta, caixas de diálogo ou notificações conforme definido em '{data}:
+		|Nome|Tipo|Descrição|
+		|type|string|Indica o tipo de interação (notificação, alerta ou diálogo).|
+		|head|string|Define o título da interação.|
+		|body|string|Define a mensagem da interação.|
+		|node|Node|Define um elemento HTML a ser exibido após a mensagem (notificação e diálogo).|
+		|id|string|Identificador da interação.|
+		|trigger|function|Define a função a ser chamada após o fechamento (notificação e diálogo).|
+		|actions|object|Define os botões de resposta do u{diálogo}.|
+		|time|integer|Duração da mensagem de u{alerta} em milissegundos.|
+		. As propriedades '{body} ou '{node} precisam ser informadas. Os seguintes valores de '{type} são possíveis:
+		|Valor|Interação|
+		|notify|Exibe uma notificação.|
+		|warn|Exibe uma caixa de u{alerta} de advertência.|
+		|error|Exibe uma caixa de u{alerta} de erro.|
+		|info|Exibe uma caixa de u{alerta} de informação.|
+		|ok|Exibe uma caixa de u{alerta} de sucesso.|
+		|dialog|Exibe uma caixa de u{diálogo}.|
+		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do texto do botão para focá-lo ao abrir o diálogo.
+		. A função '{trigger} receberá como argumentos os identificadores da interação e do botão de ação definidos nas propriedades '{id} e '{actions}, respectivamente. Se a caixa for fechada sem definir uma ação, o respectivo argumento será nulo.**/
+		signal: function(data) {
+			data       = typeof data === "object" ? data : {};
+			const time = new Date();
+			const info = {
+				type:    data.type in this.id ? data.type : "info",
+				id:      "id"   in data ? data.id   : null,
+				head:    "head" in data ? data.head : null,
+				body:    "body" in data ? data.body : null,
+				node:    typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null,
+				actions: typeof data.actions === "object"   ? data.actions : {OK: "OK*"},
+				trigger: typeof data.trigger === "function" ? data.trigger : null,
+				time:    typeof data.time    === "number"   ? Math.trunc(data.time) : 0,
+				iso:     time.toISOString(),
+				date:    time.toLocaleString(__LANG.value)
+			};
+			if (info.body !== null || info.node !== null)
+				info.type === "notify" ? this.notify(info) : this.alert(info);
+		}
+	};
+
+
+
+
+/*============================================================================*/
+	/**#3 Eventos Customizados
+	''{const object wdDatasetEvent''
+	Evento a ser disparado ao definir o atributo HTML i{dataset} pela ferramenta da biblioteca (ver __Node).**/
+	const wdDatasetEvent = new CustomEvent("wddataset", {detail: null, bubbles: true});
+/*----------------------------------------------------------------------------*/
+	/**''const object wdReloadEvent''
+	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
+	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
+/*----------------------------------------------------------------------------*/
+	/**''const object wdResizeEvent''
+	Evento a ser disparado ao alterar as dimensões da tela.**/
+	const wdResizeEvent = new CustomEvent("wdresize", {detail: null, bubbles: true});
+
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Gestão de Dados
@@ -3267,6 +3233,512 @@ const wd = (function() {
 				this._saved["wdDoc"] = data;
 				return this.wdDoc;
 			}
+		}
+	});
+
+/*============================================================================*/
+	/**#3 Requisições e Respostas
+	#4 Barra de Progresso
+	''const object __PROGRESS''
+	Registra a barra de progresso das requisições da biblioteca.**/
+	const __PROGRESS = {
+		/**. '{integer count}: Contador de ações em progresso.**/
+		count: 0,
+		/**. '{node bar}: Barra de progresso.**/
+		bar: document.createElement("PROGRESS"),
+		/**. '{object event(void value)}: Retorna o evento correspondente à ação do argumento:
+		|Valor|Tipo|Descrição|
+		|open|string|Abre a barra de progresso|
+		|close|string|Fecha a barra de progresso|
+		|0 a 1|number|Define o valor da barra de progresso|**/
+		event: function(value) {
+			return new CustomEvent("wdprogress", {detail: value})
+		},
+		/**. '{void handleEvent(object ev)}: Disparador vinculado ao evento '{wdprogress} atrelado a '{window}.**/
+		handleEvent: function(ev) {
+			if (ev.type !== "wdprogress") return;
+			/*-- avançar/exibir progresso --*/
+			if (ev.detail === "open") {
+				this.count++;
+				__WINDOW.append(this.bar, {type: "frame"});
+			}
+			/*-- retroceder/fechar progresso --*/
+			else if (ev.detail === "close") {
+				if (this.count === 0)
+					__WINDOW.remove(this.bar);
+				else if (--this.count === 0)
+					window.setTimeout(function(ev, me) {me.handleEvent(ev);}, 50, ev, this);
+			}
+			/*-- definir valor --*/
+			else {
+				if (isNaN(ev.detail))
+					this.bar.removeAttribute("value");
+				else
+					this.bar.value = Number(ev.detail);
+			}
+			return;
+		}
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Resposta
+	''constructor object __Response(function' trigger)''
+	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento opcional '{trigger} define o disparador a ser invocado a cada mudança ou encerramento da requisição. O disparador receberá a cada atualização um objeto com as seguintes propriedades:
+	|Nome|Descrição|
+	|done|Booleano que indica o fim do processo.|
+	|ok|Indica, ao fim do processo, se o procedimento foi concluído com sucesso.|
+	|status|Traz, ao fim do processo, uma mensagem sobre o procedimento.|
+	|time|Indica o tempo de execução do processo.|
+	|size|Indica a quantidade de trabalho do processo.|
+	|progress|Indica o progresso do processo (de 0 a 1).|
+	|headers|Traz, ao fim do processo e se aplicável, o cabeçalho de retorno (Headers ou object).|
+	|response|Traz, ao fim do processo, o conteúdo do procedimento ou nulo, se inaplicável.|
+	|abort()|Uma função para abortar o procedimento.|
+	|contentType|Retorna o tipo de arquivo proveniente do cabeçalho ou nulo.|**/
+	function __Response(trigger) {
+		if (!(this instanceof __Response)) return new __Response(trigger);
+		Object.defineProperties(this, {
+			_trigger:  {value: __Type(trigger).function ? trigger : null},
+			_start:    {value: new Date().valueOf()},
+			_fetch:    {value: null,  writable: true},
+			_aborted:  {value: false, writable: true},
+			_response: { value: {
+					done: false,
+					ok: null,
+					status: null,
+					time: 0,
+					size: 0,
+					progress: 0,
+					headers: null,
+					response: null,
+					abort: null,
+					contentType: null,
+				}
+			}
+		});
+		window.dispatchEvent(__PROGRESS.event("open"));
+	}
+	Object.defineProperties(__Response.prototype, {
+		constructor: {value: __Response},
+		/**. '{string _getHeaderValue(string name)}: Retorna o valor da propriedade (´{name}) de ´{headers} ou nulo.**/
+		_getHeaderValue: {
+			value: function(name) {
+				const data = new __DataSet(this._response.headers);
+				const list = data.getAll(name);
+				return list.length > 0 ? list[0] : null;
+			}
+		},
+		/**. '{void _changes(string type, string caller)}: Define o formato da resposta ('{_response.response}) conforme tipo ('{type}) e o método ('{caller}).**/
+		_changes: {
+			value: function(type, caller) {
+				if (this._response.response !== null) {
+					const parser = new __Parser(this._response.response);
+					const mime   = __MIME[this._response.contentType];
+					function table() {
+						if (mime === "csv")  return parser.csvTable.get();
+						if (mime === "json") return parser.stringJSON.matrixCSV.csvTable.get();
+						return null;
+					};
+					const change = {
+						send: {
+							xml:    function() {return parser.stringXML.get();},
+							url:    function() {return parser.fileURL.get();},
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							object: function() {return parser.csvTable.tableValues.matrixList.get();},
+							table:  table,
+						},
+						read: {
+							html:   function() {return parser.stringHTML.get();},
+							xml:    function() {return parser.stringXML.get();},
+							json:   function() {return parser.stringJSON.get();},
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							object: function() {return parser.csvTable.tableValues.matrixList.get();},
+							table:  table,
+						},
+						fetch: {
+							html:   function() {return parser.stringHTML.get();},
+							xml:    function() {return parser.stringXML.get();},
+							url:    function() {return parser.fileURL.get();},
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							object: function() {return parser.csvTable.tableValues.matrixList.get();},
+							table:  table,
+						}
+					}
+					if (type in change[caller])
+						this._response.response = change[caller][type]();
+				}
+				return;
+			}
+		},
+		/**. '{void send(object ev, object config)}: Disparador para o método '{send} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da requisição.**/
+		send: {
+			value: function(ev, config) {
+				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
+				if (this._response.done) return;
+				const target = ev.target;
+				const type   = ev.type;
+				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
+				/*-- tempo de requisição --*/
+				this._response.time   = (new Date().valueOf()) - this._start;
+				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
+				if (this._response.abort === null && target instanceof XMLHttpRequest)
+					this._response.abort = function() {return target.abort();}
+				/*-- se o tamanho é computável, definir o progresso --*/
+				if (ev.lengthComputable === true) {
+					this._response.size = ev.total;
+					this._response.progress = ev.loaded/ev.total;
+					window.dispatchEvent(__PROGRESS.event(this._response.progress));
+				}
+				/*-- verificar se a requisição acabou --*/
+				if (target instanceof XMLHttpRequest && type in done) {
+					const code = target.status;
+					const text = target.statusText;
+					const fail = done[type] === 0;
+					this._response.done   = true;
+					this._response.status = fail ? type  : (code + " - " + text);
+					this._response.ok     = fail ? false : (code >= 200 && code < 300);
+				}
+				/*-- se a requisição foi um sucesso, definir o resultado --*/
+				if (this._response.ok) {
+					const dataset = new __DataSet(target.getAllResponseHeaders());
+					this._response.headers     = dataset.toHeaders;
+					this._response.response    = target.response;
+					this._response.contentType = this._getHeaderValue("content-type");
+					this._changes(config.type, "send");
+				}
+				/*-- chamar o disparador se existente --*/
+				if (this._trigger !== null) this._trigger(this._response);
+				/*-- encerrar o progresso se a requisição acabou --*/
+				if (this._response.done)
+					window.dispatchEvent(__PROGRESS.event("close"));
+				return;
+			}
+		},
+		/**. '{void read(object ev, object config)}: Disparador para o método '{read} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da leitura.**/
+		read: {
+			value: function(ev, config) {
+				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
+				if (this._response.done) return;
+				const target = ev.target;
+				let   type   = ev.type;
+				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
+				/*-- tempo de requisição: verificar se já estourou o tempo --*/
+				this._response.time = (new Date().valueOf()) - this._start;
+				if (config.timeout > 0 && !(type in done)) {
+					if (this._response.time > config.timeout) type = "timeout";
+				}
+				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
+				if (this._response.abort === null)
+					this._response.abort = function() {return target.abort();}
+				/*-- se o tamanho é computável, definir o progresso --*/
+				if (ev.lengthComputable === true) {
+					this._response.size = ev.total;
+					this._response.progress = ev.loaded/ev.total;
+					window.dispatchEvent(__PROGRESS.event(this._response.progress));
+				}
+				/*-- verificar se a requisição acabou --*/
+				if (type in done) {
+					const code = target.readyState;
+					const text = ["EMPTY", "LOADING", "DONE"]
+					const fail = done[type] === 0;
+					this._response.done   = true;
+					this._response.status = fail ? type : (text[code]);
+					this._response.ok     = !fail;
+				}
+				/*-- se a requisição foi um sucesso, definir o resultado --*/
+				if (this._response.ok) {
+					const dataset = new __DataSet(config.fileHeaders);
+					this._response.headers     = dataset.toHeaders;
+					this._response.contentType = this._getHeaderValue("content-type");
+					this._response.response    = target.result;
+					this._changes(config.type, "read");
+				}
+				/*-- chamar o disparador se existente --*/
+				if (this._trigger !== null) this._trigger(this._response);
+				/*-- encerrar o progresso se a requisição acabou --*/
+				if (this._response.done)
+					window.dispatchEvent(__PROGRESS.event("close"));
+				return;
+			}
+		},
+		/**. '{boolean fetch(object ev, object config)}: Disparador para o método '{fetch} de __Request. O argumento '{ev} é o retorno do ação e '{config} os dados de configuração da requisição. Retorna falso se os eventos precários "timeout" e "aborted" ocorrerem.**/
+		fetch: {
+			value: function(ev, config) {
+				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
+				if (this._response.done) return;
+				const self     = this;
+				const progress = {EMPTY: 0, LOADEND: 1/2, DONE: 1};
+				/*-- tempo de requisição --*/
+				this._response.time = (new Date().valueOf()) - this._start;
+				/*-- progresso da requisição (0, 50%, 100%) --*/
+				this._response.progress = progress[config._status];
+				/*-- definir precariamente um método de abortar --*/
+				if (this._response.abort === null) {
+					this._response.abort = function() {self._aborted = true;}
+				}
+				/*-- verificar precariamente se a requisição foi abortada --*/
+				if (this._aborted) {
+					this.error("aborted");
+					return false;
+				}
+				/*-- verificar precariamente se acabou o tempo da requisição --*/
+				if (config.timeout > 0 && this._response.time > config.timeout) {
+					this.error("timeout");
+					return false;
+				}
+				/*-- se a requisição acabou, guardar provisoriamente o resultado --*/
+				if (config._status === "LOADEND") {
+					this._fetch = ev;
+				}
+				/*-- se a requisição foi um sucesso, definir o resultado --*/
+				else if (config._status === "DONE") {
+					const fetch = this._fetch;
+					this._response.done        = true;
+					this._response.ok          = fetch.ok;
+					this._response.status      = fetch.status + " - " + fetch.statusText;
+					this._response.headers     = fetch.headers;
+					this._response.contentType = this._getHeaderValue("content-type");
+					this._response.size        = Number(this._getHeaderValue("content-length"));
+					this._response.response    = ev;
+					this._changes(config.type, "fetch");
+				}
+				/*-- definir o progresso --*/
+				window.dispatchEvent(__PROGRESS.event(this._response.progress));
+				/*-- chamar o disparador se existente --*/
+				if (this._trigger !== null) this._trigger(this._response);
+				/*-- encerrar o progresso se a requisição acabou --*/
+				if (this._response.done)
+					window.dispatchEvent(__PROGRESS.event("close"));
+				return true;
+			}
+		},
+		/**. '{void error(string status)}: Disparador para casos de erro em __Request. O argumento '{status} é a mensagem de erro.**/
+		error: {
+			value: function(status) {
+				this._response.time     = (new Date().valueOf()) - this._start;
+				this._response.progress = 1;
+				this._response.done     = true;
+				this._response.ok       = false;
+				this._response.status   = status;
+				if (this._trigger !== null) this._trigger(this._response);
+				window.dispatchEvent(__PROGRESS.event("close"));
+				return;
+			}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Requisição
+	''constructor object __Request(object config)''
+	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento '{config} aceita os mesmos valores do objeto '{__Dataset} e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
+	|Nome|Referência|Aplicação|
+	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
+	|method|a{Método da requisição}[href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods"] (padrão é post)|send e fetch|
+	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
+	|headers|Cabeçalhos a enviar (ver __DataSet)|send e fetch|
+	|body|Dados a enviar na requisição|send e fetch|
+	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
+	function __Request(config) {
+		if (!(this instanceof __Request)) return new __Request(config);
+		const dataset = new __DataSet(config);
+		Object.defineProperties(this, {
+			_config: {value: dataset.toObject},
+		});
+	}
+	Object.defineProperties(__Request.prototype, {
+		constructor: {value: __Request},
+		/**. '{array _events}: Array contendo os eventos de XMLHttpRequest e FileReader.**/
+		_events: {
+			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
+		},
+		/**. '{array _methods}: Array contendo os métodos para requisições web.**/
+		_methods: {
+			value: ("post connect delete get head options patch put trace").split(" ")
+		},
+		/**. '{object _types}: Objeto contendo a configuração de responseType conforme definido na propriedade '{type}:
+		|Propriedade|Descrição|
+		|text|Conteúdo em string (padrão)|
+		|blob|Conteúdo em arquivo|
+		|html|Conteúdo em documento HTML|
+		|xml|Conteúdo em documento XML|
+		|json|Conteúdo em JSON|
+		|buffer|Conteúdo em ArrayBuffer|
+		|url|Conteúdo em ObjectURL|
+		|matrix|Conteúdo em Array a partir de fonte CSV|
+		|object|Conteúdo em lista de objetosArray a partir de fonte CSV|
+		|table|Conteúdo em tabela HTML a partir de dados/arquivo CSV|**/
+		_types: {
+			value: {
+				text:   {send: "text",        read: "readAsText",         fetch: "text"},
+				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
+				html:   {send: "document",    read: "readAsText",         fetch: "text"},
+				xml:    {send: "text",        read: "readAsText",         fetch: "text"},
+				json:   {send: "json",        read: "readAsText",         fetch: "json"},
+				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
+				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
+				matrix: {send: "text",        read: "readAsText",         fetch: "text"},
+				object: {send: "text",        read: "readAsText",         fetch: "text"},
+				table:  {send: "text",        read: "readAsText",         fetch: "text"},
+			}
+		},
+		/**. '{object _cfg(string caller)}: Retorna a configuração adaptada ao tipo de chamada ('{caller}).**/
+		_cfg: {
+			value: function(caller) {
+				/*-- clonando --*/
+				const cfg = {};
+				for (let i in this._config) cfg[i] = this._config[i];
+				/*-- cabeçalho (Headers) --*/
+				if (caller === "send" || caller === "fetch") {
+					const dataset  = new __DataSet(cfg["headers"]);
+					cfg["headers"] = dataset[caller === "send" ? "toObjectHeaders" : "toHeaders"];
+				}
+				/*-- Método (POST/GET/...) --*/
+				if (caller === "send" || caller === "fetch") {
+					const data = String(cfg.method).toLowerCase().trim();
+					cfg.method = this._methods.indexOf(data) < 0 ? "post" : data;
+				}
+				/*-- Tipo de resposta (text, html, xml, matrix...) --*/
+				if (caller === "send" || caller === "fetch") {
+					cfg.type = cfg.type in this._types ? cfg.type : "text";
+				} else {
+					const file = /^(image|audio|video)(\/\w+)?$/i;
+					cfg.type = cfg.type in this._types ? cfg.type : (file.test(cfg.url.type) ? "url" : "text");
+				}
+				cfg.responseType = this._types[cfg.type][caller];
+				/*-- específico para o método send --*/
+				if (caller === "send") {
+					const data = {async: true, user: null, password: null};
+					for (let i in data)
+						cfg[i] = i in cfg ? cfg[i] : data[i];
+				}
+				/*-- específico para o método read --*/
+				if (caller === "read") {
+					cfg.fileHeaders = {
+						"content-length": cfg.url.size,
+						"content-type": cfg.url.type
+					};
+				}
+				/*-- timeout --*/
+				const time  = new __Type(cfg.timeout);
+				cfg.timeout = time.integer && time.positive ? time.value : 0;
+				/*-- retornando os dados para preenchimento da requisição --*/
+				return cfg;
+			}
+		},
+		/**. '{void send(function' trigger)}: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
+		|Nome|Descrição|
+		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
+		|user|Usuário (padrão nulo)|
+		|password|Senha (padrão nulo)|
+		|withCredentials|Aplica-se à propriedade de mesmo nome|
+		|overrideMimeType|Aplica-se ao método de mesmo nome|**/
+		send: {
+			value: function(trigger) {
+				const request  = new XMLHttpRequest();
+				const response = new __Response(trigger);
+				const cfg      = this._cfg("send");
+				try {
+					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
+					request.responseType = cfg.responseType;
+					request.timeout      = cfg.timeout;
+					for (let i in cfg.headers)
+						request.setRequestHeader(i, cfg.headers[i]);
+					if ("withCredentials" in cfg)
+						request.withCredentials = cfg.withCredentials;
+					if ("overrideMimeType" in cfg)
+						request.overrideMimeType(cfg.overrideMimeType);
+					/*-- atribuindo disparadores aos eventos --*/
+					for (let v of this._events) {
+						if (v in request)
+							request[v] = function (ev) {response.send(ev, cfg);};
+						if (v in request.upload)
+							request.upload[v] = function (ev) {response.send(ev, cfg);};
+					}
+					/*-- executar a requisição --*/
+					request.send(cfg.body);
+				} catch(e) {
+					response.error(e.name + "- " + e.message);
+				}
+				return;
+			},
+		},
+		/**. '{void read(function' trigger)}: Lê um arquivo via FileReader e executa o argumento opcional '{trigger} a cada atualização (ver __Response)**/
+		read: {
+			value: function(trigger) {
+				const test = new __Type(this._config.url);
+				/*-- se for uma lista de arquivos, chamar para cada um deles --*/
+				if (test.instanceOf("FileList")) {
+					const cfg = this._config;
+					const obj = {};
+					for (let i in cfg) obj[i] = cfg[i];
+					for (let i = 0; i < cfg.url.length; i++) {
+						obj.url = cfg.url[i];
+						let data = new __Request(obj);
+						data.read(trigger);
+					}
+					return;
+				}
+				/*-- um único arquivo --*/
+				const request  = new FileReader();
+				const response = new __Response(trigger);
+				const cfg      = this._cfg("read");
+				try {
+					/*-- atribuindo disparadores aos eventos --*/
+					for (let v of this._events) {
+						if (v in request)
+							request[v] = function (ev) {response.read(ev, cfg);};
+					}
+					/*-- executar a requisição --*/
+					request[cfg.responseType](cfg.url);
+				} catch(e) {
+					response.error(e.name + " - " + e.message);
+				}
+				return;
+			},
+		},
+		/**. '{void fetch(function' trigger)}: Envia uma requisição ao servidor via fetch e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto i{url}.**/
+		fetch: {
+			value: function(trigger) {
+				const request  = new FileReader();
+				const response = new __Response(trigger);
+				const cfg      = this._cfg("fetch");
+				try {
+					/*-- status inicial: EMPTY --*/
+					cfg._status = "EMPTY";
+					response.fetch(null, cfg);
+					/*-- iniciar requisição --*/
+					fetch(cfg.url, cfg)
+					/*-- requisição encerrada: LOADEND (resultado em output) --*/
+					.then(function(output) {
+						cfg._status = "LOADEND";
+						/*-- encerramento com sucesso --*/
+						if (output.ok) {
+							/*-- sem abortar e sem expirar o tempo: "DONE" --*/
+							if (response.fetch(output, cfg)) {
+								cfg._status = "DONE";
+								/*-- definir o valor da resposta --*/
+								output[cfg.responseType]()
+								.then(function(data) {response.fetch(data, cfg);})
+								.catch(function (e)  {response.fetch(null, cfg);});
+							}
+						}
+						/*-- encerramento sem sucesso: DONE --*/
+						else {
+							if (response.fetch(output, cfg)) {
+								cfg._status = "DONE"
+								response.fetch(null, cfg);
+							}
+						}
+					})
+					/*-- em caso de erro --*/
+					.catch(function(e) {
+						response.error(e.name + " - " + e.message);
+					});
+				} catch(e) {
+					response.error(e.name + " - " + e.message);
+				}
+				return;
+			},
 		}
 	});
 
@@ -6721,465 +7193,7 @@ const wd = (function() {
 		},
 	});
 
-/*============================================================================*/
-	/**#3 Requisições e Leituras
-	#4 Resposta
-	''constructor object __Response(function' trigger)''
-	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento opcional '{trigger} define o disparador a ser invocado a cada mudança ou encerramento da requisição. O disparador receberá a cada atualização um objeto com as seguintes propriedades:
-	|Nome|Descrição|
-	|done|Booleano que indica o fim do processo.|
-	|ok|Indica, ao fim do processo, se o procedimento foi concluído com sucesso.|
-	|status|Traz, ao fim do processo, uma mensagem sobre o procedimento.|
-	|time|Indica o tempo de execução do processo.|
-	|size|Indica a quantidade de trabalho do processo.|
-	|progress|Indica o progresso do processo (de 0 a 1).|
-	|headers|Traz, ao fim do processo e se aplicável, o cabeçalho de retorno (Headers ou object).|
-	|response|Traz, ao fim do processo, o conteúdo do procedimento ou nulo, se inaplicável.|
-	|abort()|Uma função para abortar o procedimento.|
-	|contentType|Retorna o tipo de arquivo proveniente do cabeçalho ou nulo.|**/
-	function __Response(trigger) {
-		if (!(this instanceof __Response)) return new __Response(trigger);
-		Object.defineProperties(this, {
-			_trigger:  {value: __Type(trigger).function ? trigger : null},
-			_start:    {value: new Date().valueOf()},
-			_fetch:    {value: null,  writable: true},
-			_aborted:  {value: false, writable: true},
-			_response: { value: {
-					done: false,
-					ok: null,
-					status: null,
-					time: 0,
-					size: 0,
-					progress: 0,
-					headers: null,
-					response: null,
-					abort: null,
-					contentType: null,
-				}
-			}
-		});
-		__PROGRESS.open();
-	}
-	Object.defineProperties(__Response.prototype, {
-		constructor: {value: __Response},
-		/**. '{string _getHeaderValue(string name)}: Retorna o valor da propriedade (´{name}) de ´{headers} ou nulo.**/
-		_getHeaderValue: {
-			value: function(name) {
-				const data = new __DataSet(this._response.headers);
-				const list = data.getAll(name);
-				return list.length > 0 ? list[0] : null;
-			}
-		},
-		/**. '{void _changes(string type, string caller)}: Define o formato da resposta ('{_response.response}) conforme tipo ('{type}) e o método ('{caller}).**/
-		_changes: {
-			value: function(type, caller) {
-				if (this._response.response !== null) {
-					const parser = new __Parser(this._response.response);
-					const mime   = __MIME[this._response.contentType];
-					function table() {
-						if (mime === "csv")  return parser.csvTable.get();
-						if (mime === "json") return parser.stringJSON.matrixCSV.csvTable.get();
-						return null;
-					};
-					const change = {
-						send: {
-							xml:    function() {return parser.stringXML.get();},
-							url:    function() {return parser.fileURL.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						},
-						read: {
-							html:   function() {return parser.stringHTML.get();},
-							xml:    function() {return parser.stringXML.get();},
-							json:   function() {return parser.stringJSON.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						},
-						fetch: {
-							html:   function() {return parser.stringHTML.get();},
-							xml:    function() {return parser.stringXML.get();},
-							url:    function() {return parser.fileURL.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						}
-					}
-					if (type in change[caller])
-						this._response.response = change[caller][type]();
-				}
-				return;
-			}
-		},
-		/**. '{void send(object ev, object config)}: Disparador para o método '{send} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da requisição.**/
-		send: {
-			value: function(ev, config) {
-				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
-				if (this._response.done) return;
-				const target = ev.target;
-				const type   = ev.type;
-				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				/*-- tempo de requisição --*/
-				this._response.time   = (new Date().valueOf()) - this._start;
-				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
-				if (this._response.abort === null && target instanceof XMLHttpRequest)
-					this._response.abort = function() {return target.abort();}
-				/*-- se o tamanho é computável, definir o progresso --*/
-				if (ev.lengthComputable === true) {
-					this._response.size = ev.total;
-					this._response.progress = ev.loaded/ev.total;
-					__PROGRESS.set(this._response.progress);
-				}
-				/*-- verificar se a requisição acabou --*/
-				if (target instanceof XMLHttpRequest && type in done) {
-					const code = target.status;
-					const text = target.statusText;
-					const fail = done[type] === 0;
-					this._response.done   = true;
-					this._response.status = fail ? type  : (code + " - " + text);
-					this._response.ok     = fail ? false : (code >= 200 && code < 300);
-				}
-				/*-- se a requisição foi um sucesso, definir o resultado --*/
-				if (this._response.ok) {
-					const dataset = new __DataSet(target.getAllResponseHeaders());
-					this._response.headers     = dataset.toHeaders;
-					this._response.response    = target.response;
-					this._response.contentType = this._getHeaderValue("content-type");
-					this._changes(config.type, "send");
-				}
-				/*-- chamar o disparador se existente --*/
-				if (this._trigger !== null) this._trigger(this._response);
-				/*-- encerrar o progresso se a requisição acabou --*/
-				if (this._response.done) __PROGRESS.close();
-				return;
-			}
-		},
-		/**. '{void read(object ev, object config)}: Disparador para o método '{read} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da leitura.**/
-		read: {
-			value: function(ev, config) {
-				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
-				if (this._response.done) return;
-				const target = ev.target;
-				let   type   = ev.type;
-				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				/*-- tempo de requisição: verificar se já estourou o tempo --*/
-				this._response.time = (new Date().valueOf()) - this._start;
-				if (config.timeout > 0 && !(type in done)) {
-					if (this._response.time > config.timeout) type = "timeout";
-				}
-				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
-				if (this._response.abort === null)
-					this._response.abort = function() {return target.abort();}
-				/*-- se o tamanho é computável, definir o progresso --*/
-				if (ev.lengthComputable === true) {
-					this._response.size = ev.total;
-					this._response.progress = ev.loaded/ev.total;
-					__PROGRESS.set(this._response.progress);
-				}
-				/*-- verificar se a requisição acabou --*/
-				if (type in done) {
-					const code = target.readyState;
-					const text = ["EMPTY", "LOADING", "DONE"]
-					const fail = done[type] === 0;
-					this._response.done   = true;
-					this._response.status = fail ? type : (text[code]);
-					this._response.ok     = !fail;
-				}
-				/*-- se a requisição foi um sucesso, definir o resultado --*/
-				if (this._response.ok) {
-					const dataset = new __DataSet(config.fileHeaders);
-					this._response.headers     = dataset.toHeaders;
-					this._response.contentType = this._getHeaderValue("content-type");
-					this._response.response    = target.result;
-					this._changes(config.type, "read");
-				}
-				/*-- chamar o disparador se existente --*/
-				if (this._trigger !== null) this._trigger(this._response);
-				/*-- encerrar o progresso se a requisição acabou --*/
-				if (this._response.done) __PROGRESS.close();
-				return;
-			}
-		},
-		/**. '{boolean fetch(object ev, object config)}: Disparador para o método '{fetch} de __Request. O argumento '{ev} é o retorno do ação e '{config} os dados de configuração da requisição. Retorna falso se os eventos precários "timeout" e "aborted" ocorrerem.**/
-		fetch: {
-			value: function(ev, config) {
-				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
-				if (this._response.done) return;
-				const self     = this;
-				const progress = {EMPTY: 0, LOADEND: 1/2, DONE: 1};
-				/*-- tempo de requisição --*/
-				this._response.time = (new Date().valueOf()) - this._start;
-				/*-- progresso da requisição (0, 50%, 100%) --*/
-				this._response.progress = progress[config._status];
-				/*-- definir precariamente um método de abortar --*/
-				if (this._response.abort === null) {
-					this._response.abort = function() {self._aborted = true;}
-				}
-				/*-- verificar precariamente se a requisição foi abortada --*/
-				if (this._aborted) {
-					this.error("aborted");
-					return false;
-				}
-				/*-- verificar precariamente se acabou o tempo da requisição --*/
-				if (config.timeout > 0 && this._response.time > config.timeout) {
-					this.error("timeout");
-					return false;
-				}
-				/*-- se a requisição acabou, guardar provisoriamente o resultado --*/
-				if (config._status === "LOADEND") {
-					this._fetch = ev;
-				}
-				/*-- se a requisição foi um sucesso, definir o resultado --*/
-				else if (config._status === "DONE") {
-					const fetch = this._fetch;
-					this._response.done        = true;
-					this._response.ok          = fetch.ok;
-					this._response.status      = fetch.status + " - " + fetch.statusText;
-					this._response.headers     = fetch.headers;
-					this._response.contentType = this._getHeaderValue("content-type");
-					this._response.size        = Number(this._getHeaderValue("content-length"));
-					this._response.response    = ev;
-					this._changes(config.type, "fetch");
-				}
-				/*-- definir o progresso --*/
-				__PROGRESS.set(this._response.progress);
-				/*-- chamar o disparador se existente --*/
-				if (this._trigger !== null) this._trigger(this._response);
-				/*-- encerrar o progresso se a requisição acabou --*/
-				if (this._response.done) __PROGRESS.close();
-				return true;
-			}
-		},
-		/**. '{void error(string status)}: Disparador para casos de erro em __Request. O argumento '{status} é a mensagem de erro.**/
-		error: {
-			value: function(status) {
-				this._response.time     = (new Date().valueOf()) - this._start;
-				this._response.progress = 1;
-				this._response.done     = true;
-				this._response.ok       = false;
-				this._response.status   = status;
-				if (this._trigger !== null) this._trigger(this._response);
-				__PROGRESS.close();
-				return;
-			}
-		}
-	});
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Requisição
-	''constructor object __Request(object config)''
-	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento '{config} aceita os mesmos valores do objeto '{__Dataset} e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
-	|Nome|Referência|Aplicação|
-	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
-	|method|a{Método da requisição}[href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods"] (padrão é post)|send e fetch|
-	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
-	|headers|Cabeçalhos a enviar (ver __DataSet)|send e fetch|
-	|body|Dados a enviar na requisição|send e fetch|
-	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
-	function __Request(config) {
-		if (!(this instanceof __Request)) return new __Request(config);
-		const dataset = new __DataSet(config);
-		Object.defineProperties(this, {
-			_config: {value: dataset.toObject},
-		});
-	}
-	Object.defineProperties(__Request.prototype, {
-		constructor: {value: __Request},
-		/**. '{array _events}: Array contendo os eventos de XMLHttpRequest e FileReader.**/
-		_events: {
-			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
-		},
-		/**. '{array _methods}: Array contendo os métodos para requisições web.**/
-		_methods: {
-			value: ("post connect delete get head options patch put trace").split(" ")
-		},
-		/**. '{object _types}: Objeto contendo a configuração de responseType conforme definido na propriedade '{type}:
-		|Propriedade|Descrição|
-		|text|Conteúdo em string (padrão)|
-		|blob|Conteúdo em arquivo|
-		|html|Conteúdo em documento HTML|
-		|xml|Conteúdo em documento XML|
-		|json|Conteúdo em JSON|
-		|buffer|Conteúdo em ArrayBuffer|
-		|url|Conteúdo em ObjectURL|
-		|matrix|Conteúdo em Array a partir de fonte CSV|
-		|object|Conteúdo em lista de objetosArray a partir de fonte CSV|
-		|table|Conteúdo em tabela HTML a partir de dados/arquivo CSV|**/
-		_types: {
-			value: {
-				text:   {send: "text",        read: "readAsText",         fetch: "text"},
-				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
-				html:   {send: "document",    read: "readAsText",         fetch: "text"},
-				xml:    {send: "text",        read: "readAsText",         fetch: "text"},
-				json:   {send: "json",        read: "readAsText",         fetch: "json"},
-				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
-				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				matrix: {send: "text",        read: "readAsText",         fetch: "text"},
-				object: {send: "text",        read: "readAsText",         fetch: "text"},
-				table:  {send: "text",        read: "readAsText",         fetch: "text"},
-			}
-		},
-		/**. '{object _cfg(string caller)}: Retorna a configuração adaptada ao tipo de chamada ('{caller}).**/
-		_cfg: {
-			value: function(caller) {
-				/*-- clonando --*/
-				const cfg = {};
-				for (let i in this._config) cfg[i] = this._config[i];
-				/*-- cabeçalho (Headers) --*/
-				if (caller === "send" || caller === "fetch") {
-					const dataset  = new __DataSet(cfg["headers"]);
-					cfg["headers"] = dataset[caller === "send" ? "toObjectHeaders" : "toHeaders"];
-				}
-				/*-- Método (POST/GET/...) --*/
-				if (caller === "send" || caller === "fetch") {
-					const data = String(cfg.method).toLowerCase().trim();
-					cfg.method = this._methods.indexOf(data) < 0 ? "post" : data;
-				}
-				/*-- Tipo de resposta (text, html, xml, matrix...) --*/
-				if (caller === "send" || caller === "fetch") {
-					cfg.type = cfg.type in this._types ? cfg.type : "text";
-				} else {
-					const file = /^(image|audio|video)(\/\w+)?$/i;
-					cfg.type = cfg.type in this._types ? cfg.type : (file.test(cfg.url.type) ? "url" : "text");
-				}
-				cfg.responseType = this._types[cfg.type][caller];
-				/*-- específico para o método send --*/
-				if (caller === "send") {
-					const data = {async: true, user: null, password: null};
-					for (let i in data)
-						cfg[i] = i in cfg ? cfg[i] : data[i];
-				}
-				/*-- específico para o método read --*/
-				if (caller === "read") {
-					cfg.fileHeaders = {
-						"content-length": cfg.url.size,
-						"content-type": cfg.url.type
-					};
-				}
-				/*-- timeout --*/
-				const time  = new __Type(cfg.timeout);
-				cfg.timeout = time.integer && time.positive ? time.value : 0;
-				/*-- retornando os dados para preenchimento da requisição --*/
-				return cfg;
-			}
-		},
-		/**. '{void send(function' trigger)}: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
-		|Nome|Descrição|
-		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
-		|user|Usuário (padrão nulo)|
-		|password|Senha (padrão nulo)|
-		|withCredentials|Aplica-se à propriedade de mesmo nome|
-		|overrideMimeType|Aplica-se ao método de mesmo nome|**/
-		send: {
-			value: function(trigger) {
-				const request  = new XMLHttpRequest();
-				const response = new __Response(trigger);
-				const cfg      = this._cfg("send");
-				try {
-					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
-					request.responseType = cfg.responseType;
-					request.timeout      = cfg.timeout;
-					for (let i in cfg.headers)
-						request.setRequestHeader(i, cfg.headers[i]);
-					if ("withCredentials" in cfg)
-						request.withCredentials = cfg.withCredentials;
-					if ("overrideMimeType" in cfg)
-						request.overrideMimeType(cfg.overrideMimeType);
-					/*-- atribuindo disparadores aos eventos --*/
-					for (let v of this._events) {
-						if (v in request)
-							request[v] = function (ev) {response.send(ev, cfg);};
-						if (v in request.upload)
-							request.upload[v] = function (ev) {response.send(ev, cfg);};
-					}
-					/*-- executar a requisição --*/
-					request.send(cfg.body);
-				} catch(e) {
-					response.error(e.name + "- " + e.message);
-				}
-				return;
-			},
-		},
-		/**. '{void read(function' trigger)}: Lê um arquivo via FileReader e executa o argumento opcional '{trigger} a cada atualização (ver __Response)**/
-		read: {
-			value: function(trigger) {
-				const test = new __Type(this._config.url);
-				/*-- se for uma lista de arquivos, chamar para cada um deles --*/
-				if (test.instanceOf("FileList")) {
-					const cfg = this._config;
-					const obj = {};
-					for (let i in cfg) obj[i] = cfg[i];
-					for (let i = 0; i < cfg.url.length; i++) {
-						obj.url = cfg.url[i];
-						let data = new __Request(obj);
-						data.read(trigger);
-					}
-					return;
-				}
-				/*-- um único arquivo --*/
-				const request  = new FileReader();
-				const response = new __Response(trigger);
-				const cfg      = this._cfg("read");
-				try {
-					/*-- atribuindo disparadores aos eventos --*/
-					for (let v of this._events) {
-						if (v in request)
-							request[v] = function (ev) {response.read(ev, cfg);};
-					}
-					/*-- executar a requisição --*/
-					request[cfg.responseType](cfg.url);
-				} catch(e) {
-					response.error(e.name + " - " + e.message);
-				}
-				return;
-			},
-		},
-		/**. '{void fetch(function' trigger)}: Envia uma requisição ao servidor via fetch e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto i{url}.**/
-		fetch: {
-			value: function(trigger) {
-				const request  = new FileReader();
-				const response = new __Response(trigger);
-				const cfg      = this._cfg("fetch");
-				try {
-					/*-- status inicial: EMPTY --*/
-					cfg._status = "EMPTY";
-					response.fetch(null, cfg);
-					/*-- iniciar requisição --*/
-					fetch(cfg.url, cfg)
-					/*-- requisição encerrada: LOADEND (resultado em output) --*/
-					.then(function(output) {
-						cfg._status = "LOADEND";
-						/*-- encerramento com sucesso --*/
-						if (output.ok) {
-							/*-- sem abortar e sem expirar o tempo: "DONE" --*/
-							if (response.fetch(output, cfg)) {
-								cfg._status = "DONE";
-								/*-- definir o valor da resposta --*/
-								output[cfg.responseType]()
-								.then(function(data) {response.fetch(data, cfg);})
-								.catch(function (e)  {response.fetch(null, cfg);});
-							}
-						}
-						/*-- encerramento sem sucesso: DONE --*/
-						else {
-							if (response.fetch(output, cfg)) {
-								cfg._status = "DONE"
-								response.fetch(null, cfg);
-							}
-						}
-					})
-					/*-- em caso de erro --*/
-					.catch(function(e) {
-						response.error(e.name + " - " + e.message);
-					});
-				} catch(e) {
-					response.error(e.name + " - " + e.message);
-				}
-				return;
-			},
-		}
-	});
 
 /*============================================================================*/
 	/**#3 Figuras
@@ -9479,8 +9493,9 @@ const wd = (function() {
 			STYLE:    {value: __STYLE},
 			DATETIME: {value: __DATETIME},
 			NUMBER:   {value: __NUMBER},
-			OBJECT:   {value: __OBJECT},
+			OBJECT:   {value: __TYPE},
 			ARIA:     {value: __ARIA},
+			HASH:     {value: __HASH},
 		});
 	}
 
@@ -9527,44 +9542,6 @@ const wd = (function() {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Âncora Hash //FIXME não está funcionando direito
-	''function void data_wd_hash(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|Não se aplica|
-	|Objetivo|Adequar a âncora do documento em caso de elementos fixos nas extremidades da página.|
-	|Eventos|load wdreload hashchange resize|
-	|Alvos|Documento|
-	|Grupos|Não se aplica|
-	|Referências|Não há|
-	|Propriedades|Não se aplica|**/
-	function data_wd_hash(target, event, wdArray) {
-		const nodes = WD.$$("body > header, body > footer");
-		const hash  = WD.$(window.location.hash);
-		const data  = {header: 0, footer: 0};
-		const re    = /[^0-9\.]/g;
-		nodes.forEach(function(x) {
-			const node  = new __Node(x);
-			const tag   = node.tag;
-			const style = node.styles;
-			const attr  = {top: 0, bottom: 0, height: 0, position: null};
-			/*-- obter atributos --*/
-			for (let i in attr)
-				attr[i] = attr[i] === null ? style[i].toLowerCase() : Number(style[i].replace(re, ""));
-			/*-- avaliar altura --*/
-			let height = 0;
-			if (attr.position === "fixed")
-				height = attr.height + (tag === "header" ? attr.top : attr.bottom);
-			data[tag] = height > data[tag] ? height : data[tag];
-		});
-		/*-- acertar margens de body --*/
-		if (data.header > 0) document.body.style.marginTop    = data.header+"px";
-		if (data.footer > 0) document.body.style.marginBottom = data.footer+"px";
-		/*-- reposicionar body no hash --*/
-		if (data.header > 0 && hash.length === 1 && event.type !== "resize")
-			window.scrollTo(0, hash.valueOf()[0].offsetTop - data.header);
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Requisições
@@ -10704,18 +10681,6 @@ const wd = (function() {
 	//FIXME quando o evento de clique receber um enter, forçar um click
 	//FIXME implantar extra para cada disparador
 	const __EVENTS = {
-		load: {
-			target: window, preventDefault: false,
-			data: [
-				{name: null, kill: false, bind: {}, call: function() {
-					const node = document.createElement("STYLE");
-					node.innerHTML = __STYLE;
-					document.head.appendChild(node);
-					document.dispatchEvent(wdReloadEvent);
-					return;
-				}}
-			]
-		},
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
@@ -10728,41 +10693,20 @@ const wd = (function() {
 				{name: "[data-wd-mask]",   call: data_wd_mask,    kill: false, bind: {}},
 				{name: "[data-wd-device]", call: data_wd_device,  kill: false, bind: {}},
 				{name: "[data-wd-tabs]",   call: data_wd_tabs, kill: true,  bind: {}},
-				{name: null,               call: data_wd_hash,    kill: false, bind: {}}
 			]
 		},
 		wddataset: {
 			target: document, preventDefault: false, extra: "wddatasetList",
 			data: [
-				{name: "wdRepeat", call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
-				{name: "wdLoad",   call: data_wd_load,    kill: true,  bind: {headers: {}}},
-				{name: "wdChart",  call: data_wd_chart,   kill: true,  bind: {}},
-				{name: "wdCode",   call: data_wd_code,    kill: true,  bind: {}},
-				{name: "wdClick",  call: data_wd_click,   kill: false, bind: {id: null}},
-				{name: "wdFilter", call: data_wd_filter,  kill: false, bind: {}},
-				{name: "wdMask",   call: data_wd_mask,    kill: false, bind: {}},
-				{name: "wdDevice", call: data_wd_device,  kill: false, bind: {}},
-				{name: "wdTabs",   call: data_wd_tabs, kill: true,  bind: {}},
-			]
-		},
-		resize: {
-			target: window, preventDefault: false,
-			data: [
-				{name: null, kill: false, bind: {}, call: function() {
-					if (__DEVICE.changeDevice) {
-						const selector = WD.$$("[data-wd-device]");
-						selector.forEach(function(node,i) {
-							node.dispatchEvent(wdDatasetEvent);
-						});
-					}
-				}},
-				{name: null, call: data_wd_hash, kill: false, bind: {}}
-			]
-		},
-		hashchange: {
-			target: window, preventDefault: false,
-			data: [
-				{name: null, call: data_wd_hash, kill: false, bind: {}}
+				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
+				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
+				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
+				{name: "wdCode",   call: data_wd_code,   kill: true,  bind: {}},
+				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {id: null}},
+				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {}},
+				{name: "wdMask",   call: data_wd_mask,   kill: false, bind: {}},
+				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
+				{name: "wdTabs",   call: data_wd_tabs,   kill: true,  bind: {}},
 			]
 		},
 		submit: {
@@ -11028,6 +10972,30 @@ const wd = (function() {
 	/*-- defininir eventos e disparadores --*/
 	for (let ev in __EVENTS)
 		__EVENTS[ev].target.addEventListener(ev, eventManager, false);
+
+
+
+	window.addEventListener("resize", __DEVICE);
+	window.addEventListener("resize", __HASH);
+	window.addEventListener("hashchange", __HASH);
+	window.addEventListener("wdreload", __HASH);
+	window.addEventListener("wdprogress", __PROGRESS);
+
+	window.addEventListener("load", function(ev) {
+		const node = document.createElement("STYLE");
+		node.innerHTML = __STYLE;
+		document.head.appendChild(node);
+		document.dispatchEvent(wdReloadEvent);
+		return;
+	});
+
+
+
+
+
+
+
+
 
 	/*-- retornar a função principal da biblioteca --*/
 	return WD;
