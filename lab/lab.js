@@ -8,15 +8,14 @@ function darkMode() {
 
 
 function doc() {
-	wd({url: "wd.js"}).send(function(x) {
+	wd({url: "wd.js", trigger: function(x) {
+		console.log(x)
 		if (x.ok) {
-			const mime = x.headers.get("content-type");
-			console.log(mime);
-
-			const doc = new wd.parser(x.response).wdComment("/**", "**/").html;
+			const doc  = new wd.parser(x.response).wdComment("/**", "**/").html;
 			document.querySelector("main").innerHTML = doc;
+			return;
 		}
-	});
+	}}).send();
 }
 
 

@@ -33,18 +33,9 @@ const wd = (function() {
 	|Nome|Tipo|Descrição|
 	|__VERSION|string|Registra a versão da biblioteca|
 	|__UNDERMAINTENANCE|boolean|Se verdadeiro, libera em WD métodos em teste e imprime cascata de disparadores|
-	|__MIME|Object|Tipos a{MIME}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"] úteis|
 	|__STYLE|string|Folha de estilos básica da biblioteca|**/
 	const __VERSION = "WD JS v5.0.0";
 	const __UNDERMAINTENANCE = true;
-	const __MIME = {
-		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
-		"text/xml":    "xml", "text/html": "html", "text/javascript": "js",
-		"application/octet-stream": "default",
-		"application/json": "json", "application/javascript": "js",
-		"application/xml":   "xml",
-		"image/svg+xml": "svg",
-	};
 	const __STYLE = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
@@ -3252,32 +3243,120 @@ const wd = (function() {
 		|close|string|Fecha a barra de progresso|
 		|0 a 1|number|Define o valor da barra de progresso|**/
 		event: function(value) {
-			return new CustomEvent("wdprogress", {detail: value})
+			const event = new CustomEvent("wdprogress", {detail: value})
+			window.dispatchEvent(event);
 		},
 		/**. '{void handleEvent(object ev)}: Disparador vinculado ao evento '{wdprogress} atrelado a '{window}.**/
 		handleEvent: function(ev) {
-			if (ev.type !== "wdprogress") return;
-			/*-- avançar/exibir progresso --*/
-			if (ev.detail === "open") {
-				this.count++;
-				__WINDOW.append(this.bar, {type: "frame"});
-			}
-			/*-- retroceder/fechar progresso --*/
-			else if (ev.detail === "close") {
-				if (this.count === 0)
-					__WINDOW.remove(this.bar);
-				else if (--this.count === 0)
-					window.setTimeout(function(ev, me) {me.handleEvent(ev);}, 50, ev, this);
-			}
-			/*-- definir valor --*/
-			else {
-				if (isNaN(ev.detail))
-					this.bar.removeAttribute("value");
-				else
-					this.bar.value = Number(ev.detail);
+			if (ev.type === "wdprogress") {
+				/*-- avançar/exibir progresso --*/
+				if (ev.detail === "open") {
+					this.count++;
+					__WINDOW.append(this.bar, {type: "frame"});
+				}
+				/*-- retroceder/fechar progresso --*/
+				else if (ev.detail === "close") {
+					if (this.count === 0)
+						__WINDOW.remove(this.bar);
+					else if (--this.count === 0)
+						window.setTimeout(function(ev, me) {me.handleEvent(ev);}, 50, ev, this);
+				}
+				/*-- definir valor --*/
+				else {
+					if (isNaN(ev.detail) || String(ev.detail).trim() === "")
+						this.bar.removeAttribute("value");
+					else
+						this.bar.value = Number(ev.detail);
+				}
 			}
 			return;
 		}
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Constantes
+	''const object __MIME''
+	Registra tipos a{MIME}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"] mais usados.**/
+	const __MIME = {
+		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
+		"text/xml":    "xml", "text/html": "html", "text/javascript": "js",
+		"application/octet-stream": "default",
+		"application/json": "json", "application/javascript": "js",
+		"application/xml":   "xml",
+		"image/svg+xml": "svg",
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**''const object __RESPONSETYPES''
+	Registra os tipos de respostas para as requisições:
+	|Nível|Nome|Descrição|
+	|1|-|Tipo de resposta|
+	|2|-|Método de envio ou leitura (objeto utilizado para a requisição)|
+	|3|type|Tipo de leitura original do método|
+	|3|parser|String que identifica a cadeira modificadora da resposta conforme MIMETYPE ou '{type} (modificador principal)|
+	Tipos de resposta:
+	|Nome|Descrição|**/
+	const __RESPONSETYPES = {
+		/**|text|Fornece parâmetros para o retorno do conteúdo em forma de texto|**/
+		text: {
+			send:  {type: "text",       parser: {type: null}},
+			read:  {type: "readAsText", parser: {type: null}},
+			fetch: {type: "text",       parser: {type: null}},
+		},
+		/**|blob|Fornece parâmetros para o retorno do conteúdo como arquivo, exceto no caso em '{read} que retorna uma string|**/
+		blob:   {
+			send:  {type: "blob",               parser: {type: null}},
+			read:  {type: "readAsBinaryString", parser: {type: null}},
+			fetch: {type: "blob",               parser: {type: null}},
+		},
+		/**|html|Fornece parâmetros para o retorno do conteúdo como HTML|**/
+		html:   {
+			send:  {type: "document",   parser: {type: null}},
+			read:  {type: "readAsText", parser: {type: "stringHTML"}},
+			fetch: {type: "text",       parser: {type: "stringHTML"}},
+		},
+		/**|xml|Fornece parâmetros para o retorno do conteúdo como XML|**/
+		xml:    {
+			send:  {type: "text",       parser: {type: "stringXML"}},
+			read:  {type: "readAsText", parser: {type: "stringXML"}},
+			fetch: {type: "text",       parser: {type: "stringXML"}},
+		},
+		/**|json|Fornece parâmetros para o retorno do conteúdo como objeto javaScript|**/
+		json:   {
+			send:  {type: "json",       parser: {type: null}},
+			read:  {type: "readAsText", parser: {type: "stringJSON"}},
+			fetch: {type: "json",       parser: {type: null}},
+		},
+		/**|buffer|Fornece parâmetros para o retorno do conteúdo como Array Buffer|**/
+		buffer: {
+			send:  {type: "arraybuffer",       parser: {type: null}},
+			read:  {type: "readAsArrayBuffer", parser: {type: null}},
+			fetch: {type: "arrayBuffer",       parser: {type: null}},
+		},
+		/**|url|Fornece parâmetros para o retorno do conteúdo como URL|**/
+		url:    {
+			send:  {type: "blob",          parser: {type: "fileURL"}},
+			read:  {type: "readAsDataURL", parser: {type: null}},
+			fetch: {type: "blob",          parser: {type: "fileURL"}},
+		},
+		/**|matrix|Fornece parâmetros para o retorno do conteúdo CSV como um array de duas dimensões|**/
+		matrix: {
+			send:  {type: "text",       parser: {type: "csvTable.tableValues"}},
+			read:  {type: "readAsText", parser: {type: "csvTable.tableValues"}},
+			fetch: {type: "text",       parser: {type: "csvTable.tableValues"}},
+		},
+		/**|object|Fornece parâmetros para o retorno do conteúdo CSV como um array de objetos|**/
+		object: {
+			send:  {type: "text",       parser: {type: "csvTable.tableValues.matrixList"}},
+			read:  {type: "readAsText", parser: {type: "csvTable.tableValues.matrixList"}},
+			fetch: {type: "text",       parser: {type: "csvTable.tableValues.matrixList"}}
+		},
+		/**|table|Fornece parâmetros para o retorno do conteúdo CSV ou JSON como uma tabela HTML|**/
+		table:  {
+			send:  {type: "text",       parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}},
+			read:  {type: "readAsText", parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}},
+			fetch: {type: "text",       parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}}
+		},
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -3295,169 +3374,161 @@ const wd = (function() {
 	|response|Traz, ao fim do processo, o conteúdo do procedimento ou nulo, se inaplicável.|
 	|abort()|Uma função para abortar o procedimento.|
 	|contentType|Retorna o tipo de arquivo proveniente do cabeçalho ou nulo.|**/
-	function __Response(trigger) {
-		if (!(this instanceof __Response)) return new __Response(trigger);
+	/*--
+	FIXME
+	as propriedades de _response devem ser as propriedades de __Response
+
+
+
+
+
+	TODO funciona
+	function Teste(externo) {
+		Object.defineProperties(this, {externo: {value: externo}});
+	}
+	Object.defineProperties(Teste.prototype, {
+		constructor: {value: Teste},
+		prototipo: {value: "protótipo"},
+		handleEvent: {value: function(ev) {console.log({ev: ev, ext: this.externo, prot: this.prototipo});}}
+	});
+a = new Teste("A"); b = new Teste("B");$("header").addEventListener("click", a);$("header").addEventListener("click", b)
+
+
+
+	--*/
+
+
+
+
+
+	function __Response(request) {
+		if (!(this instanceof __Response)) return new __Response(request);
+		if (typeof request !== "object" || !(request instanceof __Request))
+			throw new TypeError("Input value must be an instance of __Request.");
+		const date = new Date();
 		Object.defineProperties(this, {
-			_trigger:  {value: __Type(trigger).function ? trigger : null},
-			_start:    {value: new Date().valueOf()},
-			_fetch:    {value: null,  writable: true},
-			_aborted:  {value: false, writable: true},
-			_response: { value: {
-					done: false,
-					ok: null,
-					status: null,
-					time: 0,
-					size: 0,
-					progress: 0,
-					headers: null,
-					response: null,
-					abort: null,
-					contentType: null,
-				}
-			}
+			request:  {value: request},
+			start:    {value: new Date()},
+			time:     {value: 0, writable: true},
+			done:     {value: false, writable: true},
+			ok:       {value: null, writable: true},
+			status:   {value: null, writable: true},
+			size:     {value: 0, writable: true},
+			progress: {value: 0, writable: true},
+			headers:  {value: null, writable: true},
+			response: {value: null, writable: true},
+			abort:    {value: null, writable: true},
+			mime:     {value: null, writable: true},
 		});
-		window.dispatchEvent(__PROGRESS.event("open"));
+		__PROGRESS.event("open");
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
-		/**. '{string _getHeaderValue(string name)}: Retorna o valor da propriedade (´{name}) de ´{headers} ou nulo.**/
-		_getHeaderValue: {
-			value: function(name) {
-				const data = new __DataSet(this._response.headers);
-				const list = data.getAll(name);
-				return list.length > 0 ? list[0] : null;
-			}
-		},
 		/**. '{void _changes(string type, string caller)}: Define o formato da resposta ('{_response.response}) conforme tipo ('{type}) e o método ('{caller}).**/
-		_changes: {
-			value: function(type, caller) {
-				if (this._response.response !== null) {
-					const parser = new __Parser(this._response.response);
-					const mime   = __MIME[this._response.contentType];
-					function table() {
-						if (mime === "csv")  return parser.csvTable.get();
-						if (mime === "json") return parser.stringJSON.matrixCSV.csvTable.get();
-						return null;
-					};
-					const change = {
-						send: {
-							xml:    function() {return parser.stringXML.get();},
-							url:    function() {return parser.fileURL.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						},
-						read: {
-							html:   function() {return parser.stringHTML.get();},
-							xml:    function() {return parser.stringXML.get();},
-							json:   function() {return parser.stringJSON.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						},
-						fetch: {
-							html:   function() {return parser.stringHTML.get();},
-							xml:    function() {return parser.stringXML.get();},
-							url:    function() {return parser.fileURL.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  table,
-						}
+		handleEvent: {
+			value: function(ev) {
+				if (!this.done) {
+					/*-- atributo time --*/
+					const date = new Date();
+					const time = date.valueOf() - this.start.valueOf();
+					this.time  = time%2 === 0 ? time : time+1;
+					/*-- obter demais atributos conforme método --*/
+					const send = ev.target instanceof XMLHttpRequest;
+					const read = ev.target instanceof FileReader;
+					const call = send ? "send" : (read ? "read" : "fetch");
+					this[call](ev);
+					/*-- atributo progress --*/
+					__PROGRESS.event(this.progress);
+					/*-- requisição encerrada com sucesso: atributo headers, mime e response --*/
+					if (this.ok) {
+						/*-- headers --*/
+						const header = new __DataSet(this.headers);
+						this.headers = header.toHeaders;
+						/*-- mime --*/
+						const list   = header.getAll("content-type");
+						this.mime    = list.length > 0 ? list[0] : null;
+						/*-- response --*/
+						const data   = this.request.data[call].responseTypeData.parser;
+						const chain  = this.mime in data ? data[this.mime] : data.type;
+						const names  = chain === null ? [] : chain.split(".");
+						let   parser = new __Parser(this.response);
+						names.forEach(function(v,i,a) {parser = parser[v];});
+						this.response = parser.get();
 					}
-					if (type in change[caller])
-						this._response.response = change[caller][type]();
+					/*-- encerrando o progresso --*/
+					if (this.done)
+						__PROGRESS.event("close");
+					/*-- chamando o método --*/
+					if (typeof this.request.data[call].trigger === "function")
+						this.request.data[call].trigger({
+							done:     this.done,
+							ok:       this.ok,
+							time:     this.time,
+							status:   this.status,
+							size:     this.size,
+							progress: this.progress,
+							headers:  this.headers,
+							response: this.response,
+							abort:    this.abort,
+							mime:     this.mime
+						});
 				}
-				return;
 			}
 		},
-		/**. '{void send(object ev, object config)}: Disparador para o método '{send} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da requisição.**/
+		/**. '{void send(object ev)}: Obtém os dados para o disparador invocado pelo método '{send} de __Request.**/
 		send: {
-			value: function(ev, config) {
-				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
-				if (this._response.done) return;
-				const target = ev.target;
-				const type   = ev.type;
-				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				/*-- tempo de requisição --*/
-				this._response.time   = (new Date().valueOf()) - this._start;
-				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
-				if (this._response.abort === null && target instanceof XMLHttpRequest)
-					this._response.abort = function() {return target.abort();}
-				/*-- se o tamanho é computável, definir o progresso --*/
-				if (ev.lengthComputable === true) {
-					this._response.size = ev.total;
-					this._response.progress = ev.loaded/ev.total;
-					window.dispatchEvent(__PROGRESS.event(this._response.progress));
+			value: function(ev) {
+				console.log(ev.type);
+				/*-- atributos gerais --*/
+				this.abort    = this.abort === null ? function() {ev.target.abort();} : this.abort;
+				this.size     = ev.lengthComputable ? ev.total : this.size;
+				this.progress = ev.lengthComputable && ev.total !== 0 ? ev.loaded/ev.total : this.progress;
+				this.status   = `${ev.target.status} ${ev.target.statusText}`;
+				/*-- fim da requisição --*/
+				const done    = {loadend: 1, error: 0, abort: 0, timeout: 0};
+				if (ev.type in done) {
+					const fail  = done[ev.type] === 0;
+					this.done   = true;
+					this.status = fail ? ev.type : this.status;
+					this.ok     = fail ? false : (ev.target.status >= 200 && ev.target.status < 300);
 				}
-				/*-- verificar se a requisição acabou --*/
-				if (target instanceof XMLHttpRequest && type in done) {
-					const code = target.status;
-					const text = target.statusText;
-					const fail = done[type] === 0;
-					this._response.done   = true;
-					this._response.status = fail ? type  : (code + " - " + text);
-					this._response.ok     = fail ? false : (code >= 200 && code < 300);
+				/*-- Requisição encerrada com sucesso --*/
+				if (this.ok) {
+					this.headers  = ev.target.getAllResponseHeaders();
+					this.response = ev.target.response;
 				}
-				/*-- se a requisição foi um sucesso, definir o resultado --*/
-				if (this._response.ok) {
-					const dataset = new __DataSet(target.getAllResponseHeaders());
-					this._response.headers     = dataset.toHeaders;
-					this._response.response    = target.response;
-					this._response.contentType = this._getHeaderValue("content-type");
-					this._changes(config.type, "send");
-				}
-				/*-- chamar o disparador se existente --*/
-				if (this._trigger !== null) this._trigger(this._response);
-				/*-- encerrar o progresso se a requisição acabou --*/
-				if (this._response.done)
-					window.dispatchEvent(__PROGRESS.event("close"));
 				return;
 			}
 		},
-		/**. '{void read(object ev, object config)}: Disparador para o método '{read} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da leitura.**/
+		/**. '{void read(object ev)}: Obtém os dados para o disparador invocado pelo método '{read} de __Request.**/
 		read: {
-			value: function(ev, config) {
-				/*-- se a requisição terminou, não efetuar chamadas desnecessárias do disparador --*/
-				if (this._response.done) return;
-				const target = ev.target;
-				let   type   = ev.type;
-				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				/*-- tempo de requisição: verificar se já estourou o tempo --*/
-				this._response.time = (new Date().valueOf()) - this._start;
-				if (config.timeout > 0 && !(type in done)) {
-					if (this._response.time > config.timeout) type = "timeout";
+			value: function(ev) {
+				/*-- checando timeout forçado --*/
+				const status  = ["EMPTY", "LOADING", "DONE"];
+				const timeout = this.request.data.read.timeout;
+				const expired = timeout > 0 && this.time > timeout;
+				/*-- atributos gerais --*/
+				this.abort    = this.abort === null ? function() {ev.target.abort();} : this.abort;
+				this.size     = ev.lengthComputable ? ev.total : this.size;
+				this.progress = ev.lengthComputable && ev.total !== 0 ? ev.loaded/ev.total : this.progress;
+				this.status   = `${ev.target.readyState} ${status[ev.target.readyState]}`;
+				/*-- fim da requisição --*/
+				const done = {loadend: 1, error: 0, abort: 0};
+				if (ev.type in done || expired) {
+					const fail = done[ev.type] === 0 || expired;
+					this.done  = true;
+					this.status = fail ? (expired ? "timeout" : ev.type) : this.status;
+					this.ok     = !fail;
+					if (expired) ev.target.abort();
 				}
-				/*-- definir, se ainda não efetuado, a função abort à resposta (valor inicial é nulo) --*/
-				if (this._response.abort === null)
-					this._response.abort = function() {return target.abort();}
-				/*-- se o tamanho é computável, definir o progresso --*/
-				if (ev.lengthComputable === true) {
-					this._response.size = ev.total;
-					this._response.progress = ev.loaded/ev.total;
-					window.dispatchEvent(__PROGRESS.event(this._response.progress));
+				/*-- Requisição encerrada com sucesso --*/
+				if (this.ok) {
+					this.headers  = {
+						"content-length": this.request.data.read.url.size,
+						"content-type":   this.request.data.read.url.type,
+					};
+					this.response = ev.target.result;
 				}
-				/*-- verificar se a requisição acabou --*/
-				if (type in done) {
-					const code = target.readyState;
-					const text = ["EMPTY", "LOADING", "DONE"]
-					const fail = done[type] === 0;
-					this._response.done   = true;
-					this._response.status = fail ? type : (text[code]);
-					this._response.ok     = !fail;
-				}
-				/*-- se a requisição foi um sucesso, definir o resultado --*/
-				if (this._response.ok) {
-					const dataset = new __DataSet(config.fileHeaders);
-					this._response.headers     = dataset.toHeaders;
-					this._response.contentType = this._getHeaderValue("content-type");
-					this._response.response    = target.result;
-					this._changes(config.type, "read");
-				}
-				/*-- chamar o disparador se existente --*/
-				if (this._trigger !== null) this._trigger(this._response);
-				/*-- encerrar o progresso se a requisição acabou --*/
-				if (this._response.done)
-					window.dispatchEvent(__PROGRESS.event("close"));
 				return;
 			}
 		},
@@ -3503,12 +3574,12 @@ const wd = (function() {
 					this._changes(config.type, "fetch");
 				}
 				/*-- definir o progresso --*/
-				window.dispatchEvent(__PROGRESS.event(this._response.progress));
+				__PROGRESS.event(this._response.progress);
 				/*-- chamar o disparador se existente --*/
 				if (this._trigger !== null) this._trigger(this._response);
 				/*-- encerrar o progresso se a requisição acabou --*/
 				if (this._response.done)
-					window.dispatchEvent(__PROGRESS.event("close"));
+					__PROGRESS.event("close");
 				return true;
 			}
 		},
@@ -3521,7 +3592,7 @@ const wd = (function() {
 				this._response.ok       = false;
 				this._response.status   = status;
 				if (this._trigger !== null) this._trigger(this._response);
-				window.dispatchEvent(__PROGRESS.event("close"));
+				__PROGRESS.event("close");
 				return;
 			}
 		}
@@ -3540,92 +3611,40 @@ const wd = (function() {
 	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
 	function __Request(config) {
 		if (!(this instanceof __Request)) return new __Request(config);
-		const dataset = new __DataSet(config);
-		Object.defineProperties(this, {
-			_config: {value: dataset.toObject},
+		const info   = new __DataSet(config);
+		const data   = info.toObject;
+		const method = ["post", "connect", "delete", "get", "head", "options", "patch", "put", "trace"];
+		/*-- acertando dados gerais --*/
+		data.type     = String(data.type).toLowerCase();
+		data.type     = data.type in __RESPONSETYPES ? data.type : "text";
+		data.method   = String(data.method).toLowerCase();
+		data.method   = method.indexOf(data.method) >= 0 ? data.method : method[0];
+		data.headers  = new __DataSet(data.headers);
+		data.timeout  = isFinite(data.timeout) && Number(data.timeout) > 0 ? Math.trunc(Number(data.timeout)) : 0;
+		data.onchange = typeof data.onchange === "function" ? data.onchange : null;
+		/*-- copiando dados para main --*/
+		const main = {send: {}, read: {}, fetch: {}};
+		for (let i in main) {
+			main[i].responseTypeData = __RESPONSETYPES[data.type][i];
+			for (let j in data)
+				main[i][j] = data[j];
+		}
+		/*-- acertando dados específicos --*/
+		main.send.headers  = main.send.headers.toObjectHeaders;
+		main.read.headers  = {};
+		main.fetch.headers = main.fetch.headers.toHeaders;
+		/*-- para send --*/
+		const send = {async: true, user: null, password: null};
+		for (let i in send)
+			main.send[i] = i in main.send ? main.send[i] : send[i];
+
+ 		Object.defineProperties(this, {
+ 			data: {value: main},
 		});
 	}
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**. '{array _events}: Array contendo os eventos de XMLHttpRequest e FileReader.**/
-		_events: {
-			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
-		},
-		/**. '{array _methods}: Array contendo os métodos para requisições web.**/
-		_methods: {
-			value: ("post connect delete get head options patch put trace").split(" ")
-		},
-		/**. '{object _types}: Objeto contendo a configuração de responseType conforme definido na propriedade '{type}:
-		|Propriedade|Descrição|
-		|text|Conteúdo em string (padrão)|
-		|blob|Conteúdo em arquivo|
-		|html|Conteúdo em documento HTML|
-		|xml|Conteúdo em documento XML|
-		|json|Conteúdo em JSON|
-		|buffer|Conteúdo em ArrayBuffer|
-		|url|Conteúdo em ObjectURL|
-		|matrix|Conteúdo em Array a partir de fonte CSV|
-		|object|Conteúdo em lista de objetosArray a partir de fonte CSV|
-		|table|Conteúdo em tabela HTML a partir de dados/arquivo CSV|**/
-		_types: {
-			value: {
-				text:   {send: "text",        read: "readAsText",         fetch: "text"},
-				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
-				html:   {send: "document",    read: "readAsText",         fetch: "text"},
-				xml:    {send: "text",        read: "readAsText",         fetch: "text"},
-				json:   {send: "json",        read: "readAsText",         fetch: "json"},
-				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
-				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				matrix: {send: "text",        read: "readAsText",         fetch: "text"},
-				object: {send: "text",        read: "readAsText",         fetch: "text"},
-				table:  {send: "text",        read: "readAsText",         fetch: "text"},
-			}
-		},
-		/**. '{object _cfg(string caller)}: Retorna a configuração adaptada ao tipo de chamada ('{caller}).**/
-		_cfg: {
-			value: function(caller) {
-				/*-- clonando --*/
-				const cfg = {};
-				for (let i in this._config) cfg[i] = this._config[i];
-				/*-- cabeçalho (Headers) --*/
-				if (caller === "send" || caller === "fetch") {
-					const dataset  = new __DataSet(cfg["headers"]);
-					cfg["headers"] = dataset[caller === "send" ? "toObjectHeaders" : "toHeaders"];
-				}
-				/*-- Método (POST/GET/...) --*/
-				if (caller === "send" || caller === "fetch") {
-					const data = String(cfg.method).toLowerCase().trim();
-					cfg.method = this._methods.indexOf(data) < 0 ? "post" : data;
-				}
-				/*-- Tipo de resposta (text, html, xml, matrix...) --*/
-				if (caller === "send" || caller === "fetch") {
-					cfg.type = cfg.type in this._types ? cfg.type : "text";
-				} else {
-					const file = /^(image|audio|video)(\/\w+)?$/i;
-					cfg.type = cfg.type in this._types ? cfg.type : (file.test(cfg.url.type) ? "url" : "text");
-				}
-				cfg.responseType = this._types[cfg.type][caller];
-				/*-- específico para o método send --*/
-				if (caller === "send") {
-					const data = {async: true, user: null, password: null};
-					for (let i in data)
-						cfg[i] = i in cfg ? cfg[i] : data[i];
-				}
-				/*-- específico para o método read --*/
-				if (caller === "read") {
-					cfg.fileHeaders = {
-						"content-length": cfg.url.size,
-						"content-type": cfg.url.type
-					};
-				}
-				/*-- timeout --*/
-				const time  = new __Type(cfg.timeout);
-				cfg.timeout = time.integer && time.positive ? time.value : 0;
-				/*-- retornando os dados para preenchimento da requisição --*/
-				return cfg;
-			}
-		},
-		/**. '{void send(function' trigger)}: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
+		/**. '{void send()}: Envia uma requisição ao servidor via XMLHttpRequest. Propriedades opcionais específicas:
 		|Nome|Descrição|
 		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
 		|user|Usuário (padrão nulo)|
@@ -3634,69 +3653,69 @@ const wd = (function() {
 		|overrideMimeType|Aplica-se ao método de mesmo nome|**/
 		send: {
 			value: function(trigger) {
+				const data     = this.data.send;
 				const request  = new XMLHttpRequest();
-				const response = new __Response(trigger);
-				const cfg      = this._cfg("send");
+				const response = new __Response(this);
 				try {
-					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
-					request.responseType = cfg.responseType;
-					request.timeout      = cfg.timeout;
-					for (let i in cfg.headers)
-						request.setRequestHeader(i, cfg.headers[i]);
-					if ("withCredentials" in cfg)
-						request.withCredentials = cfg.withCredentials;
-					if ("overrideMimeType" in cfg)
-						request.overrideMimeType(cfg.overrideMimeType);
+					request.open(data.method, data.url, data.async, data.user, data.password);
+					request.responseType = data.responseTypeData.type;
+					request.timeout      = data.timeout;
+					for (let i in data.headers)
+						request.setRequestHeader(i, data.headers[i]);
+					if ("withCredentials" in data)
+						request.withCredentials = data.withCredentials;
+					if ("overrideMimeType" in data)
+						request.overrideMimeType(data.overrideMimeType);
 					/*-- atribuindo disparadores aos eventos --*/
-					for (let v of this._events) {
-						if (v in request)
-							request[v] = function (ev) {response.send(ev, cfg);};
-						if (v in request.upload)
-							request.upload[v] = function (ev) {response.send(ev, cfg);};
-					}
+					const events = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
+					events.forEach(function(event,i,a) {
+						if (`on${event}` in request)
+							request.addEventListener(event, response);
+						if (`on${event}` in request.upload)
+							request.upload.addEventListener(event, response);
+					});
 					/*-- executar a requisição --*/
-					request.send(cfg.body);
+					request.send(data.body);
 				} catch(e) {
 					response.error(e.name + "- " + e.message);
 				}
 				return;
 			},
 		},
-		/**. '{void read(function' trigger)}: Lê um arquivo via FileReader e executa o argumento opcional '{trigger} a cada atualização (ver __Response)**/
+		/**. '{void read()}: Lê um arquivo via FileReader.**/
 		read: {
-			value: function(trigger) {
-				const test = new __Type(this._config.url);
+			value: function() {
+				const data = this.data.read;
+				const test = new __Type(data.url);
 				/*-- se for uma lista de arquivos, chamar para cada um deles --*/
 				if (test.instanceOf("FileList")) {
-					const cfg = this._config;
-					const obj = {};
-					for (let i in cfg) obj[i] = cfg[i];
-					for (let i = 0; i < cfg.url.length; i++) {
-						obj.url = cfg.url[i];
-						let data = new __Request(obj);
-						data.read(trigger);
+					const list = data.url;
+					for (let i = 0; i < list.length; i++) {
+						data.url = list[i];
+						let request = new __Request(data);
+						request.read();
 					}
 					return;
 				}
 				/*-- um único arquivo --*/
 				const request  = new FileReader();
-				const response = new __Response(trigger);
-				const cfg      = this._cfg("read");
+				const response = new __Response(this);
 				try {
 					/*-- atribuindo disparadores aos eventos --*/
-					for (let v of this._events) {
-						if (v in request)
-							request[v] = function (ev) {response.read(ev, cfg);};
-					}
+					const events = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
+					events.forEach(function(event,i,a) {
+						if (`on${event}` in request)
+							request.addEventListener(event, response);
+					});
 					/*-- executar a requisição --*/
-					request[cfg.responseType](cfg.url);
+					request[data.responseTypeData.type](data.url);
 				} catch(e) {
-					response.error(e.name + " - " + e.message);
+					//response.error(e.name + " - " + e.message);
 				}
 				return;
 			},
 		},
-		/**. '{void fetch(function' trigger)}: Envia uma requisição ao servidor via fetch e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto i{url}.**/
+		/**. '{void fetch()}: Envia uma requisição ao servidor via fetch. As propriedades são as mesmas do método nativo, exceto i{url}.**/
 		fetch: {
 			value: function(trigger) {
 				const request  = new FileReader();
@@ -9487,6 +9506,7 @@ const wd = (function() {
 			LANG:     {value: __LANG},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
+			RESPONSE: {value: __RESPONSETYPES},
 			WINDOW:   {value: __WINDOW},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
