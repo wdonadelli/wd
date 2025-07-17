@@ -9,7 +9,7 @@ function darkMode() {
 
 function doc() {
 	wd({url: "wd.js", trigger: function(x) {
-		console.log(x)
+		//console.log(x)
 		if (x.ok) {
 			const doc  = new wd.parser(x.response).wdComment("/**", "**/").html;
 			document.querySelector("main").innerHTML = doc;
