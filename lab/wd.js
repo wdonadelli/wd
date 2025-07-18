@@ -2500,7 +2500,7 @@ const wd = (function() {
 		handleEvent: function(ev) {
 			if (this.changeDevice) {
 				const query = document.querySelectorAll("[data-wd-device]");
-				const event = new CustomEvent("wddataset", {detail: {data: "wdDevice"}, bubbles: false});
+				const event = new CustomEvent("wddataset", {detail: "wdDevice", bubbles: false});
 				for (let i = 0; i < query.length; i++)
 					query[i].dispatchEvent(event);
 			}
@@ -2793,7 +2793,7 @@ const wd = (function() {
 			/*-- atributos --*/
 			else if (inline.test(name)) {
 				let dataset = {};
-				dataset[name.replace("data-", "")] = value;console.log(dataset)
+				dataset[name.replace("data-", "")] = value;
 				__SET_PROPERTIES.dataset(node, dataset);
 			}
 			else if (value === null) {
@@ -2936,11 +2936,11 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
 	''const object __WINDOW''
-	Exibe um formulário HTML em janelas modais, quadro ou flutuantes:
-	|Tipo|Posição|Exibição Múltipla|Em Espera|
-	|modal|Fixo|Não|Sim|
-	|frame|Fixo|Sim|Não|
-	|float|Absoluto|Não|Não|**/
+	Exibe um formulário HTML em janelas flutuantes:
+	|Janela|Posição|Profundidade|Exibição|Aguarda|Incompatibilidade|
+	|modal|Fixo|0|Única|Sim|Não|
+	|float|Absoluto|1|Única|Não|modal|
+	|frame|Fixo|2|Múltipla|Não|Não|**/
 	const __WINDOW = {
 		/**. '{regexp places}: Valores de posicionamento.**/
 		places: /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/i,
@@ -2953,8 +2953,7 @@ const wd = (function() {
 		/**. '{integer display(string type)}: Retorna o índice da pilha do primeiro tipo exibido localizado ou -1.**/
 		display: function(type) {
 			for (let i = 0; i < this.heap.length; i++)
-				if (this.heap[i].type === type && this.heap[i].added)
-					return i;
+				if (this.heap[i].type === type) return i;
 			return -1;
 		},
 		/**. '{integer indexOf(node node)}: Retorna o índice da pilha onde o nó foi localizado ou -1 se não encontrado.**/
@@ -2963,18 +2962,41 @@ const wd = (function() {
 				if (this.heap[i].node === node) return i;
 			return -1;
 		},
-		/**. '{boolean remove(node node)}: Retorna verdadeiro se a remoção do nó da pilha foi possível (não renderizado)**/
+		/**. '{boolean remove(node node)}: Retorna verdadeiro se o formulário não renderizado foi excluído da pilha.**/
 		remove: function (node) {
 			const item = this.indexOf(node);
-			if (item < 0)              return true;
-			if (this.heap[item].added) return false;
-			this.heap = this.heap.filter(function(v,i,a) {return item !== i;});
-			return true;
+			if (item >= 0 && !this.heap[item].added) {
+				const item = this.indexOf(node);
+				const event = new CustomEvent("wdwindow", {detail: "removed"});
+				this.heap[item].node.dispatchEvent(event);
+				return true;
+			}
+			return item < 0 ? true : !this.heap[item].added;
+		},
+		/**. '{boolean kill(node node)}: Retorna verdadeiro se o formulário renderizado foi removido do DOM.**/
+		kill: function(node) {
+			if (!this.remove(node)) {
+				const item = this.indexOf(node);
+				const event = new CustomEvent("wdwindow", {detail: "kill"});
+				this.heap[item].node.dispatchEvent(event);
+				return true;
+			}
+			return false;
+		},
+		/**. '{void listeners(node node)}: Redefine os eventos dos formulários.**/
+		listeners: function(node) {
+			const data = {submit: {}, wdwindow: {}};
+			for (let ev in data) {
+				node.removeEventListener(ev, this, data[ev]);
+				node.addEventListener(ev, this, data[ev]);
+			}
+			return;
 		},
 		/**. '{boolean isForm(node node)}: Retorna verdadeiro se o elemento for um nó.**/
 		isForm: function(node) {
 			return typeof node === "object" && node instanceof HTMLFormElement;
 		},
+
 
 
 
@@ -2994,22 +3016,33 @@ const wd = (function() {
 			place      = this.places.test(place) ? place.toLowerCase() : "center";
 			trigger    = typeof trigger === "function" ? trigger : null;
 			const heap = {
-				id:   this.id++, added: false, type:    "modal",
-				node: node,      place: place, trigger: trigger,
-				win: __DOM({
+				id:      this.id++,
+				type:    "modal",
+				node:    node,
+				place:   place,
+				trigger: trigger,
+				win:     __DOM({
 					tag: "DIV",
 					attr: {
-						"data-js-wd-window": "modal",
-						"className": `js-wd-window-${place}`,
-						"tabIndex": "-1",
+						dataset:   {jsWdWindow: "modal"},
+						className: `js-wd-window-${place}`,
+						tabIndex:  -1,
 					},
-					child: [
-						{tag: node, attr: {"aria-modal": "true", "tabIndex": "-1"}}
-					]
+					child: [{
+						tag: node,
+						attr: {
+							setAttribute: ["aria-modal", "true"],
+							tabIndex: "-1"
+						}
+					}]
 				}, (this.display("modal") < 0 ? document.body : null))
 			};
-			node.removeEventListener("submit", this);
-			node.addEventListener("submit", this);
+			/*-- matando float se existente (incompatível) --*/
+			const index = this.display("float");
+			if (index >= 0)
+				this.kill(this.heap[index].node);
+			/*-- concluindo --*/
+			this.listeners(node);
 			this.heap.push(heap);
 			this.update();
 			return heap.id;
@@ -3020,22 +3053,29 @@ const wd = (function() {
 			if (!this.isForm(node) || !this.remove(node)) return null;
 			trigger    = typeof trigger === "function" ? trigger : null;
 			const heap = {
-				id:   this.id++, added: true, type:    "frame",
-				node: node,      time:  time, trigger: trigger,
-				win: __DOM({
+				id:      this.id++,
+				type:    "frame",
+				node:    node,
+				time:    time,
+				trigger: trigger,
+				win:     __DOM({
 					tag: this.frame,
 					attr: {
-						"data-js-wd-window": "frame",
-						"className": "",
-						"tabIndex": "-1",
+						dataset:   {jsWdWindow: "frame"},
+						className: "",
+						tabIndex:  -1,
 					},
-					child: [
-						{tag: node, attr: {"tabIndex": "-1"}}
-					]
+					child: [{
+						tag:  node,
+						attr: {
+							removeAttribute: ["aria-modal"],
+							tabIndex: "-1"
+						}
+					}]
 				}, document.body)
 			};
-			node.removeEventListener("submit", this);
-			node.addEventListener("submit", this);
+			/*-- concluindo --*/
+			this.listeners(node);
 			this.heap.push(heap);
 			this.update();
 			return heap.id;
@@ -3045,50 +3085,37 @@ const wd = (function() {
 
 
 		update: function() {
-			const display = {
+			/*-- obtendo dados básicos --*/
+			const data = {
 				frame: this.display("frame"),
 				modal: this.display("modal"),
-				float: this.display("float"),
+				float: this.display("float")
 			};
 			/*-- FRAME --*/
-			if (display.frame < 0)
+			if (data.frame < 0) {
+				this.frame.innerHTML = "";
 				this.frame.remove();
-			/*-- MODAL --*/
-			if (display.modal >= 0)
-				document.body.appendChild(this.heap[display.modal].win.tag);
-			/*-- FRAME --*/
-			if (display.frame >= 0)
-				document.body.appendChild(this.heap[display.frame].win.tag);
-			/*-- MODAL/FLOAT: adicionar --*/
-			for (let i = 0; i < this.heap.length; i++) {
-				/*-- ignorar janelas ocupadas e renderizadas --*/
-				if (display[this.heap[i].type] >= 0 || this.heap[i].added) continue;
-				this.heap[i].added = true;
-				document.body.appendChild(this.heap[i].win.tag);
-				display[this.heap[i].type]++;
 			}
+			/*-- MODAL --*/
+			if (data.modal >= 0 && this.heap[data.modal].win.tag.parentElement !== document.body) {
+				document.body.appendChild(this.heap[data.modal].win.tag);
+				this.heap[data.modal].added = true;//FIXME acho que não precisa mais disso
+			}
+			/*-- FLOAT --*/
 			return;
 		},
 
 
 
-
-
-
-
-
-
-
-
-
 		handleEvent: function(ev) {
-			if (ev.type === "submit") {
-				ev.preventDefault();
+			if (ev.type === "submit" || ev.type === "wdwindow") {
+				/*-- prevenir comportamento padrão se submit --*/
+				if (ev.type === "submit") ev.preventDefault();
 				/*-- localizar na pilha --*/
 				const index = this.indexOf(ev.target);
 				if (index < 0) return;
+				/*-- fechar o formulário ou a janela --*/
 				const heap = this.heap[index];
-				/*-- fecha janela --*/
 				if (heap.type === "frame")
 					heap.node.remove();
 				else
@@ -3347,42 +3374,58 @@ const wd = (function() {
 	''const object __PROGRESS''
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __PROGRESS = {
-		/**. '{integer count}: Contador de ações em progresso.**/
-		count: 0,
-		/**. '{node bar}: Barra de progresso.**/
-		bar: __DOM({tag: "form", child: [{tag: "PROGRESS"}]}),
-		/**. '{object event(void value)}: Retorna o evento correspondente à ação do argumento:
-		|Valor|Tipo|Descrição|
-		|open|string|Abre a barra de progresso|
-		|close|string|Fecha a barra de progresso|
-		|0 a 1|number|Define o valor da barra de progresso|**/
-		event: function(value) {
-			const event = new CustomEvent("wdprogress", {detail: value})
+		/**. '{array heap}: Pilha de processos em andamento.**/
+		heap: [],
+		/**. '{object tree}: Árvore da barra de progresso (form > [bar, submit]).**/
+		tree: __DOM({tag: "form", child: [{tag: "PROGRESS"}]}),
+		/**. '{integer open()}: Abre um processo e retorna seu identificador.**/
+		open: function() {
+			const date   = new Date();
+			const detail = {type: "open", data: date.valueOf()};
+			const event  = new CustomEvent("wdprogress", {detail: detail});
 			window.dispatchEvent(event);
+			return detail.data;
+		},
+		/**. '{integer close(integer id)}: Fecha o processo aberto com o identificador especificado retornanod-o.**/
+		close: function(id) {
+			const detail = {type: "close", data: id};
+			const event  = new CustomEvent("wdprogress", {detail: detail});
+			window.dispatchEvent(event);
+			return detail.data;
+		},
+		/**. '{integer value(float data)}: Define o valor do progresso e o retorna (0 <= data <= 1) ou nulo.**/
+		value: function(data) {
+			const check  = new __Type(data);
+			const detail = {type: "value", data: check.finite ? check.value : -1};
+			const event  = new CustomEvent("wdprogress", {detail: detail});
+			window.dispatchEvent(event);
+			return detail.data;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador vinculado ao evento '{wdprogress} atrelado a '{window}.**/
 		handleEvent: function(ev) {
+			console.log(ev.detail);
 			if (ev.type === "wdprogress") {
-				/*-- avançar/exibir progresso --*/
-				if (ev.detail === "open") {
-					this.count++;
-					__WINDOW.addFrame(this.bar.tag);
+				const type = ev.detail.type;
+				const data = ev.detail.data;
+				const form = this.tree.tag;
+				const bar  = this.tree.child[0].tag;
+				if (type === "open") {
+					this.heap.push(data);
+					__WINDOW.addFrame(form);
 				}
-				/*-- retroceder/fechar progresso --*/
-				else if (ev.detail === "close") {
-					if (this.count === 0)
-						this.bar.tag.submit();//FIXME achar outro jeito de submeter sem recarregar a página
-					else if (--this.count === 0)
-						window.setTimeout(function(ev, me) {me.handleEvent(ev);}, 50, ev, this);
+				else if (type === "close" && this.heap.indexOf(data) >= 0) {
+					this.heap = this.heap.filter(function(v,i,a) {return v !== data;});
+					window.setTimeout(function(self) {
+						if (self.heap.length === 0)
+							__WINDOW.kill(form);
+					}, 50, this);
 				}
 				/*-- definir valor --*/
-				else {
-					const number = typeof ev.detail === "number" && !isNaN(ev.detail);
-					const value  = number ? Number(ev.detail) : -1;
-					if (value >= 0 && value <= 1)
-						this.bar.child[0].tag.value = value;
+				else if (type === "value") {
+					if (data >= 0 && data <= 1)
+						bar.value = data;
 					else
-						this.bar.child[0].tag.removeAttribute("value");
+						bar.removeAttribute("value");
 				}
 			}
 			return;
@@ -3496,6 +3539,7 @@ const wd = (function() {
 			throw new TypeError("Input value must be an instance of __Request.");
 		const date = new Date();
 		Object.defineProperties(this, {
+			id:       {value: __PROGRESS.open()},
 			request:  {value: request},
 			start:    {value: new Date()},
 			/*-- retornam ao usuário --*/
@@ -3510,7 +3554,6 @@ const wd = (function() {
 			abort:    {value: null,  writable: true},
 			mime:     {value: null,  writable: true},
 		});
-		__PROGRESS.event("open");
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
@@ -3538,7 +3581,7 @@ const wd = (function() {
 						throw new Error("__Response: Unknown event.");
 					this[call](ev);
 					/*-- renderizar progresso --*/
-					__PROGRESS.event(this.progress);
+					__PROGRESS.value(this.progress);
 					/*-- headers/mime --*/
 					if (this.headers !== null) {
 						const header = new __DataSet(this.headers);
@@ -3557,6 +3600,7 @@ const wd = (function() {
 					}
 					/*-- chamando o método --*/
 					if (this.request.trigger !== null) {
+						/*-- definindo o argumento --*/
 						const arg = {
 							done:    this.done,    ok:    this.ok,   status:   this.status,
 							time:    this.time,    size:  this.size, progress: this.progress,
@@ -3564,12 +3608,12 @@ const wd = (function() {
 							abort:   this.abort,   error: this.error
 						};
 						/*-- não se sabe quanto tempo vai demorar a função do usuário --*/
-						if (this.done) __PROGRESS.event();
+						if (this.done) __PROGRESS.value();
 						try      {this.request.trigger(arg);}
 						catch(e) {this.done = true;}
 					}
 					/*-- encerrando o progresso --*/
-					if (this.done) __PROGRESS.event("close");
+					if (this.done) __PROGRESS.close(this.id);
 				}
 			}
 		},
