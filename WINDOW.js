@@ -316,3 +316,58 @@
 
 
 	};
+
+
+
+	/**. '{void hideFocus(node node, boolean add)}: Método para tirar o nó do fluxo natural se '{add} for verdadeiro. Se falso, reestabelecerá o fluxo, caso contrário, aplicará falso a todos os nós do elemento.**/
+		hideFocus: function(node, add) {
+			const attr = "data-js-wd-flux";
+			const has  = node.hasAttribute(attr);
+			/*-- adicionando (se receber foco ou for editável) --*/
+			if (add === true && !has && (node.tabIndex >= 0 || node.isContentEditable)) {
+				const json = {tab: node.getAttribute("tabindex"), edit: node.isContentEditable};
+				node.removeAttribute("contenteditable");
+				node.setAttribute("tabindex", "-1");
+				node.setAttribute(attr, JSON.stringify(json));
+			}
+			/*-- removendo (se conter o atributo) --*/
+			else if (add === false && has) {
+				try {
+					const json = JSON.parse(node.getAttribute(attr));
+					if (json.tab !== null)
+						node.setAttribute("tabindex", json.tab);
+					else
+						node.removeAttribute("tabindex");
+					if (json.edit)
+						node.setAttribute("contenteditable", "true");
+				} catch(e) {}
+				node.removeAttribute(attr);
+			}
+			/*-- remover o método de todos os filhos do nó --*/
+			else {
+				const query = node.querySelectorAll(`[${attr}]`);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], false);
+			}
+			return;
+		},
+		/**. '{void fakeInert(node node, boolean add)}: Método alternativo para deixar o nó inerte.**/
+		fakeInert: function(node, add) {
+			const has  = node.hasAttribute("data-js-wd-inert");
+			if (add && !has) {
+				node.setAttribute("data-js-wd-inert", "");
+				node.setAttribute("aria-hidden", "true");
+				this.hideFocus(node, add);
+				const focus = `[contenteditable], [tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
+				const query = node.querySelectorAll(focus);
+				for (let i = 0; i < query.length; i++)
+					this.hideFocus(query[i], true);
+			}
+			else if (!add && has) {
+				node.removeAttribute("data-js-wd-inert");
+				node.removeAttribute("aria-hidden");
+				this.hideFocus(node, add);
+				this.hideFocus(node);
+			}
+			return;
+		},

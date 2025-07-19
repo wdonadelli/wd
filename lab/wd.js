@@ -33,10 +33,10 @@ const wd = (function() {
 	|Nome|Tipo|Descrição|
 	|__VERSION|string|Registra a versão da biblioteca|
 	|__UNDERMAINTENANCE|boolean|Se verdadeiro, libera em WD métodos em teste e imprime cascata de disparadores|
-	|__STYLE|string|Folha de estilos básica da biblioteca|**/
+	|__CSS|string|Folha de estilos básica da biblioteca|**/
 	const __VERSION = "WD JS v5.0.0";
 	const __UNDERMAINTENANCE = true;
-	const __STYLE = `
+	const __CSS = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
 			--var-js-wd-z-index-1: 9999;
@@ -61,15 +61,7 @@ const wd = (function() {
 			from {transform: scale(1);} to {transform: scale(0);}
 		}
 		/*-- Geral ---------------------------------------------------------------*/
-		[data-js-wd-inert] {
-			opacity: 0.5 !important;
-			cursor: default !important;
-			pointer-events: none !important;
-			-ms-user-select: none !important;
-			-webkit-user-select: none !important;
-			user-select: none !important;
-		}
-		[inert] {opacity: 0.5 !important;}
+		${"inert" in document.body ? "" : "[inert] {display: none !important;}"}
 
 
 
@@ -133,15 +125,15 @@ const wd = (function() {
 			right:  0.5em !important;
 			display: flex !important;
 			flex-direction: column !important;
-			max-height: calc(100vh - 1em) !important;
-			z-index: var(--var-js-wd-z-index-2) !important;
+			max-height: calc(100vh - 0.5em) !important;
+			z-index: var(--var-js-wd-z-index-3) !important;
 		}
 		@media screen and (min-width: 768px) {
 			[data-js-wd-window="frame"] {width: 25vw !important;}
 		}
 		/*-- FLOAT --*/
 		[data-js-wd-window="float"] {
-			z-index: var(--var-js-wd-z-index-1);
+			z-index: var(--var-js-wd-z-index-2);
 		}
 		/*-- MODAL --*/
 		[data-js-wd-window="modal"] {
@@ -153,8 +145,8 @@ const wd = (function() {
 			flex-direction: row !important;
 			justify-content: center !important;
 			align-items: center !important;
-			background-color: rgba(50,50,50,0.7) !important;
-			z-index: var(--var-js-wd-z-index-3);
+			background-color: rgba(50,50,50,0.5) !important;
+			z-index: var(--var-js-wd-z-index-1);
 		}
 		[data-js-wd-window="modal"].js-wd-window-n,
 		[data-js-wd-window="modal"].js-wd-window-ne,
@@ -2515,7 +2507,8 @@ const wd = (function() {
 	const __HASH = {
 		/**. '{array fixed}: Retorna uma lista de nós com posicionamento fixo a '{body}.**/
 		get fixed() {
-			const query = Array.prototype.slice.call(document.querySelectorAll("body > *"));
+			const css   = "body > :not([data-js-wd-window])";
+			const query = Array.prototype.slice.call(document.querySelectorAll(css));
 			return query.filter(function(node,i,a) {
 				const style = window.getComputedStyle(node, null);
 				return style.position === "fixed";
@@ -2619,6 +2612,42 @@ const wd = (function() {
 			const parent   = node.parentElement;
 			node.outerHTML = value;
 			parent.dispatchEvent(event);
+			return;
+		},
+		/**. '{void appendChild(node node, string value)}: Define o valor da propriedade e reanalisa o documento.**/
+		appendChild(node, value) {
+			if (Array.isArray(value)) {
+				const isNew = value[0].parentElement === null;
+				node.appendChild(value[0]);
+				if (isNew) {
+					const event = new CustomEvent("wdreload", {detail: null, bubbles: true});
+					node.dispatchEvent(event);
+				}
+			}
+			return;
+		},
+		/**. '{void insertAdjacentElement(node node, string value)}: Define o valor da propriedade e reanalisa o documento.**/
+		insertAdjacentElement(node, value) {
+			if (Array.isArray(value)) {
+				const isNew = value[1].parentElement === null;
+				node.insertAdjacentElement(value[0], value[1]);
+				if (isNew) {
+					const event = new CustomEvent("wdreload", {detail: null, bubbles: true});
+					node.dispatchEvent(event);
+				}
+			}
+			return;
+		},
+		/**. '{void insertBefore(node node, string value)}: Define o valor da propriedade e reanalisa o documento.**/
+		insertBefore(node, value) {
+			if (Array.isArray(value)) {
+				const isNew = value[0].parentElement === null;
+				node.insertBefore(value[0], value[1]);
+				if (isNew) {
+					const event = new CustomEvent("wdreload", {detail: null, bubbles: true});
+					node.dispatchEvent(event);
+				}
+			}
 			return;
 		},
 		/**. '{void style(node node, any value)}: Define o valor da propriedade/atributo:
@@ -2838,101 +2867,29 @@ const wd = (function() {
 	''const object __ARIA''
 	Agrupa ações de acessibilidade.**/
 	const __ARIA = {
-		/**. '{boolean isHTML(node node)}: Retorna verdadeiro se o nó é um elemento HTML.**/
-		isHTML: function(node) {
-			return typeof node === "object" && node instanceof HTMLElement && node.nodeType === 1;
-		},
-		/**. '{boolean setFocus(node node, boolean force)}: Ativa o primeiro elemento focável em '{node}, de preferência com o atributo i{autofocus}, e retorna verdadeiro. Caso não encontre, retonará falso, exceto se '{force} for verdadeiro, situação que forçará a focalização do elemento com o atributo i{autofocus} ou do primeiro elemento de ´{node}.**/
-		setFocus: function(node, force) {
-			if (!this.isHTML(node)) return false;
-			/*-- localizando por autofocus --*/
+		/**. '{void setFirstFocusable(node node)}: Força o primeiro elemento focável '{node}:
+		- Focar o primeiro elemento com '{tabIndex} não negativo contendo o atributo '{autofocus};
+		- Focar o primeiro elemento com '{tabIndex} não negativo;
+		- Forçar o foco do primeiro elemento contendo o atributo '{autofocus} definindo '{tabIndex} como zero;
+		- Forçar o foco do primeiro elemento definindo '{tabIndex} como -1; ou
+		- Forçar o foco do próprio nó definindo '{tabIndex} como -1.**/
+		 setFirstFocusable: function(node) {
+			/*-- regra 1: procurar autofocus focável --*/
 			const auto = node.querySelectorAll("[autofocus]");
-			for (let i = 0; i < auto.length; i++) {
-				if (auto[i].tabIndex >= 0) {
-					auto[i].focus();
-					return true;
-				}
-			}
-			/*-- localizando por focáveis --*/
+			for (let i = 0; i < auto.length; i++)
+				if (auto[i].tabIndex >= 0)
+					return auto[i].focus();
+			/*-- regra 2: procurar por focáveis --*/
 			const all = node.querySelectorAll("*");
-			for (let i = 0; i < all.length; i++) {
-				if (all[i].tabIndex >= 0) {
-					all[i].focus();
-					return true;
-				}
-			}
-			/*-- forçando focus --*/
-			if (force === true && all.length > 0) {
-				const elem = auto.length > 0 ? auto[0] : all[0];
-				elem.setAttribute("tabindex", auto.length > 0 ? "0" : "-1");
-				elem.focus();
-				return true;
-			}
-			return false;
-		},
-		/**. '{void hideFocus(node node, boolean add)}: Método para tirar o nó do fluxo natural se '{add} for verdadeiro. Se falso, reestabelecerá o fluxo, caso contrário, aplicará falso a todos os nós do elemento.**/
-		hideFocus: function(node, add) {
-			const attr = "data-js-wd-flux";
-			const has  = node.hasAttribute(attr);
-			/*-- adicionando (se receber foco ou for editável) --*/
-			if (add === true && !has && (node.tabIndex >= 0 || node.isContentEditable)) {
-				const json = {tab: node.getAttribute("tabindex"), edit: node.isContentEditable};
-				node.removeAttribute("contenteditable");
-				node.setAttribute("tabindex", "-1");
-				node.setAttribute(attr, JSON.stringify(json));
-			}
-			/*-- removendo (se conter o atributo) --*/
-			else if (add === false && has) {
-				try {
-					const json = JSON.parse(node.getAttribute(attr));
-					if (json.tab !== null)
-						node.setAttribute("tabindex", json.tab);
-					else
-						node.removeAttribute("tabindex");
-					if (json.edit)
-						node.setAttribute("contenteditable", "true");
-				} catch(e) {}
-				node.removeAttribute(attr);
-			}
-			/*-- remover o método de todos os filhos do nó --*/
-			else {
-				const query = node.querySelectorAll(`[${attr}]`);
-				for (let i = 0; i < query.length; i++)
-					this.hideFocus(query[i], false);
-			}
-			return;
-		},
-		/**. '{void fakeInert(node node, boolean add)}: Método alternativo para deixar o nó inerte.**/
-		fakeInert: function(node, add) {
-			const has  = node.hasAttribute("data-js-wd-inert");
-			if (add && !has) {
-				node.setAttribute("data-js-wd-inert", "");
-				node.setAttribute("aria-hidden", "true");
-				this.hideFocus(node, add);
-				const focus = `[contenteditable], [tabindex], a[href], area[href], button, input, select, textarea, summary, iframe, object`;
-				const query = node.querySelectorAll(focus);
-				for (let i = 0; i < query.length; i++)
-					this.hideFocus(query[i], true);
-			}
-			else if (!add && has) {
-				node.removeAttribute("data-js-wd-inert");
-				node.removeAttribute("aria-hidden");
-				this.hideFocus(node, add);
-				this.hideFocus(node);
-			}
-			return;
-		},
-		/**. '{void inert(node node, boolean add)}: Define o nó '{node} como inerte ou defaz a ação se '{add} for falso.**/
-		inert: function(node, add) {
-			if (!this.isHTML(node)) return;
-			add = add !== false;
-			if ("inert" in node)
-				node.inert = add;
-			else
-				this.fakeInert(node, add);
-			return;
-		},
-	}
+			for (let i = 0; i < all.length; i++)
+				if (all[i].tabIndex >= 0)
+					return all[i].focus();
+			/*-- regra 3: forçar o primeiro --*/
+			const force = auto.length > 0 ? auto[0] : (all.length > 0 ? all[0] : node);
+			force.setAttribute("tabindex", auto.length > 0 ? "0" : "-1");
+			return force.focus();
+		}
+	};
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
 	''const object __WINDOW''
@@ -2940,7 +2897,8 @@ const wd = (function() {
 	|Janela|Posição|Profundidade|Exibição|Aguarda|Incompatibilidade|
 	|modal|Fixo|0|Única|Sim|Não|
 	|float|Absoluto|1|Única|Não|modal|
-	|frame|Fixo|2|Múltipla|Não|Não|**/
+	|frame|Fixo|2|Múltipla|Não|Não|
+	Para vincular a abertura de uma janela com um clique, é preciso chamar o método '{stopPropagation}.**/
 	const __WINDOW = {
 		/**. '{regexp places}: Valores de posicionamento.**/
 		places: /^(top|bottom|left|right|center|full|[nswe]|[ns][we])$/i,
@@ -2950,183 +2908,254 @@ const wd = (function() {
 		frame: __HTML("DIV", {"data-wd-window": "frame"}),
 		/**. '{array heap}: Registra informações sobre os quadros.**/
 		heap: [],
-		/**. '{integer display(string type)}: Retorna o índice da pilha do primeiro tipo exibido localizado ou -1.**/
-		display: function(type) {
+		/**. '{integer indexOf(any data)}: Retorna o índice do primeiro registro especificado em '{data} ou -1 se não encontrado:
+		|Tipo|Descrição|
+		|node|Procura pelo formulário|
+		|integer|Procura pelo id|
+		|string|Procura pelo tipo|**/
+		indexOf: function(data) {
+			const test = new __Type(data);
+			const find = test.node ? "form" : (test.integer ? "id" : "type");
 			for (let i = 0; i < this.heap.length; i++)
-				if (this.heap[i].type === type) return i;
+				if (this.heap[i][find] === data) return i;
 			return -1;
 		},
-		/**. '{integer indexOf(node node)}: Retorna o índice da pilha onde o nó foi localizado ou -1 se não encontrado.**/
-		indexOf: function(node) {
-			for (let i = 0; i < this.heap.length; i++)
-				if (this.heap[i].node === node) return i;
-			return -1;
-		},
-		/**. '{boolean remove(node node)}: Retorna verdadeiro se o formulário não renderizado foi excluído da pilha.**/
-		remove: function (node) {
+		/**. '{boolean remove(node node, boolean kill)}: Elimina o nó da pilha (não renderizado) ou, se '{kill} for verdadeiro, do documento (renderizado) e retorna falso se o elemento não existe na pilha ou não foi possível eliminá-lo.**/
+		remove: function (node, kill) {
 			const item = this.indexOf(node);
-			if (item >= 0 && !this.heap[item].added) {
-				const item = this.indexOf(node);
-				const event = new CustomEvent("wdwindow", {detail: "removed"});
-				this.heap[item].node.dispatchEvent(event);
-				return true;
+			if (item >= 0) {
+				const data  = this.heap[item];
+				data.action = data.wall.parentElement === null ? "remove" : (kill === true ? "kill" : null);
+				/*-- atualizar --*/
+				if (data.action !== null) {
+					/*-- atualizar pilha --*/
+					this.heap = this.heap.filter(function(v,i,a) {return i !== item;});
+					if (data.action === "kill") {
+						data[data.type === "frame" ? "form" : "wall"].remove();
+						this.update();
+					}
+					/*-- provocar evento --*/
+					delete data.wall;
+					const event = new CustomEvent("wdwindow", {detail: data});
+					data.form.dispatchEvent(event);
+					return true;
+				}
+				return false;
 			}
-			return item < 0 ? true : !this.heap[item].added;
+			return item < 0;
 		},
-		/**. '{boolean kill(node node)}: Retorna verdadeiro se o formulário renderizado foi removido do DOM.**/
-		kill: function(node) {
-			if (!this.remove(node)) {
-				const item = this.indexOf(node);
-				const event = new CustomEvent("wdwindow", {detail: "kill"});
-				this.heap[item].node.dispatchEvent(event);
-				return true;
-			}
-			return false;
-		},
-		/**. '{void listeners(node node)}: Redefine os eventos dos formulários.**/
-		listeners: function(node) {
+		/**. '{void listeners(node node, boolean remove)}: Redefine ou removes os eventos dos formulários.**/
+		listeners: function(node, remove) {
+			/*-- eventos --*/
 			const data = {submit: {}, wdwindow: {}};
 			for (let ev in data) {
 				node.removeEventListener(ev, this, data[ev]);
-				node.addEventListener(ev, this, data[ev]);
+				if (remove !== true)
+					node.addEventListener(ev, this, data[ev]);
 			}
+			/*-- método não compatível --*/
+			if (node.method === "dialog")
+				node.removeAttribute("method");
 			return;
 		},
 		/**. '{boolean isForm(node node)}: Retorna verdadeiro se o elemento for um nó.**/
 		isForm: function(node) {
 			return typeof node === "object" && node instanceof HTMLFormElement;
 		},
-
-
-
-
-
-
-
-		/*
-		nó precisa ser um form para adicionar o evento submit
-		tipos:
-			modal: janela  flutuante modal com posição fixa à tela (em espera)
-			float: janela  flutuante com posição absoluta sobre um elemento (única)
-			frame: janelas flutuantes dispostas em uma área da tela em ordem de exibição (múltipla)
-		*/
-		/**. '{integer addModal(node node, string place, function trigger)}: Adiciona o nó á fila para ser exibido numa janela modal quando oportuno e retorna seu id ou nulo se o nó não for um formulário HTML ou já estiver na fila ou renderizado.**/
+		/**. '{integer addModal(node node, string place, function trigger)}: Adiciona o nó (´{form}) à fila para ser exibido numa janela modal quando oportuno e retorna seu id ou nulo (já renderizado). O argumento '{place} define o local da exibição da janela.**/
 		addModal: function(node, place, trigger) {
 			if (!this.isForm(node) || !this.remove(node)) return null;
-			place      = this.places.test(place) ? place.toLowerCase() : "center";
-			trigger    = typeof trigger === "function" ? trigger : null;
-			const heap = {
-				id:      this.id++,
-				type:    "modal",
-				node:    node,
-				place:   place,
-				trigger: trigger,
-				win:     __DOM({
-					tag: "DIV",
+			const css = this.places.test(place) ? place.toLowerCase() : "center"
+			const dom = __DOM({
+				tag: "DIV",
+				attr: {
+					dataset:   {jsWdWindow: "modal"},
+					className: `js-wd-window-${css}`,
+					tabIndex:  -1,
+				},
+				child: [{
+					tag: node,
 					attr: {
-						dataset:   {jsWdWindow: "modal"},
-						className: `js-wd-window-${place}`,
-						tabIndex:  -1,
-					},
-					child: [{
-						tag: node,
-						attr: {
-							setAttribute: ["aria-modal", "true"],
-							tabIndex: "-1"
-						}
-					}]
-				}, (this.display("modal") < 0 ? document.body : null))
-			};
-			/*-- matando float se existente (incompatível) --*/
-			const index = this.display("float");
-			if (index >= 0)
-				this.kill(this.heap[index].node);
-			/*-- concluindo --*/
-			this.listeners(node);
-			this.heap.push(heap);
+						setAttribute: ["aria-modal", "true"],
+						tabIndex: "-1"
+					}
+				}]
+			});
+			/*-- adicionando à pilha --*/
+			this.heap.push({
+				id:      ++this.id,
+				type:    "modal",
+				form:    node,
+				wall:    dom.tag,
+				trigger: typeof trigger === "function" ? trigger : null,
+			});
+			/*-- atualizando e retornando --*/
 			this.update();
-			return heap.id;
+			return this.id;
 		},
-
-
+		/**. '{integer addFrame(node node, integer time FIXME, function trigger)}: Adiciona o nó (´{form}) ao quadro e retorna seu id ou nulo. O argumento '{time} FIXME define o local da exibição da janela.**/
 		addFrame: function(node, time, trigger) {
 			if (!this.isForm(node) || !this.remove(node)) return null;
-			trigger    = typeof trigger === "function" ? trigger : null;
-			const heap = {
-				id:      this.id++,
-				type:    "frame",
-				node:    node,
-				time:    time,
-				trigger: trigger,
-				win:     __DOM({
-					tag: this.frame,
+			const dom = __DOM({
+				tag: this.frame,
+				attr: {
+					dataset:   {jsWdWindow: "frame"},
+					className: "",
+					tabIndex:  -1,
+				},
+				child: [{
+					tag:  node,
 					attr: {
-						dataset:   {jsWdWindow: "frame"},
-						className: "",
-						tabIndex:  -1,
-					},
-					child: [{
-						tag:  node,
-						attr: {
-							removeAttribute: ["aria-modal"],
-							tabIndex: "-1"
-						}
-					}]
-				}, document.body)
-			};
+						removeAttribute: ["aria-modal"],
+						tabIndex: -1
+					}
+				}]
+			}, document.body);
 			/*-- concluindo --*/
 			this.listeners(node);
-			this.heap.push(heap);
+			this.heap.push({
+				id:      ++this.id,
+				type:    "frame",
+				form:    node,
+				wall:    dom.tag,
+				trigger: typeof trigger === "function" ? trigger : null,
+			});
 			this.update();
-			return heap.id;
+			return this.id;
 		},
-
-
-
-
+		/**. '{integer addFloat(node node, integer x, integer y, function trigger)}: Adiciona o nó (´{form}) ao documento, fixandos nas coordenadas (x,y) e retorna seu id ou nulo.**/
+		addFloat: function(node, time, trigger) {
+			if (!this.isForm(node) || !this.remove(node))
+				return null;
+			if (this.indexOf("modal") >= 0 || this.indexOf("float") >= 0)
+				return null;
+			/*-- construindo janela --*/
+			const dom = __DOM({
+				tag: "DIV",
+				attr: {
+					dataset:   {jsWdWindow: "float"},
+					className: "",
+					tabIndex:  -1,
+					style: {top: 0, left: 0},
+				},
+				child: [{
+					tag:  node,
+					attr: {
+						removeAttribute: ["aria-modal"],
+						tabIndex: "-1"
+					}
+				}]
+			}, document.body);
+			/*-- concluindo --*/
+			this.listeners(node);
+			this.heap.push({
+				id:      ++this.id,
+				type:    "float",
+				form:    node,
+				wall:    dom.tag,
+				trigger: typeof trigger === "function" ? trigger : null,
+			});
+			this.update();
+			return this.id;
+		},
+		/**. '{void update()}: Atualiza os registros da fila.**/
 		update: function() {
 			/*-- obtendo dados básicos --*/
-			const data = {
-				frame: this.display("frame"),
-				modal: this.display("modal"),
-				float: this.display("float")
-			};
+			const data = {frame: {}, modal: {}, float: {}};
+			for (let i in data) {
+				data[i].id   = this.indexOf(i);
+				data[i].form = data[i].id < 0 ? null : this.heap[data[i].id].form;
+				data[i].wall = data[i].id < 0 ? null : this.heap[data[i].id].wall;
+			}
 			/*-- FRAME --*/
-			if (data.frame < 0) {
+			if (data.frame.id < 0) {
 				this.frame.innerHTML = "";
 				this.frame.remove();
 			}
 			/*-- MODAL --*/
-			if (data.modal >= 0 && this.heap[data.modal].win.tag.parentElement !== document.body) {
-				document.body.appendChild(this.heap[data.modal].win.tag);
-				this.heap[data.modal].added = true;//FIXME acho que não precisa mais disso
+			if (data.modal.id >= 0) {
+				/*-- matar float (incompatível) --*/
+				if (data.float.id >= 0)
+					this.remove(data.float.form, true);
+				/*-- adicionando novo modal --*/
+				if (data.modal.wall.parentElement !== document.body) {
+					/*-- adicionar ouvinte --*/
+					this.listeners(data.modal.form);
+					/*-- deixar elementos inertes --*/
+					const query = document.querySelectorAll("body > *");
+					for (let i = 0; i < query.length; i++)
+						query[i].setAttribute("inert", "true");
+					this.frame.setAttribute("inert", "true");
+					/*-- adicionar à janela --*/
+					document.body.appendChild(data.modal.wall);
+					/*-- focar primeiro elemento --*/
+					__ARIA.setFirstFocusable(data.modal.form);
+				}
+			}
+			else {
+				/*-- desfazer elementos inertes --*/
+				const query = document.querySelectorAll(`body > [inert]`);
+				for (let i = 0; i < query.length; i++)
+					query[i].removeAttribute("inert");
+				this.frame.removeAttribute("inert");
 			}
 			/*-- FLOAT --*/
+			if (data.float.id >= 0) {
+				__ARIA.setFirstFocusable(data.float.form);
+			}
+			/*-- redefinir eventos para body --*/
+			document.body.removeEventListener("keydown", this);
+			document.body.removeEventListener("click", this);
+			if (data.modal.id >= 0 || data.float.id >= 0) {
+				document.body.addEventListener("keydown", this);
+			}
+			if (data.float.id >= 0) {
+				document.body.addEventListener("click", this);
+			}
 			return;
 		},
 
 
 
 		handleEvent: function(ev) {
-			if (ev.type === "submit" || ev.type === "wdwindow") {
-				/*-- prevenir comportamento padrão se submit --*/
-				if (ev.type === "submit") ev.preventDefault();
-				/*-- localizar na pilha --*/
+			/*-- remoção do formulário da pilha --*/
+			if (ev.type === "wdwindow") {
+				if (ev.detail.trigger !== null)
+					ev.detail.trigger(ev.detail.id, ev);
+			}
+			/*-- submissão do formulário --*/
+			else if (ev.type === "submit") {
+				ev.preventDefault();
 				const index = this.indexOf(ev.target);
-				if (index < 0) return;
-				/*-- fechar o formulário ou a janela --*/
-				const heap = this.heap[index];
-				if (heap.type === "frame")
-					heap.node.remove();
-				else
-					heap.win.tag.remove();
-				/*-- executar disparador --*/
-				if (heap.trigger !== null)
-					heap.trigger(heap.id, ev);
-				/*-- atualizar --*/
-				this.heap = this.heap.filter(function(v,i,a) {return index !== i;});
-				this.update();
-				return;
+				if (index >= 0) {
+					const heap = this.heap[index];
+					/*-- fechar o formulário ou a janela --*/
+					heap[heap.type === "frame" ? "form" : "wall"].remove();
+					/*-- executar disparador --*/
+					if (heap.trigger !== null)
+						heap.trigger(heap.id, ev);
+					/*-- atualizar pilha e registros --*/
+					this.heap = this.heap.filter(function(v,i,a) {return index !== i;});
+					this.update();
+				}
+			}
+			/*-- escapar janela float com clique fora --*/
+			else if (ev.type === "click") {
+				const item = this.indexOf("float");
+				if (item >= 0) {
+					const heap = this.heap[item];
+					if (ev.target !== heap.wall && !heap.wall.contains(ev.target))
+						this.remove(heap.form, true);
+				}
+			}
+			/*-- escapar janela float/modal com ESC --*/
+			else if (ev.type === "keydown" && ev.key === "Escape") {
+				const float = this.indexOf("float");
+				const modal = this.indexOf("modal");
+				if (float >= 0 || modal >= 0) {
+					const heap = this.heap[float >= 0 ? float : modal];
+					this.remove(heap.form, true);
+				}
 			}
 
 
@@ -3141,24 +3170,7 @@ const wd = (function() {
 				if (ev.target === document.body)
 					return ev.preventDefault();
 			}
-			/*-- escapar janela float com clique fora --*/
-			if (ev.type === "click" && this.packs.float.child.length > 0) {
-				if (ev.target !== this.packs.float.node && !this.packs.float.node.contains(ev.target)) {
-					ev.preventDefault();
-					return this.remove(this.packs.float.child[0], true);
-				}
-			}
-			/*-- escapar janela float ou modal com Esc --*/
-			if (ev.type === "keydown" && ev.key === "Escape") {
-				if (this.packs.float.child.length > 0) {
-					ev.preventDefault();
-					return this.remove(this.packs.float.child[0], true);
-				}
-				if (this.packs.modal.child.length > 0) {
-					ev.preventDefault();
-					return this.remove(this.packs.modal.child[0], true);
-				}
-			}
+
 			return;
 		},
 
@@ -3403,7 +3415,6 @@ const wd = (function() {
 		},
 		/**. '{void handleEvent(object ev)}: Disparador vinculado ao evento '{wdprogress} atrelado a '{window}.**/
 		handleEvent: function(ev) {
-			console.log(ev.detail);
 			if (ev.type === "wdprogress") {
 				const type = ev.detail.type;
 				const data = ev.detail.data;
@@ -3417,7 +3428,7 @@ const wd = (function() {
 					this.heap = this.heap.filter(function(v,i,a) {return v !== data;});
 					window.setTimeout(function(self) {
 						if (self.heap.length === 0)
-							__WINDOW.kill(form);
+							__WINDOW.remove(form, true);
 					}, 50, this);
 				}
 				/*-- definir valor --*/
@@ -9613,7 +9624,7 @@ const wd = (function() {
 			WINDOW:   {value: __WINDOW},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
-			STYLE:    {value: __STYLE},
+			CSS:      {value: __CSS},
 			DATETIME: {value: __DATETIME},
 			NUMBER:   {value: __NUMBER},
 			OBJECT:   {value: __CHECK},
@@ -11108,7 +11119,7 @@ const wd = (function() {
 
 	window.addEventListener("load", function(ev) {
 		const node = document.createElement("STYLE");
-		node.innerHTML = __STYLE;
+		node.innerHTML = __CSS;
 		document.head.appendChild(node);
 		document.dispatchEvent(wdReloadEvent);
 		return;
