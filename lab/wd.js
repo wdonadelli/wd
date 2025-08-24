@@ -2548,6 +2548,129 @@ const wd = (function() {
 		}
 	};
 
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Obter Propriedades/Atributos
+	''const object __FIELDS''
+	Define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
+	const __FIELDS = {
+		/**. '{object fields}: Contém informações sobre os campos de formulários e sua submissão**/
+		fields: {
+			button: {button: 0, reset: 0, submit: 1},
+			input:  {
+				button: 0, reset:    0, submit: 1, color: 1, image:    0,
+				radio:  1, checkbox: 1, number: 1, range: 1, file:     1,
+				date:   1, time:     1, month:  1, week:  1, datetime: 1, "datetime-local": 1,
+				email:  1, password: 1, hidden: 1, text:  1, search:   1,
+				url:    1, datalist: 0, tel:    1
+			},
+			form: 0, meter: 0, option: 0, output: 0, progress: 0, textarea: 1, select: 1
+		},
+		/**. '{string tag(node node)}: Informa a tag do elemento.**/
+		tag: function(node) {
+			return node.tagName.toLowerCase();
+		},
+		/**. '{boolean isForm(node node)}: Informa se é se é campo de formulário.**/
+		isForm: function(node) {
+			return this.tag(node) in this.fields;
+		},
+		/**. '{string tag(node node)}: Informa o tipo deo campo ou nulo.**/
+		type: function(node) {
+			const tag  = this.tag(node);
+			const data = this.fields[tag];
+			if (typeof data === "number")
+				return tag;
+			if (typeof data === "object") {
+				const attr = String(node.getAttribute("type")).toLowerCase();
+				const prop = String(node.value).toLowerCase();
+				return attr in data ? attr : (prop in data ? prop : "text");
+			}
+			return null;
+		},
+		/**. '{boolean hasMask(node node)}: Informa se o campo tem máscara nativa.**/
+		hasMask: function(node) {
+			if (this.isForm(node)) {
+				const error = "A1!@#$%¨&*()+";
+				const clone = node.cloneNode();
+				try {clone.value = error;} catch(e) {}
+				return clone.value !== error;
+			}
+			return false;
+		},
+		/**. '{boolean working(node node)}: Informa se o campo já foi implementado pelo navegador.**/
+		working: function() {
+			if (this.isForm(node)) {
+				const attr = String(node.getAttribute("type")).toLowerCase();
+				const prop = String(node.value).toLowerCase();
+				return attr === prop;
+			}
+			return false;
+		},
+		/**. '{boolean canSubmit(node node)}: Informa se o campo pode submeter.**/
+		canSubmit: function(node) {
+			const tag  = this.tag(node);
+			const type = this.type(node);
+			const data = tag in this.fields ? this.fields[tag] : {};
+			return data === 1 || data[type] === 1;
+		},
+
+		hasLabel: function(node) {
+			const types = ["button", "submit", "option"]
+
+
+		}
+
+
+
+
+		/**. '{object _msg}: Registra algumas mensagens de validação de formulários.**/
+		_msg: {
+			value: (function(){
+				const re   = "[0-9]";
+				const elem = __HTML("input", {required: true, title: re, pattern: re, value: "ABC"});
+				const msg  = {
+					pattern:  elem.validationMessage.replace(re , "?"),
+					required: elem.validationMessage
+				};
+				Object.freeze(msg);
+				return msg;
+			})()
+		},
+		/**. '{object _config}: Contém as configurações sobre os campos de formulário.**/
+		_config: {
+			value: (function() {
+				/*-- informações que definem o tipo do campo de formulário -------------
+					tag.tipo:config1;config2
+						tag: tag do elemento
+						tipo: tipo do elemento quando houver (tag input e button)
+
+					SUBMIT: o campo pode ser submetido em um formulário
+					VISUAL: o campo possui representação textual
+					VALUE.tipo: define o valor aceito pelo campo
+					MASK: checar se o campo possui máscara nativa
+				----------------------------------------------------------------------*/
+				const config = [
+
+				];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**#4 Obter Propriedades/Atributos
 	''const object __GET_PROPERTIES''
@@ -2718,8 +2841,7 @@ const wd = (function() {
 		removeEventListener: function(node, value) {
 			return this.addEventListener(node, value, true);
 		},
-		/**. '{void dataset(node node, any value)}: Adiciona ou remove atributos de '{dataset} e dispara o evento '{wddataset}:
-		|Valor|Tamanho|Argumento 1|Argumento 2|Argumento 3|
+		/**. '{void dataset(node node, any value)}: Adiciona ou remove propriedades de '{dataset} e dispara o evento '{wddataset}:
 		|Tipo|Valor|Descrição|
 		|nulo||Apaga todas as propriedades|
 		|object|nulo|Apaga a propriedade específica|
@@ -2734,18 +2856,62 @@ const wd = (function() {
 					for (let name in value) {
 						let prop = name;
 						if (prop.indexOf("-") >= 0)
-							prop = prop.replace(/\-./g, function(x) {return x[1].toUpperCase();});
+							prop = prop.replace(/\-./g, function(x) {return x.toUpperCase().replace("-", "");});
 						if (value[name] === null && prop in node.dataset) {
-							delete node.dataset[prop];;
+							delete node.dataset[prop];
 						}
 						else if (value[name] !== null) {
-							const event = new CustomEvent("wddataset", {detail: prop, bubbles: true});
 							node.dataset[prop] = value[name];
-							node.dispatchEvent(event);
+							/*-- dispara evento para propriedades "data-wd-... --*/
+							if ((/^wd[A-Z]/).test(prop)) {
+								const event = new CustomEvent("wddataset", {detail: prop, bubbles: true});
+								node.dispatchEvent(event);
+							}
 						}
 					}
 			return;
 		},
+		/**. '{void setAttribute(node node, object|array value)}: Define atributos HTML.**/
+		setAttribute: function(node, value) {
+			const check = new __Type(value);
+			if (check.object) {
+				for (let i in value) this.setAttribute(node, [i, value[i]]);
+				return;
+			}
+			if (check.array) {
+				const re = /^data\-wd\-.+/i;
+				if (re.test(value[0])) {
+					const camel = function(x) {return x.toUpperCase().replace("-", "");};
+					const data  = {};
+					const name  = String(value[0]).toLowerCase().replace(/\-+/g, "-").replace("data-", "");
+					data[name.replace(/\-./gi, camel)] = value[1];
+					this.dataset(node, data);
+				}
+				else {
+					node.setAttribute(value[0], value[1]);
+				}
+			}
+			return;
+		},
+		/**. '{void removeAttribute(node node, any value)}: Remove atributos HTML**/
+		removeAttribute: function(node, value) {
+			const check = new __Type(value);
+			if (check.array) {
+				for (let i = 0; i < value.length; i++)
+					node.removeAttribute(value[i]);
+			}
+			else if (check.null) {
+				const attr = node.attributes;
+				for (let i = 0; i < attr.length; i++)
+					node.removeAttribute(attr[i].name);
+			}
+			else {
+				node.removeAttribute(value);
+			}
+		},
+
+
+
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -2763,8 +2929,7 @@ const wd = (function() {
 		const check  = {tag: new __Type(tag), attr: new __Type(attr)};
 		const prop   = check.attr.object ? attr : {};
 		const isURI  = (/^https?\:\/\/.+/i).test(uri);
-		const inline = /^data\-[a-z0-9\-\.\:\_]+$/;
-		let node = null;
+		let node     = null;
 		if (check.tag.chars)
 			node = isURI ? document.createElementNS(uri, tag) : document.createElement(tag);
 		else if (check.tag.node && check.tag.value.length > 0)
@@ -2791,16 +2956,11 @@ const wd = (function() {
 					node[name] = value;
 			}
 			/*-- atributos --*/
-			else if (inline.test(name)) {
-				let dataset = {};
-				dataset[name.replace("data-", "")] = value;
-				__SET_PROPERTIES.dataset(node, dataset);
-			}
 			else if (value === null) {
-				node.removeAttribute(name)
+				__SET_PROPERTIES.removeAttribute(node, value)
 			}
 			else {
-				node.setAttribute(name, value);
+				__SET_PROPERTIES.setAttribute(node, [name, value]);
 			}
 		}
 		return node;
@@ -2951,6 +3111,163 @@ const wd = (function() {
 
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**#4 Menu e Formulários
+	''const object __FORM''
+	Cria elementos de menus e formulários a partir de objetos.**/
+	const __FORM = {
+		/**. '{integer id}: Controla o identificador da ferramenta.**/
+		id: Math.trunc(Math.random()*100),
+		/**. '{object info}: Define a tábula de campos de formulário.**/
+		info: Object.freeze({
+			text:     {single: "label", group: "datalist", form:  true, tag: "input"},
+			email:    {single: "label", group: "datalist", form:  true, tag: "input"},
+			url:      {single: "label", group: "datalist", form:  true, tag: "input"},
+			search:   {single: "label", group: "datalist", form:  true, tag: "input"},
+			number:   {single: "label", group: "fieldset", form:  true, tag: "input"},
+			range:    {single: "label", group: "fieldset", form:  true, tag: "input"},
+			file:     {single: "label", group: "fieldset", form:  true, tag: "input"},
+			hidden:   {single:  "none", group:     "none", form:  true, tag: "input"},
+			password: {single: "label", group: "fieldset", form:  true, tag: "input"},
+			date:     {single: "label", group: "fieldset", form:  true, tag: "input"},
+			time:     {single: "label", group: "fieldset", form:  true, tag: "input"},
+			datetime: {single: "label", group: "fieldset", form:  true, tag: "input"},
+			textarea: {single: "label", group: "fieldset", form:  true, tag: "textarea"},
+			button:   {single: "inner", group:    "block", form:  true, tag: "button"},
+			submit:   {single: "inner", group:    "block", form:  true, tag: "button"},
+			checkbox: {single: "label", group: "fieldset", form:  true, tag: "input"},
+			radio:    {single: "label", group: "fieldset", form:  true, tag: "input"},
+			select:   {single: "label", group:   "option", form:  true, tag: "select"},
+			hr:       {single:  "none", group:     "none", form: false, tag: "hr"},
+			h:        {single: "inner", group:     "none", form: false, tag: "h6"},
+			p:        {single: "inner", group:     "none", form: false, tag: "p"},
+		}),
+		/**. '{object html(string tag, object attr, array child)}: Retorna o objeto configurado para '{__DOM}**/
+		html: function(tag, attr, child) {
+			return {
+				tag:  String(tag),
+				attr: typeof attr === "object" ? attr : {},
+				child: Array.isArray(child) ? child : []
+			};
+		},
+		/**. '{object single(object data, string name)}: Retorna a estrutura do elemento individual.**/
+		single: function(data, name) {
+			name = `${name}_${data.type}`;
+			const info  = this.info[data.type];
+			const check = data.type === "radio" || data.type === "checkbox";
+			const attr  = {id: name};
+			/*-- formulários --*/
+			if (info.form) {
+				attr.name  = name;
+				attr.value = "value" in data ? data.value : (check ? data.label : "")
+				if (info.tag === "input")
+					attr.type = data.type === "datetime" ? "datetime-local" : data.type;
+			}
+			/*-- rótulo --*/
+			if (info.single === "label") {
+				const elem  = this.html(info.tag, attr, []);
+				const text  = this.html(check ? "span" : "div", {innerText: data.label}, []);
+				return this.html("label", {}, check ? [elem, text] : [text, elem]);
+			}
+			/*-- texto --*/
+			if (info.single === "inner") {
+				attr.innerText = data.label;
+				return this.html(info.tag, attr, []);
+			}
+			/*-- padrão --*/
+			return this.html(info.tag, attr, []);
+		},
+		/**. '{array group(object data, string name)}: Retorna a lista da estrutura dos elementos agrupados.**/
+		group: function(data, name) {
+			const info  = this.info[data.type];
+			const check = data.type === "radio" || data.type === "checkbox";
+			/*-- datalist --*/
+			if (info.group === "datalist") {
+				const child = [];
+				data.list.forEach(function(v,i,a) {
+					child.push(this.html("option", {value: v, innerText: v}, []));
+				}, this);
+				const list = this.html("datalist", {id: `${name}_datalist`}, child);
+				const elem = this.single(data, name);
+				elem.child[1].attr.setAttribute = ["list", list.attr.id];
+				return [list, elem];
+			}
+			/*-- option --*/
+			if (info.group === "option") {
+				const child = [];
+				data.list.forEach(function(v,i,a) {
+					child.push(this.html("option", {value: v, innerText: v, selected: v === data.value}, []));
+				}, this);
+				const elem = this.single(data, name);
+				elem.child[1].child = child;
+				return [elem];
+			}
+			/*-- fieldset --*/
+			if (info.group === "fieldset") {
+				const child = [this.html("legend", {innerText: data.label})];
+				const check = data.type === "radio" || data.type === "checkbox";
+				const array = Array.isArray(data.value) ? data.value : [data.value];
+				data.list.forEach(function(v,i,a) {
+					const input  = {type: data.type, value: check ? v : "", label: v};
+					const single = this.single(input, name + (data.type === "radio" ? "" : i));
+					if (check)
+						single.child[0].attr.checked = array.indexOf(v) >= 0;
+					child.push(single);
+				}, this);
+				const elem = this.html("fieldset", {}, child);
+				return [elem];
+			}
+			/*-- block --*/
+			if (info.group === "block") {
+				const child = [];
+				data.list.forEach(function(v,i,a) {
+					const input  = {type: data.type, value: check ? v : "", label: v};
+					child.push(this.single(input, name+i));
+				}, this);
+				const elem = this.html("div", {}, child);
+				return [elem];
+			}
+			/*-- padrão --*/
+			return [this.single(data, name)];
+		},
+		/**. '{node form(array data)}: Retorna o nó de formulário configurado em '{fields}.
+		O argumento pode ser um array de objetos ou ser uma série de objetos:
+		|Nome|Tipo|Obrigatório|Descrição|
+		|type|string|Sim|Tipo do campo de formulário (ver '{info})|
+		|label|string|Sim|Rótulo ou texto do elemento ou grupo|
+		|value|string|Não|Valor do campo ou do elementos a ser selecionado|
+		|list|array|Não|Define uma lista de opções ou o um conjunto de campos de elementos|.**/
+		form: function(fields) {
+			fields = Array.isArray(fields) ? fields : Array.prototype.slice.call(arguments);
+			this.id += Math.trunc(this.id * Math.random());
+			const child = [];
+			fields.forEach(function(v,i,a) {
+				if (typeof v !== "object" || !(v.type in this.info)) return;
+				const name = `form${this.id}_${i}`;
+				const item = "list" in v ? this.group(v, name) : [this.single(v, name)];
+				item.forEach(function(V,I,A) {child.push(V)});
+			}, this);
+			return __DOM(this.html("form", {}, child)).tag;
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	};
+
+
+
+
 
 
 
@@ -2959,33 +3276,24 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
 	''const object __WINDOW''
-	Exibe um formulário HTML em janelas flutuantes:
-	|Propriedade|modal|float|frame|
-	|Posição|Fixa à tela|Fixa à tela ou absoluta a um elemento|Fixa a um quadro|
-	|Proximidade|1|2|3|
-	|Exibição|Única|Única|Múltipla|
-	|Incompatibilidade|Não|modal renderizado|Não|
-	|Destroi|float renderizado|Não|Não|
-	|Fila|Aguarda|Abre, se compatível|Abre|
-	|Clique Fora|Inerte|Fecha|Inerte|
-	|Escape Clicado|Fecha|Fecha|Inerte|
-	|role|alertdialog|dialog|alert|
-	Para vincular a abertura da janela com clique é preciso chamar o método '{stopPropagation}, no mínimo. Os seguintes eventos serão enviados como argumento ao disparador ('{trigger}):
-	|Evento|Ocorrência|
-	|submit|Quando a janela for fechada (formulário submetido) pelo usuário|
-	|wdwindow|Quando a janela é removida da fila de espera ou do documento|
-	A propriedade '{detail} do evento enviado como argumento ao disparador '{trigger} conterá os seguintes dados:
-	|Propriedade|Tipo|Descrição|
-	|id|integer|Identificador da janela retornado após sua abertura|
-	|pin|node|Elemento no qual a janela foi anexada|
-	|status|string|Aborted, Canceled, Submitted|
-	|trigger|funcion|Disparador definido|**/
+	Administrador de paredes e janelas:
+	. frame:
+	. Parede de profundidade baixa e posição invariável e fixa à tela permitindo a adição de múltiplas janelas sem restrição.
+	. float:
+	. Parede de profundidade intermediária e posição variável e fixa à tela ou absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
+	. modal:
+	. Parede de profundidade alta e posição fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
+	A cada mudança de '{status}, o evento i{wdwindow} será disparado. A propriedade '{detail} do evento contera os dados de entrada, o valor de '{status} (string) e do identificador ('{id}) (integer) da janela adicionada:
+	|Status|Descrição|
+	|open|Indica que a janela foi fixada à parede e está sendo exibida na tela|
+	|close|Indica que a janela em exibição foi removida da parede|
+	|cancel|Indica que a janela que aguardava sua exibição foi removida da fila (modal)|**/
 	const __WINDOW = {
 		/**. '{integer id}: Controla o identificador das janelas.**/
-		id: Math.trunc(100*Math.random()),
+		id: Math.trunc(10*Math.random()),
 		/**. '{array heap}: Guarda os registros vigentes.**/
 		heap: [],
-		/**. '{object wall}: Registra as paredes para fixar as janelas.**/
+		/**. '{object wall}: Registra as paredes fixadoras de janelas.**/
 		wall: Object.freeze({
 			frame: __HTML("div", {"data-js-wd-window": "frame"}),
 			modal: __HTML("div", {"data-js-wd-window": "modal"}),
@@ -3047,8 +3355,8 @@ const wd = (function() {
 		},
 		/**. '{void update()}: Atualiza fixação das janelas.**/
 		update: function() {
-			document.body.removeEventListener("click", this);
-			document.body.removeEventListener("keydown", this);
+			window.removeEventListener("click", this);
+			window.removeEventListener("keydown", this);
 			/*-- atualizando janelas --*/
 			const list = this.list;
 			for (let wall in list) {
@@ -3080,18 +3388,18 @@ const wd = (function() {
 			}
 			/*-- Tecla esc --*/
 			if (list.modal.length > 0 || list.float.length > 0)
-				document.body.addEventListener("keydown", this);
+				window.addEventListener("keydown", this);
 			/*-- clique fora --*/
 			if (list.float.length > 0)
-				document.body.addEventListener("click", this);
+				window.addEventListener("click", this);
 			/*-- inert e freeze --*/
 			this.inert  = list.modal.length > 0;
 			this.freeze = list.float.length > 0;
 			return;
 		},
-		/**. '{integer remove(integer id)}: Remove a janela da pilha pelo ID.**/
-		remove: function(id) {
-			const heap = this.find(id);
+		/**. '{integer remove(any key)}: Remove a janela da pilha (ver método '{find} quanto ao argumento).**/
+		remove: function(key) {
+			const heap = this.find(key);
 			const wall = heap === null ? null : heap.wall;
 			const show = heap === null ? null : this.wall[heap.wall].contains(heap.window);
 			if (heap !== null) {
@@ -3122,9 +3430,11 @@ const wd = (function() {
 				if (window.contains(this.wall[i]))
 					return -1
 			/*-- analisando dados --*/
+			const plus = Math.trunc(this.id*Math.random());
 			const list = this.list;
+			this.id = this.id + (plus >= 1 ? plus : 1);
 			const data = {
-				id: this.id++,
+				id: this.id,
 				window: window,
 				wall: wall in this.wall ? wall : "frame",
 				fire: (/^function|object$/).test(typeof fire) ? fire : null,
@@ -3137,10 +3447,10 @@ const wd = (function() {
 					this.remove(list.float[0].id);
 			}
 			else if (data.wall === "float") {
-				if (list.modal.length > 0)
-					return -1;
 				if (list.float.length > 0)
 					this.remove(list.float[0].id);
+				if (list.modal.length > 0 || list.float.length > 0)
+					return -1;
 			}
 			/*-- adicionando disparador de evento --*/
 			if (data.fire !== null)
@@ -3164,10 +3474,6 @@ const wd = (function() {
 			}
 			return;
 		},
-
-
-
-
 		/**. '{node pinFloat(node node, any data)}: Fixa o nó na posição definida ou anexo a outro nó conforme '{data}:
 		|Tipo|Descrição|Posição|Retorno|
 		|node|Fixará o argumento '{node} ao nó especificado|absolute|nó definido em '{data}|
@@ -3250,7 +3556,7 @@ const wd = (function() {
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
 		/**. '{integer id}: Registra os identificadores dos elementos do diálogo.**/
-		id: 0,
+		id: Math.trunc(10*Math.random()),
 		/**. '{object now}: Retorna dados do tempo atual.**/
 		get now() {
 			return {
@@ -3260,6 +3566,38 @@ const wd = (function() {
 				get iso()   {return this.date.toISOString();}
 			};
 		},
+
+
+
+
+
+
+
+
+		check: function(input) {
+			const plus = Math.trunc(this.id*Math.random());
+			const data = {head: null, body: null, modal: null, trigger: null, pin: null, timeout: null, list: null};
+			for (let i in data) data[i] = new __Type(input[i]);
+			this.id = this.id + (plus > 0 ? plus : 1);
+			data.id = this.id;
+			return data;
+		},
+
+
+		alert: function(body, head) {
+			const data = this.check({head: head, body: body});
+
+
+
+
+
+
+
+
+
+		},
+
+
 		/**. '{object alert(string head, string body, string)}: Retorna o objeto '{__DOM} do formulário base.**/
 		base: function(head, body) {
 			const check = {head: new __Type(head), body: new __Type(body)};
@@ -9748,6 +10086,7 @@ const wd = (function() {
 			HASH:     {value: __HASH},
 			SETHTML:  {value: __SET_PROPERTIES},
 			GETHTML:  {value: __GET_PROPERTIES},
+			FORM:     {value: __FORM},
 		});
 	}
 
