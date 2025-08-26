@@ -680,7 +680,7 @@ const wd = (function() {
 			}
 			return upper;
 		},
-		/**. '{string string(number data, string unit)}: Retorna o valor textua conforme formato definido em '{unit}:**/
+		/**. '{string string(number data, string unit)}: Retorna o valor textual conforme formato definido em '{unit}:**/
 		string: function(data, unit) {
 			const abs = Math.abs(data);
 			if (unit === "YYYY" || unit === "Y") {
@@ -749,7 +749,7 @@ const wd = (function() {
 			}
 			return null;
 		},
-		/**. '{string iso(object data)}: Retorna uma string para formulário a partir do resultado do método '{check}.**/
+		/**. '{string form(object data)}: Retorna uma string para formulário a partir do resultado do método '{check}.**/
 		form: function(data) {
 			if (typeof data !== "object")  return "";
 			if ("P" in data && data.P < 0) return "";
@@ -829,7 +829,7 @@ const wd = (function() {
 			}
 			return null;
 		},
-		/**. '{object test(string input)}: Testa o valor de entrada como data e tempo ou o retorna o resultado do método '{check}.**/
+		/**. '{object test(string input)}: Testa o valor de entrada como u{data e tempo} ou o retorna o resultado do método '{check}.**/
 		test: function(input) {
 			const find = /([0-9][0-9])(T|\,|\ |\,\ )(\d?\d\:[0-5][0-9])/;
 			/*-- testar tempo ou data --*/
@@ -2566,6 +2566,221 @@ const wd = (function() {
 			},
 			form: 0, meter: 0, option: 0, output: 0, progress: 0, textarea: 1, select: 1
 		},
+		value: function(node, value) {
+			if (!this.isForm(node)) return null;
+			const type  = this.type(node);
+			const test  = new __Type(value);
+			const isGet = !test.undefined;
+			const data  = new __Type(isGet ? node.value : value);
+			const time  = DATETIME.test(isGet ? node.value : value);
+			const mult  = node.multiple === true;
+			const check = node.checked === true;
+			const files = type === "file"  ? node.files : [];
+			const email = type === "email" ?
+			/*-- obter valor --*/
+			if (isGet) {
+				switch(type) {
+					case "button":   return node.value;
+					case "reset":    return node.value;
+					case "submit":   return node.value;
+					case "image":    return node.value;
+					case "radio":    return check ? node.value : null;
+					case "checkbox": return check ? node.value : null;
+					case "number":   return data.finite ? node.value : "";
+					case "range":    return data.finite ? node.value : "";
+					case "file":     return !mult && files.length > 1 ? [] : files;
+					case "email":    return node.value;
+					case "textarea": return node.value;
+					case "textarea": return node.value;
+					case "textarea": return node.value;
+					case "textarea": return node.value;
+					case "textarea": return node.value;
+					case "textarea": return node.value;
+
+
+
+					case "text":     return node.value;
+					case "textarea": return node.value;
+
+
+
+
+
+
+
+				}
+			}
+
+
+
+
+
+
+		},
+
+
+
+
+
+
+		fvalue: {
+			get: function() {
+				if (!this.form) return null;
+				const node  = this.node;
+				const value = node.value;
+				const check = new __Type(value);
+				/*-- valor finito --*/
+				if (this.fcheck === "finite") {
+					return check.finite ? check.value : "";
+				}
+				/*-- data/tempo --*/
+				if (this.fcheck === "datetime") {
+					const data = __DATETIME.test(value);
+					if (data === null)
+						return "";
+					if (data.type === "week" && 	__Time.weekToDate(data.iso) === null)
+						return "";
+					if (this.ftype === "datetime")
+						return data.iso;
+					if (data.type === "datetime" && this.ftype === "datetime-local")
+						return data.form;
+					if (data.type === this.ftype)
+						return data.form;
+					return "";
+				}
+				/*-- lista de valores --*/
+				if (this.fcheck === "combo") {
+					switch(this.ftype) {
+						case "file": {
+							const list = node.files;
+							return !node.multiple && list.length > 1 ? [] : list;
+						}
+						case "email": {
+							const list = value.split(",");
+							for (let i = 0; i < list.length; i++) {
+								let item = new __Type(list[i]);
+								if (!item.email) return [];
+								list[i] = list[i].trim();
+							}
+							return node.multiple === false && list.length > 1 ? [] : list;
+						}
+						case "select": {
+							const list = [];
+							for (let i = 0; i < node.length; i++)
+								if (node[i].selected) list.push(node[i].value);
+							return node.multiple === false && list.length > 1 ? [] : list;
+						}
+					}
+					return [];
+				}
+				/*-- valor boleano --*/
+				if (this.fcheck === "check") {
+					return node.checked ? value : null;
+				}
+				/*-- valor textual/cor --*/
+				if (this.fcheck === "text") {
+					const color = /^\#[0-9a-f]{6}$/i;
+					switch(this.ftype) {
+						case "color": return color.test(value.trim()) ? value.trim() : "#000000";
+						case "url":   try {return new URL(value).href;} catch(e) {return "";}
+					}
+					return value;
+				}
+				/*-- outros valores --*/
+				return null;
+			},
+			/*----------------------------------------------------------------------*/
+			set: function(value) {
+				if (!this.form) return;
+				const node  = this.node;
+				const check = new __Type(value);
+				const mask  = this.fmask;
+				/*-- apagar valor --*/
+				if (check.null && this.fcheck !== "check") {
+					node.value = null;
+					return;
+				}
+				/*-- definir valor finito --*/
+				if (this.fcheck === "finite") {
+					if (check.finite) node.value = check.value;
+					return;
+				}
+				/*-- definir data/tempo --*/
+				if (this.fcheck === "datetime") {
+					const data  = __DATETIME.test(value);
+					if (data === null)
+						return;
+					if (data.type === "week" && __Time.weekToDate(data.iso) === null)
+						return;
+					if (this.ftype === "datetime")
+						node.value = data.iso;
+					else if (data.type === "datetime" && this.ftype === "datetime-local")
+						node.value = data.form;
+					else if (data.type === this.ftype)
+						node.value = data.form;
+					return;
+				}
+				/*-- definir lista de valores --*/
+				if (this.fcheck === "combo") {
+					if (this.ftype === "file")
+						return;
+					if (this.ftype === "email") {
+						const list = check.array ? value : String(value).split(",");
+						if (node.multiple === false && list.length > 1) return;
+						for (let i = 0; i < list.length; i++) {
+							let item = new __Type(list[i]);
+							if (!item.email) return;
+							list[i] = list[i].trim();
+						}
+						node.value = list.join(",")
+						return;
+					}
+					if (this.ftype === "select") {
+						const list = check.array ? value : [value];
+						list.forEach(function(v,i,a) {a[i] = String(v);})
+						for (let i = 0; i < node.length; i++)
+							node[i].selected = list.indexOf(node[i].value) >= 0;
+						return;
+					}
+					return;
+				}
+				/*-- definir valores boleanos --*/
+				if (this.fcheck === "check") {
+					if (check.boolean)
+						node.checked = check.value;
+					else if (check.null)
+						node.checked = !node.checked;
+					else
+						node.checked = check.value;
+					return;
+				}
+				/*-- definir valores textuais/color/url --*/
+				if (this.fcheck === "text") {
+					if (this.ftype === "color") {
+						const color = /^\#[0-9a-f]{6}$/i;
+						if (color.test(value.trim()))
+							node.value = value.trim().toLowerCase();
+						return;
+					}
+					if (this.ftype === "url") {
+						if (check.instanceOf("URL"))
+							node.value = value.href;
+						else
+							try {node.value = new URL(value).href;} catch(e) {}
+						return;
+					}
+					node.value = value;
+				}
+				return;
+			}
+		},
+
+
+
+
+
+
+
 		/**. '{string tag(node node)}: Informa a tag do elemento.**/
 		tag: function(node) {
 			return node.tagName.toLowerCase();
@@ -2598,7 +2813,7 @@ const wd = (function() {
 			return false;
 		},
 		/**. '{boolean working(node node)}: Informa se o campo já foi implementado pelo navegador.**/
-		working: function() {
+		working: function(node) {
 			if (this.isForm(node)) {
 				const attr = String(node.getAttribute("type")).toLowerCase();
 				const prop = String(node.value).toLowerCase();
@@ -2618,40 +2833,19 @@ const wd = (function() {
 			const types = ["button", "submit", "option"]
 
 
-		}
-
-
-
-
-		/**. '{object _msg}: Registra algumas mensagens de validação de formulários.**/
-		_msg: {
-			value: (function(){
-				const re   = "[0-9]";
-				const elem = __HTML("input", {required: true, title: re, pattern: re, value: "ABC"});
-				const msg  = {
-					pattern:  elem.validationMessage.replace(re , "?"),
-					required: elem.validationMessage
-				};
-				Object.freeze(msg);
-				return msg;
-			})()
 		},
-		/**. '{object _config}: Contém as configurações sobre os campos de formulário.**/
-		_config: {
-			value: (function() {
-				/*-- informações que definem o tipo do campo de formulário -------------
-					tag.tipo:config1;config2
-						tag: tag do elemento
-						tipo: tipo do elemento quando houver (tag input e button)
 
-					SUBMIT: o campo pode ser submetido em um formulário
-					VISUAL: o campo possui representação textual
-					VALUE.tipo: define o valor aceito pelo campo
-					MASK: checar se o campo possui máscara nativa
-				----------------------------------------------------------------------*/
-				const config = [
-
-				];
+		get messages() {
+			const lang = __LANG.value.join(" ");
+			const data = {
+				pattern:  __HTML("input", {pattern: "[0-9]", value: "ABC", lang: lang}),
+				required: __HTML("input", {required: true,   value: "",    lang: lang}),
+			};
+			for (let i in data)
+				data[i] = data[i].validationMessage;
+			return data;
+		},
+	};
 
 
 
@@ -10053,8 +10247,8 @@ const wd = (function() {
 		Object.defineProperties(WD, {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
-			time:     {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			time2:    {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
+			date:     {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
@@ -10068,8 +10262,12 @@ const wd = (function() {
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
+			SETHTML:  {value: __SET_PROPERTIES},
+			GETHTML:  {value: __GET_PROPERTIES},
 			HTML:     {value: __HTML},
 			DOM:      {value: __DOM},
+			FORM:     {value: __FORM},
+			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
@@ -10084,9 +10282,6 @@ const wd = (function() {
 			ARIA:     {value: __ARIA},
 			FOCUS:    {value: __FOCUS},
 			HASH:     {value: __HASH},
-			SETHTML:  {value: __SET_PROPERTIES},
-			GETHTML:  {value: __GET_PROPERTIES},
-			FORM:     {value: __FORM},
 		});
 	}
 
