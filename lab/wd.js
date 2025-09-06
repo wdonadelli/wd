@@ -680,7 +680,7 @@ const wd = (function() {
 			}
 			return upper;
 		},
-		/**. '{string string(number data, string unit)}: Retorna o valor textual conforme formato definido em '{unit}:**/
+		/**. '{string string(number data, string unit)}: Retorna o valor textual conforme formato definido em '{unit}**/
 		string: function(data, unit) {
 			const abs = Math.abs(data);
 			if (unit === "YYYY" || unit === "Y") {
@@ -751,9 +751,9 @@ const wd = (function() {
 		},
 		/**. '{string form(object data)}: Retorna uma string para formulário a partir do resultado do método '{check}.**/
 		form: function(data) {
-			if (typeof data !== "object")  return "";
-			if ("P" in data && data.P < 0) return "";
-			if ("Y" in data && (data.Y < 1 || data.Y > 9999)) return "";
+			if (typeof data !== "object")    return "";
+			if ("P" in data && data.P < 0)   return "";
+			if ("Y" in data && (data.Y < 1)) return "";
 			if (data.type === "date") {
 				const YYYY = this.string(data.Y, "YYYY");
 				const MM   = this.string(data.M, "MM");
@@ -803,9 +803,18 @@ const wd = (function() {
 						}
 					}
 
-					/*-- checando o valor do dia do mês --*/
-					if (data.type === "date" && data.D > this.max(data.Y, data.M))
-							continue;
+					/*-- checando o dia do mês --*/
+					if (data.type === "date" && data.D > this.max(data.Y, data.M)) {
+						continue;
+					}
+					/*-- checando a semana <https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings> --*/
+					if (data.type === "week") {
+						const base = new __Week(data.Y, 1, 1);
+						const init = base.weekDay;
+						const leap = base.leap;
+						const max  = init === 5 || (init === 4 && leap) ? 53 : 52;
+						if (data.w > max) continue;
+					}
 					/*-- checando tempo --*/
 					if (data.type === "time") {
 						/*-- 12 horas --*/
@@ -822,7 +831,7 @@ const wd = (function() {
 						if (!("s" in data)) data.s = 0;
 					}
 					/*-- retornar --*/
-					data.iso = this.iso(data);
+					data.iso  = this.iso(data);
 					data.form = this.form(data);
 					return data;
 				}
@@ -2564,216 +2573,202 @@ const wd = (function() {
 				email:  1, password: 1, hidden: 1, text:  1, search:   1,
 				url:    1, datalist: 0, tel:    1
 			},
-			form: 0, meter: 0, option: 0, output: 0, progress: 0, textarea: 1, select: 1
+			form: 0, meter: 0, option: 0, output: 0, progress: 0, textarea: 1, select: 1,
+			optgroup: 0, label: 0,
 		},
+		/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} com as seguintes particularidades em relação ao comportamento padrão:
+		- Campos numéricos são definidos por números finitos (string ou number) e retornam valores numéricos.
+		- Campos de checagem e opção retornam o valor do atributo, se checados ou selecionados, ou nulo.
+		- Campos de checagem e opção podem ser definido por valores boleanos, que definirá o estado da checagem ou seleção.
+		- Campos múltiplos podem ser definidos como array e obtidos como array, se houver mais de um valor habilitado.
+		- Campos de data e tempo são definidos conforme tipo e definição da biblioteca e retornam o valor em formato ISO.
+		- O campo "datetime" aceita qualquer propriedade de data ou tempo independente do período.
+		- O campo "file" retorna o objeto '{File}, se simples, e '{FileList}, se múltiplo.
+		- Os valores dos campos "url" e "email" devem estar no respectivo formato para serem definidos ou retornados.
+		- O campo "color" pode ser definido por um número inteiro, por uma lista com os valores (0-255) de RGB, nessa ordem, ou por um objeto contendo os valores das propriedades i{red}, i{green}, i{blue}.
+		- Outros elementos retornam ou definem o valor da propriedade ou atributo.**/
 		value: function(node, value) {
-			if (!this.isForm(node)) return null;
-			const type  = this.type(node);
-			const test  = new __Type(value);
-			const isGet = !test.undefined;
-			const data  = new __Type(isGet ? node.value : value);
-			const time  = DATETIME.test(isGet ? node.value : value);
-			const mult  = node.multiple === true;
-			const check = node.checked === true;
-			const files = type === "file"  ? node.files : [];
-			const email = type === "email" ?
-			/*-- obter valor --*/
-			if (isGet) {
-				switch(type) {
-					case "button":   return node.value;
-					case "reset":    return node.value;
-					case "submit":   return node.value;
-					case "image":    return node.value;
-					case "radio":    return check ? node.value : null;
-					case "checkbox": return check ? node.value : null;
-					case "number":   return data.finite ? node.value : "";
-					case "range":    return data.finite ? node.value : "";
-					case "file":     return !mult && files.length > 1 ? [] : files;
-					case "email":    return node.value;
-					case "textarea": return node.value;
-					case "textarea": return node.value;
-					case "textarea": return node.value;
-					case "textarea": return node.value;
-					case "textarea": return node.value;
-					case "textarea": return node.value;
-
-
-
-					case "text":     return node.value;
-					case "textarea": return node.value;
-
-
-
-
-
-
-
-				}
-			}
-
-
-
-
-
-
-		},
-
-
-
-
-
-
-		fvalue: {
-			get: function() {
-				if (!this.form) return null;
-				const node  = this.node;
-				const value = node.value;
-				const check = new __Type(value);
-				/*-- valor finito --*/
-				if (this.fcheck === "finite") {
-					return check.finite ? check.value : "";
-				}
-				/*-- data/tempo --*/
-				if (this.fcheck === "datetime") {
-					const data = __DATETIME.test(value);
-					if (data === null)
-						return "";
-					if (data.type === "week" && 	__Time.weekToDate(data.iso) === null)
-						return "";
-					if (this.ftype === "datetime")
-						return data.iso;
-					if (data.type === "datetime" && this.ftype === "datetime-local")
-						return data.form;
-					if (data.type === this.ftype)
-						return data.form;
-					return "";
-				}
-				/*-- lista de valores --*/
-				if (this.fcheck === "combo") {
-					switch(this.ftype) {
-						case "file": {
-							const list = node.files;
-							return !node.multiple && list.length > 1 ? [] : list;
-						}
-						case "email": {
-							const list = value.split(",");
-							for (let i = 0; i < list.length; i++) {
-								let item = new __Type(list[i]);
-								if (!item.email) return [];
-								list[i] = list[i].trim();
-							}
-							return node.multiple === false && list.length > 1 ? [] : list;
-						}
-						case "select": {
-							const list = [];
-							for (let i = 0; i < node.length; i++)
-								if (node[i].selected) list.push(node[i].value);
-							return node.multiple === false && list.length > 1 ? [] : list;
-						}
-					}
-					return [];
-				}
-				/*-- valor boleano --*/
-				if (this.fcheck === "check") {
-					return node.checked ? value : null;
-				}
-				/*-- valor textual/cor --*/
-				if (this.fcheck === "text") {
-					const color = /^\#[0-9a-f]{6}$/i;
-					switch(this.ftype) {
-						case "color": return color.test(value.trim()) ? value.trim() : "#000000";
-						case "url":   try {return new URL(value).href;} catch(e) {return "";}
-					}
-					return value;
-				}
-				/*-- outros valores --*/
-				return null;
-			},
-			/*----------------------------------------------------------------------*/
-			set: function(value) {
-				if (!this.form) return;
-				const node  = this.node;
-				const check = new __Type(value);
-				const mask  = this.fmask;
-				/*-- apagar valor --*/
-				if (check.null && this.fcheck !== "check") {
-					node.value = null;
-					return;
-				}
-				/*-- definir valor finito --*/
-				if (this.fcheck === "finite") {
-					if (check.finite) node.value = check.value;
-					return;
-				}
-				/*-- definir data/tempo --*/
-				if (this.fcheck === "datetime") {
-					const data  = __DATETIME.test(value);
-					if (data === null)
-						return;
-					if (data.type === "week" && __Time.weekToDate(data.iso) === null)
-						return;
-					if (this.ftype === "datetime")
-						node.value = data.iso;
-					else if (data.type === "datetime" && this.ftype === "datetime-local")
-						node.value = data.form;
-					else if (data.type === this.ftype)
-						node.value = data.form;
-					return;
-				}
-				/*-- definir lista de valores --*/
-				if (this.fcheck === "combo") {
-					if (this.ftype === "file")
-						return;
-					if (this.ftype === "email") {
-						const list = check.array ? value : String(value).split(",");
-						if (node.multiple === false && list.length > 1) return;
-						for (let i = 0; i < list.length; i++) {
-							let item = new __Type(list[i]);
-							if (!item.email) return;
-							list[i] = list[i].trim();
-						}
-						node.value = list.join(",")
-						return;
-					}
-					if (this.ftype === "select") {
-						const list = check.array ? value : [value];
-						list.forEach(function(v,i,a) {a[i] = String(v);})
-						for (let i = 0; i < node.length; i++)
-							node[i].selected = list.indexOf(node[i].value) >= 0;
-						return;
-					}
-					return;
-				}
-				/*-- definir valores boleanos --*/
-				if (this.fcheck === "check") {
-					if (check.boolean)
-						node.checked = check.value;
-					else if (check.null)
-						node.checked = !node.checked;
-					else
-						node.checked = check.value;
-					return;
-				}
-				/*-- definir valores textuais/color/url --*/
-				if (this.fcheck === "text") {
-					if (this.ftype === "color") {
-						const color = /^\#[0-9a-f]{6}$/i;
-						if (color.test(value.trim()))
-							node.value = value.trim().toLowerCase();
-						return;
-					}
-					if (this.ftype === "url") {
-						if (check.instanceOf("URL"))
-							node.value = value.href;
-						else
-							try {node.value = new URL(value).href;} catch(e) {}
-						return;
-					}
-					node.value = value;
-				}
+			const test = new __Type(value);
+			const read = test.undefined;
+			const prop = read ? node.value : value;
+			const data = new __Type(prop);
+			const type = this.type(node);
+			/*-- tipos especiais --*/
+			if (["radio", "checkbox", "option"].indexOf(type) >= 0) {
+				const attr = type === "option" ? "selected" : "checked";
+				const bool = data.boolean;
+				if (read)
+					return node[attr] === true ? prop : null;
+				node[bool ? attr : "value"] = bool ? data.value : prop;
 				return;
 			}
+			if (type === "url") {
+				let url = data.instanceOf("URL") ? prop : String(prop);
+				if (!data.instanceOf("URL")) {
+					try      {url = new URL(url);}
+					catch(e) {url = {href: ""};}
+				}
+				if (read)
+					return url.href;
+				node.value = url.href;
+				return;
+			}
+			if (type === "color") {
+				function bit (x) {
+					const v = new __Type(x);
+					const n = !v.integer || v < 0 ? 0 : (v > 255 ? 255 : v.value);
+					return (n < 16 ? "0" : "") + n.toString(16);
+				}
+				let hex, iso = /^\#[0-9a-f]{1,6}$/i, max = 0xffffff+1;
+				/*-- entradas permitidas --*/
+				if (iso.test(prop))
+					hex = prop.replace("#", "");
+				else if (data.finite)
+					hex = Math.trunc(data.value%max + (data < 0 ? max : 0)).toString(16);
+				else if (data.array)
+					hex = bit(prop[0]) + bit(prop[1]) + bit(prop[2]);
+				else if (data.object)
+					hex = bit(prop.red) + bit(prop.green) + bit(prop.blue);
+				else
+					hex = "000000";
+				/*-- definindo cor --*/
+				hex = "#" + ("0").repeat(6 - hex.length) + hex;
+				if (read)
+					return hex;
+				node.value = hex;
+				return;
+			}
+			if (["number", "range", "meter", "progress"].indexOf(type) >= 0) {
+				if (read)
+					return data.finite ? data.value : "";
+				node.value = data.finite ? data.value : "";
+				return;
+			}
+			if (["date", "month", "time", "week", "datetime", "datetime-local"].indexOf(type) >= 0) {
+				const time = __DATETIME.test(prop);
+				const name = type.replace("-local", "");
+				const fail = time === null || (type !== "datetime" && name !== time.type);
+				if (read)
+					return fail ? "" : time[type === "datetime" ? "iso" : "form"];
+				node.value = fail ? "" : time[type === "datetime" ? "iso" : "form"];
+				return;
+			}
+			if (type === "email") {
+				const heap = data.array ? data.value.join(",") : (data.string ? data.value : "");
+				const list = heap.replace(/\s+/g, "").split(",");
+				const mail = list.filter(function(v,i,a) {
+					const check = new __Type(v);
+					return check.email;
+				});
+				const mult = node.multiple === true;
+				const fail = list.length !== mail.length || mail.length === 0 || (!mult && mail.length > 1);
+				if (read)
+					return fail ? "" : (mail.length > 1 ? mail : mail[0]);
+				node.value = fail ? "" : mail.join(",");
+				return;
+			}
+			if (type === "file") {
+				const mult = node.multiple === true;
+				const list = node.files;
+				const fail = list.length === 0 || (!mult && list.length > 1);
+				if (read)
+					return fail ? "" : (list.length === 1 ? list[0] : list);
+				return;
+			}
+			if (type === "select" || type === "datalist") {
+				const mult = node.multiple === true;
+				const list = read ? [] : (data.array ? data.value : [prop]);
+				for (let i = 0; i < node.length; i++) {
+					if (!read)
+						list[i].selected = list.indexOf(list[i].value) >= 0;
+					else if (node[i].selected)
+						list.push(node[i].value);
+				}
+				const fail = !mult && list.length > 1;
+				if (read)
+					return fail ? "" : list;
+				return;
+			}
+			/*-- tipos genéricos --*/
+			if (read)
+				return "value" in node ? node.value : node.getAttribute("value");
+			if ("value" in node)
+				node.value = prop;
+			else
+				node.setAttribute("value", prop);
+			return;
 		},
+		/**. '{string validity(node node, string error)}: Define ou retorna mensagem de restrição do formulário.**/
+		validity: function(node, error) {
+			if (!this.canSubmit(node)) return "";
+			const test = new __Type(error);
+			const read = test.undefined;
+			const text = test.nonempty ? error.trim() : "";
+			read ? this.error(node) : node.setCustomValidity(text);
+			return read ? node.validationMessage.trim() : text;
+		},
+		/**. '{boolean error(node node)}: Retorna se o campo de formulário é inválido.**/
+		error: function(node) {
+			if (!this.canSubmit(node)) return false;
+			/*-- 0) zerar erro personalizado --*/
+			node.setCustomValidity("");
+			/*-- 1) erros implementados pelo navegador --*/
+			if (node.checkValidity() === false) return true;
+			/*-- 2) erros de valores --*/
+			const value1 = node.value;
+			const value2 = this.value(node);
+			if (value2 === null ? false : value1 !== "" && value2 === "") {
+				node.setCustomValidity(`${this.type(node)}: ${this.messages.pattern}`);
+				return true;
+			}
+			/*-- 3) FIXME checagens personalizadas --*/
+			else if ("wdCheck" in node.dataset) {
+				//...
+				//node.setCustomValidity(text);
+				//return true;
+			}
+			/*-- sem erros --*/
+			return false;
+		},
+		/**. '{object data(node node)}: Retorna um objeto contendo as propriedades '{name}, '{value}, '{error} e '{message} do formulário ou nulo se não for o caso para submeter.**/
+		data: function(node) {
+			if (!this.canSubmit(node)) return null;
+			const name  = node.name.trim();
+			const value = this.value(node);
+			const error = this.validity(node);
+			const send  = name !== "" && value !== null;
+			return send ? {name: name, value: value, error: error !== "", message: error} : null;
+		},
+		/**. '{object submit(node node, string action, string method, boolean form)}: Retorna um objeto contendo as informações a serem enviadas na requisição ou nulo em caso de error no formulário. O argumento '{form}, se falso, capturará somente os dados do nó, caso contrário, de todos os campos do formulário vinculado ao nó. O objeto retornado contém os dados da '{url}, de '{ctype} e '{body}.**/
+		submit: function(node, action, method, form) {
+			const test = new __Type(node.form);
+			const list = test.node && form !== false ? test.value : [node];
+			const data = new __DataSet();
+			for (let i = 0; i < list.length; i++) {
+				let node = list[i];
+				let info = this.data(node);
+				if (info === null) continue;
+				if (info.error) {
+					this.alert(node);
+					return null;
+				}
+				data.append(info.name, info.value);
+			}
+			return data.toSubmit(action, method);
+		},
+		/**. '{void alert(node node)}: Exibe a mensagem de texto de erro no formulário.**/
+		alert: function(node) {
+			if ("reportValidity" in node)
+				node.reportValidity();
+			else
+				alert(data.message)//FIXME __SIGNAL.signal({body: validity, title: "!"});
+		},
+
+
+
+
+
+
 
 
 
@@ -2828,6 +2823,11 @@ const wd = (function() {
 			const data = tag in this.fields ? this.fields[tag] : {};
 			return data === 1 || data[type] === 1;
 		},
+
+
+
+
+
 
 		hasLabel: function(node) {
 			const types = ["button", "submit", "option"]
@@ -2887,6 +2887,10 @@ const wd = (function() {
 	''const object __SET_PROPERTIES''
 	Define um conjunto de métodos para definir propriedades em elementos HTML de forma personalizada.**/
 	const __SET_PROPERTIES = {
+		/**. '{void value(node node, string value)}: Define o valor da propriedade ou atributo '{value}.**/
+		value: function(node, value) {
+			return __FIELDS.value(node, value);
+		},
 		/**. '{void innerHTML(node node, string value)}: Define o valor da propriedade e reanalisa o documento.**/
 		innerHTML: function(node, value) {
 			const event    = new CustomEvent("wdreload", {detail: null, bubbles: true});
@@ -3042,13 +3046,15 @@ const wd = (function() {
 		|object||item 1|Define o valor da propriedade|**/
 		dataset: function(node, value) {
 				const check = new __Type(value);
+				/*-- limpar propriedades --*/
 				if (check.null)
 					for (let i in node.dataset) {
 						delete node.dataset[i];
 					}
+				/*-- definir propriedades --*/
 				else if (check.object)
 					for (let name in value) {
-						let prop = name;
+						let prop = name.replace(/\-+/g, "").replace(/^\-|\-$/g, "");
 						if (prop.indexOf("-") >= 0)
 							prop = prop.replace(/\-./g, function(x) {return x.toUpperCase().replace("-", "");});
 						if (value[name] === null && prop in node.dataset) {
@@ -3073,14 +3079,19 @@ const wd = (function() {
 				return;
 			}
 			if (check.array) {
-				const re = /^data\-wd\-.+/i;
-				if (re.test(value[0])) {
+				/*-- data-wd-... --*/
+				if ((/^data\-wd\-.+/i).test(value[0])) {
 					const camel = function(x) {return x.toUpperCase().replace("-", "");};
 					const data  = {};
-					const name  = String(value[0]).toLowerCase().replace(/\-+/g, "-").replace("data-", "");
+					const name  = String(value[0]).toLowerCase().replace(/^data\-+|\-+$/gi, "").replace(/\-+/g, "-");
 					data[name.replace(/\-./gi, camel)] = value[1];
 					this.dataset(node, data);
 				}
+				/*-- value --*/
+				else if ((/^value$/i).test(value[0])) {
+					this.value(node, value[1]);
+				}
+				/*-- normal --*/
 				else {
 					node.setAttribute(value[0], value[1]);
 				}
@@ -3103,9 +3114,6 @@ const wd = (function() {
 				node.removeAttribute(value);
 			}
 		},
-
-
-
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -5643,7 +5651,7 @@ const wd = (function() {
 			weekDay: {value: wday.today + 1},
 			/**. '{integer firstWeekDay}: Registra o primeiro dia da semana do ano (1-7).**/
 			firstWeekDay: {value: wday.init + 1},
-			/**. '{integer week}: Retorna a semana do ano (1-54) iniciando em domingo e desde o primeiro dia do ano.**/
+			/**. '{integer week}: Retorna a semana do ano (1-54), com início no domingo, desde o primeiro dia do ano.**/
 			week: {value: week + 1},
 		});
 	}
@@ -5651,6 +5659,7 @@ const wd = (function() {
 	__Week.prototype = Object.create(__Day.prototype, {
 		constructor: {value: __Week},
 		/**. '{string YYYYWww}: Retorna a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira do primeiro dia útil.**/
+		//FIXME verificar se foi considerado que 1º de janeiro não é dia útil!
 		YYYYWww: {
 			get: function() {
 				function week(year, days) {
@@ -5684,7 +5693,6 @@ const wd = (function() {
 	/**#4 Tempo
 	''constructor object __Time(integer year, integer month, integer day, integer hour, integer minute, i{finite} second)''
 	Construtor para resgate de informações sobre a hora a partir da informação do ano ('{year}), mês (1-12) ('{month}), dia (1-31) ('{day}), hora (0-24) ('{hour}), minuto (0-59) ('{minute}) e segundo (0-59.999) ('{second}).  Herda propriedades do objeto __Week.**/
-
 	function __Time(year, month, day, hour, minute, second) {
 		if (!(this instanceof __Time)) return new __Time(year, month, day, hour, minute, second);
 		__Week.call(this, year, month, day);
