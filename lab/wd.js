@@ -72,6 +72,9 @@ const wd = (function() {
 
 
 
+
+
+
 		/*font-family: Verdana, sans-serif */
 
 
@@ -166,6 +169,44 @@ const wd = (function() {
 		}
 
 		/*-- SIGNAL --------------------------------------------------------------*/
+		.css-wd-alert, .css-wd-dialog {
+			font-size: 14px;
+			color: black;
+			background: white;
+			border: thin solid black;
+			border-radius: 0.25em;
+			position: relative;
+		}
+		.css-wd-alert > *, .css-wd-dialog > * {
+			margin: 0;
+			padding: 0.5em;
+		}
+		.css-wd-alert > h1, .css-wd-dialog > h1 {font-size: 1.0em; padding-right: 2em;}
+		.css-wd-alert > p  {font-size: 0.9em;}
+		.css-wd-button-close {
+			font-size: 1em;
+			position: absolute;
+			top: 0.5em;
+			right: 1em;
+			margin: 0;
+			padding: 0;
+			background: none;
+			border: 0;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/*-- Signal: box --*/
 		[data-js-wd-signal] {
 			position: relative !important;
@@ -2557,7 +2598,6 @@ const wd = (function() {
 		}
 	};
 
-
 /*----------------------------------------------------------------------------*/
 	/**#4 Obter Propriedades/Atributos
 	''const object __FIELDS''
@@ -2739,16 +2779,16 @@ const wd = (function() {
 			const send  = name !== "" && value !== null;
 			return send ? {name: name, value: value, error: error !== "", message: error} : null;
 		},
-		/**. '{object submit(node node, string action, string method, boolean form)}: Retorna um objeto contendo as informações a serem enviadas na requisição ou nulo em caso de error no formulário. O argumento '{form}, se falso, capturará somente os dados do nó, caso contrário, de todos os campos do formulário vinculado ao nó. O objeto retornado contém os dados da '{url}, de '{ctype} e '{body}.**/
-		submit: function(node, action, method, form) {
+		/**. '{object submit(node node, string action, string method, boolean check)}: Retorna um objeto contendo as informações dos campos de formulário a serem enviadas na requisição ('{url}, de '{ctype} e '{body}) ou nulo em caso de erro. Se '{check} for falso, a validade dos campos não será analisada.**/
+		submit: function(node, action, method, check) {
 			const test = new __Type(node.form);
-			const list = test.node && form !== false ? test.value : [node];
+			const list = this.tag(node) === "form" ? node : (test.node ? node.form : [node]);
 			const data = new __DataSet();
 			for (let i = 0; i < list.length; i++) {
 				let node = list[i];
 				let info = this.data(node);
 				if (info === null) continue;
-				if (info.error) {
+				if (check !== false && info.error) {
 					this.alert(node);
 					return null;
 				}
@@ -2758,24 +2798,15 @@ const wd = (function() {
 		},
 		/**. '{void alert(node node)}: Exibe a mensagem de texto de erro no formulário.**/
 		alert: function(node) {
-			if ("reportValidity" in node)
+			if ("reportValidity" in node) {
 				node.reportValidity();
-			else
-				alert(data.message)//FIXME __SIGNAL.signal({body: validity, title: "!"});
+			}
+			else {
+				const data = node.getBoundingClientRect();
+				const attr = {textContent: node.validationMessage, role: "alert", className: "js-wd-alert"};
+				__WINDOW.add(__HTML("span", attr), "float", {x: data.left, y: data.bottom});
+			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**. '{string tag(node node)}: Informa a tag do elemento.**/
 		tag: function(node) {
 			return node.tagName.toLowerCase();
@@ -2784,7 +2815,7 @@ const wd = (function() {
 		isForm: function(node) {
 			return this.tag(node) in this.fields;
 		},
-		/**. '{string tag(node node)}: Informa o tipo deo campo ou nulo.**/
+		/**. '{string tag(node node)}: Informa o tipo de campo ou nulo.**/
 		type: function(node) {
 			const tag  = this.tag(node);
 			const data = this.fields[tag];
@@ -2823,18 +2854,7 @@ const wd = (function() {
 			const data = tag in this.fields ? this.fields[tag] : {};
 			return data === 1 || data[type] === 1;
 		},
-
-
-
-
-
-
-		hasLabel: function(node) {
-			const types = ["button", "submit", "option"]
-
-
-		},
-
+		/**. '{object messages}: Retorna um objeto com mensagens de erros para campos de formulários.**/
 		get messages() {
 			const lang = __LANG.value.join(" ");
 			const data = {
@@ -2846,24 +2866,6 @@ const wd = (function() {
 			return data;
 		},
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Obter Propriedades/Atributos
@@ -3492,7 +3494,7 @@ const wd = (function() {
 	|cancel|Indica que a janela que aguardava sua exibição foi removida da fila (modal)|**/
 	const __WINDOW = {
 		/**. '{integer id}: Controla o identificador das janelas.**/
-		id: Math.trunc(10*Math.random()),
+		id: Date.now(),
 		/**. '{array heap}: Guarda os registros vigentes.**/
 		heap: [],
 		/**. '{object wall}: Registra as paredes fixadoras de janelas.**/
@@ -3579,7 +3581,7 @@ const wd = (function() {
 							this.wall.modal.className = `js-wd-window-${heap.pin}`;
 						/*-- definir foco --*/
 						if (heap.wall === "modal" || heap.wall === "float")
-							__FOCUS.setFocus(heap.window	);
+							__FOCUS.setFocus(heap.window);
 						/*-- disparar evento --*/
 						heap.status = "open";
 						this.fire(heap);
@@ -3615,29 +3617,27 @@ const wd = (function() {
 			}
 			return heap === null ? null : heap.id;
 		},
-		/**. '{integer add(node window, string wall, any pin, any fire)}: Retorna o '{id} da janela ou -1 em caso de insucesso:
+		/**. '{integer add(node win, string wall, any pin, any fire)}: Retorna o '{id} da janela ou -1 em caso de insucesso:
 		|Argumento|Tipo|Descrição|
-		|window|node|Janela a ser adicionada a pilha, não pode ser parte de outra janela já adicionada.|
+		|win|node|Janela a ser adicionada a pilha, não pode ser parte de outra janela já adicionada.|
 		|wall|string|Tipo de parede ("float", "modal" ou "frame")|
 		|pin|string|Localização da janela na parede "modal" ("top", "bottom", "left", "right", "full" e "center")|
 		|pin|node|Nó de fixação da parede "float"|
 		|pin|object|Posição (x, y) da parede "float" na tela|
 		|fire|function ou object|Disparador a ser chamada durante o evento "wdwindow"|**/
-		add: function(window, wall, pin, fire) {
+		add: function(win, wall, pin, fire) {
 			/*-- verificando inclusão da janela --*/
-			const test = new __Type(window);
-			if (!test.node || test.value.length < 1 || this.find(window) !== null)
+			const test = new __Type(win);
+			if (!test.node || test.value.length < 1 || this.find(win) !== null)
 				return -1;
 			for (let i in this.wall)
-				if (window.contains(this.wall[i]))
+				if (win.contains(this.wall[i]))
 					return -1
 			/*-- analisando dados --*/
-			const plus = Math.trunc(this.id*Math.random());
 			const list = this.list;
-			this.id = this.id + (plus >= 1 ? plus : 1);
 			const data = {
-				id: this.id,
-				window: window,
+				id: Date.now() - this.id,
+				window: win,
 				wall: wall in this.wall ? wall : "frame",
 				fire: (/^function|object$/).test(typeof fire) ? fire : null,
 				pin: pin,
@@ -3656,7 +3656,7 @@ const wd = (function() {
 			}
 			/*-- adicionando disparador de evento --*/
 			if (data.fire !== null)
-				window.addEventListener("wdwindow", data.fire);
+				win.addEventListener("wdwindow", data.fire);
 			this.heap.push(data);
 			this.update();
 			return data.id;
@@ -3757,8 +3757,8 @@ const wd = (function() {
 	/**''const object __SIGNAL''
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. '{integer id}: Registra os identificadores dos elementos do diálogo.**/
-		id: Math.trunc(10*Math.random()),
+		/**. '{integer id}: Referência do ID.**/
+		id: Date.now(),
 		/**. '{object now}: Retorna dados do tempo atual.**/
 		get now() {
 			return {
@@ -3768,244 +3768,96 @@ const wd = (function() {
 				get iso()   {return this.date.toISOString();}
 			};
 		},
-
-
-
-
-
-
-
-
-		check: function(input) {
-			const plus = Math.trunc(this.id*Math.random());
-			const data = {head: null, body: null, modal: null, trigger: null, pin: null, timeout: null, list: null};
-			for (let i in data) data[i] = new __Type(input[i]);
-			this.id = this.id + (plus > 0 ? plus : 1);
-			data.id = this.id;
-			return data;
+		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
+		handleEvent: function(ev) {
+			ev.preventDefault();
+			ev.target.removeEventListener("click", this);
+			__WINDOW.remove(ev.target);
 		},
-
-
-		alert: function(body, head) {
-			const data = this.check({head: head, body: body});
-
-
-
-
-
-
-
-
-
-		},
-
-
-		/**. '{object alert(string head, string body, string)}: Retorna o objeto '{__DOM} do formulário base.**/
-		base: function(head, body) {
-			const check = {head: new __Type(head), body: new __Type(body)};
-			const count = this.id++;
-			const now   = this.now;
-			const child = [];
-			const attr  = {className: `js-wd-signal`};
-			let   ok    = false;
-			/*-- cabeçalho --*/
-			if (check.head.nonempty) {
-				ok = true;
-				const id = `signal_head_${count}`;
-				child.push({tag: "div", attr: {id: id, className: "js-wd-signal-head", innerText: head}});
-				attr["aria-labelledby"] = id;
-			}
-			/*-- corpo --*/
-			if (check.body.nonempty) {
-				ok = true;
-				const id  = `signal_body_${count}`;
-				child.push({tag: "div", attr: {id: id, className: "js-wd-signal-body", innerText: body}});
-				attr["aria-describedby"] = id;
-			}
-			/*-- Botões --*/
-			child.push({tag: "div", attr: {className: "js-wd-signal-fire"}});
-			/*-- registro do tempo --*/
-			child.push({tag: "time", attr: {datetime: now.iso, className: "js-wd-signal-time", textContent: now.local}});
-			/*-- botão para fechar diálogo --*/
-			child.push({tag: "button", attr: {type: "submit", className: "js-wd-signal-kill", innerHTML: "&times;"}});
-
-			return ok ? __DOM({tag: "FORM", attr: attr, child: child}) : null;
-		},
-
-
-
-
-
-
-		/**. '{integer id}: Controla o id da caixa de mensagem.**/
-		//id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0, notify: 0},
-		/**. '{node builder(object data)}: Retorna a caixa de alerta ou diálogo conforme especificado em i{data} (ver '{signal}).**/
-		buider: function(data) {
-			const time = `<time datetime="${data.iso}">${data.date}</time>`;
-			const num  = this.id[data.type]++;
-			const id   = `js_wd_signal_${data.type}_${num}`;
-			const aria = {head: `${id}_head`, body: `${id}_body`, node: `${id}_node`};
-			const role = data.type === "dialog" ? "alertdialog" : "alert";
-			const move = role === "alert" ? "" : `data-wd-move="{$:'#${id}'}"`;
-			const main = __HTML("div", {
-				id: id, role: role, dataset: {jsWdSignal: data.type},
-				"aria-labelledby": aria.head, "aria-describedby": aria.body,
-				innerHTML: `<button class="js-wd-signal-kill" type="button" >&times;</button>
-				<div class="js-wd-signal-head" id="${aria.head}" ${move} >${data.head === null ? time : data.head}</div>
-				<div class="js-wd-signal-body" id="${aria.body}" >${data.body}</div>
-				<div class="js-wd-signal-node" id="${aria.node}"></div>
-				<div class="js-wd-signal-fire"></div>`
-			});
-			/*-- DEFINIÇÕES --------------------------------------------------------*/
-			main.setAttribute("aria-describedby", data.body === null ? aria.node : aria.body);
-			if (data.body === null)
-				main.querySelector(".js-wd-signal-body").remove();
-			if (data.node === null)
-				main.querySelector(".js-wd-signal-node").remove();
-			else
-				main.querySelector(".js-wd-signal-node").appendChild(data.node);
-			const fire = main.querySelector(".js-wd-signal-fire");
-			for (let i in data.actions) {
-				let btn = __HTML("button", {
-					textContent: data.actions[i].replace(/\*$/, ""), type: "button",
-					autofocus: (/\*$/).test(data.actions[i]),
-					dataset: {jsWdSignalId: i}
-				});
-				fire.appendChild(btn);
-				//FIXME isso será eliminado após a criação do atributo data-wd-key
-				btn.addEventListener("keydown", function(ev) {
-					const keys = {
-						next: /^(ArrowRight|ArrowDown)$/i,
-						previus: /^(ArrowLeft|ArrowUp)$/i,
-						first: /^(Home)$/i,
-						last: /^(End)$/i
-					};
-					const child = ev.target.parentElement.children;
-					if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
-						ev.target.nextElementSibling.focus();
-					else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
-						ev.target.previousElementSibling.focus();
-					else if (keys.first.test(ev.key))
-						child[0].focus();
-					else if (keys.last.test(ev.key))
-						child[child.length - 1].focus();
-					return;
-				}, false);
-			}
-			return main;
-		},
-		/**. '{void alert(object info)}: Ver método i{signal}.**/
-		alergggt: function(info) {
-			const main = this.buider(info);
-			/*----------------------------------------------------------------------*/
-			if (info.type === "dialog") {
-				main.querySelector(".js-wd-signal-kill").remove();
-				const buttons = main.querySelector(".js-wd-signal-fire").children;
-				let   focus   = null;
-				for (let i = 0; i < buttons.length; i++) {
-					let btn = buttons[i];
-					let id  = btn.dataset.jsWdSignalId;
-					delete btn.dataset.jsWdSignalId;
-					btn.addEventListener("click", function(ev) {
-						__WINDOW.remove(main);
-						if (info.trigger !== null)
-							info.trigger(info.id, id);
-						return;
-					}, false);
-					if (focus === null && btn.autofocus)
-						focus = btn;
+		/**. '{object close(string label)}: Retorna a estrutura do botão de fechar o alerta. O argumento define a descrição do botão.**/
+		close: function(label) {
+			return {
+				tag:  "button",
+				attr: {
+					type: "button",
+					className: "css-wd-button-close",
+					"aria-label": String(label || "").trim() || "Close",
+					addEventListener: ["click", this],
+					innerHTML: "&#x2715;"
 				}
-				/*-- Renderizando diálogo --*/
-				__WINDOW.append(main, {
-					type: "modal",
-					close: function(result) {
-						if (info.trigger !== null && !result)
-							info.trigger(info.id, null);
-						return;
-					}
-				});
-				if (focus !== null) focus.focus();
 			}
-			/*----------------------------------------------------------------------*/
-			else {
-				main.querySelector(".js-wd-signal-fire").remove();
-				const kill = main.querySelector(".js-wd-signal-kill");
-				kill.addEventListener("click", function(ev) {
-					return __WINDOW.remove(main);
-				}, false);
-				__WINDOW.append(main, {type: "frame", close: function() {
-					if (info.trigger !== null) info.trigger(info.id, null);
-				}});
-				if (info.time > 0)
-					window.setTimeout(function() {kill.click();}, info.time);
+		},
+		/**. '{void alert(string body, string head, string label)}: Abre uma mensagem de alerta:
+		|Argumento|Descrição|Observação|
+		|body|Texto da mensagem|Obrigatório|
+		|head|Texto do título|Opcional|
+		|label|Rótulo do botão fechar|Recomendado|**/
+		alert: function(body, head, label, time) {
+			/*-- checagem dos dados de entrada --*/
+			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
+			body = String(body || "").trim() || null;
+			/*-- chamar caixa de alerta --*/
+			if (body !== null) {
+				const alert = {
+					tag: "div",
+					attr: {role: "alert", className: "css-wd-alert"},
+					child: [
+						this.close(label),
+						{tag: "h1",  attr: {innerText: head}},
+						{tag: "p" ,  attr: {innerText: body}},
+						//FIXME não pode ser display none
+						{tag: "div", attr: {innerText: time, role: "timer", "aria-atomic": "true", style: {display: "none"}}},
+					]
+				};
+				__WINDOW.add(__DOM(alert).tag, "frame");
 			}
-			/*----------------------------------------------------------------------*/
 			return;
 		},
 
-
-
-
-
-
-
+		//FIXME o que fazer quando fecha?
+		dialog: function(form, head) {
+			/*-- checagem dos dados de entrada --*/
+			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
+			/*-- chamar caixa de diálogo --*/
+			if (typeof form === "object" && form instanceof HTMLFormElement) {
+				form.addEventListener("submit", this);
+				const id     = Date.now() - this.id;
+				const dialog = {
+					tag: "div",
+					attr: {
+						role: "alertdialog",
+						className: "css-wd-dialog",
+						"aria-labelledby":  `wd_dialog_head_${id}`,
+						"aria-describedby": `wd_dialog_body_${id}`,
+					},
+					child: [
+						{tag: "h1",  attr: {innerText: head, id: `wd_dialog_head_${id}`}},
+						{tag: form , attr: {id: `wd_dialog_body_${id}`}},
+					]
+				};
+				__WINDOW.add(__DOM(dialog).tag, "modal");
+			}
+			return;
+		},
 
 		/**. '{void notify(object data)}: Ver método i{signal}.**/
-		notify: function (data) {
-			const title  = data.head === null ? data.date : data.head;
-			const config = {
-				lang: __LANG.value,
-				body: data.body === null ? data.node.innerText : data.body,
-				tag:  data.id   === null ? "" : data.id
-			};
-			if (Notification.permission === "denied")
-				return;
-			if (Notification.permission === "granted")
-				new Notification(title, config);
-			else
-				Notification.requestPermission().then(function(x) {
-					if (x === "granted") new Notification(title, config);
-				});
+		notify: function (body, head) {
+			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
+			body = String(body || "").trim() || null;
+			if (body !== null) {
+				const config = {lang: __LANG.value, body: body, tag: Date.now() - this.id,};
+				if (Notification.permission === "denied")
+					return;
+				if (Notification.permission === "granted")
+					new Notification(head, config);
+				else
+					Notification.requestPermission().then(function(x) {
+						if (x === "granted") new Notification(head, config);
+					});
+			}
 			return;
 		},
-		/**. '{void signal(object data)}: Define mensagens de alerta, caixas de diálogo ou notificações conforme definido em '{data}:
-		|Nome|Tipo|Descrição|
-		|type|string|Indica o tipo de interação (notificação, alerta ou diálogo).|
-		|head|string|Define o título da interação.|
-		|body|string|Define a mensagem datime.toLocaleString(__LANG.value) interação.|
-		|node|Node|Define um elemento HTML a ser exibido após a mensagem (notificação e diálogo).|
-		|id|string|Identificador da interação.|
-		|trigger|function|Define a função a ser chamada após o fechamento (notificação e diálogo).|
-		|actions|object|Define os botões de resposta do u{diálogo}.|
-		|time|integer|Duração da mensagem de u{alerta} em milissegundos.|
-		. As propriedades '{body} ou '{node} precisam ser informadas. Os seguintes valores de '{type} são possíveis:
-		|Valor|Interação|
-		|notify|Exibe uma notificação.|
-		|warn|Exibe uma caixa de u{alerta} de advertência.|
-		|error|Exibe uma caixa de u{alerta} de erro.|
-		|info|Exibe uma caixa de u{alerta} de informação.|
-		|ok|Exibe uma caixa de u{alerta} de sucesso.|
-		|dialog|Exibe uma caixa de u{diálogo}.|
-		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do texto do botão para focá-lo ao abrir o diálogo.
-		. A função '{trigger} receberá como argumentos os identificadores da interação e do botão de ação definidos nas propriedades '{id} e '{actions}, respectivamente. Se a caixa for fechada sem definir uma ação, o respectivo argumento será nulo.**/
-		signal: function(data) {
-			data       = typeof data === "object" ? data : {};
-			const time = new Date();
-			const info = {
-				type:    data.type in this.id ? data.type : "info",
-				id:      "id"   in data ? data.id   : null,
-				head:    "head" in data ? data.head : null,
-				body:    "body" in data ? data.body : null,
-				node:    typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null,
-				actions: typeof data.actions === "object"   ? data.actions : {OK: "OK*"},
-				trigger: typeof data.trigger === "function" ? data.trigger : null,
-				time:    typeof data.time    === "number"   ? Math.trunc(data.time) : 0,
-				iso:     time.toISOString(),
-				date:    time.toLocaleString(__LANG.value)
-			};
-			if (info.body !== null || info.node !== null)
-				info.type === "notify" ? this.notify(info) : this.alert(info);
-		}
+
 	};
 
 
