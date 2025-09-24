@@ -3015,11 +3015,12 @@ const wd = (function() {
 			this.className(node, value);
 			return;
 		},
-		/**. '{void addEventLister(node node, any value, boolean remove)}: Adiciona ou remove ouvintes de eventos. Se o valor for um array, cada item do array corresponderá ao argumento do método. Em caso de objeto:
+		/**. '{void addEventLister(node node, any value, boolean remove)}: Adiciona ou remove ouvintes de eventos. Se o valor for um array, cada item do array corresponderá ao argumento do método. Em caso de objeto, a referência aos argumento do método é:
 		|Valor|Tamanho|Argumento 1|Argumento 2|Argumento 3|
-		|function||name|disparador||
-		|array|1|name|item 1||
-		|array|2|name|item 1|item 2|
+		|function||nome|disparador||
+		|object||nome|disparador||
+		|array|1|nome|item 1||
+		|array|2|nome|item 1|item 2|
 		|array|3|item 1|item 2|item 3|**/
 		addEventListener: function(node, value, remove) {
 			const attr  = remove === true ? "removeEventListener" : "addEventListener";
@@ -3030,7 +3031,7 @@ const wd = (function() {
 				for(let ev in value) {
 					let test = new __Type(value[ev]);
 					let name = ev.trim().replace(/^(on)?/i, "");
-					if (test.function)
+					if (test.function || test.object)
 						node[attr](name, value[ev]);
 					else if (test.array && value[ev].length > 0)
 						node[attr].apply(node, value[ev].length > 2 ? value[ev] : [name].concat(value[ev]));
@@ -3318,141 +3319,260 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Menu e Formulários
 	''const object __FORM''
-	Cria elementos de menus e formulários a partir de objetos.**/
+	Cria elementos de menus e formulários a partir de objetos.
+	|Argumento|Tipo|Descrição|Obrigatório|
+	|type|string|Tipo de formulário|Sim|
+	|label|string|Rótulo do formulário|Sim|
+	|name|string|Nome do formulário|Sim|
+	|value|string|Valor do formulário|Sim|
+	|value|array|Lista dos rótulos dos items do formulário (label), se aplicável|Sim|
+	|value|object|Lista dos rótulos e valores dos items do formulário, se aplicável|Sim|
+	|check|string|Valor padrão do formulário|Não|
+	|check|list|Valores padrão do formulário, se aplicável|Não|
+	|id|string|Identificador do formulário|Não|**/
 	const __FORM = {
 		/**. '{integer id}: Controla o identificador da ferramenta.**/
-		id: Math.trunc(Math.random()*100),
+		id: Date.now(),
 		/**. '{object info}: Define a tábula de campos de formulário.**/
-		info: Object.freeze({
-			text:     {single: "label", group: "datalist", form:  true, tag: "input"},
-			email:    {single: "label", group: "datalist", form:  true, tag: "input"},
-			url:      {single: "label", group: "datalist", form:  true, tag: "input"},
-			search:   {single: "label", group: "datalist", form:  true, tag: "input"},
-			number:   {single: "label", group: "fieldset", form:  true, tag: "input"},
-			range:    {single: "label", group: "fieldset", form:  true, tag: "input"},
-			file:     {single: "label", group: "fieldset", form:  true, tag: "input"},
-			hidden:   {single:  "none", group:     "none", form:  true, tag: "input"},
-			password: {single: "label", group: "fieldset", form:  true, tag: "input"},
-			date:     {single: "label", group: "fieldset", form:  true, tag: "input"},
-			time:     {single: "label", group: "fieldset", form:  true, tag: "input"},
-			datetime: {single: "label", group: "fieldset", form:  true, tag: "input"},
-			textarea: {single: "label", group: "fieldset", form:  true, tag: "textarea"},
-			button:   {single: "inner", group:    "block", form:  true, tag: "button"},
-			submit:   {single: "inner", group:    "block", form:  true, tag: "button"},
-			checkbox: {single: "label", group: "fieldset", form:  true, tag: "input"},
-			radio:    {single: "label", group: "fieldset", form:  true, tag: "input"},
-			select:   {single: "label", group:   "option", form:  true, tag: "select"},
-			hr:       {single:  "none", group:     "none", form: false, tag: "hr"},
-			h:        {single: "inner", group:     "none", form: false, tag: "h6"},
-			p:        {single: "inner", group:     "none", form: false, tag: "p"},
+		field: Object.freeze({
+			text:     {method: "combo", tag: "input"},
+			email:    {method: "combo", tag: "input"},
+			url:      {method: "combo", tag: "input"},
+			search:   {method: "combo", tag: "input"},
+			number:   {method:  "text", tag: "input"},
+			range:    {method:  "text", tag: "input"},
+			file:     {method:  "text", tag: "input"},
+			hidden:   {method:  "text", tag: "input"},
+			password: {method:  "text", tag: "input"},
+			date:     {method:  "text", tag: "input"},
+			time:     {method:  "text", tag: "input"},
+			datetime: {method:  "text", tag: "input"},
+			textarea: {method:  "text", tag: "textarea"},
+			button:   {method: "click", tag: "button"},
+			submit:   {method: "click", tag: "button"},
+			reset:    {method: "click", tag: "button"},
+			color:    {method: "click", tag: "input"},
+			image:    {method: "click", tag: "input"},
+			checkbox: {method: "check", tag: "input"},
+			radio:    {method: "check", tag: "input"},
+			select:   {method: "list",  tag: "select"},
 		}),
-		/**. '{object html(string tag, object attr, array child)}: Retorna o objeto configurado para '{__DOM}**/
-		html: function(tag, attr, child) {
-			return {
-				tag:  String(tag),
-				attr: typeof attr === "object" ? attr : {},
-				child: Array.isArray(child) ? child : []
-			};
+		/**. '{object html(string type, string label)}: Retorna a estrutura de elemento HTML.**/
+		html: function(type, label) {
+			return {tag: type, attr: {innerHTML: label}, child: []};
 		},
-		/**. '{object single(object data, string name)}: Retorna a estrutura do elemento individual.**/
-		single: function(data, name) {
-			name = `${name}_${data.type}`;
-			const info  = this.info[data.type];
-			const check = data.type === "radio" || data.type === "checkbox";
-			const attr  = {id: name};
-			/*-- formulários --*/
-			if (info.form) {
-				attr.name  = name;
-				attr.value = "value" in data ? data.value : (check ? data.label : "")
-				if (info.tag === "input")
-					attr.type = data.type === "datetime" ? "datetime-local" : data.type;
-			}
-			/*-- rótulo --*/
-			if (info.single === "label") {
-				const elem  = this.html(info.tag, attr, []);
-				const text  = this.html(check ? "span" : "div", {innerText: data.label}, []);
-				return this.html("label", {}, check ? [elem, text] : [text, elem]);
-			}
-			/*-- texto --*/
-			if (info.single === "inner") {
-				attr.innerText = data.label;
-				return this.html(info.tag, attr, []);
-			}
-			/*-- padrão --*/
-			return this.html(info.tag, attr, []);
+		/**. '{object label(string label)}: Retorna a estrutura de elemento HTML de rótulo.**/
+		label: function(label) {
+			return {tag: "label", attr: {}, child: [this.html("span", label)]};
 		},
-		/**. '{array group(object data, string name)}: Retorna a lista da estrutura dos elementos agrupados.**/
-		group: function(data, name) {
-			const info  = this.info[data.type];
-			const check = data.type === "radio" || data.type === "checkbox";
-			/*-- datalist --*/
-			if (info.group === "datalist") {
-				const child = [];
-				data.list.forEach(function(v,i,a) {
-					child.push(this.html("option", {value: v, innerText: v}, []));
-				}, this);
-				const list = this.html("datalist", {id: `${name}_datalist`}, child);
-				const elem = this.single(data, name);
-				elem.child[1].attr.setAttribute = ["list", list.attr.id];
-				return [list, elem];
-			}
-			/*-- option --*/
-			if (info.group === "option") {
-				const child = [];
-				data.list.forEach(function(v,i,a) {
-					child.push(this.html("option", {value: v, innerText: v, selected: v === data.value}, []));
-				}, this);
-				const elem = this.single(data, name);
-				elem.child[1].child = child;
-				return [elem];
-			}
-			/*-- fieldset --*/
-			if (info.group === "fieldset") {
-				const child = [this.html("legend", {innerText: data.label})];
-				const check = data.type === "radio" || data.type === "checkbox";
-				const array = Array.isArray(data.value) ? data.value : [data.value];
-				data.list.forEach(function(v,i,a) {
-					const input  = {type: data.type, value: check ? v : "", label: v};
-					const single = this.single(input, name + (data.type === "radio" ? "" : i));
-					if (check)
-						single.child[0].attr.checked = array.indexOf(v) >= 0;
-					child.push(single);
-				}, this);
-				const elem = this.html("fieldset", {}, child);
-				return [elem];
-			}
-			/*-- block --*/
-			if (info.group === "block") {
-				const child = [];
-				data.list.forEach(function(v,i,a) {
-					const input  = {type: data.type, value: check ? v : "", label: v};
-					child.push(this.single(input, name+i));
-				}, this);
-				const elem = this.html("div", {}, child);
-				return [elem];
-			}
-			/*-- padrão --*/
-			return [this.single(data, name)];
+		/**. '{object fieldset(string label)}: Retorna a estrutura de elemento HTML de agrupamento.**/
+		fieldset: function(label) {
+			return {tag: "fieldset", attr: {}, child: [this.html("legend", label)]};
 		},
-		/**. '{node form(array data)}: Retorna o nó de formulário configurado em '{fields}.
-		O argumento pode ser um array de objetos ou ser uma série de objetos:
-		|Nome|Tipo|Obrigatório|Descrição|
-		|type|string|Sim|Tipo do campo de formulário (ver '{info})|
-		|label|string|Sim|Rótulo ou texto do elemento ou grupo|
-		|value|string|Não|Valor do campo ou do elementos a ser selecionado|
-		|list|array|Não|Define uma lista de opções ou o um conjunto de campos de elementos|.**/
-		form: function(fields) {
-			fields = Array.isArray(fields) ? fields : Array.prototype.slice.call(arguments);
-			this.id += Math.trunc(this.id * Math.random());
+		/**. '{object datalist(any value, any check, string id)}: Retorna a estrutura de elemento HTML de listagem.**/
+		datalist: function (value, check, id) {
 			const child = [];
-			fields.forEach(function(v,i,a) {
-				if (typeof v !== "object" || !(v.type in this.info)) return;
-				const name = `form${this.id}_${i}`;
-				const item = "list" in v ? this.group(v, name) : [this.single(v, name)];
-				item.forEach(function(V,I,A) {child.push(V)});
-			}, this);
-			return __DOM(this.html("form", {}, child)).tag;
+			const list  = Array.isArray(check) ? check : [check];
+			/*-- value é um array --*/
+			if (Array.isArray(value)) {
+				for (let i = 0; i < value.length; i++) child.push({
+					tag: "option",
+					attr: {value: value[i], textContent: value[i], selected: list.indexOf(value[i]) >= 0},
+				});
+			}
+			/*-- value é um objeto --*/
+			else if (typeof value === "object") {
+				for (let i in value) child.push({
+					tag: "option",
+					attr: {value: i, textContent: value[i], selected: list.indexOf(i) >= 0},
+				});
+			}
+			/*-- value é outro tipo --*/
+			else {
+				child.push({
+					tag: "option",
+					attr: {value: value, textContent: value, selected: list.indexOf(value[i]) >= 0}
+				});
+			}
+			return {tag: "datalist", attr: {id: id}, child: child};
 		},
+		/**. '{object text(string type, string label, string name, string value)}: Retorna a estrutura de elemento HTML de texto.**/
+		text: function(type, label, name, value) {
+			const base = this.label(label);
+			const attr = {type: type, name: name, value: value};
+			if      (type === "textarea") delete attr.type;
+			else if (type === "file")     delete attr.value;
+			else if (type === "password") delete attr.value;
+			else if (type === "hidden")   return {tag: this.field[type].tag, attr: attr, child: []};
+			base.child.push({tag: this.field[type].tag, attr: attr, child: []});
+			return base;
+		},
+		/**. '{object list(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de seleção.**/
+		list: function(type, label, name, value, check) {
+			const base = this.label(label);
+			const attr = {name: name, multiple: Array.isArray(check)};
+			const list = this.datalist(value, check, name);
+			const data = {tag: this.field[type].tag, attr: attr, child: list.child};
+			base.child.push(data);
+			return base;
+		},
+		/**. '{object combo(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de combo.**/
+		combo: function(type, label, name, value, check) {
+			const base = this.label(label);
+			const mult = type === "email" && Array.isArray(check);
+			const attr = {multiple: mult, type: type, name: name, value: value};
+			if (!mult) delete attr.multiple;
+			console.log(attr)
+			/*-- combo --*/
+			if (Array.isArray(value) || typeof value === "object") {
+				const id = `list_${name}_${Date.now() - this.id}`;
+				base.child.push(this.datalist(value, check, id));
+				attr.setAttribute = ["list", id];
+				attr.value = Array.isArray(check) ? check.join(",") : check;
+			}
+			base.child.push({tag: this.field[type].tag, attr: attr, child: []});
+			return base
+		},
+		/**. '{object check(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de checagem.**/
+		check: function(type, label, name, value, check) {
+			check = Array.isArray(check) ? check : [check];
+			const mult = Array.isArray(value) || typeof value === "object";
+			const base = mult ? this.fieldset(label) : this.label(label);
+			if (Array.isArray(value)) {
+				for (let i = 0; i < value.length; i++) {
+					let index = type === "radio" ? name : `${name}_${i}`;
+					let label = this.label(value[i]);
+					let attr  = {type: type, name: index, value: value[i], checked: check.indexOf(value[i]) >= 0};
+					let input = {tag: this.field[type].tag, attr: attr, child: []};
+					label.child.unshift(input);
+					base.child.push(label);
+				}
+			}
+			else if (typeof value === "object") {
+				let item = 0;
+				for (let i in value) {
+					let index = type === "radio" ? name : `${name}_${item++}`;
+					let label = this.label(value[i]);
+					let attr  = {type: type, name: index, value: i, checked: check.indexOf(i) >= 0};
+					let input = {tag: this.field[type].tag, attr: attr, child: []};
+					label.child.unshift(input);
+					base.child.push(label);
+				}
+			}
+			else {
+				let attr  = {type: type, name: name, value: value, checked: check.indexOf(value) >= 0};
+				let input = {tag: this.field[type].tag, attr: attr, child: []};
+				base.child.unshift(input);
+			}
+			return base;
+		},
+		/**. '{object click(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de botão.**/
+		click: function(type, label, name, value, check) {
+			check = Array.isArray(check) ? check : [check];
+			const tag  = this.field[type].tag;
+			const mult = Array.isArray(value) || typeof value === "object";
+			const base = mult ? this.fieldset(label) : {tag: tag, attr: {}, child: []};
+			if (Array.isArray(value)) {
+				for (let i = 0; i < value.length; i++) {
+					let index = `${name}_${i}`;
+					let attr  = {type: type, name: index, value: value[i], autoFocus: check.indexOf(value[i]) >= 0};
+					if (tag === "button") attr.innerHTML = value[i]
+					base.child.push({tag: tag, attr: attr, child: []});
+				}
+			}
+			else if (typeof value === "object") {
+				let item = 0;
+				for (let i in value) {
+					let index = `${name}_${item++}`;
+					let attr  = {type: type, name: index, value: value[i], autoFocus: check.indexOf(i) >= 0};
+					if (tag === "button") {
+						attr.innerHTML = value[i];
+						attr.value = i;
+					}
+					base.child.push({tag: tag, attr: attr, child: []});
+				}
+			}
+			else {
+				let attr = {type: type, name: name, value: label, autoFocus: check.indexOf(value) >= 0};
+				if (tag === "button") {
+					attr.innerHTML = label;
+					attr.value     = value;
+				}
+				base.attr = attr;
+			}
+			return base;
+		},
+		/**. '{object list(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML genérico.**/
+		builder: function(type, label, name, value, check) {
+			type  = String(type).toLowerCase().trim();
+			label = String(label).trim();
+			name  = String(name).trim();
+			const method = type in this.field ? this.field[type].method : "html";
+			return this[method](type, label, name, value, check);
+		},
+		/**. '{node form(array data)}: Os items do argumento são i{array} e seguem a mesma ordem do método '{builder}.**/
+		form: function(data) {
+			if (!Array.isArray(data)) return null;
+			const form = {tag: "form", attr: {}, child: []};
+			for (let i = 0; i < data.length; i++) {
+				if (Array.isArray(data[i]))
+					form.child.push(this.builder.apply(this, data[i]));
+			}
+			return __DOM(form).tag;
+		},
+
+		submenu: function(main, list, index) {
+			const data = index.split(".").length;
+			const info = {open: ">", close: "<", item: "-", label: ""};
+			const menu = {tag: "menu", attr: {hidden: data > 1}, child: []};
+			for (let i = 0; i < list.length; i++) {
+				let item = list[i];
+				let li   = {tag: "li", attr: {}, child:[]};
+				let id   = `${index}${i}`;
+				let sub  = Array.isArray(item) && item.length > 1;
+				let name = i === 0 ? (data > 1 ? "close" : "label") : (sub ? "open" : "item");
+				let type = name === "item" ? "submit" : "button";
+				let span = {tag: "span", attr: {innerHTML: sub ? item[0] : item}, child: []};
+				let act  = {tag: "span", attr: {textContent: info[name]}, child: []};
+				let add  = name === "label" ? {} : {"click": this, "keydown": this};
+				let attr = {type: type, name: name, value: id, addEventListener: add};
+				let html;
+
+				/*-- rótulo --*/
+				if (i === 0) {
+					html = {tag: "button", attr: attr, child: [act, span]};
+					/*act.attr.tabIndex = -1;
+					menu.attr["aria-label"] = label;*/
+				}
+				/*-- separador (undefined null 0) --*/
+				else if (!(item)) {
+					html = {tag: "hr", attr: {}, child: {}};
+				}
+				/*-- menuitem --*/
+				else {
+					html = {tag: "button", attr: attr, child: name === "item" ? [act, span] : [span, act]};
+					/*-- submenu --*/
+					if (name === "open") 	this.submenu(main, item, `${id}.`);
+				}
+				li.child.push(html);
+				menu.child.push(li);
+			}
+			main.child.push(menu);
+			return main;
+		},
+
+
+	menu: function(list, pin) {
+		const form = {tag: "form", attr: {}, child: []};
+		const main = this.submenu(form, list, "");
+		const menu = {tag: "div", attr: {role: "dialog", "aria-label": list[0]}, child: [main]};
+		__WINDOW.add(__DOM(menu).tag, "float", pin);
+
+
+
+
+	}
+
 
 
 
