@@ -193,6 +193,47 @@ const wd = (function() {
 			background: none;
 			border: 0;
 		}
+		/*-- MENU ----------------------------------------------------------------*/
+		.css-wd-menu {
+			padding: 0.2em;
+			margin: 0;
+			list-style: none;
+			background: white;
+			color: black;
+			border-radius: 0.2em;
+			border: thin solid black;
+		}
+		.css-wd-menu hr {
+			border: 0px;
+		  border-top: 1px solid black;
+		}
+		.css-wd-menu button {
+			position: relative;
+			display: block;
+			width: 100%;
+			padding: 0.25em 2em;
+			text-align: left;
+			background: transparent;
+			border: 0;
+			border-radius: 0.2em;
+		}
+		.css-wd-menu .css-wd-menu-menu:after {
+			content: "\\276F";
+			position: absolute;
+			right: 0;
+			margin: 0 0.5em 0 0;
+			text-align: center;
+		}
+		.css-wd-menu .css-wd-menu-back:before {
+			content: "\\276E";
+			position: absolute;
+			left: 0;
+			margin: 0 0 0 0.5em;
+			text-align: center;
+		}
+		.css-wd-menu .css-wd-menu-back, .css-wd-menu .css-wd-menu-main {
+			background: rgba(100,100,100,0.5);
+		}
 
 
 
@@ -2599,7 +2640,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Obter Propriedades/Atributos
+	/**#4 Campos de Formulários
 	''const object __FIELDS''
 	Define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
 	const __FIELDS = {
@@ -2869,9 +2910,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Obter Propriedades/Atributos
-	''const object __GET_PROPERTIES''
+	''const object __GET_HTML''
 	Define um conjunto de métodos para obter as propriedades de elementos HTML de forma personalizada.**/
-	const __GET_PROPERTIES = {
+	const __GET_HTML = {
 		/**. '{string className(node node)}: Retorna o valor do atributo '{class}.**/
 		className: function(node) {
 			const attr = node.getAttribute("class");
@@ -2886,9 +2927,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Definir Propriedades/Atributos
-	''const object __SET_PROPERTIES''
+	''const object __SET_HTML''
 	Define um conjunto de métodos para definir propriedades em elementos HTML de forma personalizada.**/
-	const __SET_PROPERTIES = {
+	const __SET_HTML = {
 		/**. '{void value(node node, string value)}: Define o valor da propriedade ou atributo '{value}.**/
 		value: function(node, value) {
 			return __FIELDS.value(node, value);
@@ -2975,7 +3016,7 @@ const wd = (function() {
 			}
 			else if (check.chars) {
 				node.setAttribute("class", value);
-				__GET_PROPERTIES.className(node);
+				__GET_HTML.className(node);
 			}
 			return;
 		},
@@ -2990,7 +3031,7 @@ const wd = (function() {
 			const check = __CHECK.test(value);
 			if (check.type === "object") {
 				const prop = ["replace", "toggle", "add", "remove"];
-				let   list = __GET_PROPERTIES.className(node).split(" ");
+				let   list = __GET_HTML.className(node).split(" ");
 				for (let i = 0; i < prop.length; i++) {
 					if (prop[i] in value) {
 						let css = String(value[prop[i]]).replace(/\s+/g, " ").trim().split(" ");
@@ -3122,11 +3163,11 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Criar/Manipular Elemento
 	''node __HTML(string/node tag, object attr, string uri)''
-	Cria e/ou define os atributos/propriedades do elemento ou retona nulo em caso de inconsistências.
+	Cria um elemento HTML ou define suas propriedades e atributos retornando-o ou nulo (falha).
 	|Argumento|Tipo|Descrição|
-	|tag|string|Nome da tag do elemento a ser criado/manipulado|
-	|tag|node|Elemento HTML a ser manipulado|
-	|attr|object|Propriedades ou atributos, nessa ordem, do elemento e seus respectivos valores|
+	|tag|string|Nome da tag do elemento a ser criado e manipulado.|
+	|tag|node|Elemento HTML a ser manipulado.|
+	|attr|object|Propriedades ou atributos, nessa ordem, do elemento e seus respectivos valores.|
 	|uri|url|Namespace URI para um elemento qualificado|
 	Se a propriedade for uma função, os argumentos são repassados como array.**/
 	function __HTML(tag, attr, uri) {
@@ -3147,8 +3188,8 @@ const wd = (function() {
 			check.value = new __Type(value);
 			check.prop  = new __Type(node[name]);
 			/*-- propriedade/atributo especial --*/
-			if (name in __SET_PROPERTIES) {
-				__SET_PROPERTIES[name](node, value);
+			if (name in __SET_HTML) {
+				__SET_HTML[name](node, value);
 			}
 			/*-- propriedade --*/
 			else if (name in node) {
@@ -3162,26 +3203,25 @@ const wd = (function() {
 			}
 			/*-- atributos --*/
 			else if (value === null) {
-				__SET_PROPERTIES.removeAttribute(node, value)
+				__SET_HTML.removeAttribute(node, value)
 			}
 			else {
-				__SET_PROPERTIES.setAttribute(node, [name, value]);
+				__SET_HTML.setAttribute(node, [name, value]);
 			}
 		}
 		return node;
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Criar/Manipular Árvore
+	/**#4 Criar Árvore DOM
 	''object __DOM(object html, node parent)''
-	Cria/Manipula uma estrutura de elementos HTML, retornando o elemento inicial, conforme especificado em '{html}:
+	Cria uma estrutura de elementos HTML a partir de objetos retornando-a. As propriedades de cada objeto são:
 	|Nome|Tipo|Descrição|
-	|tag|string|Ver argumento de mesmo nome em '{__HTML}|
-	|tag|node|Ver argumento de mesmo nome em '{__HTML}|
-	|attr|object|Ver argumento de mesmo nome em '{__HTML}|
-	|uri|string|Ver argumento de mesmo nome em '{__HTML}|
-	|child|array|Lista de objetos que seguem o mesmo parâmetro do presente quadro quanto aos elementos filhos|
-	O argumento opcional '{parent} define o elemento pai.**/
+	|tag|string/node|Mesmo propósito do argumento da função '{__HTML}|
+	|attr|object|Mesmo propósito do argumento da função '{__HTML}|
+	|uri|string|Mesmo propósito do argumento da função '{__HTML}|
+	|child|array|Lista de objetos, com as mesmas propriedades, representando os elementos filhos.|
+	O argumento opcional '{parent} define o elemento pai do objeto principal.**/
 	function __DOM(html, parent) {
 		/*-- contruindo o nó principal --*/
 		const test = {html: new __Type(html), parent: new __Type(parent)};
@@ -3212,15 +3252,16 @@ const wd = (function() {
 			return child ? find : null;
 		},
 
-
-
-
-		isDialog: function(node) {
-			const values = ["alert", "dialog", "alertdialog"];
-			const tag    = node.tagName.toLowerCase();
-			const role   = String(node.getAttribute("role")).toLowerCase();
-			return values.indexOf(role) >= 0 || values.indexOf(tag) >= 0
+		//FIXME substituir o método acima por este
+		/**. '{array getNodesBy(node node, string attr)}: Retorna os nós referenciados pelos indentificadores constantes no atributo no argumento '{attr} (list, aria-labelledby, aria-describedby, aria-details...).**/
+		getNodesBy: function(node, attr) {
+			const list  = node.hasAttribute(attr) ? node.getAttribute(attr).trim() : "";
+			const query = "#"+list.replace(/\s+/g, ", #");
+			try {return document.querySelectorAll(query);}
+			catch(e) {return [];}
 		},
+
+
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -3307,19 +3348,12 @@ const wd = (function() {
 			}
 			return;
 		},
-
-
-
-
-
-
-
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Menu e Formulários
+	/**#4 Formulário
 	''const object __FORM''
-	Cria elementos de menus e formulários a partir de objetos.
+	Cria elementos de formulários a partir de objetos.
 	|Argumento|Tipo|Descrição|Obrigatório|
 	|type|string|Tipo de formulário|Sim|
 	|label|string|Rótulo do formulário|Sim|
@@ -3520,82 +3554,229 @@ const wd = (function() {
 			}
 			return __DOM(form).tag;
 		},
+	};
 
-		submenu: function(main, list, index) {
-			const data = index.split(".").length;
-			const info = {open: ">", close: "<", item: "-", label: ""};
-			const menu = {tag: "menu", attr: {hidden: data > 1}, child: []};
-			for (let i = 0; i < list.length; i++) {
-				let item = list[i];
-				let li   = {tag: "li", attr: {}, child:[]};
-				let id   = `${index}${i}`;
-				let sub  = Array.isArray(item) && item.length > 1;
-				let name = i === 0 ? (data > 1 ? "close" : "label") : (sub ? "open" : "item");
-				let type = name === "item" ? "submit" : "button";
-				let span = {tag: "span", attr: {innerHTML: sub ? item[0] : item}, child: []};
-				let act  = {tag: "span", attr: {textContent: info[name]}, child: []};
-				let add  = name === "label" ? {} : {"click": this, "keydown": this};
-				let attr = {type: type, name: name, value: id, addEventListener: add};
-				let html;
-
-				/*-- rótulo --*/
-				if (i === 0) {
-					html = {tag: "button", attr: attr, child: [act, span]};
-					/*act.attr.tabIndex = -1;
-					menu.attr["aria-label"] = label;*/
-				}
-				/*-- separador (undefined null 0) --*/
-				else if (!(item)) {
-					html = {tag: "hr", attr: {}, child: {}};
-				}
-				/*-- menuitem --*/
-				else {
-					html = {tag: "button", attr: attr, child: name === "item" ? [act, span] : [span, act]};
-					/*-- submenu --*/
-					if (name === "open") 	this.submenu(main, item, `${id}.`);
-				}
-				li.child.push(html);
+/*----------------------------------------------------------------------------*/
+	/**#4 Menu
+	''const object __MENU''
+	Cria elementos de menus a partir de arrays.**/
+	const __MENU = {
+		/**. '{object submenu(object main, array items, string index)}: Retorna a estrutura do menu
+		|Argumento|Descrição|
+		|main|Estrutura do formulário do menu vindo do método '{menu}|
+		|items|Lista dos menus e submenus vindo do método '{menu}.|
+		|index|Identificador dos itens e menus.|**/
+		submenu: function(main, items, index) {
+			index = !index ? "" : index;
+			const level = index.split(".").length - 1;
+			const menu  = {tag: "menu", attr: {hidden: level > 0, className: "css-wd-menu"}, child: []};
+			for (let i = 0; i < items.length; i++) {
+				let item = items[i];
+				let list = Array.isArray(item) && item.length > 0;
+				let row  = String(item).trim() === "";
+				let name = i === 0 ? (level === 0 ? "main" : "back") : (list ? "menu" : "item");
+				let li   = {tag: "li", attr: {}, child:[{
+					tag:  row ? "hr" : "button",
+					child: [],
+					attr: row ? {} : {
+						type:             name === "item" ? "submit" : "button",
+						name:             name,
+						value:            `${index}${i}`,
+						textContent:      name === "menu" ? item[0] : item,
+						className:        `css-wd-menu-${name}`,
+						addEventListener: name === "item" ? {"keydown": this} : {"click": this, "keydown": this}
+					}
+				}]};
 				menu.child.push(li);
+				/*-- submenu --*/
+				if (name === "menu") this.submenu(main, item, `${li.child[0].attr.value}.`);
 			}
 			main.child.push(menu);
 			return main;
 		},
+		/**. '{void menu(array list, node/object pin)}: Abre um menu suspenso:
+		|Argumento|Descrição|
+		|list|Lista dos menus e submenus, o primeiro item de cada lista é o rótulo/retorno de menu.|
+		|pin|Nó ou posição do menu (ver ´{__WINDOW.add}|**/
+		//FIXME retornar o formulário do MENU
+		menu: function(list, pin) {
+			const form = {tag: "form", attr: {addEventListener: ["submit", this]}, child: []};
+			const main = this.submenu(form, list, "");
+			const menu = {tag: "div", attr: {role: "dialog", "aria-label": list[0]}, child: [main]};
+			__WINDOW.add(__DOM(menu).tag, "float", pin);
+		},
+		/**. '{void openMenu(node button, integer open)}: Abre um submenu (positivo)  ou retorna para o anterior (negativo)**/
+		openMenu: function(button, open) {
+			const re    = /\.\d+$/;
+			const value = button.value;
+			const find  = open < 0 ? value.replace(re, "") : (open > 0 ? `${value}.0` : null);
+			const node  = find === null ? null : button.form.querySelector(`button[value="${find}"]`);
+			if (node !== null) {
+				const menus = button.form.querySelectorAll("menu");
+				for (let i = 0; i < menus.length; i++)
+					menus[i].hidden = !menus[i].contains(node);
+				node.focus();
+			}
+		},
+		/**. '{void walkMenu(node button, integer step)}: Navega entre os itens do menu (vertical) a partir do '{button}:
+		|step|Descrição|step|Descrição|step|Descrição|step|Descrição|
+		|+1|Para baixo|-1|Para cima|+Infinity|Último|-Infinity|Primeiro|**/
+		walkMenu: function(button, step) {
+			const menu  = button.parentElement.parentElement;
+			const items = Array.prototype.slice.call(menu.querySelectorAll("button"));
+			const index = items.indexOf(button);
+			const walk  = isFinite(step) ? (index + step%items.length) : (step < 0 ? 0 : -1)
+			const item  = (items.length + walk)%items.length;
+			items[item].focus();
+		},
+
+		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click} e {submit}.**/
+		handleEvent: function(ev) {
+			ev.preventDefault();
+			const name = ev.target.name;
+			const open = name === "menu" ? 1 : (name === "back" ? -1 : 0)
+			const keys = {
+				walk: {ArrowDown: 1, ArrowUp: -1, Home: -Infinity, End: Infinity},
+				open: {ArrowRight: 1 + open, ArrowLeft: -1, Enter: open},
+				exit: {Tab: 1},
+			}
+			console.log(ev)
+			/*-- teclado --*/
+			if (ev.type === "keydown") {
+				if (ev.key in keys.walk)
+					return this.walkMenu(ev.target, keys.walk[ev.key]);
+				if (ev.key in keys.open)
+					return this.openMenu(ev.target, keys.open[ev.key]);
+			}
+			if (ev.type === "click") {
+				if (open !== 0)
+					return this.openMenu(ev.target, open);
+			}
+			/*-- fechando menu --*/
+			if (ev.type === "submit") {
+				return __WINDOW.remove(ev.target);
+			}
 
 
-	menu: function(list, pin) {
-		const form = {tag: "form", attr: {}, child: []};
-		const main = this.submenu(form, list, "");
-		const menu = {tag: "div", attr: {role: "dialog", "aria-label": list[0]}, child: [main]};
-		__WINDOW.add(__DOM(menu).tag, "float", pin);
 
+	//FIXME alterar __WINDOW para permitir que um novo menu feche o existente e seja aberto?
+	//submeter não traz uma resposta adequada
 
-
-
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		}
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**#4 Posicionamento
+	''constructor object __Pin(node box, any pin)''
+	Construtor para efetuar posicionamento do nó ('{box}) fixo à tela ou a relativo a outro nó ('{pin}):
+	|tipo|Descrição|
+	|Nó|Fixará o '{box} relativamente ao nó|
+	|object|Fixará o '{box} na posição definida pelas propriedades '{x} e '{y}|.**/
+	function __Pin(box, pin) {
+		if (!(this instanceof __Pin)) return new __Pin(box, target);
+		const test = {box: new __Type(box), pin: new __Type(pin)};
+		const node = test.pin.node && test.pin.value.length > 0;
+		let   data = {x: 0, y: 0};
 
+		if (!test.box.node || test.box.value.length < 1)
+			throw new TypeError("__Fixed: box must be an HTML element.");
 
+		if (node)
+			data = test.pin.value[0].getBoundingClientRect();
+		else if (test.pin.object)
+			data = {
+				x: !isFinite(pin.x) ? 0 : Number(pin.x) >= 0 ? Number(pin.x) : 0,
+				y: !isFinite(pin.y) ? 0 : Number(pin.y) >= 0 ? Number(pin.y) : 0,
+			};
 
+		Object.defineProperties(this, {
+			/**. '{node box}: Nó a ser posicionado.**/
+			box:  {value: test.box.value[0]},
+			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			bcr:  {value: test.box.value[0].getBoundingClientRect()},
+			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			pin:  {value: data},
+			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			node: {value: node}
+		});
+	}
 
-
-
-
+	Object.defineProperties(__Pin.prototype, {
+		constructor: {value: __Pin},
+		/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+		ecra: {value: {w: window.screen.width, h: window.screen.height}},
+		/**. '{object area}: Retorna as dimensões da tela (w/h).**/
+		area: {get: function() {return {w: window.innerWidth, h: window.innerHeight};}},
+		/**. '{integer padd}: Retorna a expessura das bordas.**/
+		padd: {get: function() {return Math.min(this.ecra.w, this.ecra.h)*0.01;}},
+		/**. '{object edge}: Retorna as dimensões da área útil (t/r/b/l/w/h).**/
+		edge: {get: function() {
+			return {
+				t: this.padd, b: this.area.h - this.padd,
+				l: this.padd, r: this.area.w - this.padd,
+				w: this.area.w - 2*this.padd,
+				h: this.area.h - 2*this.padd,
+			};
+		}},
+		/**. '{object space}: Retorna os espaços ao redor do alvo (t/r/b/l).**/
+		space: {get: function() {
+			return {
+				l: this.node ? this.pin.left : this.pin.x,
+				t: this.node ? this.pin.top  : this.pin.y,
+				r: this.ecra.w - (this.node ? this.pin.right  : this.x),
+				b: this.ecra.h - (this.node ? this.pin.bottom : this.y),
+			};
+		}},
+		/**. '{integer width}: Retorna o comprimento da caixa.**/
+		width: {get: function() {
+			return this.bcr.width > this.edge.w ? this.edge.w : this.bcr.width;
+		}},
+		/**. '{number horizontal}: Retorna a âncora na horizontal para a caixa (negativo para i{left} positivo para i{right}).**/
+		horizontal: {get: function() {
+			const edge  = this.edge;
+			const left  = this.node ? this.pin.left  : this.pin.x;
+			const right = this.node ? this.pin.right : this.pin.x;
+			const width = this.width;
+			const avg   = -Math.abs(this.area.w - width)/2;
+			return left + width <= edge.r ? -left : (right - width >= edge.l ? this.area.w - right : avg);
+		}},
+		/**. '{number vertical}: Retorna a âncora na vertical para a caixa (negativo para i{top} positivo para i{bottom}).**/
+		vertical: {get: function() {
+			const edge   = this.edge;
+			const top    = this.node ? this.pin.top    : this.pin.y;
+			const bottom = this.node ? this.pin.bottom : this.pin.y;
+			const height = this.bcr.height;
+			const avg    = -(this.area.h - (height > edge.h ? edge.h : height))/2;
+			return bottom + height <= edge.b ? -bottom : (top - height >= edge.t ? this.area.h - top : avg);
+		}},
+		/**. '{integer height}: Retorna a altura máxima da caixa.**/
+		height: {get: function() {
+			const data = this.vertical;
+			const abs  = Math.abs(data);
+			return data < 0 ? (this.edge.b + data) : (this.edge.h - data - this.edge.t);
+		}},
+		/**. '{number fix()}: Fixa a caixa à tela.**/
+		fix: {
+			value: function() {
+				/*-- ajustar posição para incluir bordas quando não for fixado a nó --*/
+				if (!this.node) {
+					const edge = this.edge;
+					this.pin.x = this.pin.x < edge.l ? edge.l : (this.pin.x > edge.r ? edge.r : this.pin.x);
+					this.pin.y = this.pin.y < edge.t ? edge.t : (this.pin.y > edge.b ? edge.b : this.pin.y);
+				}
+				const h = this.horizontal;
+				const v = this.vertical;
+				const a = {
+					width:     `${Math.abs(this.width)}px`,
+					maxHeight: `${Math.abs(this.height)}px`
+				};
+				a[h < 0 ? "left" : "right"]  = `${Math.abs(h)}px`;
+				a[v < 0 ? "top"  : "bottom"] = `${Math.abs(v)}px`;
+				__HTML(this.box, {style: a});
+				return;
+			}
+		}
+	});
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
@@ -3606,7 +3787,7 @@ const wd = (function() {
 	. float:
 	. Parede de profundidade intermediária e posição variável e fixa à tela ou absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
 	. modal:
-	. Parede de profundidade alta e posição fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
+	. Parede de profundidade alta e posiçã__Pino fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
 	A cada mudança de '{status}, o evento i{wdwindow} será disparado. A propriedade '{detail} do evento contera os dados de entrada, o valor de '{status} (string) e do identificador ('{id}) (integer) da janela adicionada:
 	|Status|Descrição|
 	|open|Indica que a janela foi fixada à parede e está sendo exibida na tela|
@@ -3624,6 +3805,9 @@ const wd = (function() {
 			float: __HTML("div", {"data-js-wd-window": "float"})
 		}),
 		/**. '{void clear(string wall)}: Remove e atualiza alterações nas paredes.**/
+		//FIXME o que isso faz?
+		//FIXME colocar um evento que fecha ou atualiza o pin em resize
+		//FIXME após fechar modal/float, retornar o foco para o elemento focável anteriormente
 		clear: function(wall) {
 			const data = {"data-js-wd-window": wall, style: null, className: null, removeAttribute: ["id"]};
 			if (wall in this.wall) {
@@ -3632,7 +3816,7 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. '{object find(any key)}: Busca na pilha e retorna o primeiro valor encontrado ou nulo conforme argumento '{key}:
+		/**. '{object find(any key)}: Retorna o primeiro identificador encontrado na pilha ou nulo conforme argumento '{key}:
 		|Tipo|Descrição|
 		|nó|Busca pelo conteúdo da janela|
 		|string|Busca pela parede|
@@ -3649,7 +3833,7 @@ const wd = (function() {
 			}
 			return null;
 		},
-		/**. '{object list}: Retorna a lista contendo informações das pilhas separados por paredes.**/
+		/**. '{object list}: Retorna as informações da pilha em forma de '{array} separados por paredes.**/
 		get list() {
 			const wall = {float: [], modal: [], frame: []};
 			for (let i = 0; i < this.heap.length; i++)
@@ -3660,7 +3844,7 @@ const wd = (function() {
 		fire: function(heap) {
 			const event  = new CustomEvent("wdwindow", {detail: heap});
 			heap.window.dispatchEvent(event);
-			return;
+			return;test
 		},
 		/**. '{boolean inert}: Define a inércia no documento.**/
 		set inert(x) {
@@ -3677,11 +3861,25 @@ const wd = (function() {
 			const data = x ? {add: "js-wd-freeze"} : {remove: "js-wd-freeze"};
 			__HTML(document.body, {className: data});
 		},
+		/**. '{void modalPin(object heap)}: Fixa a janela '{modal} conforme localização à tela (flex).**/
+		modalPin: function(heap) {
+			const places = ["center", "top", "bottom", "left", "right", "full"];
+			const place  = places.indexOf(heap.pin) >= 0 ? heap.pin : places[0];
+			this.wall[heap.wall].className = `js-wd-window-${place}`;
+			return;
+		},
+		/**. '{void floatPin(object heap)}: Define a forma de fixaçaõ da janela '{float} à tela.**/
+		floatPin: function(heap) {
+			const pin = new __Pin(this.wall.float, heap.pin);
+			pin.fix();
+		},
+
+
+
+
 		/**. '{void update()}: Atualiza fixação das janelas.**/
+		//FIXME em processo de simplificação
 		update: function() {
-			window.removeEventListener("click", this);
-			window.removeEventListener("keydown", this);
-			/*-- atualizando janelas --*/
 			const list = this.list;
 			for (let wall in list) {
 				list[wall].forEach(function(heap,i,a) {
@@ -3691,17 +3889,14 @@ const wd = (function() {
 					if (heap.window.parentElement !== this.wall[heap.wall]) {
 						/*-- adicionar janela à parede --*/
 						this.wall[heap.wall].appendChild(heap.window);
-						/*-- adicionar parede à tela --*/
+						/*-- adicionar parede ao documento (não necessariamente a body) --*/
 						if (this.wall[heap.wall].parentElement === null)
 							document.body.appendChild(this.wall[heap.wall]);
-						/*-- definindo posicionamento --*/
-						if (heap.wall === "float")
-							this.pinFloat(heap.pin);
-						else if (heap.wall === "modal")
-							this.wall.modal.className = `js-wd-window-${heap.pin}`;
-						/*-- definir foco --*/
-						if (heap.wall === "modal" || heap.wall === "float")
+						/*-- definindo posicionamento e foco --*/
+						if (heap.wall === "float" || heap.wall === "modal") {
+							heap.wall === "modal" ? this.modalPin(heap) : this.floatPin(heap);
 							__FOCUS.setFocus(heap.window);
+						}
 						/*-- disparar evento --*/
 						heap.status = "open";
 						this.fire(heap);
@@ -3721,7 +3916,7 @@ const wd = (function() {
 			this.freeze = list.float.length > 0;
 			return;
 		},
-		/**. '{integer remove(any key)}: Remove a janela da pilha (ver método '{find} quanto ao argumento).**/
+		/**. '{integer remove(any key)}: Remove a janela da pilha (ver método '{find} quanto ao argumento '{key}).**/
 		remove: function(key) {
 			const heap = this.find(key);
 			const wall = heap === null ? null : heap.wall;
@@ -3729,14 +3924,21 @@ const wd = (function() {
 			if (heap !== null) {
 				heap.window.remove();
 				heap.status = show ? "close" : "cancel";
-				this.fire(heap);
 				this.heap = this.heap.filter(function(v,i,a) {return v.id !== heap.id;});
+				this.fire(heap);
 				this.update();
-				if (heap.fire !== null)
-					heap.window.removeEventListener("wdwindow", heap.fire);
 			}
 			return heap === null ? null : heap.id;
 		},
+
+
+
+
+
+
+
+
+
 		/**. '{integer add(node win, string wall, any pin, any fire)}: Retorna o '{id} da janela ou -1 em caso de insucesso:
 		|Argumento|Tipo|Descrição|
 		|win|node|Janela a ser adicionada a pilha, não pode ser parte de outra janela já adicionada.|
@@ -3745,7 +3947,7 @@ const wd = (function() {
 		|pin|node|Nó de fixação da parede "float"|
 		|pin|object|Posição (x, y) da parede "float" na tela|
 		|fire|function ou object|Disparador a ser chamada durante o evento "wdwindow"|**/
-		add: function(win, wall, pin, fire) {
+		add2: function(win, wall, pin, fire) {
 			/*-- verificando inclusão da janela --*/
 			const test = new __Type(win);
 			if (!test.node || test.value.length < 1 || this.find(win) !== null)
@@ -3781,6 +3983,51 @@ const wd = (function() {
 			this.update();
 			return data.id;
 		},
+		/**. '{boolean checkWindow(node win, string wall)}: Checa se a janela atende os critérios para inclusão na pilha.**/
+		checkWindow: function(win, wall) {
+			wall = wall in this.wall ? wall : "frame";
+			const list = this.list;
+			/*-- 1) a janela precisa ser um nó --*/
+			if (typeof win !== "object" || !(win instanceof HTMLElement))
+				return false;
+			/*-- 2) a janela não pode estar contida na pilha --*/
+			if (this.find(win) !== null)
+				return false;
+			/*-- 3) a janela não pode estar contida nas paredes --*/
+			for (let i in this.wall)
+				if (win.contains(this.wall[i])) return false;
+			/*-- 4) janela float aberta é fechada, exceto em caso de nova janela frame --*/
+			if (list.float.length > 0 && wall !== "frame")
+				list.float.forEach(function(v,i,a) {this.remove(v.window);}, this);
+			/*-- 5) janela float é incompatível com uma janela modal aberta --*/
+			if (wall === "float" && list.modal.length > 0)
+				return false;
+			return true;
+		},
+
+		add: function(win, wall, pin) {
+			wall = wall in this.wall ? wall : "frame";
+			if (!this.checkWindow(win, wall)) return -1;
+			this.heap.push({
+				id:     Date.now() - this.id,
+				status: null,
+				window: win,
+				wall:   wall,
+				pin:    pin
+			});
+			this.update();
+			return;
+		},
+
+
+
+
+
+
+
+
+
+
 		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{wdwindow, submit, click e keydown}.**/
 		handleEvent: function(ev) {
 			const list = this.list;
@@ -3795,81 +4042,6 @@ const wd = (function() {
 				if (list.modal.length > 0) this.remove(list.modal[0].id);
 			}
 			return;
-		},
-		/**. '{node pinFloat(node node, any data)}: Fixa o nó na posição definida ou anexo a outro nó conforme '{data}:
-		|Tipo|Descrição|Posição|Retorno|
-		|node|Fixará o argumento '{node} ao nó especificado|absolute|nó definido em '{data}|
-		|object|As propriedades '{x} e '{y} definem a posição na tela|fixed|'{document.body}|
-		|-|Igual ao objeto, fixando o nó na origem|-|-|**/
-		pinFloat: function(data) {
-			const test = new __Type(data);
-			const wall = this.wall.float;
-			const ecra = {w: window.screen.width, h: window.screen.height};
-			const area = {w: window.innerWidth,   h: window.innerHeight};
-			const padd = Math.min(ecra.w, ecra.h)*0.01;
-			const edge = {
-				t: padd, l: padd, r: area.w - padd, b: area.h - padd,
-				w: area.w - 2*padd, h: area.h - 2*padd
-			};
-			/*-- absoluto ao nó alvo -----------------------------------------------*/
-			if (test.node && test.value.length > 0) {
-				const target = test.value[0];
-				/*-- acertar posicionamento do alvo se estático --*/
-				const style = window.getComputedStyle(target, null);
-				if (style.position === "static") target.style.position = "relative";
-				/*-- fixar ao elemento --*/
-				wall.style.position = "absolute";
-				target.appendChild(wall);
-				let main = wall.getBoundingClientRect();
-				/*-- fixar comprimento --*/
-				wall.style.width = (main.width > edge.w ? edge.w : main.width)+"px";
-				main = wall.getBoundingClientRect();
-				/*-- obtendo dados --*/
-				const rect = target.getBoundingClientRect();
-				rect.above = rect.top - edge.t;
-				rect.below = edge.b - (rect.top + rect.height);
-				rect.vside = main.height > rect.below && rect.above > rect.below ? "above" : "below";
-				rect.hend  = rect.left + main.width;
-				/*-- fixar altura --*/
-				wall.style.maxHeight = (rect.vside === "above" ? rect.above : rect.below)+"px";
-				/*-- fixar vertical --*/
-				wall.style[rect.vside === "above" ? "bottom" : "top"] = "100%";
-				/*-- fixar horizontal --*/
-				wall.style.left = (rect.hend > edge.r ? edge.r - rect.hend : 0)+"px";
-			}
-			/*-- fixo à tela -------------------------------------------------------*/
-			else if (test.object) {
-				/*-- analisando entrada --*/
-				const check = {x: new __Type(data.x), y: new __Type(data.y)};
-				data.x = check.x.finite && check.x >= 0 ? check.x.value : 0;
-				data.y = check.y.finite && check.y >= 0 ? check.y.value : 0;
-				data.x = data.x < edge.l ? edge.l : (data.x > edge.r ? edge.r : data.x);
-				data.y = data.y < edge.t ? edge.t : (data.y > edge.b ? edge.b : data.y);
-				/*-- fixar a body --*/
-				wall.style.position = "fixed";
-				document.body.appendChild(wall);
-				let main = wall.getBoundingClientRect();
-				/*-- fixar comprimento --*/
-				wall.style.width = (main.width > edge.w ? edge.w : main.width)+"px";
-				main = wall.getBoundingClientRect();
-				/*-- obter dados --*/
-				data.above = data.y - edge.t;
-				data.below = edge.b - data.y;
-				data.vside = main.height > data.below && data.above > data.below ? "above" : "below";
-				data.vptr  = data.vside === "above" ? area.h - data.y : data.y;
-				data.hout  = data.x + main.width > edge.r;
-				/*-- fixar altura --*/
-				wall.style.maxHeight = (data.vside === "above" ? data.above : data.below)+"px";
-				/*-- fixar vertical --*/
-				wall.style[data.vside === "above" ? "bottom" : "top"] = data.vptr+"px";
-				/*-- fixar horizontal --*/
-				wall.style[data.hout ? "right" : "left"] = (data.hout ? padd : data.x)+"px";
-				return document.body;
-			}
-			/*-- dado não definido -------------------------------------------------*/
-			else {
-				return this.pinFloat({x: edge.l, y: edge.t});
-			}
 		},
 	};
 
@@ -10242,11 +10414,12 @@ const wd = (function() {
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
-			SETHTML:  {value: __SET_PROPERTIES},
-			GETHTML:  {value: __GET_PROPERTIES},
+			SETHTML:  {value: __SET_HTML},
+			GETHTML:  {value: __GET_HTML},
 			HTML:     {value: __HTML},
 			DOM:      {value: __DOM},
 			FORM:     {value: __FORM},
+			MENU:     {value: __MENU},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
 			DEVICE:   {value: __DEVICE},
