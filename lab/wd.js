@@ -197,15 +197,29 @@ const wd = (function() {
 		.css-wd-menu {
 			padding: 0.2em;
 			margin: 0;
-			list-style: none;
 			background: white;
 			color: black;
 			border-radius: 0.2em;
 			border: thin solid black;
+			font-size: 12px;
+			font-family: /*Verdana, sans-serif;*/Courier New, monospace;
 		}
-		.css-wd-menu hr {
-			border: 0px;
-		  border-top: 1px solid black;
+		.css-wd-menu > *:first-child {
+			font-size: 1em;
+			text-align: center;
+			margin: 0 0 0.25em 0;
+			padding: 0.25em 2em;
+			background: rgba(100,100,100,0.5);
+			font-weight: normal;
+		}
+		.css-wd-menu menu {
+			list-style: none;
+			padding: 0;
+			margin: 0
+		}
+		.css-wd-menu li {
+			padding: 0;
+			margin: 0.2em 0;
 		}
 		.css-wd-menu button {
 			position: relative;
@@ -214,10 +228,12 @@ const wd = (function() {
 			padding: 0.25em 2em;
 			text-align: left;
 			background: transparent;
-			border: 0;
+			border: 1px solid black;
 			border-radius: 0.2em;
+			font-size: inherit;
+			font-family: inherit;
 		}
-		.css-wd-menu .css-wd-menu-menu:after {
+		.css-wd-menu .css-wd-menu-open:after {
 			content: "\\276F";
 			position: absolute;
 			right: 0;
@@ -230,9 +246,6 @@ const wd = (function() {
 			left: 0;
 			margin: 0 0 0 0.5em;
 			text-align: center;
-		}
-		.css-wd-menu .css-wd-menu-back, .css-wd-menu .css-wd-menu-main {
-			background: rgba(100,100,100,0.5);
 		}
 
 
@@ -3056,13 +3069,13 @@ const wd = (function() {
 			this.className(node, value);
 			return;
 		},
-		/**. '{void addEventLister(node node, any value, boolean remove)}: Adiciona ou remove ouvintes de eventos. Se o valor for um array, cada item do array corresponderá ao argumento do método. Em caso de objeto, a referência aos argumento do método é:
-		|Valor|Tamanho|Argumento 1|Argumento 2|Argumento 3|
-		|function||nome|disparador||
-		|object||nome|disparador||
-		|array|1|nome|item 1||
-		|array|2|nome|item 1|item 2|
-		|array|3|item 1|item 2|item 3|**/
+		/**. '{void addEventListener(node node, any value, boolean remove)}: Adiciona ou remove ouvintes de eventos. Se o valor for um array, cada item do array corresponderá ao argumento do método. Em caso de objeto, a referência aos argumentos são:
+		|Valor|Array|Evento|Disparador|Complemento|
+		|function|-|propriedade|valor|-|
+		|object (handleEvent)|-|propriedade|valor|-|
+		|array|1 item|propriedade|item 1|-|
+		|array|2 itens|propriedade|item 1|item 2|
+		|array|3 itens|item 1|item 2|item 3|**/
 		addEventListener: function(node, value, remove) {
 			const attr  = remove === true ? "removeEventListener" : "addEventListener";
 			const check = new __Type(value);
@@ -3559,128 +3572,226 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Menu
 	''const object __MENU''
-	Cria elementos de menus a partir de arrays.**/
+	Cria elementos de menus a partir de arrays. Os seguintes argumentos são comuns aos métodos:
+	|Argumento|Tipo|Descrição|
+	|list|array|Lista principal de itens e submenus repassada ao método '{form}.|
+	|input|any|O conteúdo do item de '{list} que definirá um item ou um submenu (array secundário).|
+	|level|integer|Nível do menu iniciado por 1.|
+	|heap|string|Cadeia de índices, separados por ponto, que direcionam o menu.|
+	|home|any|Conteúdo do primeiro item de cada menu ou submenu.|
+	|menu|array|Lista das estruturas dos containers do menu (cabeçalho e menu) de todo o conjunto.|
+	|items|array|Lista das estruturas dos itens de cada menu.|
+	|link|string|Identificador do menu para fins de lincagem com o cabeçalho respectivo.|
+	A configuração do menu obedece o seguinte regramento:
+	- Um formulário HTML acomodará um conjunto de blocos de menu;
+	- Cada bloco de menu possui um cabeçalho e uma lista de itens (menu);
+	- Cada bloco será exibido de forma individual na posição vertical;
+	- Cada bloco de menu é definido por um array;
+	- O texto do cabeçalho do bloco é definido pelo conteúdo do primeiro item do array;
+	- O texto dos itens do menu é definido pelos demais itens do array;
+	- Se o item do array for um objeto, o texto será definido pela propriedade '{text};
+	- Se o item do array for outro array, um novo bloco (submenu) será criado;
+	- Demais valores definirão o texto do item ou do cabeçalho, conforme o caso;
+	- Os itens do menu podem avançar/retroceder pelos menus ou executar uma ação;
+	- Ao executar uma ação, o evento '{wdmenu} será disparado no formulário;
+	- A propriedade '{detail} do evento disparado conterá o conteúdo do respectivo item do array;
+	- Somente valores presentes no formato JSON poderão ser utilizados.**/
 	const __MENU = {
-		/**. '{object submenu(object main, array items, string index)}: Retorna a estrutura do menu
-		|Argumento|Descrição|
-		|main|Estrutura do formulário do menu vindo do método '{menu}|
-		|items|Lista dos menus e submenus vindo do método '{menu}.|
-		|index|Identificador dos itens e menus.|**/
-		submenu: function(main, items, index) {
-			index = !index ? "" : index;
-			const level = index.split(".").length - 1;
-			const menu  = {tag: "menu", attr: {hidden: level > 0, className: "css-wd-menu"}, child: []};
-			for (let i = 0; i < items.length; i++) {
-				let item = items[i];
-				let list = Array.isArray(item) && item.length > 0;
-				let row  = String(item).trim() === "";
-				let name = i === 0 ? (level === 0 ? "main" : "back") : (list ? "menu" : "item");
-				let li   = {tag: "li", attr: {}, child:[{
-					tag:  row ? "hr" : "button",
-					child: [],
-					attr: row ? {} : {
-						type:             name === "item" ? "submit" : "button",
-						name:             name,
-						value:            `${index}${i}`,
-						textContent:      name === "menu" ? item[0] : item,
-						className:        `css-wd-menu-${name}`,
-						addEventListener: name === "item" ? {"keydown": this} : {"click": this, "keydown": this}
-					}
-				}]};
-				menu.child.push(li);
-				/*-- submenu --*/
-				if (name === "menu") this.submenu(main, item, `${li.child[0].attr.value}.`);
-			}
-			main.child.push(menu);
-			return main;
-		},
-		/**. '{void menu(array list, node/object pin)}: Abre um menu suspenso:
-		|Argumento|Descrição|
-		|list|Lista dos menus e submenus, o primeiro item de cada lista é o rótulo/retorno de menu.|
-		|pin|Nó ou posição do menu (ver ´{__WINDOW.add}|**/
-		//FIXME retornar o formulário do MENU
-		menu: function(list, pin) {
-			const form = {tag: "form", attr: {addEventListener: ["submit", this]}, child: []};
-			const main = this.submenu(form, list, "");
-			const menu = {tag: "div", attr: {role: "dialog", "aria-label": list[0]}, child: [main]};
-			__WINDOW.add(__DOM(menu).tag, "float", pin);
-		},
-		/**. '{void openMenu(node button, integer open)}: Abre um submenu (positivo)  ou retorna para o anterior (negativo)**/
-		openMenu: function(button, open) {
-			const re    = /\.\d+$/;
-			const value = button.value;
-			const find  = open < 0 ? value.replace(re, "") : (open > 0 ? `${value}.0` : null);
-			const node  = find === null ? null : button.form.querySelector(`button[value="${find}"]`);
-			if (node !== null) {
-				const menus = button.form.querySelectorAll("menu");
-				for (let i = 0; i < menus.length; i++)
-					menus[i].hidden = !menus[i].contains(node);
-				node.focus();
-			}
-		},
-		/**. '{void walkMenu(node button, integer step)}: Navega entre os itens do menu (vertical) a partir do '{button}:
-		|step|Descrição|step|Descrição|step|Descrição|step|Descrição|
-		|+1|Para baixo|-1|Para cima|+Infinity|Último|-Infinity|Primeiro|**/
-		walkMenu: function(button, step) {
-			const menu  = button.parentElement.parentElement;
-			const items = Array.prototype.slice.call(menu.querySelectorAll("button"));
-			const index = items.indexOf(button);
-			const walk  = isFinite(step) ? (index + step%items.length) : (step < 0 ? 0 : -1)
-			const item  = (items.length + walk)%items.length;
-			items[item].focus();
+		/**. '{integer id}: Referência para criação de id únicos.**/
+		id: Date.now(),
+
+		info: function(list, heap) {
+			const data = heap.split(".");
+			const info = {
+				level: data.length - 1,
+				index: Number(data[data.length - 1]),
+				value: list
+			};
+			data.forEach(function(v,i,a) {info.value = info.value[Number(v)];});
+			return info;
 		},
 
-		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click} e {submit}.**/
-		handleEvent: function(ev) {
-			ev.preventDefault();
-			const name = ev.target.name;
-			const open = name === "menu" ? 1 : (name === "back" ? -1 : 0)
-			const keys = {
-				walk: {ArrowDown: 1, ArrowUp: -1, Home: -Infinity, End: Infinity},
-				open: {ArrowRight: 1 + open, ArrowLeft: -1, Enter: open},
-				exit: {Tab: 1},
+
+		//FIXME
+		/**. '{object data(any input, string base)}: Extraí e retorna os valores do texto (`{text}) da descrição (`{help}) de '{input}**/
+		data: function(input, base) {
+			const obj = typeof input === "object" && !Array.isArray(input) && input !== null;
+			const txt = typeof input === "string" || typeof input === "number";
+			return {
+				text: obj && "text" in input ? input.text : (txt ? input : base),
+				help: obj && "help" in input ? input.help : null
 			}
-			console.log(ev)
+		},
+
+
+
+
+		/**. '{object head(string text, integer level, string link)}: Retorna a estrutura do cabeçalho do menu com o título `{text}**/
+		head: function(text, level, link) {
+			const attr = {innerHTML: text, role: "heading", "aria-level": level, id: link};
+			return {
+				tag:  level > 6 ? "div" : `h${level}`,
+				attr: level > 6 ? attr  : {innerHTML: text, id: link},
+				child: [],
+			}
+		},
+		/**. '{object menu(string link, array items)}: Retorna a estrutura do menu.**/
+		menu: function(link, items) {
+			return {tag: "menu", attr: {"aria-labelledby": link}, child: items};
+		},
+		/**. '{object items(any input, integer level, array items)}: Retorna a estrutura do item do menu**/
+		item: function(input, heap, type) {
+			const data = this.data(input, `Item ${heap}`);
+			const attr = {
+				innerHTML: data.text,
+				type: "button",
+				className: `css-wd-menu-${type}`,
+				value: heap,
+				name: `${type}:${heap}`,
+				addEventListener: {keydown: this, click: this, mouseenter: this},
+				dataset: {wdMenuItem: JSON.stringify(input)}
+			};
+			return {tag: "li", attr: {}, child: [{tag: "button", attr: attr, child: []}]};
+		},
+		/**. '{object box(any input, integer level, array items)}: Retorna a estrutura do container do menu (cabeçalho e menu).|**/
+		box: function(input, level, items) {
+			const data = this.data(input, `Menu ${level}`);
+			const link = `wd_menu_id_${Date.now() - this.id}`;
+			const attr = {className: "css-wd-menu", hidden: level > 1};
+			const head = this.head(data.text, level, link);
+			const menu = this.menu(link, items);
+			console.log(level, items, "\n", menu)
+			return {tag: "section", attr: attr, child: [head, menu]};
+		},
+		/**. '{void main(array menu, array list, integer level, string heap, any home)}: Define estrutura do conjunto de menus.**/
+		main: function(menu, list, level, heap, home) {
+			const items = [];
+			for (let i = 0; i < list.length; i++) {
+				let data = list[i];
+				let path = `${heap}${i}`;
+				/*-- Retorno de Menu --*/
+				if (i === 0) {
+					if (home !== null)
+						items.push(this.item(home[0], path, "back"));
+				}
+				/*-- Avanço de Menu e Submenu --*/
+				else if (Array.isArray(data)) {
+					this.main(menu, data, level+1, `${path}.`, list);
+					items.push(this.item(data[0], path, "open"));
+				}
+				/*-- Executar Menu --*/
+				else {
+					items.push(this.item(data, path, "item"));
+				}
+			}
+			menu.push(this.box(list[0], level, items));
+			return;
+		},
+		/**. '{node menu(array list)} Retorna um formulário contendo os blocos de menu.**/
+		form: function(list) {
+			const menu = [];
+			if (Array.isArray(list))
+				this.main(menu, list, 1, "", null);
+			const form = __DOM({tag: "form", attr: {}, child: menu}).tag;
+			return form;
+		},
+/*The element that opens the menu has role button.
+The element with role button has aria-haspopup set to either menu or true.
+When the menu is displayed, the element with role button has aria-expanded set to true. When the menu is hidden, aria-expanded is set to false.
+The element that contains the menu items displayed by activating the button has role menu.
+Optionally, the element with role button has a value specified for aria-controls that refers to the element with role menu.
+Additional roles, states, and properties needed for the menu element are described in the Menu and Menubar Pattern.
+<button type="button" id="menubutton1" aria-haspopup="true" aria-expanded="false" aria-controls="menu1">*/
+		/**. '{void openMenu(node button, string way)}: Navega horizontalmente entre os menus.**/
+		openMenu: function(button, way) {
+			const data = button.name.split(":");
+			const heap = button.value;
+			const deep = /\.\d+$/;
+			const open = {
+				open: data[0] === "open" ? `${heap}.0` : null,
+				back: data[0] === "back" ? heap.replace(deep, "") : null,
+				left: deep.test(heap) ? heap.replace(deep, "") : heap
+			};
+			const find = way in open ? button.form.querySelector(`button[value="${open[way]}"]`) : null;
+			if (find !== null) {
+				const list = Array.prototype.slice.call(button.form.children);
+				for (let i = 0; i < list.length; i++)
+					list[i].hidden = !list[i].contains(find);
+				find.focus();
+			}
+			return;
+		},
+		/**. '{void walkMenu(node button, string way)}: Navega verticalmente entre os itens.**/
+		walkMenu: function(button, way) {
+			const menu = button.parentElement.parentElement;
+			const list = Array.prototype.slice.call(menu.querySelectorAll("button"));
+			const item = list.indexOf(button);
+			const walk = {
+				home:  0,
+				end:   list.length - 1,
+				below: (item + 1)%list.length,
+				above: (list.length + item - 1)%list.length
+			}
+			list[walk[way]].focus();
+			return;
+		},
+		/**. '{void fireMenu(node button)}: Dispara o evento '{wdmenu} no formulário.**/
+		fireMenu: function(button) {
+			let data = null;
+			try {data = JSON.parse(button.dataset.wdMenuItem);} catch(e) {};
+			const event = new CustomEvent("wdmenu", {detail: data});
+			console.log(data);
+			button.form.dispatchEvent(event);
+			return;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click} e {mouseenter}.**/
+		handleEvent: function(ev) {
 			/*-- teclado --*/
 			if (ev.type === "keydown") {
-				if (ev.key in keys.walk)
-					return this.walkMenu(ev.target, keys.walk[ev.key]);
-				if (ev.key in keys.open)
-					return this.openMenu(ev.target, keys.open[ev.key]);
+				const stop = ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "Home", "End"];
+				const walk = {ArrowDown: "below", ArrowUp: "above", Home: "home", End: "end"};
+				const open = {ArrowRight: "open", ArrowLeft: "left"};
+				if (ev.key in walk || ev.key in open)
+					ev.preventDefault();
+				if (ev.key in walk)
+					return this.walkMenu(ev.target, walk[ev.key]);
+				if (ev.key in open)
+					return this.openMenu(ev.target, open[ev.key]);
+				return;
 			}
+			/*-- clique --*/
 			if (ev.type === "click") {
-				if (open !== 0)
-					return this.openMenu(ev.target, open);
+				const data = ev.target.name.split(":");
+				if (data[0] === "open" || data[0] === "back")
+					return this.openMenu(ev.target, data[0]);
+				if (data[0] === "item")
+					return this.fireMenu(ev.target)
+				return;
 			}
-			/*-- fechando menu --*/
-			if (ev.type === "submit") {
-				return __WINDOW.remove(ev.target);
+			/*-- mouse sobre --*/
+			if (ev.type === "mouseenter") {
+				ev.target.focus();
+				return;
 			}
-
-
-
-	//FIXME alterar __WINDOW para permitir que um novo menu feche o existente e seja aberto?
-	//submeter não traz uma resposta adequada
-
+			return;
 		}
+		//FIXME ver se vai precisar de um onfocus para avaliar se todo o menu está sendo exibido quando houver muitos
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Posicionamento
+	/**#4 Fixação
 	''constructor object __Pin(node box, any pin)''
 	Construtor para efetuar posicionamento do nó ('{box}) fixo à tela ou a relativo a outro nó ('{pin}):
 	|tipo|Descrição|
 	|Nó|Fixará o '{box} relativamente ao nó|
 	|object|Fixará o '{box} na posição definida pelas propriedades '{x} e '{y}|.**/
 	function __Pin(box, pin) {
-		if (!(this instanceof __Pin)) return new __Pin(box, target);
+		if (!(this instanceof __Pin)) return new __Pin(box, pin);
 		const test = {box: new __Type(box), pin: new __Type(pin)};
 		const node = test.pin.node && test.pin.value.length > 0;
 		let   data = {x: 0, y: 0};
-
 		if (!test.box.node || test.box.value.length < 1)
 			throw new TypeError("__Fixed: box must be an HTML element.");
-
 		if (node)
 			data = test.pin.value[0].getBoundingClientRect();
 		else if (test.pin.object)
@@ -3688,7 +3799,6 @@ const wd = (function() {
 				x: !isFinite(pin.x) ? 0 : Number(pin.x) >= 0 ? Number(pin.x) : 0,
 				y: !isFinite(pin.y) ? 0 : Number(pin.y) >= 0 ? Number(pin.y) : 0,
 			};
-
 		Object.defineProperties(this, {
 			/**. '{node box}: Nó a ser posicionado.**/
 			box:  {value: test.box.value[0]},
@@ -3718,36 +3828,41 @@ const wd = (function() {
 				h: this.area.h - 2*this.padd,
 			};
 		}},
-		/**. '{object space}: Retorna os espaços ao redor do alvo (t/r/b/l).**/
+		/**. '{object space}: Retorna o espaço disponível em cada direção (n/e/s/w) em relação à área exibida.**/
 		space: {get: function() {
 			return {
-				l: this.node ? this.pin.left : this.pin.x,
-				t: this.node ? this.pin.top  : this.pin.y,
-				r: this.ecra.w - (this.node ? this.pin.right  : this.x),
-				b: this.ecra.h - (this.node ? this.pin.bottom : this.y),
+				n: this.node ? this.pin.top   : this.pin.y,
+				w: this.node ? this.pin.right : this.pin.x,
+				s: this.area.h - (this.node ? this.pin.bottom : this.pin.y),
+				e: this.area.w - (this.node ? this.pin.left   : this.pin.x)
 			};
+		}},
+		/**. '{object wide}: Retorna a direção que contém o maior espaço (e/w para horizontal e n/s para vertical).**/
+		wide: {get: function() {
+			const data = this.space;
+			return {v: data.s >= data.n ? "s" : "n", h: data.e >= data.w ? "e" : "w"};
 		}},
 		/**. '{integer width}: Retorna o comprimento da caixa.**/
 		width: {get: function() {
 			return this.bcr.width > this.edge.w ? this.edge.w : this.bcr.width;
 		}},
-		/**. '{number horizontal}: Retorna a âncora na horizontal para a caixa (negativo para i{left} positivo para i{right}).**/
+		/**. '{number horizontal}: Retorna a âncora horizontal para a caixa (negativo fixa i{left}, positivo fixa i{right}).**/
 		horizontal: {get: function() {
 			const edge  = this.edge;
 			const left  = this.node ? this.pin.left  : this.pin.x;
 			const right = this.node ? this.pin.right : this.pin.x;
 			const width = this.width;
-			const avg   = -Math.abs(this.area.w - width)/2;
-			return left + width <= edge.r ? -left : (right - width >= edge.l ? this.area.w - right : avg);
+			const wide  = this.padd * (this.wide.h === "w" ? -1 : 1);
+			return left + width <= edge.r ? -left : (right - width >= edge.l ? this.area.w - right : wide);
 		}},
-		/**. '{number vertical}: Retorna a âncora na vertical para a caixa (negativo para i{top} positivo para i{bottom}).**/
+		/**. '{number vertical}: Retorna a âncora na vertical para a caixa (negativo fixa i{top} positivo fixa i{bottom}).**/
 		vertical: {get: function() {
 			const edge   = this.edge;
 			const top    = this.node ? this.pin.top    : this.pin.y;
 			const bottom = this.node ? this.pin.bottom : this.pin.y;
 			const height = this.bcr.height;
-			const avg    = -(this.area.h - (height > edge.h ? edge.h : height))/2;
-			return bottom + height <= edge.b ? -bottom : (top - height >= edge.t ? this.area.h - top : avg);
+			const wide   = this.wide.v === "s" ? -bottom : this.area.h - top;
+			return bottom + height <= edge.b ? -bottom : (top - height >= edge.t ? this.area.h - top : wide);
 		}},
 		/**. '{integer height}: Retorna a altura máxima da caixa.**/
 		height: {get: function() {
@@ -3780,7 +3895,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
-	''const object __WINDOW''
+	''const object __WINDOW''FIXME acrescentar fechamento por resize e TAB
 	Administrador de paredes e janelas:
 	. frame:
 	. Parede de profundidade baixa e posição invariável e fixa à tela permitindo a adição de múltiplas janelas sem restrição.
@@ -3788,11 +3903,11 @@ const wd = (function() {
 	. Parede de profundidade intermediária e posição variável e fixa à tela ou absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
 	. modal:
 	. Parede de profundidade alta e posiçã__Pino fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
-	A cada mudança de '{status}, o evento i{wdwindow} será disparado. A propriedade '{detail} do evento contera os dados de entrada, o valor de '{status} (string) e do identificador ('{id}) (integer) da janela adicionada:
+	A cada mudança de '{status}, o evento i{wdwindow} será disparado. A propriedade '{detail} do evento contera os dados do identificador '{id} e do '{status} (string):
 	|Status|Descrição|
 	|open|Indica que a janela foi fixada à parede e está sendo exibida na tela|
-	|close|Indica que a janela em exibição foi removida da parede|
-	|cancel|Indica que a janela que aguardava sua exibição foi removida da fila (modal)|**/
+	|closed|Indica que a janela renderizada foi removida da parede|
+	|canceled|Indica que a janela foi removida da fila|**/
 	const __WINDOW = {
 		/**. '{integer id}: Controla o identificador das janelas.**/
 		id: Date.now(),
@@ -3804,15 +3919,12 @@ const wd = (function() {
 			modal: __HTML("div", {"data-js-wd-window": "modal"}),
 			float: __HTML("div", {"data-js-wd-window": "float"})
 		}),
-		/**. '{void clear(string wall)}: Remove e atualiza alterações nas paredes.**/
-		//FIXME o que isso faz?
-		//FIXME colocar um evento que fecha ou atualiza o pin em resize
-		//FIXME após fechar modal/float, retornar o foco para o elemento focável anteriormente
+		/**. '{void clear(string wall)}: Remove e limpa atributos da parede especificada em '{wall}.**/
 		clear: function(wall) {
-			const data = {"data-js-wd-window": wall, style: null, className: null, removeAttribute: ["id"]};
+			const attr = {"data-js-wd-window": wall, style: null, className: null, removeAttribute: ["id"]};
 			if (wall in this.wall) {
 				this.wall[wall].remove();
-				__HTML(this.wall[wall], data);
+				__HTML(this.wall[wall], attr);
 			}
 			return;
 		},
@@ -3840,11 +3952,12 @@ const wd = (function() {
 				wall[this.heap[i].wall].push(this.heap[i]);
 			return wall;
 		},
-		/**. '{object fire(object heap)}: Dispara eventos de fixação da janela.**/
+		/**. '{object fire(object heap)}: Dispara eventos de mutação da janela.**/
 		fire: function(heap) {
-			const event  = new CustomEvent("wdwindow", {detail: heap});
+			const detail = {id: heap.id, status: heap.status};
+			const event  = new CustomEvent("wdwindow", {detail: detail});
 			heap.window.dispatchEvent(event);
-			return;test
+			return;
 		},
 		/**. '{boolean inert}: Define a inércia no documento.**/
 		set inert(x) {
@@ -3873,13 +3986,13 @@ const wd = (function() {
 			const pin = new __Pin(this.wall.float, heap.pin);
 			pin.fix();
 		},
-
-
-
-
 		/**. '{void update()}: Atualiza fixação das janelas.**/
-		//FIXME em processo de simplificação
 		update: function() {
+			/*-- removendo eventos --*/
+			const event = {float: ["keydown", "resize", "click"], modal: ["keydown"]};
+			for (let i = 0; i < event.float.length; i++)
+				window.removeEventListener(event.float[i], this);
+			/*-- atualizando lista --*/
 			const list = this.list;
 			for (let wall in list) {
 				list[wall].forEach(function(heap,i,a) {
@@ -3905,12 +4018,11 @@ const wd = (function() {
 				/*-- limpar dados da parede --*/
 				if (list[wall].length < 1) this.clear(wall);
 			}
-			/*-- Tecla esc --*/
-			if (list.modal.length > 0 || list.float.length > 0)
-				window.addEventListener("keydown", this);
-			/*-- clique fora --*/
-			if (list.float.length > 0)
-				window.addEventListener("click", this);
+			/*-- adicionando eventos à window --*/
+			const ev = list.modal.length > 0 ? "modal" : (list.float.length > 0 ? "float" : null);
+			if (ev in event)
+				for (let i = 0; i < event[ev].length; i++)
+					window.addEventListener(event[ev][i], this);
 			/*-- inert e freeze --*/
 			this.inert  = list.modal.length > 0;
 			this.freeze = list.float.length > 0;
@@ -3923,65 +4035,24 @@ const wd = (function() {
 			const show = heap === null ? null : this.wall[heap.wall].contains(heap.window);
 			if (heap !== null) {
 				heap.window.remove();
-				heap.status = show ? "close" : "cancel";
+				heap.status = show ? "closed" : "canceled";
 				this.heap = this.heap.filter(function(v,i,a) {return v.id !== heap.id;});
 				this.fire(heap);
 				this.update();
+				/*-- focalizar elementos --*/
+				if (heap.wall === "float" || heap.wall === "modal") {
+					const list = this.list;
+					if (list.float.length + list.modal.length === 0) {
+						const pin  = new __Type(heap.wall === "float" ? heap.pin : null);
+						const elem = new __Type(heap.focus);
+						if (pin.node)
+							heap.pin.focus();
+						else if (elem.node)
+							heap.focus.focus();
+					}
+				}
 			}
 			return heap === null ? null : heap.id;
-		},
-
-
-
-
-
-
-
-
-
-		/**. '{integer add(node win, string wall, any pin, any fire)}: Retorna o '{id} da janela ou -1 em caso de insucesso:
-		|Argumento|Tipo|Descrição|
-		|win|node|Janela a ser adicionada a pilha, não pode ser parte de outra janela já adicionada.|
-		|wall|string|Tipo de parede ("float", "modal" ou "frame")|
-		|pin|string|Localização da janela na parede "modal" ("top", "bottom", "left", "right", "full" e "center")|
-		|pin|node|Nó de fixação da parede "float"|
-		|pin|object|Posição (x, y) da parede "float" na tela|
-		|fire|function ou object|Disparador a ser chamada durante o evento "wdwindow"|**/
-		add2: function(win, wall, pin, fire) {
-			/*-- verificando inclusão da janela --*/
-			const test = new __Type(win);
-			if (!test.node || test.value.length < 1 || this.find(win) !== null)
-				return -1;
-			for (let i in this.wall)
-				if (win.contains(this.wall[i]))
-					return -1
-			/*-- analisando dados --*/
-			const list = this.list;
-			const data = {
-				id: Date.now() - this.id,
-				window: win,
-				wall: wall in this.wall ? wall : "frame",
-				fire: (/^function|object$/).test(typeof fire) ? fire : null,
-				pin: pin,
-				status: null
-			};
-			/*-- verificar critérios das janelas --*/
-			if (data.wall === "modal") {
-				if (list.float.length > 0)
-					this.remove(list.float[0].id);
-			}
-			else if (data.wall === "float") {
-				if (list.float.length > 0)
-					this.remove(list.float[0].id);
-				if (list.modal.length > 0 || list.float.length > 0)
-					return -1;
-			}
-			/*-- adicionando disparador de evento --*/
-			if (data.fire !== null)
-				win.addEventListener("wdwindow", data.fire);
-			this.heap.push(data);
-			this.update();
-			return data.id;
 		},
 		/**. '{boolean checkWindow(node win, string wall)}: Checa se a janela atende os critérios para inclusão na pilha.**/
 		checkWindow: function(win, wall) {
@@ -4004,43 +4075,52 @@ const wd = (function() {
 				return false;
 			return true;
 		},
-
+		/**. '{integer add(node win, string wall, any pin)}: Adiciona a janela e retorna seu '{id} ou -1 em caso de insucesso:
+		|Argumento|Tipo|Descrição|
+		|win|node|Janela a ser adicionada, não pode ser parte de outra janela já adicionada (ver método '{checkWindow}).|
+		|wall|string|Tipo de parede: "float", "modal" ou "frame"|
+		|pin|string|Localização da janela na parede modal:  "top", "bottom", "left", "right", "full" e "center".|
+		|pin|node|Nó de fixação da parede float.|
+		|pin|object|Posição (x, y) da parede float.|**/
 		add: function(win, wall, pin) {
 			wall = wall in this.wall ? wall : "frame";
 			if (!this.checkWindow(win, wall)) return -1;
+			const id = Date.now() - this.id;
 			this.heap.push({
-				id:     Date.now() - this.id,
+				id:     id,
 				status: null,
 				window: win,
 				wall:   wall,
-				pin:    pin
+				pin:    pin,
+				focus:  document.activeElement
 			});
 			this.update();
-			return;
+			return id;
 		},
-
-
-
-
-
-
-
-
-
-
-		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{wdwindow, submit, click e keydown}.**/
+		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{resize, click e keydown}.**/
 		handleEvent: function(ev) {
+			let   kill = false;
 			const list = this.list;
-			/*-- escapar janela float com clique fora --*/
-			if (ev.type === "click") {
-				if (list.float.length > 0 && !this.wall.float.contains(ev.target))
+			/*-- FLOAT --*/
+			if (list.float.length > 0) {
+				if (ev.type === "click")
+					kill = !this.wall.float.contains(ev.target)
+				else if (ev.type === "keydown")
+					kill = ev.key === "Escape" || ev.key === "Tab";
+				else if (ev.type === "resize")
+					kill = true;
+				if (kill)
 					this.remove(list.float[0].id);
 			}
-			/*-- escapar janela float/modal com ESC --*/
-			else if (ev.type === "keydown" && ev.key === "Escape") {
-				if (list.float.length > 0) this.remove(list.float[0].id);
-				if (list.modal.length > 0) this.remove(list.modal[0].id);
+			/*-- MODAL --*/
+			if (list.modal.length > 0) {
+				if (ev.type === "keydown")
+					kill = ev.key === "Escape";
+				if (kill)
+					this.remove(list.modal[0].id);
 			}
+
+
 			return;
 		},
 	};
@@ -4548,13 +4628,13 @@ const wd = (function() {
 	''constructor object __Request(object config)''
 	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento '{config} aceita os mesmos valores do objeto '{__Dataset} e contém as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
 	|Nome|Referência|Aplicação|Padrão|
-	|url|Alvo da requisição ou da leitura, não necessariamento um URL|´{send read fetch}||
-	|method|a{Método da requisição}[href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods"]|´{send fetch}|"post"|
-	|type|Tipo de resposta a retornar|´{send read fetch}|"text"|
+	|url|Alvo da requisição ou da leitura, não necessariamento um URL|'{send read fetch}||
+	|method|a{Método da requisição}[href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods"]|'{send fetch}|"post"|
+	|type|Tipo de resposta a retornar|'{send read fetch}|"text"|
 	|headers|Cabeçalhos a enviar (ver __DataSet)|'{send fetch}||
 	|body|Dados a enviar na requisição|'{send fetch}||
 	|timeout|Tempo de espera pela resposta|'{send read}|0|
-	|trigger|Disparador a ser chamado durante o progresso|´{send read fetch}|**/
+	|trigger|Disparador a ser chamado durante o progresso|'{send read fetch}|**/
 	function __Request(config) {
 		if (!(this instanceof __Request)) return new __Request(config);
 		const info   = new __DataSet(config);
@@ -7209,7 +7289,7 @@ const wd = (function() {
 				this.class;
 			}
 		},
-		/**. '{array|object  addEventLister}: Propriedade para adicionar disparadores a eventos, aceitando dois tipos de valores.
+		/**. '{array|object  addEventListener}: Propriedade para adicionar disparadores a eventos, aceitando dois tipos de valores.
 		. Se o valor for um array, cada item do array corresponderá aos argumentos do método padrão, na mesma sequência (evento, disparador, captura).
 		. Se o valor for um objeto, o nome da propriedade corresponderá ao evento e seu valor ao disparador ou uma lista de disparadores (array). A captura será definida pelo valor padrão.**/
 		addEventListener: {
@@ -10414,6 +10494,7 @@ const wd = (function() {
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
+			pin:      {value: function(){return __Pin.apply(null, Array.prototype.slice.call(arguments));}},
 			SETHTML:  {value: __SET_HTML},
 			GETHTML:  {value: __GET_HTML},
 			HTML:     {value: __HTML},
@@ -10594,7 +10675,7 @@ const wd = (function() {
 	Observações:
 	- Se o arquivo for CSV e a propriedade for inner/outerHTML, uma tabela com dados será adicionada ao documento;
 	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz (array de duas dimensões) de dados;
-	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a ´{value}.**/
+	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a '{value}.**/
 	function data_wd_load(target, event, wdArray) {
 		const data   = wdArray[0];
 		const node   = new __Node(target);
