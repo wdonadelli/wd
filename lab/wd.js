@@ -65,17 +65,13 @@ const wd = (function() {
 		* {box-sizing: border-box !important;}
 		${"inert" in document.body ? "" : "[inert] {display: none !important;}"}
 		.js-wd-freeze {overflow: hidden !important;}
-
-
 		.css-wd-form-error {
+			padding: 0.25em;
+			margin: 0.25em;
 			font-size: 12px;
 			font-family: Verdana, sans-serif;
-			border: thin solid black;
+			border: thin solid;
 			border-radius: 0.2em;
-			background: black;
-			color: white;
-			padding: 0.2em;
-			margin: 0.2em;
 		}
 
 
@@ -207,22 +203,13 @@ const wd = (function() {
 		}
 		/*-- MENU ----------------------------------------------------------------*/
 		.css-wd-menu {
-			padding: 0.2em;
+			padding: 0.3em;
 			margin: 0;
-			background: white;
 			color: black;
 			border-radius: 0.2em;
 			border: thin solid black;
 			font-size: 12px;
-			font-family: /*Verdana, sans-serif;*/Courier New, monospace;
-		}
-		.css-wd-menu > *:first-child {
-			font-size: 1em;
-			text-align: center;
-			margin: 0 0 0.25em 0;
-			padding: 0.25em 2em;
-			background: rgba(100,100,100,0.5);
-			font-weight: normal;
+			font-family: Verdana, sans-serif;
 		}
 		.css-wd-menu menu {
 			list-style: none;
@@ -231,19 +218,25 @@ const wd = (function() {
 		}
 		.css-wd-menu li {
 			padding: 0;
-			margin: 0.2em 0;
+			margin: 0.3em 0 0 0;
+		}
+		.css-wd-menu > *:first-child {
+			text-align: center;
+			font-weight: bold;
 		}
 		.css-wd-menu button {
+			text-align: left;
+			font-weight: normal;
+		}
+		.css-wd-menu > *:first-child, .css-wd-menu button {
 			position: relative;
 			display: block;
 			width: 100%;
+			margin: 0;
 			padding: 0.25em 2em;
-			text-align: left;
-			background: transparent;
-			border: 1px solid black;
-			border-radius: 0.2em;
 			font-size: inherit;
 			font-family: inherit;
+			border-radius: 0.2em;
 		}
 		.css-wd-menu .css-wd-menu-open:after {
 			content: "\\276F";
@@ -597,9 +590,30 @@ const wd = (function() {
 			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 			//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 /*============================================================================*/
-
 	/**#3 Tipologia e Gestão de Dados
-	#4 Linguagem
+	#4 Identificadores
+	''const object __ID''
+	Cria identificadores para biblioteca.**/
+	const __ID = {
+		/**. '{integer init}: Controlador dos identificadores.**/
+		init: Date.now(),
+		/**. '{integer shift}: Define o incremento.**/
+		get shift() {
+			const list = new Uint16Array(1);
+			window.crypto.getRandomValues(list);
+			return list[0];
+		},
+		/**. '{string value}: Retorna um identificador.**/
+		get value() {
+			this.init += this.shift;
+			const id   = `id${this.init.toString(16)}`;
+			const find = document.getElementById(id);
+			return find === null ? id : this.value;
+		},
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Linguagem
 	''const object __LANG''
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
@@ -2667,7 +2681,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Campos de Formulários
+	/**#4 Tipos de Formulários
 	''const object __FTYPES''
 	Define os tipos de campos de formulário com a respectiva função para obter ou definir valor:
 	- Campos numéricos são definidos por números finitos (string ou number) e retornam valores numéricos.
@@ -2706,51 +2720,57 @@ const wd = (function() {
 			const read = value === undefined;
 			const data = new __Type(read ? this.text(node) : value);
 			const fail = !data.finite;
-			if (read) return fail ? "" : data.value;
-			this.text(node, fail ? null : data.value);
+			if (read)  return fail ? "" : data.value;
+			if (!fail) this.text(node, data.value);
 			return this.number(node);
 		},
 		date:     function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null || data.type !== "date";
-			if (read) fail ? "" : data.form;
-			return this.text(node, fail ? null : data.form);
+			if (read)  return fail ? "" : data.form;
+			if (!fail) this.text(node, data.form);
+			return this.date(node);
 		},
 		time:     function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null || data.type !== "time";
-			if (read) fail ? "" : data.form;
-			return this.text(node, fail ? null : data.form);
-		},//FIXME esqueci do month/week em __FORM?
+			if (read)  return fail ? "" : data.form;
+			if (!fail) this.text(node, data.form);
+			return this.time(node);
+		},
 		month:    function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null || data.type !== "month";
-			if (read) fail ? "" : data.form;
-			return this.text(node, fail ? null : data.form);
+			if (read)  return fail ? "" : data.form;
+			if (!fail) this.text(node, data.form);
+			return this.month(node);
 		},
 		week:     function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null || data.type !== "week";
-			if (read) fail ? "" : data.form;
-			return this.text(node, fail ? null : data.form);
+			if (read)  return fail ? "" : data.form;
+			if (!fail) this.text(node, data.form);
+			return this.week(node);
 		},
 		"datetime-local": function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null || data.type !== "datetime";
-			if (read) fail ? "" : data.form;
-			return this.text(node, fail ? null : data.form);
+			if (read)  return fail ? "" : data.form;
+			if (!fail) this.text(node, data.form);
+			return this["datetime-local"](node);
 		},
 		datetime: function(node, value) {
 			const read = value === undefined;
 			const data = __DATETIME.test(read ? this.text(node) : value);
 			const fail = data === null;
-			if (read) fail ? "" : data.iso;
-			return this.text(node, fail ? null : data.iso);
+			if (read)  return fail ? "" : data.iso;
+			if (!fail) this.text(node, data.iso);
+			return this.datetime(node);
 		},
 		radio: function(node, value) {
 			const read = value === undefined;
@@ -2774,8 +2794,10 @@ const wd = (function() {
 				url = String(data._input);
 			else
 				try {url = String(new URL(data._input));} catch(e){}
-			if (read) return url === null ? "" : url;
-			return this.text(node, url);
+			const fail = url === null;
+			if (read)  return fail ? "" : url;
+			if (!fail) this.text(node, url);
+			return this.url(node, url);
 		},
 		color: function(node, value) {
 			const read = value === undefined;
@@ -2784,8 +2806,9 @@ const wd = (function() {
 			if (typeof data === "string") {
 				const hex  = "#"+("000000"+data.replace(/(\s+|\#)/g, "")).slice(-6);
 				const fail = !iso.test(hex);
-				if (read) return fail ? "#000000" : hex;
-				return this.text(node, fail ? null : hex);
+				if (read)  return fail ? "#000000" : hex;
+				if (!fail) this.text(node, hex);
+				return this.color(node);
 			}
 			/*-- somente definição de valores pode ser tipo diferente de string --*/
 			if (Array.isArray(data)) {
@@ -2802,7 +2825,7 @@ const wd = (function() {
 				const num = Number(data)%(0xffffff+1);
 				return this.color(node, "#"+num.toString(16));
 			}
-			return this.text(node, null);
+			return this.text(node);
 		},
 		file: function(node, value) {
 			if (value === null) return this.text(node, null);
@@ -2819,14 +2842,14 @@ const wd = (function() {
 				const list = data.replace(/\s+/g, "").split(",");
 				const mail = list.filter(function(v,i,a) {return new __Type(v).email;});
 				const fail = list.length !== mail.length || mail.length === 0 || (!mult && mail.length > 1);
-				if (read) return fail ? "" : (mail.length > 1 ? mail : mail.join(","));
-				this.text(node, fail ? null : mail.join(","))
+				if (read)  return fail ? "" : (mail.length > 1 ? mail : mail.join(","));
+				if (!fail) this.text(node, mail.join(","));
 				return this.email(node);
 			}
 			/*-- somente definição de valores pode ser tipo diferente de string --*/
 			if (Array.isArray(data))
 				return this.email(node, data.join(","));
-			return this.text(node, null);
+			return this.text(node);
 		},
 		select:   function(node, value) {
 			const read = value === undefined;
@@ -2844,11 +2867,12 @@ const wd = (function() {
 			return this.select(node);
 		},
 	};
+
+/*----------------------------------------------------------------------------*/
 	/**#4 Campos de Formulários
 	''const object __FIELDS''
 	Define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
 	const __FIELDS = {
-		id: Date.now(),
 		/**. '{string tag(node node)}: Informa a tag do elemento.**/
 		tag: function(node) {return node.tagName.toLowerCase();},
 		/**. '{string tag(node node)}: Informa o tipo de campo ou nulo.**/
@@ -2925,7 +2949,7 @@ const wd = (function() {
 				const label = "labels" in node && node.labels.length > 0 ? node.labels[0] : null;
 				const attr  = {role: "alert", textContent: data, className: "css-wd-form-error"};
 				if (label !== null) {
-					label.id = label.id.trim() === "" ? `wd_label_id_${Date.now() - this.id}` : label.id;
+					label.id = label.id.trim() === "" ? __ID.value : label.id;
 					attr["aria-labelledby"] = label.id;
 				}
 				__WINDOW.add(__DOM({tag: "div", attr: attr}).tag, "float", node);
@@ -3288,7 +3312,6 @@ const wd = (function() {
 			const child = find === null ? false : node.contains(find);
 			return child ? find : null;
 		},
-
 		//FIXME substituir o método acima por este
 		/**. '{array getNodesBy(node node, string attr)}: Retorna os nós referenciados pelos indentificadores constantes no atributo no argumento '{attr} (list, aria-labelledby, aria-describedby, aria-details...).**/
 		getNodesBy: function(node, attr) {
@@ -3297,8 +3320,6 @@ const wd = (function() {
 			try {return document.querySelectorAll(query);}
 			catch(e) {return [];}
 		},
-
-
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -3402,11 +3423,10 @@ const wd = (function() {
 	|check|list|Valores padrão do formulário, se aplicável|Não|
 	|id|string|Identificador do formulário|Não|**/
 	const __FORM = {
-		/**. '{integer id}: Controla o identificador da ferramenta.**/
-		id: Date.now(),
 		/**. '{object info}: Define a tábula de campos de formulário.**/
 		field: Object.freeze({
 			text:     {method: "combo", tag: "input"},
+			tel:      {method: "combo", tag: "input"},
 			email:    {method: "combo", tag: "input"},
 			url:      {method: "combo", tag: "input"},
 			search:   {method: "combo", tag: "input"},
@@ -3499,7 +3519,7 @@ const wd = (function() {
 			console.log(attr)
 			/*-- combo --*/
 			if (Array.isArray(value) || typeof value === "object") {
-				const id = `list_${name}_${Date.now() - this.id}`;
+				const id = __ID.value;
 				base.child.push(this.datalist(value, check, id));
 				attr.setAttribute = ["list", id];
 				attr.value = Array.isArray(check) ? check.join(",") : check;
@@ -3624,22 +3644,7 @@ const wd = (function() {
 	- A propriedade '{detail} do evento disparado conterá o conteúdo do respectivo item do array;
 	- Somente valores presentes no formato JSON poderão ser utilizados.**/
 	const __MENU = {
-		/**. '{integer id}: Referência para criação de id únicos.**/
-		id: Date.now(),
-
-		info: function(list, heap) {
-			const data = heap.split(".");
-			const info = {
-				level: data.length - 1,
-				index: Number(data[data.length - 1]),
-				value: list
-			};
-			data.forEach(function(v,i,a) {info.value = info.value[Number(v)];});
-			return info;
-		},
-
-
-		//FIXME
+		//FIXME manter propriedade help?
 		/**. '{object data(any input, string base)}: Extraí e retorna os valores do texto (`{text}) da descrição (`{help}) de '{input}**/
 		data: function(input, base) {
 			const obj = typeof input === "object" && !Array.isArray(input) && input !== null;
@@ -3649,10 +3654,6 @@ const wd = (function() {
 				help: obj && "help" in input ? input.help : null
 			}
 		},
-
-
-
-
 		/**. '{object head(string text, integer level, string link)}: Retorna a estrutura do cabeçalho do menu com o título `{text}**/
 		head: function(text, level, link) {
 			const attr = {innerHTML: text, role: "heading", "aria-level": level, id: link};
@@ -3683,11 +3684,10 @@ const wd = (function() {
 		/**. '{object box(any input, integer level, array items)}: Retorna a estrutura do container do menu (cabeçalho e menu).|**/
 		box: function(input, level, items) {
 			const data = this.data(input, `Menu ${level}`);
-			const link = `wd_menu_id_${Date.now() - this.id}`;
-			const attr = {className: "css-wd-menu", hidden: level > 1};
+			const link = __ID.value;
+			const attr = {className: "css-wd-menu", hidden: level > 1, "aria-labelledby": link};
 			const head = this.head(data.text, level, link);
 			const menu = this.menu(link, items);
-			console.log(level, items, "\n", menu)
 			return {tag: "section", attr: attr, child: [head, menu]};
 		},
 		/**. '{void main(array menu, array list, integer level, string heap, any home)}: Define estrutura do conjunto de menus.**/
@@ -3766,9 +3766,8 @@ Additional roles, states, and properties needed for the menu element are describ
 		fireMenu: function(button) {
 			let data = null;
 			try {data = JSON.parse(button.dataset.wdMenuItem);} catch(e) {};
-			const event = new CustomEvent("wdmenu", {detail: data});
-			console.log(data);
-			button.form.dispatchEvent(event);
+			const event = new CustomEvent("wdmenu", {detail: data, bubbles: true});
+			button.dispatchEvent(event);
 			return;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click} e {mouseenter}.**/
@@ -3802,7 +3801,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		}
-		//FIXME ver se vai precisar de um onfocus para avaliar se todo o menu está sendo exibido quando houver muitos
+		//FIXME ver se vai precisar de um onfocus para avaliar se todo o menu está sendo exibido quando houver muitos itens
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -3812,6 +3811,7 @@ Additional roles, states, and properties needed for the menu element are describ
 	|tipo|Descrição|
 	|Nó|Fixará o '{box} relativamente ao nó|
 	|object|Fixará o '{box} na posição definida pelas propriedades '{x} e '{y}|.**/
+	//FIXME e quando não existir espaço acima ou abaixo (elemento cobre toda a tela)?
 	function __Pin(box, pin) {
 		if (!(this instanceof __Pin)) return new __Pin(box, pin);
 		const test = {box: new __Type(box), pin: new __Type(pin)};
@@ -3936,8 +3936,6 @@ Additional roles, states, and properties needed for the menu element are describ
 	|closed|Indica que a janela renderizada foi removida da parede|
 	|canceled|Indica que a janela foi removida da fila|**/
 	const __WINDOW = {
-		/**. '{integer id}: Controla o identificador das janelas.**/
-		id: Date.now(),
 		/**. '{array heap}: Guarda os registros vigentes.**/
 		heap: [],
 		/**. '{object wall}: Registra as paredes fixadoras de janelas.**/
@@ -3955,19 +3953,18 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		},
-		/**. '{object find(any key)}: Retorna o primeiro identificador encontrado na pilha ou nulo conforme argumento '{key}:
-		|Tipo|Descrição|
-		|nó|Busca pelo conteúdo da janela|
-		|string|Busca pela parede|
-		|integer|Busca pelo id|**/
+		/**. '{object find(any key)}: Retorna o primeiro identificador encontrado na pilha ou nulo conforme argumento '{key}. Se o argumento for um nó HTML, buscará pela janela, se for uma string, fará a busca pelo nome da janela ou pelo identificador.**/
 		find: function(key) {
-			const check = new __Type(key);
-			for (let i = 0; i < this.heap.length; i++) {
-				if (check.integer && this.heap[i].id === check.value)
+			const node = typeof key === "object" && key instanceof HTMLElement;
+			const text = typeof key === "string";
+			const wall = text && (/^(float|modal|frame)$/i).test(key.toLowerCase());
+			const len  = node || wall || text ? this.heap.length : 0;
+			for (let i = 0; i < len; i++) {
+				if (node && this.heap[i].window.contains(key))
 					return this.heap[i];
-				if (check.string && this.heap[i].wall === check.value.toLowerCase().trim())
+				if (wall && this.heap[i].wall === key.toLowerCase())
 					return this.heap[i];
-				if (check.node && this.heap[i].window.contains(key))
+				if (text && this.heap[i].id === key)
 					return this.heap[i];
 			}
 			return null;
@@ -4001,18 +3998,25 @@ Additional roles, states, and properties needed for the menu element are describ
 			const data = x ? {add: "js-wd-freeze"} : {remove: "js-wd-freeze"};
 			__HTML(document.body, {className: data});
 		},
-		/**. '{void modalPin(object heap)}: Fixa a janela '{modal} conforme localização à tela (flex).**/
-		modalPin: function(heap) {
-			const places = ["center", "top", "bottom", "left", "right", "full"];
-			const place  = places.indexOf(heap.pin) >= 0 ? heap.pin : places[0];
-			this.wall[heap.wall].className = `js-wd-window-${place}`;
+		/**. '{void pin(object heap)}: Define a forma de fixação das janelas '{float/modal} à tela.**/
+		pin: function(heap) {
+			if (heap.wall === "modal") {
+				const places = ["center", "top", "bottom", "left", "right", "full"];
+				const place  = places.indexOf(heap.pin) >= 0 ? heap.pin : places[0];
+				this.wall[heap.wall].className = `js-wd-window-${place}`;
+				__FOCUS.setFocus(heap.window);
+			}
+			else if (heap.wall === "float") {
+				const pin = new __Pin(this.wall.float, heap.pin);
+				pin.fix();
+				__FOCUS.setFocus(heap.window);
+			}
+			const bg = window.getComputedStyle(heap.window).background;
+			if (bg === "none") {
+				heap.window.style.color = "black";
+				heap.window.style.background = "white";
+			}
 			return;
-		},
-		/**. '{void floatPin(object heap)}: Define a forma de fixaçaõ da janela '{float} à tela.**/
-		//FIXME que tal deixar o modal pin também?
-		floatPin: function(heap) {
-			const pin = new __Pin(this.wall.float, heap.pin);
-			pin.fix();
 		},
 		/**. '{void update()}: Atualiza fixação das janelas.**/
 		update: function() {
@@ -4034,10 +4038,7 @@ Additional roles, states, and properties needed for the menu element are describ
 						if (this.wall[heap.wall].parentElement === null)
 							document.body.appendChild(this.wall[heap.wall]);
 						/*-- definindo posicionamento e foco --*/
-						if (heap.wall === "float" || heap.wall === "modal") {
-							heap.wall === "modal" ? this.modalPin(heap) : this.floatPin(heap);
-							__FOCUS.setFocus(heap.window);
-						}
+						this.pin(heap);
 						/*-- disparar evento --*/
 						heap.status = "open";
 						this.fire(heap);
@@ -4113,7 +4114,7 @@ Additional roles, states, and properties needed for the menu element are describ
 		add: function(win, wall, pin) {
 			wall = wall in this.wall ? wall : "frame";
 			if (!this.checkWindow(win, wall)) return -1;
-			const id = Date.now() - this.id;
+			const id = __ID.value;
 			this.heap.push({
 				id:     id,
 				status: null,
@@ -4147,8 +4148,6 @@ Additional roles, states, and properties needed for the menu element are describ
 				if (kill)
 					this.remove(list.modal[0].id);
 			}
-
-
 			return;
 		},
 	};
@@ -4157,8 +4156,6 @@ Additional roles, states, and properties needed for the menu element are describ
 	/**''const object __SIGNAL''
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. '{integer id}: Referência do ID.**/
-		id: Date.now(),
 		/**. '{object now}: Retorna dados do tempo atual.**/
 		get now() {
 			return {
@@ -4221,18 +4218,19 @@ Additional roles, states, and properties needed for the menu element are describ
 			/*-- chamar caixa de diálogo --*/
 			if (typeof form === "object" && form instanceof HTMLFormElement) {
 				form.addEventListener("submit", this);
-				const id     = Date.now() - this.id;
+				const idHead = __ID.value;
+				const idBody = __ID.value;
 				const dialog = {
 					tag: "div",
 					attr: {
 						role: "alertdialog",
 						className: "css-wd-dialog",
-						"aria-labelledby":  `wd_dialog_head_${id}`,
-						"aria-describedby": `wd_dialog_body_${id}`,
+						"aria-labelledby":  idHead,
+						"aria-describedby": idBody,
 					},
 					child: [
-						{tag: "h1",  attr: {innerText: head, id: `wd_dialog_head_${id}`}},
-						{tag: form , attr: {id: `wd_dialog_body_${id}`}},
+						{tag: "h1",  attr: {innerText: head, id: idHead}},
+						{tag: form , attr: {id: idBody}},
 					]
 				};
 				__WINDOW.add(__DOM(dialog).tag, "modal");
@@ -4245,7 +4243,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 			body = String(body || "").trim() || null;
 			if (body !== null) {
-				const config = {lang: __LANG.value, body: body, tag: Date.now() - this.id,};
+				const config = {lang: __LANG.value, body: body, tag: __ID.value,};
 				if (Notification.permission === "denied")
 					return;
 				if (Notification.permission === "granted")
@@ -4283,8 +4281,6 @@ Additional roles, states, and properties needed for the menu element are describ
 	const __PROGRESS = {
 		//FIXME https://w3c.github.io/aria/#aria-busy colocar isso no load e no repeat enquanto a página é carregada
 		//TODO https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/progress#describing_a_particular_region
-		/**. '{integer id}: Controla o identificador das chamadas.**/
-		id: 0,
 		/**. '{object heap}: Pilha de processos em andamento.**/
 		heap: {},
 		/**. '{node tree}: Elementos da barra de progresso (main, label, bar).**/
@@ -4322,28 +4318,27 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		},
-		/**. '{integer open()}: Abre um processo e retorna seu identificador.**/
+		/**. '{string open()}: Abre um processo e retorna seu identificador.**/
 		open: function() {
-			const id = this.id++;
+			const id = __ID.value;
 			this.heap[id] = null;
 			if (this.tree.main.parentElement !== document.body)
 				document.body.appendChild(this.tree.main);
 			this.calc();
 			return id;
 		},
-		/**. '{void close(integer id)}: Fecha o processo aberto com o identificador especificado.**/
+		/**. '{void close(string id)}: Fecha o processo aberto com o identificador especificado.**/
 		close: function(id) {
 			if (id in this.heap) {
 				delete this.heap[id];
-				this.calc()
+				this.calc();
 			}
 			return;
 		},
-		/**. '{void value(float data)}: Define o valor do progresso.**/
+		/**. '{void value(string id, float data)}: Define o valor do progresso.**/
 		value: function(id, data) {
-			const check  = new __Type(data);
 			if (id in this.heap) {
-				this.heap[id] = check.finite ? check.value : null;
+				this.heap[id] = isFinite(data) ? Math.abs(Number(data)) : null;//FIXME como otimizar isso?
 				this.calc();
 			}
 			return;
@@ -10516,6 +10511,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
+			response: {value: function(){return __Response.apply(null, Array.prototype.slice.call(arguments));}},
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
@@ -10523,6 +10519,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
 			pin:      {value: function(){return __Pin.apply(null, Array.prototype.slice.call(arguments));}},
+			ID:       {value: __ID},
 			SETHTML:  {value: __SET_HTML},
 			GETHTML:  {value: __GET_HTML},
 			HTML:     {value: __HTML},
