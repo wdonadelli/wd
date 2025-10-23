@@ -113,12 +113,12 @@ const wd = (function() {
 		}
 		/*-- FLOAT --*/
 		[data-js-wd-window="float"] {
-			position: fixed; /*-- não é importante --*/
+			position: fixed !important;
 			display: block !important;
 			margin:  0 !important;
 			padding: 0 !important;
 			overflow-y: auto !important;
-			z-index:  var(--var-js-wd-z-index-2);
+			z-index:  var(--var-js-wd-z-index-2) !important;
 			background: transparent !important;
 		}
 		/*-- MODAL --*/
@@ -129,38 +129,15 @@ const wd = (function() {
 			right:   0 !important;
 			bottom:  0 !important;
 			margin:  0 !important;
-			padding: 0 !important;
-			display: flex !important;
-			flex-direction: row !important;
-			justify-content: center !important;
-			align-items: center !important;
+			padding: 0.5em !important;
 			overflow-y: auto !important;
 			z-index: var(--var-js-wd-z-index-1);
 			background: rgb(50,50,50) !important;
 			background: rgba(50,50,50,0.5) !important;
-		}
-		/*-- posicionamento --*/
-		[data-js-wd-window="modal"].js-wd-window-left,
-		[data-js-wd-window="modal"].js-wd-window-right,
-		[data-js-wd-window="modal"].js-wd-window-top,
-		[data-js-wd-window="modal"].js-wd-window-bottom,
-		[data-js-wd-window="modal"].js-wd-window-full {
-			align-items: stretch !important;
-		}
-		[data-js-wd-window="modal"].js-wd-window-top,
-		[data-js-wd-window="modal"].js-wd-window-bottom {
-			flex-direction: column !important;
-		}
-		[data-js-wd-window="modal"].js-wd-window-left,
-		[data-js-wd-window="modal"].js-wd-window-top {
-			justify-content: flex-start !important;
-		}
-		[data-js-wd-window="modal"].js-wd-window-right,
-		[data-js-wd-window="modal"].js-wd-window-bottom {
-			justify-content: flex-end !important;
-		}
-		[data-js-wd-window="modal"].js-wd-window-full > * {
-			flex-grow: 1 !important;
+			display:         flex !important;
+			flex-direction:  row !important;
+			justify-content: center !important;
+			align-items:     center !important;
 		}
 		/*-- PROGRESS --*/
 		[data-js-wd-window="progress"] {
@@ -172,10 +149,9 @@ const wd = (function() {
 			padding: 0 1em 0 0.5em !important;
 			overflow: hidden !important;
 			z-index: var(--var-js-wd-z-index-0) !important;
-			background: white;
-			color: black;
+			font-size: 12px;
+			font-family: Verdana, sans-serif;
 		}
-
 		/*-- SIGNAL --------------------------------------------------------------*/
 		.css-wd-alert, .css-wd-dialog {
 			font-size: 14px;
@@ -191,7 +167,7 @@ const wd = (function() {
 		}
 		.css-wd-alert > h1, .css-wd-dialog > h1 {font-size: 1.0em; padding-right: 2em;}
 		.css-wd-alert > p  {font-size: 0.9em;}
-		.css-wd-button-close {
+		.css-wd-quit {
 			font-size: 1em;
 			position: absolute;
 			top: 0.5em;
@@ -227,6 +203,7 @@ const wd = (function() {
 		.css-wd-menu button {
 			text-align: left;
 			font-weight: normal;
+			cursor: pointer;
 		}
 		.css-wd-menu > *:first-child, .css-wd-menu button {
 			position: relative;
@@ -251,6 +228,12 @@ const wd = (function() {
 			left: 0;
 			margin: 0 0 0 0.5em;
 			text-align: center;
+		}
+		/*-- TAB -----------------------------------------------------------------*/
+		.css-wd-tab {
+
+
+
 		}
 
 
@@ -3440,7 +3423,6 @@ const wd = (function() {
 			datetime: {method:  "text", tag: "input"},
 			month:    {method:  "text", tag: "input"},
 			week:     {method:  "text", tag: "input"},
-			"datetime-local": {method:  "text", tag: "input"},
 			textarea: {method:  "text", tag: "textarea"},
 			button:   {method: "click", tag: "button"},
 			submit:   {method: "click", tag: "button"},
@@ -3450,6 +3432,7 @@ const wd = (function() {
 			checkbox: {method: "check", tag: "input"},
 			radio:    {method: "check", tag: "input"},
 			select:   {method: "list",  tag: "select"},
+			"datetime-local": {method:  "text", tag: "input"},
 		}),
 		/**. '{object html(string type, string label)}: Retorna a estrutura de elemento HTML.**/
 		html: function(type, label) {
@@ -3459,36 +3442,29 @@ const wd = (function() {
 		label: function(label) {
 			return {tag: "label", attr: {}, child: [this.html("span", label)]};
 		},
-		/**. '{object fieldset(string label)}: Retorna a estrutura de elemento HTML de agrupamento.**/
-		fieldset: function(label) {
-			return {tag: "fieldset", attr: {}, child: [this.html("legend", label)]};
-		},
-		/**. '{object datalist(any value, any check, string id)}: Retorna a estrutura de elemento HTML de listagem.**/
-		datalist: function (value, check, id) {
+		/**. '{array options(any value, any check)}: Retorna uma lista de estruturas do elemento HTML '{option}.**/
+		options: function (value, check) {
 			const child = [];
 			const list  = Array.isArray(check) ? check : [check];
-			/*-- value é um array --*/
 			if (Array.isArray(value)) {
-				for (let i = 0; i < value.length; i++) child.push({
-					tag: "option",
-					attr: {value: value[i], textContent: value[i], selected: list.indexOf(value[i]) >= 0},
-				});
+				for (let i = 0; i < value.length; i++)
+					child.push({tag: "option", attr: {
+						value: value[i], textContent: value[i], selected: list.indexOf(value[i]) >= 0
+					}});
 			}
-			/*-- value é um objeto --*/
 			else if (typeof value === "object") {
-				for (let i in value) child.push({
-					tag: "option",
-					attr: {value: i, textContent: value[i], selected: list.indexOf(i) >= 0},
-				});
+				for (let i in value)
+					child.push({tag: "option", attr: {
+						value: i, textContent: value[i], selected: list.indexOf(i) >= 0
+					}});
 			}
 			/*-- value é outro tipo --*/
 			else {
-				child.push({
-					tag: "option",
-					attr: {value: value, textContent: value, selected: list.indexOf(value[i]) >= 0}
-				});
+				child.push({tag: "option", attr: {
+					value: value, textContent: value, selected: list.indexOf(value[i]) >= 0
+				}});
 			}
-			return {tag: "datalist", attr: {id: id}, child: child};
+			return child;
 		},
 		/**. '{object text(string type, string label, string name, string value)}: Retorna a estrutura de elemento HTML de texto.**/
 		text: function(type, label, name, value) {
@@ -3504,97 +3480,70 @@ const wd = (function() {
 		/**. '{object list(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de seleção.**/
 		list: function(type, label, name, value, check) {
 			const base = this.label(label);
-			const attr = {name: name, multiple: Array.isArray(check)};
-			const list = this.datalist(value, check, name);
-			const data = {tag: this.field[type].tag, attr: attr, child: list.child};
+			const attr = {name: name, multiple: Array.isArray(check) && check.length > 1};
+			const list = this.options(value, check);
+			const data = {tag: this.field[type].tag, attr: attr, child: list};
 			base.child.push(data);
 			return base;
 		},
 		/**. '{object combo(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de combo.**/
 		combo: function(type, label, name, value, check) {
+			if (!Array.isArray(value) && typeof value !== "object")
+				return this.text(type, label, name, value);
 			const base = this.label(label);
-			const mult = type === "email" && Array.isArray(check);
-			const attr = {multiple: mult, type: type, name: name, value: value};
-			if (!mult) delete attr.multiple;
-			console.log(attr)
-			/*-- combo --*/
-			if (Array.isArray(value) || typeof value === "object") {
-				const id = __ID.value;
-				base.child.push(this.datalist(value, check, id));
-				attr.setAttribute = ["list", id];
-				attr.value = Array.isArray(check) ? check.join(",") : check;
-			}
+			const data = {tag: "datalist", attr: {id: __ID.value}, child: this.options(value)};
+			const show = Array.isArray(check) ? check : [typeof check === null || check === undefined ? "" : check];
+			const attr = {type: type, name: name, value: show.join(","), setAttribute: ["list", data.attr.id]};
+			if (type === "email" && init.length > 1)
+				attr.multiple = true;
+			base.child.push(data);
 			base.child.push({tag: this.field[type].tag, attr: attr, child: []});
-			return base
+			return base;
 		},
 		/**. '{object check(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de checagem.**/
 		check: function(type, label, name, value, check) {
 			check = Array.isArray(check) ? check : [check];
-			const mult = Array.isArray(value) || typeof value === "object";
-			const base = mult ? this.fieldset(label) : this.label(label);
+			const keep = type === "radio";
+			const list = [this.html("legend", label)];
+			let   item = 0;
 			if (Array.isArray(value)) {
-				for (let i = 0; i < value.length; i++) {
-					let index = type === "radio" ? name : `${name}_${i}`;
-					let label = this.label(value[i]);
-					let attr  = {type: type, name: index, value: value[i], checked: check.indexOf(value[i]) >= 0};
-					let input = {tag: this.field[type].tag, attr: attr, child: []};
-					label.child.unshift(input);
-					base.child.push(label);
-				}
+				for (let i = 0; i < value.length; i++)
+					list.push(this.check(type, value[i], keep ? name : `${name}_${i}`, value[i], check));
 			}
 			else if (typeof value === "object") {
-				let item = 0;
-				for (let i in value) {
-					let index = type === "radio" ? name : `${name}_${item++}`;
-					let label = this.label(value[i]);
-					let attr  = {type: type, name: index, value: i, checked: check.indexOf(i) >= 0};
-					let input = {tag: this.field[type].tag, attr: attr, child: []};
-					label.child.unshift(input);
-					base.child.push(label);
-				}
+				for (let i in value)
+					list.push(this.check(type, value[i], keep ? name : `${name}_${item++}`, i, check));
 			}
 			else {
-				let attr  = {type: type, name: name, value: value, checked: check.indexOf(value) >= 0};
-				let input = {tag: this.field[type].tag, attr: attr, child: []};
+				const attr  = {type: type, name: name, value: value, checked: check.indexOf(value) >= 0};
+				const input = {tag: this.field[type].tag, attr: attr, child: []};
+				const base  = this.label(label);
 				base.child.unshift(input);
+				return base;
 			}
-			return base;
+			return {tag: "fieldset", attr: {}, child: list};
 		},
 		/**. '{object click(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML de botão.**/
 		click: function(type, label, name, value, check) {
 			check = Array.isArray(check) ? check : [check];
 			const tag  = this.field[type].tag;
-			const mult = Array.isArray(value) || typeof value === "object";
-			const base = mult ? this.fieldset(label) : {tag: tag, attr: {}, child: []};
+			const btn  = tag === "button";
+			const list = [];
+			let   item = 0;
 			if (Array.isArray(value)) {
-				for (let i = 0; i < value.length; i++) {
-					let index = `${name}_${i}`;
-					let attr  = {type: type, name: index, value: value[i], autoFocus: check.indexOf(value[i]) >= 0};
-					if (tag === "button") attr.innerHTML = value[i]
-					base.child.push({tag: tag, attr: attr, child: []});
-				}
+				for (let i = 0; i < value.length; i++)
+					list.push(this.click(type, value[i], `${name}_${i}`, value[i], check));
 			}
 			else if (typeof value === "object") {
-				let item = 0;
-				for (let i in value) {
-					let index = `${name}_${item++}`;
-					let attr  = {type: type, name: index, value: value[i], autoFocus: check.indexOf(i) >= 0};
-					if (tag === "button") {
-						attr.innerHTML = value[i];
-						attr.value = i;
-					}
-					base.child.push({tag: tag, attr: attr, child: []});
-				}
+				for (let i in value)
+					list.push(this.click(type, btn ? value[i] : i, `${name}_${item++}`, btn ? i : value[i], check));
 			}
 			else {
-				let attr = {type: type, name: name, value: label, autoFocus: check.indexOf(value) >= 0};
-				if (tag === "button") {
-					attr.innerHTML = label;
-					attr.value     = value;
-				}
-				base.attr = attr;
+				const attr = {type: type, name: name, value: value, autoFocus: check.indexOf(value) >= 0};
+				attr[btn ? "innerHTML" : "aria-label"] = label;
+				return {tag: tag, attr: attr, child: []};
 			}
-			return base;
+			return {tag: "div", attr: {}, child: list};
 		},
 		/**. '{object list(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML genérico.**/
 		builder: function(type, label, name, value, check) {
@@ -3604,10 +3553,10 @@ const wd = (function() {
 			const method = type in this.field ? this.field[type].method : "html";
 			return this[method](type, label, name, value, check);
 		},
-		/**. '{node form(array data)}: Os items do argumento são i{array} e seguem a mesma ordem do método '{builder}.**/
-		form: function(data) {
+		/**. '{node form(array data, object attr)}: Os items do argumento são i{array} e seguem a mesma ordem do método '{builder}.**/
+		form: function(data, attr) {
 			if (!Array.isArray(data)) return null;
-			const form = {tag: "form", attr: {}, child: []};
+			const form = {tag: "form", attr: attr, child: []};
 			for (let i = 0; i < data.length; i++) {
 				if (Array.isArray(data[i]))
 					form.child.push(this.builder.apply(this, data[i]));
@@ -3722,7 +3671,7 @@ const wd = (function() {
 			const form = __DOM({tag: "form", attr: {}, child: menu}).tag;
 			return form;
 		},
-/*The element that opens the menu has role button.
+/*FIXME The element that opens the menu has role button.
 The element with role button has aria-haspopup set to either menu or true.
 When the menu is displayed, the element with role button has aria-expanded set to true. When the menu is hidden, aria-expanded is set to false.
 The element that contains the menu items displayed by activating the button has role menu.
@@ -3801,9 +3750,130 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		}
-		//FIXME ver se vai precisar de um onfocus para avaliar se todo o menu está sendo exibido quando houver muitos itens
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**#4 Abas
+	''const object __TAB''
+	Organiza um container em forma de abas.**/
+	const __TAB = {
+		/**. '{string title(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba.**/
+		title: function(panel, index) {
+			const find = "h1, h2, h3, h4, h5, h6, [role=heading]";
+			const aria = panel.hasAttribute("aria-label") ? panel.getAttribute("aria-label") : null
+			const data = panel.querySelector(find);
+			if (data !== null) data.hidden = true;
+			return data !== null ? data.innerHTML : (aria !== null ? aria : `Tab ${index}`);
+		},
+		/**. '{object tab(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
+		tab: function(panel, index) {
+			const idPanel = panel.id.trim() === "" ? __ID.value : panel.id.trim();
+			const idTab   = __ID.value;
+			const textTab = this.title(panel, index);
+			/*-- preparando painel --*/
+			__HTML(panel, {
+				id: idPanel,
+				tabIndex: -1,
+				role: "tabpanel",
+				"aria-labelledby": idTab,
+				hidden: index !== 0,
+			});
+			/*-- retornando a aba --*/
+			return {tag: "button", child: [], attr: {
+				type: "button",
+				id: idTab,
+				innerHTML: textTab,
+				tabIndex: index === 0 ? 0 : -1,
+				role: "tab",
+				"aria-controls": idPanel,
+				"aria-selected": index === 0 ? "true" : "false",
+				addEventListener: {click: this, keydown: this}
+			}};
+		},
+		/**. '{void builder(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
+		builder: function(node, vertical) {
+			const data = node.children;
+			const list = {tag: "div", child: [], attr: {
+				tabIndex: -1,
+				role: "tablist",
+				"aria-orientation": vertical === true ? "vertical" : "horizontal",
+			}};
+			/*-- estilizando o container --*/
+			node.className = "css-wd-tab";
+			/*-- definindo abas e configurando paineis --*/
+			for (let i = 0; i < data.length; i++)
+				list.child.push(this.tab(data[i], i));
+			/*-- adicionando a lista ao container --*/
+			node.insertBefore(__DOM(list).tag, node.firstElementChild);
+			return;
+		},
+		/**. '{void setPanel(node tab)}: Exibe o painel vinculado à aba.**/
+		setPanel: function(tab) {
+			const list = tab.parentElement.parentElement.children;
+			const find = tab.getAttribute("aria-controls");
+			for (let i = 0; i < list.length; i++) {
+				if (list[i].role === "tablist") continue;
+				list[i].hidden = list[i].id !== find;
+			}
+			return;
+		},
+		/**. '{void setTab(node tab)}: Seleciona a aba.**/
+		setTab: function(tab) {
+			const list = tab.parentElement.children;
+			for (let i = 0; i < list.length; i++)
+				__HTML(list[i], {
+					tabIndex:        list[i] === tab ? 0 : -1,
+					"aria-selected": list[i] === tab ? "true" : "false",
+				});
+			tab.focus();
+			return this.setPanel(tab);
+		},
+		/**. '{void walkTab(node tab, string key)}: Navega pelas abas pelo teclado.**/
+		walkTab: function (tab, key) {
+			const list = Array.prototype.slice.call(tab.parentElement.children);
+			const item = list.indexOf(tab);
+			const walk = {
+				ArrowRight: item + 1, ArrowLeft: item - 1, Home: 0,
+				ArrowDown:  item + 1, ArrowUp:   item - 1, End:  list.length - 1
+			};
+			const next = (walk[key] + list.length)%list.length;
+			return this.setTab(list[next]);
+   	},
+   	/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
+		handleEvent: function(ev) {
+			if (ev.type === "click") {
+				ev.preventDefault();
+				return this.setTab(ev.target);
+			}
+			else if (ev.type === "keydown") {
+				const keys = {
+					horizontal:  /^(ArrowRight|ArrowLeft|Home|End)$/i,
+					vertical:    /^(ArrowUp|ArrowDown|Home|End)$/i,
+					orientation: ev.target.parentElement.getAttribute("aria-orientation")
+				};
+				if (keys[keys.orientation].test(ev.key)) {
+					ev.preventDefault();
+					return this.walkTab(ev.target, ev.key);
+				}
+				else if (ev.key === "Tab") {
+					ev.preventDefault();
+					const panel = ev.target.getAttribute("aria-controls");
+					document.getElementById(panel).focus();
+				}
+			}
+			return;
+		},
+	};
+
+
+	/*----------------------------------------------------------------------------*/
+	/**#4 Ícones
+	''const object __ICON''
+	Define um plano de fundo para botões.**/
+	const __ICON = {
+
+
+	};
 /*----------------------------------------------------------------------------*/
 	/**#4 Fixação
 	''constructor object __Pin(node box, any pin)''
@@ -3829,11 +3899,11 @@ Additional roles, states, and properties needed for the menu element are describ
 		Object.defineProperties(this, {
 			/**. '{node box}: Nó a ser posicionado.**/
 			box:  {value: test.box.value[0]},
-			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			/**. '{object bcr}: Retorna as dimensões do nó a ser fixado.**/
 			bcr:  {value: test.box.value[0].getBoundingClientRect()},
-			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			/**. '{object pin}: Retorna o ponto de fixação do nó.**/
 			pin:  {value: data},
-			/**. '{object ecra}: Retorna as dimensões do monitor (w/h).**/
+			/**. '{boolean node}: Informa se o ponto de referência para fixação é um nó.**/
 			node: {value: node}
 		});
 	}
@@ -3922,14 +3992,11 @@ Additional roles, states, and properties needed for the menu element are describ
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Janelas
-	''const object __WINDOW''FIXME acrescentar fechamento por resize e TAB
+	''const object __WINDOW''
 	Administrador de paredes e janelas:
-	. frame:
-	. Parede de profundidade baixa e posição invariável e fixa à tela permitindo a adição de múltiplas janelas sem restrição.
-	. float:
-	. Parede de profundidade intermediária e posição variável e fixa à tela ou absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
-	. modal:
-	. Parede de profundidade alta e posiçã__Pino fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
+	- frame: Parede de profundidade baixa e posição invariável e fixa à tela permitindo a adição de múltiplas janelas sem restrição.
+	- float: Parede de profundidade intermediária e posição variável e fixa à tela ou absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
+	- modal: Parede de profundidade alta e posiçã__Pino fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
 	A cada mudança de '{status}, o evento i{wdwindow} será disparado. A propriedade '{detail} do evento contera os dados do identificador '{id} e do '{status} (string):
 	|Status|Descrição|
 	|open|Indica que a janela foi fixada à parede e está sendo exibida na tela|
@@ -4000,17 +4067,15 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 		/**. '{void pin(object heap)}: Define a forma de fixação das janelas '{float/modal} à tela.**/
 		pin: function(heap) {
-			if (heap.wall === "modal") {
-				const places = ["center", "top", "bottom", "left", "right", "full"];
-				const place  = places.indexOf(heap.pin) >= 0 ? heap.pin : places[0];
-				this.wall[heap.wall].className = `js-wd-window-${place}`;
-				__FOCUS.setFocus(heap.window);
-			}
-			else if (heap.wall === "float") {
+			/*-- fixar posição --*/
+			if (heap.wall === "float") {
 				const pin = new __Pin(this.wall.float, heap.pin);
 				pin.fix();
-				__FOCUS.setFocus(heap.window);
 			}
+			/*-- definir focus --*/
+			if (heap.wall === "float" || heap.wall === "modal")
+				__FOCUS.setFocus(heap.window);
+			/*-- cor --*/
 			const bg = window.getComputedStyle(heap.window).background;
 			if (bg === "none") {
 				heap.window.style.color = "black";
@@ -4104,7 +4169,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				return false;
 			return true;
 		},
-		/**. '{integer add(node win, string wall, any pin)}: Adiciona a janela e retorna seu '{id} ou -1 em caso de insucesso:
+		/**. '{string add(node win, string wall, any pin)}: Adiciona a janela e retorna seu '{id} ou nulo em caso de insucesso:
 		|Argumento|Tipo|Descrição|
 		|win|node|Janela a ser adicionada, não pode ser parte de outra janela já adicionada (ver método '{checkWindow}).|
 		|wall|string|Tipo de parede: "float", "modal" ou "frame"|
@@ -4113,7 +4178,7 @@ Additional roles, states, and properties needed for the menu element are describ
 		|pin|object|Posição (x, y) da parede float.|**/
 		add: function(win, wall, pin) {
 			wall = wall in this.wall ? wall : "frame";
-			if (!this.checkWindow(win, wall)) return -1;
+			if (!this.checkWindow(win, wall)) return null;
 			const id = __ID.value;
 			this.heap.push({
 				id:     id,
@@ -4156,89 +4221,77 @@ Additional roles, states, and properties needed for the menu element are describ
 	/**''const object __SIGNAL''
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. '{object now}: Retorna dados do tempo atual.**/
-		get now() {
-			return {
-				date: new Date(),
-				get local() {return this.date.toLocaleString(__LANG.value);},
-				get value() {return this.date.valueOf();},
-				get iso()   {return this.date.toISOString();}
-			};
-		},
 		/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
 		handleEvent: function(ev) {
 			ev.preventDefault();
-			ev.target.removeEventListener("click", this);
-			__WINDOW.remove(ev.target);
-		},
-		/**. '{object close(string label)}: Retorna a estrutura do botão de fechar o alerta. O argumento define a descrição do botão.**/
-		close: function(label) {
-			return {
-				tag:  "button",
-				attr: {
-					type: "button",
-					className: "css-wd-button-close",
-					"aria-label": String(label || "").trim() || "Close",
-					addEventListener: ["click", this],
-					innerHTML: "&#x2715;"
+			if (ev.type === "wdwindow") {
+				if (ev.detail.status === "canceled" || ev.detail.status === "closed") {
+					const form = ev.target.querySelector("form");
+					if (form !== null) {
+						form.remove();
+						form.removeEventListener("submit", this)
+					}
 				}
 			}
+			else if (ev.type === "click" || ev.type === "submit") {
+				__WINDOW.remove(ev.target);
+			}
+			return;
 		},
-		/**. '{void alert(string body, string head, string label)}: Abre uma mensagem de alerta:
+		/**. '{object quit(string label)}: Retorna a estrutura do botão de fechar o alerta. O argumento define a descrição do botão.**/
+		quit: function(label) {
+			return {tag:  "button", attr: {
+				type: "button",
+				className: "css-wd-quit",
+				"aria-label": String(label || "").trim() || "Close",
+				addEventListener: {click: this},
+				innerHTML: "&#x2715;"
+			}};
+		},
+		/**. '{node alert(string body, string head, string quit)}: Exibe e retorna um nó de alerta (ver evento '{wdwinow}) ou nulo:
 		|Argumento|Descrição|Observação|
 		|body|Texto da mensagem|Obrigatório|
 		|head|Texto do título|Opcional|
-		|label|Rótulo do botão fechar|Recomendado|**/
-		alert: function(body, head, label, time) {
-			/*-- checagem dos dados de entrada --*/
+		|quit|Rótulo do botão fechar|Recomendado|**/
+		alert: function(body, head, quit) {
 			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 			body = String(body || "").trim() || null;
-			/*-- chamar caixa de alerta --*/
-			if (body !== null) {
-				const alert = {
-					tag: "div",
-					attr: {role: "alert", className: "css-wd-alert"},
-					child: [
-						this.close(label),
-						{tag: "h1",  attr: {innerText: head}},
-						{tag: "p" ,  attr: {innerText: body}},
-						//FIXME não pode ser display none
-						{tag: "div", attr: {innerText: time, role: "timer", "aria-atomic": "true", style: {display: "none"}}},
-					]
-				};
-				__WINDOW.add(__DOM(alert).tag, "frame");
-			}
-			return;
+			/*-- alerta --*/
+			const box0 = {tag: "div", attr: {role: "alert", className: "css-wd-alert"}};
+			const box1 = {tag:  "h1", attr: {innerHTML: head}};
+			const box2 = {tag:   "p", attr: {innerHTML: body}};
+			box0.child = [box1, box2, this.quit(quit)];
+			const data = body === null ? null : __WINDOW.add(__DOM(box0).tag, "frame");
+			return data === null ? null : __WINDOW.find(data).window;
 		},
-
-		//FIXME o que fazer quando fecha?
-		dialog: function(form, head) {
-			/*-- checagem dos dados de entrada --*/
+		/**. '{node dialog(node form, string head, string quit)}: Exibe e retorna um nó de diálogo (ver evento '{wdwinow}) ou nulo:
+		|Argumento|Descrição|Observação|
+		|form|Formulário para o diálogo|Obrigatório|
+		|head|Texto do título|Opcional|
+		|quit|Rótulo do botão fechar|Recomendado|**/
+		dialog: function(form, head, quit) {
 			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
-			/*-- chamar caixa de diálogo --*/
-			if (typeof form === "object" && form instanceof HTMLFormElement) {
-				form.addEventListener("submit", this);
-				const idHead = __ID.value;
-				const idBody = __ID.value;
-				const dialog = {
-					tag: "div",
-					attr: {
-						role: "alertdialog",
-						className: "css-wd-dialog",
-						"aria-labelledby":  idHead,
-						"aria-describedby": idBody,
-					},
-					child: [
-						{tag: "h1",  attr: {innerText: head, id: idHead}},
-						{tag: form , attr: {id: idBody}},
-					]
-				};
-				__WINDOW.add(__DOM(dialog).tag, "modal");
-			}
-			return;
+			form = typeof form === "object" && form instanceof HTMLFormElement ? form : null;
+			/*-- Barrar formulário inválido ou já existente --*/
+			if (form === null || __WINDOW.find(form) !== null)
+				return null;
+			if (form.method.toLowerCase() === "dialog") form.method = "get";
+			/*-- diálogo --*/
+			const attr = {
+				"aria-labelledby":  __ID.value,
+				"aria-describedby": form.id.trim() !== "" ? form.id : __ID.value,
+				addEventListener:   {wdwindow: this},
+				role:               "alertdialog",
+				className:          "css-wd-dialog"
+			};
+			const box0 = {tag: "div", attr: attr};
+			const box1 = {tag:  "h1", attr: {id: attr["aria-labelledby"], innerHTML: head}};
+			const box2 = {tag:  form, attr: {id: attr["aria-describedby"], addEventListener: {submit: this}}};
+			box0.child = [box1, box2, this.quit(quit)];
+			const data = __WINDOW.add(__DOM(box0).tag, "modal");
+			return data === null ? null : __WINDOW.find(data).window;
 		},
-
-		/**. '{void notify(object data)}: Ver método i{signal}.**/
+		/**. '{void notify(string body, string head)}: Exibe uma notificação (ver método i{alert}).**/
 		notify: function (body, head) {
 			head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 			body = String(body || "").trim() || null;
@@ -4255,11 +4308,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		},
-
 	};
-
-
-
 
 /*============================================================================*/
 	/**#3 Eventos Customizados //FIXME acabar com isso
@@ -10526,6 +10575,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			DOM:      {value: __DOM},
 			FORM:     {value: __FORM},
 			MENU:     {value: __MENU},
+			TAB:      {value: __TAB},
 			FTYPES:   {value: __FTYPES},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
@@ -10968,100 +11018,9 @@ Additional roles, states, and properties needed for the menu element are describ
 	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
 
 	function data_wd_tabs(target, event, wdArray) {
-		//{type: tabs; rule: [{$: elem; label: tabName},...], orientation: vertical|horizontal}
-		const data = wdArray[0];
-		const tabs = Array.isArray(data.tabs) ? data.tabs : [];
-		const time = new Date().valueOf();
-		const list = __HTML("div", {
-			tabindex: "-1",
-			"aria-orientation": data.orientation === "vertical" ? "vertical" : "horizontal",
-			role: "tablist",
-		});
-		/*-- limpando container principal e adicionando lista de tabs --*/
-		__HTML(target, {
-			innerHTML: "",
-			dataset: {wdBuilder: "tabs"},
-			tabindex: "-1"
-		});
-		target.appendChild(list);
-		/*-- analisando abas --*/
-		tabs.forEach(function(v,i,a) {
-			/*-- verificando dados --*/
-			const check = {data: new __Type(v), panel: new __Type(v.$), label: new __Type(v.label)};
-			if (!check.data.object) return;
-			if (!check.panel.node) return;
-			if (check.label.empty) return;
-			if (target.contains(v.panel)) return;
-			/*-- construir abas --*/
-			const id = v.$.id.trim() !== "" ? v.$.id : `panel_${time}_${i}`;
-			v.tab = __HTML("button", {
-				type: "button",
-				id: `tab_${time}_${i}`,
-				tabindex: i === 0 ? "0" : "-1",
-				textContent: v.label.trim(),
-				role: "tab",
-				"aria-controls": id,
-				"aria-selected": i === 0 ? "true" : "false",
-			});
-			v.panel = __HTML(v.$, {
-				id: id,
-				tabindex: "0",
-				role: "tabpanel",
-				"aria-labelledby": v.tab.id,
-			});
-			WD(v.panel).display(i === 0 ? "show" : "hide");
-			list.appendChild(v.tab);
-			target.appendChild(v.panel);
-			/*-- vincular eventos --*/
-			v.tab.addEventListener("click", function(ev) {
-				if (ev.which === 1) {
-					ev.preventDefault();
-					const main  = ev.target.parentElement.parentElement;
-					const find  = ev.target.getAttribute("aria-controls");
-					const tabs  = new __Type(main.querySelectorAll(`[role="tablist"] > [role="tab"]`));
-					const panel = new __Type(main.querySelectorAll(`[role="tabpanel"]`));
-					tabs.value.forEach(function(v,i,a) {
-						const active = v === ev.target;
-						v.setAttribute("aria-selected", active ? "true" : "false")
-						v.setAttribute("tabindex", active ? "0" : "-1")
-						if (active) v.focus();
-					});
-					panel.value.forEach(function(v,i,a) {
-						WD(v).display(v.id === find ? "show" : "hide");
-					});
-				}
-				return;
-			}, false);
-			v.tab.addEventListener("keydown", function(ev) {
-				const vert = ev.target.parentElement.getAttribute("aria-orientation") === "vertical";
-				const re   = vert ? /^(Arrow(Down|Up)|Home|End)$/i: /^(Arrow(Right|Left)|Home|End)$/i;
-				if (re.test(ev.key)) {
-					ev.preventDefault();
-					const tabs  = new __Type(ev.target.parentElement.children);
-					const list  = tabs.value;
-					const size  = list.length;
-					const index = list.indexOf(ev.target);
-					if ((vert && ev.key === "ArrowDown") || (!vert && ev.key === "ArrowRight"))
-						list[(index + 1)%size].click();
-					else if ((vert && ev.key === "ArrowUp") || (!vert && ev.key === "ArrowLeft"))
-						list[(index + size - 1)%size].click();
-					else if (ev.key === "Home" || ev.key === "End")
-						list[ev.key === "Home" ? 0 : size - 1].click();
-				}
-				return;
-			}, false);
-		});
+		//TODO ver __TAB
 		return;
 	};
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wd_mask(node target, object event, array wdArray)''
