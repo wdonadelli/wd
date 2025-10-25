@@ -63,16 +63,32 @@ const wd = (function() {
 		}
 		/*-- Geral ---------------------------------------------------------------*/
 		* {box-sizing: border-box !important;}
+		/*-- Inert ---------------------------------------------------------------*/
 		${"inert" in document.body ? "" : "[inert] {display: none !important;}"}
+		/*-- Freeze --------------------------------------------------------------*/
 		.js-wd-freeze {overflow: hidden !important;}
-		.css-wd-form-error {
+		/*-- Tip/Validity --------------------------------------------------------*/
+		.css-wd-form-error, .css-wd-tooltip {
+			display: inline-block;
 			padding: 0.25em;
-			margin: 0.25em;
+			margin: 0.25em 0;
 			font-size: 12px;
 			font-family: Verdana, sans-serif;
 			border: thin solid;
 			border-radius: 0.2em;
 		}
+		.css-wd-tooltip {
+			display: none;
+			position: absolute;
+			top: 100%;
+			left: 0;
+		}
+		*:hover > .css-wd-tooltip {
+			display: inline-block;
+			animation: js-wd-animation-emerge 3s ease;
+		}
+		/*-- Tip -----------------------------------------------------------------*/
+
 
 
 
@@ -86,7 +102,7 @@ const wd = (function() {
 		/*font-family: Verdana, sans-serif */
 
 
-		/*-- WINDOW/PROGRESS -----------------------------------------------------*/
+		/*-- WINDOW --------------------------------------------------------------*/
 		/*-- FRAME --*/
 		[data-js-wd-window="frame"] {
 			position: fixed !important;
@@ -139,7 +155,7 @@ const wd = (function() {
 			justify-content: center !important;
 			align-items:     center !important;
 		}
-		/*-- PROGRESS --*/
+		/*-- PROGRESS ------------------------------------------------------------*/
 		[data-js-wd-window="progress"] {
 			position: fixed !important;
 			top:   0 !important;
@@ -235,6 +251,20 @@ const wd = (function() {
 
 
 		}
+		/*-- ICON ----------------------------------------------------------------*/
+		.css-wd-icon-circle, .css-wd-icon-square {
+				font-family: monospace;
+				height:  1em;
+				width:   1em;
+				padding: 0;
+				border:  none;
+				margin: auto;
+			}
+			.css-wd-icon-circle {border-radius: 0.5em;}
+
+
+
+
 
 
 
@@ -3574,6 +3604,7 @@ const wd = (function() {
 	|input|any|O conteúdo do item de '{list} que definirá um item ou um submenu (array secundário).|
 	|level|integer|Nível do menu iniciado por 1.|
 	|heap|string|Cadeia de índices, separados por ponto, que direcionam o menu.|
+	|type|string|Tipo de ação do botão: open (abrir submenu), back (voltar ao menu pai), item (executar)|
 	|home|any|Conteúdo do primeiro item de cada menu ou submenu.|
 	|menu|array|Lista das estruturas dos containers do menu (cabeçalho e menu) de todo o conjunto.|
 	|items|array|Lista das estruturas dos itens de cada menu.|
@@ -3616,15 +3647,16 @@ const wd = (function() {
 		menu: function(link, items) {
 			return {tag: "menu", attr: {"aria-labelledby": link}, child: items};
 		},
-		/**. '{object items(any input, integer level, array items)}: Retorna a estrutura do item do menu**/
+		/**. '{object items(any input, integer level, string type)}: Retorna a estrutura do item do menu**/
 		item: function(input, heap, type) {
-			const data = this.data(input, `Item ${heap}`);
+			const data = this.data(input, `Item ${heap}`); console.log(heap, data)
 			const attr = {
 				innerHTML: data.text,
 				type: "button",
 				className: `css-wd-menu-${type}`,
 				value: heap,
 				name: `${type}:${heap}`,
+				autofocus: heap === "1",
 				addEventListener: {keydown: this, click: this, mouseenter: this},
 				dataset: {wdMenuItem: JSON.stringify(input)}
 			};
@@ -3645,7 +3677,7 @@ const wd = (function() {
 			for (let i = 0; i < list.length; i++) {
 				let data = list[i];
 				let path = `${heap}${i}`;
-				/*-- Retorno de Menu --*/
+				/*-- 1º botão: menu [ignorar], submenu [retorno ao pai] --*/
 				if (i === 0) {
 					if (home !== null)
 						items.push(this.item(home[0], path, "back"));
@@ -3869,8 +3901,94 @@ Additional roles, states, and properties needed for the menu element are describ
 	/*----------------------------------------------------------------------------*/
 	/**#4 Ícones
 	''const object __ICON''
-	Define um plano de fundo para botões.**/
+	Define plano de fundo estilizados por i{dingbats}/'{symbols} em unicode. O argumento '{data} define as características do fundo: posições "x" e "y", dimensões "height" e "width", rotação "rotate", opacidade "opacity", tamanho da fonte "size" e o unicode do símbolo "code".**/
 	const __ICON = {
+		/**. '{string image(object data)}: Retorna o valor para o atributo '{background-image}.**/
+		image: function(data) {
+			data.x       = typeof data.x       === "string" ? data.x       : "50%";
+			data.y       = typeof data.y       === "string" ? data.y       : "50%";
+			data.height  = typeof data.height  === "string" ? data.height  : "1em";
+			data.width   = typeof data.width   === "string" ? data.width   : "1em";
+			data.rotate  = typeof data.rotate  === "string" ? data.rotate  : "0";
+			data.opacity = typeof data.opacity === "string" ? data.opacity : "1";
+			data.code    = typeof data.code    === "string" ? data.code    : "003F";
+			data.size    = typeof data.size    === "string" ? data.size    : "1em";
+			return `url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(${data.rotate})' opacity='${data.opacity}' height='${data.height}' width='${data.width}' style='backgroudnd-color: green'><text x='${data.x}' y='${data.y}' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='${data.size}'>\\${data.code}</text></svg>")`;
+		},
+		/**. '{void style(node, image, size, repeat, position, origin)}: Define o estilo do fundo do nó ('{node}):
+		- '{object image}: ver método '{image};
+		- '{string size}: a{backgroundSize}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"];
+		- '{string repeat}: a{backgroundRepeat}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"];
+		- '{string position}: a{backgroundPosition}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"]; e
+		- '{string origin}: a{backgroundOrigin}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"].**/
+		style: function(node, image, size, repeat, position, origin) {
+			node.style.backgroundImage    = this.image(image);
+			node.style.backgroundSize     = typeof size     === "string" ? size     : null;
+			node.style.backgroundRepeat   = typeof repeat   === "string" ? repeat   : null;
+			node.style.backgroundPosition = typeof position === "string" ? position : null;
+			node.style.backgroundOrigin   = typeof origin   === "string" ? origin   : "content-box";
+			return;
+		},
+
+		icon: function(node, code, circle) {
+			node.className = `css-wd-icon-${circle === true ? "circle" : "square"}`;
+			this.style(node, {code: code, y: "56%"}, "contain", "no-repeat", "center");
+			return;
+		},
+
+		button: function(node, code, local) {
+			const data = {top: "div", bottom: "div", left: "span", right: "span"};
+			const text = node.textContent;
+			node.innerHTML = "";
+			if (local in data) {
+				const init = local === "top" || local === "left";
+				const line = local === "top" || local === "bottom" ? "block" : "inline";
+				const size = line === "block" ? "3em" : "1em";
+				const attr = {style: {}};
+				attr.style.display  = line === "block" ? "block" : "inline-block";
+				attr.style.margin   = line === "block" ? "auto"  : "0 0.25em";
+				attr.style.fontSize = line === "block" ? "3em"   : "1em";
+				const icon = __DOM({tag: data[local], attr: attr});
+				const span = __DOM({tag: data[local], attr: {textContent: text}});
+				this.icon(icon.tag, code, true);
+				__DOM({tag: node, child: init ? [icon, span] : [span, icon]});
+			}
+			else {
+				const info = window.getComputedStyle(node, null);
+				const span = {tag: "span", attr: {textContent: text, id: __ID.value, className: "css-wd-tooltip"}};
+				node.setAttribute("aria-labelledby", span.attr.id);
+				node.style.position = info.position === "static" ? "relative" : info.position;
+				this.icon(node, code, local === "circle");
+				__DOM({tag: node, child: [span]});
+			}
+			return;
+		},
+
+		background: function(node, code, local) {
+
+
+		},
+
+
+
+
+
+
+
+
+
+/*
+
+			background-repeat: no-repeat !important;
+			background-position: center !important;
+			background-size: cover !important;
+			background-origin: content-box !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(140, 180, 255) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>") !important;
+		}
+*/
+
 
 
 	};
@@ -4072,6 +4190,9 @@ Additional roles, states, and properties needed for the menu element are describ
 				const pin = new __Pin(this.wall.float, heap.pin);
 				pin.fix();
 			}
+			//FIXME checar o foco nesse negócio: focar em onfocus/janela ou do jeito que está?
+
+
 			/*-- definir focus --*/
 			if (heap.wall === "float" || heap.wall === "modal")
 				__FOCUS.setFocus(heap.window);
@@ -4133,16 +4254,13 @@ Additional roles, states, and properties needed for the menu element are describ
 				this.heap = this.heap.filter(function(v,i,a) {return v.id !== heap.id;});
 				this.fire(heap);
 				this.update();
-				/*-- focalizar elementos --*/
+				/*-- voltar o foco ao elemento --*/
 				if (heap.wall === "float" || heap.wall === "modal") {
 					const list = this.list;
 					if (list.float.length + list.modal.length === 0) {
-						const pin  = new __Type(heap.wall === "float" ? heap.pin : null);
-						const elem = new __Type(heap.focus);
-						if (pin.node)
-							heap.pin.focus();
-						else if (elem.node)
-							heap.focus.focus();
+						try {heap.pin.focus();} catch(e) {
+							try {heap.focus.focus();} catch(f) {}
+						}
 					}
 				}
 			}
@@ -4200,7 +4318,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				if (ev.type === "click")
 					kill = !this.wall.float.contains(ev.target)
 				else if (ev.type === "keydown")
-					kill = ev.key === "Escape" || ev.key === "Tab";
+					kill = ev.key === "Escape";
 				else if (ev.type === "resize")
 					kill = true;
 				if (kill)
@@ -10576,6 +10694,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			FORM:     {value: __FORM},
 			MENU:     {value: __MENU},
 			TAB:      {value: __TAB},
+			ICON:     {value: __ICON},
 			FTYPES:   {value: __FTYPES},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
