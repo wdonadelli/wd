@@ -247,10 +247,43 @@ const wd = (function() {
 		}
 		/*-- TAB -----------------------------------------------------------------*/
 		.css-wd-tab {
-
-
-
+			display: flex;
+			align-items: stretch;
+			justify-content: center;
+			padding: 0;
 		}
+		.css-wd-tab [role=tablist] {
+			display: flex;
+			align-items: stretch;
+  		justify-content: start;
+  		margin: 0;
+		}
+		.css-wd-tab [role=tablist][aria-orientation=horizontal] {
+			flex: 1 1 auto;
+			flex-flow: row wrap;
+		}
+		.css-wd-tab [role=tablist][aria-orientation=vertical]   {
+			flex: 0 1 25%;
+			flex-flow: column nowrap;
+		}
+		.css-wd-tab [role=tab] {
+			margin: 3px;
+			flex: 1 1 auto;
+		}
+		.css-wd-tab  [role=tab][aria-selected=true] {
+			outline-width: thin;
+			outline-style: solid;
+		}
+		.css-wd-tab [role=tabpanel] {
+			flex: 1 1 auto;
+			margin: 0;
+		}
+		.css-wd-tab [role=tablist][aria-orientation=vertical] ~ [role=tabpanel] {
+			flex: 1 1 75%;
+		}
+
+
+
 		/*-- ICON ----------------------------------------------------------------*/
 		.css-wd-icon-circle, .css-wd-icon-square {
 				font-family: monospace;
@@ -258,7 +291,7 @@ const wd = (function() {
 				width:   1em;
 				padding: 0;
 				border:  none;
-				margin: auto;
+				margin:  auto;
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
 
@@ -3575,7 +3608,7 @@ const wd = (function() {
 			}
 			return {tag: "div", attr: {}, child: list};
 		},
-		/**. '{object list(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML genérico.**/
+		/**. '{object builder(string type, string label, string name, any value, any check)}: Retorna a estrutura de elemento HTML genérico.**/
 		builder: function(type, label, name, value, check) {
 			type  = String(type).toLowerCase().trim();
 			label = String(label).trim();
@@ -3831,6 +3864,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				"aria-orientation": vertical === true ? "vertical" : "horizontal",
 			}};
 			/*-- estilizando o container --*/
+			node.style.flexDirection = vertical === true ? "row" : "column";
 			node.className = "css-wd-tab";
 			/*-- definindo abas e configurando paineis --*/
 			for (let i = 0; i < data.length; i++)
@@ -3887,7 +3921,7 @@ Additional roles, states, and properties needed for the menu element are describ
 					ev.preventDefault();
 					return this.walkTab(ev.target, ev.key);
 				}
-				else if (ev.key === "Tab") {
+				else if (ev.key === "Tab" && !ev.shiftKey) {
 					ev.preventDefault();
 					const panel = ev.target.getAttribute("aria-controls");
 					document.getElementById(panel).focus();
@@ -3897,13 +3931,21 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 	};
 
-
 	/*----------------------------------------------------------------------------*/
 	/**#4 Ícones
 	''const object __ICON''
-	Define plano de fundo estilizados por i{dingbats}/'{symbols} em unicode. O argumento '{data} define as características do fundo: posições "x" e "y", dimensões "height" e "width", rotação "rotate", opacidade "opacity", tamanho da fonte "size" e o unicode do símbolo "code".**/
+	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
 	const __ICON = {
-		/**. '{string image(object data)}: Retorna o valor para o atributo '{background-image}.**/
+		/**. '{string image(object data)}: Retorna o valor para o atributo '{background-image}. Propriedade do argumento '{data}:
+		|Nome|Tipo|Descrição|Padrão|
+		|x|string|Posição horizontal do caractere|50%|
+		|y|string|Posição vertical do caractere|50%|
+		|code|string|Unicode do caractere|003F|
+		|size|string|Tamanho da fonte do caractere|1em|
+		|height|string|Altura da imagem|1em|
+		|width|string|Comprimento da imagem|1em|
+		|rotate|string|Rotação da imagem|0|
+		|opacity|string|Opacidade da imagem|1|**/
 		image: function(data) {
 			data.x       = typeof data.x       === "string" ? data.x       : "50%";
 			data.y       = typeof data.y       === "string" ? data.y       : "50%";
@@ -3913,85 +3955,111 @@ Additional roles, states, and properties needed for the menu element are describ
 			data.opacity = typeof data.opacity === "string" ? data.opacity : "1";
 			data.code    = typeof data.code    === "string" ? data.code    : "003F";
 			data.size    = typeof data.size    === "string" ? data.size    : "1em";
-			return `url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(${data.rotate})' opacity='${data.opacity}' height='${data.height}' width='${data.width}' style='backgroudnd-color: green'><text x='${data.x}' y='${data.y}' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='${data.size}'>\\${data.code}</text></svg>")`;
+			return `url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(${data.rotate})' opacity='${data.opacity}' height='${data.height}' width='${data.width}' style='background-color: inherit;'><text x='${data.x}' y='${data.y}' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='${data.size}'>\\${data.code}</text></svg>")`;
 		},
 		/**. '{void style(node, image, size, repeat, position, origin)}: Define o estilo do fundo do nó ('{node}):
-		- '{object image}: ver método '{image};
-		- '{string size}: a{backgroundSize}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"];
-		- '{string repeat}: a{backgroundRepeat}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"];
-		- '{string position}: a{backgroundPosition}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"]; e
-		- '{string origin}: a{backgroundOrigin}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"].**/
+		|Nome|Tipo|CSS|Padrão|
+		|image|object|-|Ver método '{image}|
+		|size|string|a{backgroundSize}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"]|1em|
+		|repeat|string|a{backgroundRepeat}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"]|no-repeat|
+		|position|string|a{backgroundPosition}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"]|50% 50%|
+		|origin|string|a{backgroundOrigin}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"]|content-box|**/
 		style: function(node, image, size, repeat, position, origin) {
 			node.style.backgroundImage    = this.image(image);
-			node.style.backgroundSize     = typeof size     === "string" ? size     : null;
-			node.style.backgroundRepeat   = typeof repeat   === "string" ? repeat   : null;
-			node.style.backgroundPosition = typeof position === "string" ? position : null;
+			node.style.backgroundSize     = typeof size     === "string" ? size     : "1em";
+			node.style.backgroundRepeat   = typeof repeat   === "string" ? repeat   : "no-repeat";
+			node.style.backgroundPosition = typeof position === "string" ? position : "50% 50%";
 			node.style.backgroundOrigin   = typeof origin   === "string" ? origin   : "content-box";
 			return;
 		},
-
+		/**. '{void icon(node node, string code, boolean circle)}: Atribui ao nó um ícone quadrado sem conteúdo. O argumento '{circle} estabelece bordas arredondadas se verdadeiro.**/
 		icon: function(node, code, circle) {
 			node.className = `css-wd-icon-${circle === true ? "circle" : "square"}`;
-			this.style(node, {code: code, y: "56%"}, "contain", "no-repeat", "center");
+			this.style(node, {code: code, y: "56%"}, "contain", "no-repeat", "50% 50%");
 			return;
 		},
-
-		button: function(node, code, local) {
+		/**. '{void button(node node, string code, string locale)}: Atribui ao nó um formato de botão. Argumento '{locale} define o posicionamento do ícone e do texto:
+		|Valor|Ícone|Texto|
+		|top|Superior|Inferior|
+		|bottom|Inferior|Superior|
+		|left|Esquerda|Direita|
+		|right|Direita|Esquerda|
+		|circle|Todo o nó com bordas arredondadas|Não visível|
+		|default|Todo o nó|Não visível|**/
+		button: function(node, code, locale) {
 			const data = {top: "div", bottom: "div", left: "span", right: "span"};
-			const text = node.textContent;
-			node.innerHTML = "";
-			if (local in data) {
-				const init = local === "top" || local === "left";
-				const line = local === "top" || local === "bottom" ? "block" : "inline";
-				const size = line === "block" ? "3em" : "1em";
-				const attr = {style: {}};
-				attr.style.display  = line === "block" ? "block" : "inline-block";
-				attr.style.margin   = line === "block" ? "auto"  : "0 0.25em";
-				attr.style.fontSize = line === "block" ? "3em"   : "1em";
-				const icon = __DOM({tag: data[local], attr: attr});
-				const span = __DOM({tag: data[local], attr: {textContent: text}});
-				this.icon(icon.tag, code, true);
-				__DOM({tag: node, child: init ? [icon, span] : [span, icon]});
+			/*-- redefinir conteúdo textual do nó --*/
+			const kill = node.querySelectorAll(".css-wd-icon");
+			for (let i = 0; i < kill.length; i++) kill[i].remove();
+			const text = node.textContent.trim();
+			/*-- redefinindo características do nó --*/
+			const info = window.getComputedStyle(node, null);
+			__HTML(node, {
+				innerHTML: "",
+				"aria-label": null,
+				style: {
+					fontSize: null,
+					textAlign: "center",
+					position: info.position === "static" ? "relative" : info.position,
+					className: "",
+				},
+			});
+			/*-- definindo ícone --*/
+			const tag  = locale === "top" || locale === "bottom" ? "div" : "span";
+			const icon = __HTML(tag, {style: {
+				display:  tag === "div" ? "block" : "inline-block",
+				margin:   tag === "div" ? "auto"  : "0 0.25em",
+				fontSize: tag === "div" ? "3em"   : "1em",
+			}});
+			/*-- aplicando regras --*/
+			if (locale in data) {
+				const init = locale === "top" || locale === "left";
+				const span = {tag: tag, attr: {textContent: text}};
+				__DOM({tag: node, child: init ? [{tag: icon}, span] : [span, {tag: icon}]});
+				this.icon(icon, code, true);
 			}
 			else {
-				const info = window.getComputedStyle(node, null);
-				const span = {tag: "span", attr: {textContent: text, id: __ID.value, className: "css-wd-tooltip"}};
-				node.setAttribute("aria-labelledby", span.attr.id);
-				node.style.position = info.position === "static" ? "relative" : info.position;
-				this.icon(node, code, local === "circle");
-				__DOM({tag: node, child: [span]});
+				const byid = __ID.value;
+				const span = {tag: "span", attr: {textContent: text, id: byid, className: "css-wd-tooltip"}};
+				__DOM({tag: node, child: [span], attr: {"aria-labelledby": byid, style: {fontSize: "3em"}}});
+				this.icon(node, code, locale === "circle");
 			}
 			return;
 		},
-
-		background: function(node, code, local) {
-
-
-		},
-
-
-
-
-
-
-
-
-
-/*
-
-			background-repeat: no-repeat !important;
-			background-position: center !important;
-			background-size: cover !important;
-			background-origin: content-box !important;
-			color: rgb(50, 50, 50) !important;
-			background-color: rgb(140, 180, 255) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>") !important;
+		/**. '{void icon(node node, string code, string size, string data)}: Define um plano de fundo com o ícone. O argumento '{data} pode se referir à posição x,y (com a unidade de medida, separada por espaço, sem repetição) ou o tipo de repetição.**/
+		background: function(node, code, size, data) {
+			data = String(data).replace(/\s+/g, " ").trim().toLowerCase()
+			const mult = /^(space|round|repeat\-x|repeat\-y)$/;
+			const site = /^(0|\d+(\.\d+)?(\%|[a-z]+))\ (0|\d+(\.\d+)?(\%|[a-z]+))$/;
+			if (mult.test(data))
+				return this.style(node, {code: code}, size, data);
+			if (site.test(data))
+				return this.style(node, {code: code}, size, "no-repeat", data);
+			return this.style(node, {code: code}, size);
 		}
-*/
-
-
-
 	};
+
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Redimencionamento
+	''const object __RESIZE''
+	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
+	const __RESIZE = {};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Movimento
+	''const object __MOVE''
+	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
+	const __MOVE = {};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Arrasto
+	''const object __DRAG''
+	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
+	const __DRAG = {};
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**#4 Fixação
 	''constructor object __Pin(node box, any pin)''
