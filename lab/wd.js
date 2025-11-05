@@ -275,7 +275,7 @@ const wd = (function() {
 			outline-style: solid;
 		}
 		.css-wd-tab [role=tabpanel] {
-			flex: 1 1 auto;
+			flex: 1 1 auto;1F82C
 			margin: 0;
 		}
 		.css-wd-tab [role=tablist][aria-orientation=vertical] ~ [role=tabpanel] {
@@ -294,7 +294,57 @@ const wd = (function() {
 				margin:  auto;
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
+		/*-- MOVE ----------------------------------------------------------------*/
+		[data-wd-move=box] {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			z-index: 999;
+			background: rgba(255,255,255,0.7);
+			border: 2px solid black;
+		}
+		[data-wd-move=box] > * {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			margin: -0.5em;
+		}
+		[data-wd-move=box] > * > * {
+			width: 1em;
+			height: 1em;
+			border: 2px solid black;
+			border-radius: 0.5em;
+			background: white;
+		}
 
+		[data-wd-move=box] [data-wd-move=n]  {cursor: n-resize;}
+		[data-wd-move=box] [data-wd-move=ne] {cursor: ne-resize;}
+		[data-wd-move=box] [data-wd-move=e]  {cursor: e-resize;}
+		[data-wd-move=box] [data-wd-move=se] {cursor: se-resize;}
+		[data-wd-move=box] [data-wd-move=s]  {cursor: s-resize;}
+		[data-wd-move=box] [data-wd-move=sw] {cursor: sw-resize;}
+		[data-wd-move=box] [data-wd-move=w]  {cursor: w-resize;}
+		[data-wd-move=box] [data-wd-move=nw] {cursor: nw-resize;}
+		[data-wd-move=box] [data-wd-move=c]  {cursor: move;}
+
+
+
+
+		/*.js-wd-move-n:after  {content: "\\21C5";}
+		.js-wd-move-ne:after {content: "\\231D";}
+		.js-wd-move-e:after  {content: "\\21C4";}
+		.js-wd-move-se:after {content: "\\231F";}
+		.js-wd-move-s:after  {content: "\\21C5";}
+		.js-wd-move-sw:after {content: "\\231E";}
+		.js-wd-move-w:after  {content: "\\21C4";}
+		.js-wd-move-nw:after {content: '\\231C';}
+		.js-wd-move-c:after  {content: 'c';}
+*/
 
 
 
@@ -408,7 +458,7 @@ const wd = (function() {
 
 		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
 		[data-wd-jump]   {cursor: pointer  !important;}
-		[data-wd-move]   {cursor: move     !important;}
+		/*[data-wd-move]   {cursor: move     !important;}
 		[data-wd-moving], [data-wd-moving] [data-wd-move] {cursor: grabbing !important;}
 		[data-wd-drag]   {cursor: grab     !important;}
 		[data-wd-size="{cursor:'n';}"]  {cursor: n-resize  !important;}
@@ -418,7 +468,7 @@ const wd = (function() {
 		[data-wd-size="{cursor:'s';}"]  {cursor: s-resize  !important;}
 		[data-wd-size="{cursor:'sw';}"] {cursor: sw-resize !important;}
 		[data-wd-size="{cursor:'w';}"]  {cursor: w-resize  !important;}
-		[data-wd-size="{cursor:'nw';}"] {cursor: nw-resize !important;}
+		[data-wd-size="{cursor:'nw';}"] {cursor: nw-resize !important;}*/
 		[data-wd-dropping] {
 			min-height: 4em !important;
 			background-repeat: no-repeat !important;
@@ -4041,16 +4091,263 @@ Additional roles, states, and properties needed for the menu element are describ
 
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Redimencionamento
-	''const object __RESIZE''
-	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
-	const __RESIZE = {};
-
-/*----------------------------------------------------------------------------*/
-	/**#4 Movimento
+	/**#4 Redimensionamento
 	''const object __MOVE''
 	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
-	const __MOVE = {};
+	const __MOVE = {
+		/**. '{object boxes(node node)}: Retorna os blocos do procedimento e informações a âncora do nó.**/
+		boxes: function(node) {
+			const id = node.getAttribute("aria-controls");
+			return {
+				name: node.dataset.wdMove,
+				main: document.getElementById(id),
+				move: document.querySelector(`#${id} > [data-wd-move=box]`),
+			}
+		},
+		/**. '{object position(node node, object data)}: Define ou retorna os valores dimensionais do nó.**/
+		position: function(node, data) {
+			const test = new __Type(data);
+			const info = test.object ? this.position(node) : {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0};
+			const css  = test.object ? null : window.getComputedStyle(node, null);
+			for (let i in info) {
+				if (!test.object)
+					info[i] = Number(css[i].replace(/\D+$/, ""));
+				else if (i in data)
+					node.style[i] = `${data[i]}px`;
+			}
+			return test.object ? this.position(node) : info;
+		},
+		/**. '{void open(object ev)}: Adiciona o mecanismo de ajustes ao nó.**/
+		open: function(ev) {
+			const attr = {n: {}, s: {}, w: {}, e: {}, c: {}, ne: {}, nw: {}, se: {}, sw: {}};
+			for (let i in attr) {
+				attr[i].addEventListener = {keydown: this, mousedown: this};
+				attr[i].dataset          = {wdMove: i};
+				attr[i]["aria-controls"] = ev.target.id;
+				attr[i]["aria-label"]    = i.toUpperCase();
+			}
+			__DOM({tag: "div", attr: {"data-wd-move": "box"}, child: [
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: attr.nw, child: []},
+					{tag: "button", attr: attr.n,  child: []},
+					{tag: "button", attr: attr.ne, child: []}
+				]},
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: attr.w, child: []},
+					{tag: "button", attr: attr.c, child: []},
+					{tag: "button", attr: attr.e, child: []}
+				]},
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: attr.sw, child: []},
+					{tag: "button", attr: attr.s,  child: []},
+					{tag: "button", attr: attr.se, child: []}
+				]},
+			]}, ev.target);
+			ev.target.querySelector(`[data-wd-move=c]`).focus();
+			return;
+		},
+		/**. '{void close(object ev)}: Remove o mecanismo de ajustes do nó.**/
+		close: function(ev) {
+			const find = ev.target.getAttribute("aria-controls");
+			const main = document.getElementById(find);
+			const move = main.querySelector("[data-wd-move=box]");
+			move.remove();
+			main.focus();
+			return;
+		},
+		/**. '{void jump(object ev)}: Gerencia o foco dos elementos de ajuste por teclado.**/
+		jump: function(ev) {
+			const data = ev.target.dataset.wdMove;
+			const find = ev.target.getAttribute("aria-controls");
+			const main = document.getElementById(find);
+			const heap = ["c", "sw", "se", "nw", "ne"];
+			const item = heap.indexOf(data);
+			const plus = heap.length + (ev.shiftKey ? -1 : 1);
+			const name = heap[(item + plus)%heap.length];
+			main.querySelector(`[data-wd-move=${name}]`).focus();
+			return;
+		},
+
+//FIXME falta o texto do posicionamento
+		/**. '{void mouseDown(object ev)}: Inicializa o movimento a partir do mouse.**/
+		mouseDown: function(ev) {
+			const data = ev.target.dataset.wdMove;
+			const find = ev.target.getAttribute("aria-controls");
+			const main = document.getElementById(find);
+			const box  = this.position(main);
+			box.data   = data;
+			main.dataset[data === "c" ? "wdMoving" : "wdResizing"] = JSON.stringify(box);
+			document.body.addEventListener("mouseup", this);
+			document.body.addEventListener("mousemove", this);
+			return;
+		},
+		/**. '{void mouseUp(object ev)}: Encerra o movimento a partir do mouse.**/
+		mouseUp: function(ev) {
+			const main = document.querySelector("[data-wd-resizing], [data-wd-moving]");
+			const find = main.querySelector("[data-wd-move=c]");
+			delete main.dataset.wdResizing;
+			delete main.dataset.wdMoving;
+			document.body.removeEventListener("mouseup", this);
+			document.body.removeEventListener("mousemove", this);
+			return;
+		},
+		/**. '{void mouseMove(object ev)}: Define o movimento a partir do mouse.**/
+		mouseMove: function(ev) {
+
+
+
+
+		},
+
+
+
+
+		movesdfjhgdjf: function(ev) {
+
+
+		if (event.type === "mousedown") {
+			const query = data.$$ || data.$ || target;
+			const check = new __Type(query);
+			const mover = !check.node || check.value.length < 1 ? [target] : check.value;
+			const stop  = ["static", "sticky"];
+			/*-- looping pelos elementos --*/
+			let node, box, source;
+			for (let i = 0; i < mover.length; i++) {
+				node = new __Node(mover[i]);
+				/*-- se não for posicionamento static ou sticky --*/
+				if (stop.indexOf(node.styles.position) < 0) {
+					/*-- capturando e definindo dados de referência --*/
+					source    = [];
+					box       = node.position;
+					box.pageX = event.pageX;
+					box.pageY = event.pageY;
+					delete box.height;
+					delete box.width;
+					node.position = box;
+					let parser = new __Parser([box]);
+					mover[i].setAttribute("data-wd-moving", parser.arrayWD.get());
+				}
+			}
+		}
+		/*-- parar movimento (data-wd-moving) ------------------------------------*/
+		else if (event.type === "mouseup") {
+			const node = new __Node(target);
+			node.highlight(false);
+			window.getSelection().removeAllRanges();
+		}
+		/*-- movimentar (data-wd-moving) -----------------------------------------*/
+		else if (event.type === "mousemove") {
+			const node    = new __Node(target);
+			const box     = data;
+			const dx      = event.pageX - box.pageX;
+			const dy      = event.pageY - box.pageY;
+			box.left     += dx;
+			box.right    -= dx;mousedown
+			box.top      += dy;
+			box.bottom   -= dy;
+			node.position = box;
+			node.highlight(true);
+		}
+
+
+
+
+		},
+
+
+
+
+		/**. '{void moveKey(object ev)}: Move o elemento com o teclado.**/
+		moveKey: function(ev) {
+			const find = ev.target.getAttribute("aria-controls");
+			const main = document.getElementById(find);
+			const box  = this.position(main);
+			const jump = box.fontSize/2;
+			const dy = jump * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
+			const dx = jump * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
+			box.left     += dx;
+			box.right    -= dx;
+			box.top      += dy;
+			box.bottom   -= dy;
+			this.position(main, box);
+		},
+		/**. '{void sizeKey(object ev)}: Altera as dimenssões do elemento com o teclado.**/
+		sizeKey: function(ev) {
+			const data = ev.target.dataset.wdMove;
+			const find = ev.target.getAttribute("aria-controls");
+			const main = document.getElementById(find);
+			const box  = this.position(main);
+			const jump = box.fontSize/2;
+			if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
+				if (data.indexOf("n") >= 0) {
+					box.height += ev.key === "ArrowUp" ? +jump : -jump;
+					box.top    += ev.key === "ArrowUp" ? -jump : +jump;
+				}
+				else if (data.indexOf("s") >= 0) {
+					box.height += ev.key === "ArrowUp" ? -jump : +jump;
+					box.bottom += ev.key === "ArrowUp" ? +jump : -jump;
+				}
+			}
+			else if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
+				if (data.indexOf("e") >= 0) {
+					box.width += ev.key === "ArrowRight" ? +jump : -jump;
+					box.right += ev.key === "ArrowRight" ? -jump : +jump;
+				}
+				else if (data.indexOf("w") >= 0) {
+					box.width += ev.key === "ArrowRight" ? -jump : +jump;
+					box.left  += ev.key === "ArrowRight" ? +jump : -jump;
+				}
+			}
+			this.position(main, box);
+			return;
+		},
+		/**. '{void builder(node node)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
+		builder: function(node) {
+			const data = window.getComputedStyle(node, null);
+			node.style.position = data.position === "static" ? "relative" : data.position;
+			node.tabIndex       = 0;
+			node.id             = node.id.trim() === "" ? __ID.value : node.id;
+			node.addEventListener("keydown", this);
+			//node.addEventListener("dblclick", this);
+			return;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
+		handleEvent: function(ev) {
+			//ev.stopPropagation();
+			/*-- alvo --*/
+			if (ev.type === "keydown" && !("wdMove" in ev.target.dataset)) {
+				const find = ev.target.querySelector("[data-wd-move=box]");
+				const info = find === null || find.parentElement !== ev.target;
+				if (info && ev.key === "Control") this.open(ev);
+				return;
+			}
+			/*-- ajustes --*/
+			const data = ev.target.dataset.wdMove;
+			const name = data === "c" ? "moveKey" : "sizeKey";
+			const keys = {
+				Escape: "close", Control: "close", Tab: "jump",
+				ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name
+			};
+			/*-- keydown --*/
+			if (ev.type === "keydown" && ev.key in keys) {
+				ev.preventDefault();
+				this[keys[ev.key]](ev);
+			}
+			/*-- mouse --*/
+			else if (ev.type === "mousedown") {
+				this.mouseDown(ev);
+			}
+			else if (ev.type === "mousemove") {
+				this.mouseMove(ev);
+
+			}
+			else if (ev.type === "mouseup") {
+				this.mouseUp(ev);
+			}
+			return;
+		},
+	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Arrasto
@@ -10763,6 +11060,8 @@ Additional roles, states, and properties needed for the menu element are describ
 			MENU:     {value: __MENU},
 			TAB:      {value: __TAB},
 			ICON:     {value: __ICON},
+			MOVE:     {value: __MOVE},
+			DRAG:     {value: __DRAG},
 			FTYPES:   {value: __FTYPES},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
@@ -11973,23 +12272,23 @@ Additional roles, states, and properties needed for the menu element are describ
 		mousedown: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
-				{name: "wdMove", call: data_wd_move, kill: false, bind: {}},
-				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: ""}}
+				//{name: "wdMove", call: data_wd_move, kill: false, bind: {}},
+				//{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: ""}}
 			]
 		},
 		mouseup: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
-				{name: "*[data-wd-moving]",   call: data_wd_move, kill: true, bind: {}},
-				{name: "*[data-wd-resizing]", call: data_wd_size, kill: true, bind: {cursor: ""}}
+				//{name: "*[data-wd-moving]",   call: data_wd_move, kill: true, bind: {}},
+				//{name: "*[data-wd-resizing]", call: data_wd_size, kill: true, bind: {cursor: ""}}
 			]
 		},
 		mousemove: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdSize",              call: data_wd_size, kill: false, bind: {}},
-				{name: "*[data-wd-moving]",   call: data_wd_move, kill: false, bind: {}},
-				{name: "*[data-wd-resizing]", call: data_wd_size, kill: false, bind: {cursor: ""}},
+				//{name: "wdSize",              call: data_wd_size, kill: false, bind: {}},
+				//{name: "*[data-wd-moving]",   call: data_wd_move, kill: false, bind: {}},
+				//{name: "*[data-wd-resizing]", call: data_wd_size, kill: false, bind: {cursor: ""}},
 			]
 		},
 		mouseenter: {
