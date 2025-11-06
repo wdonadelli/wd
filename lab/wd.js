@@ -294,8 +294,8 @@ const wd = (function() {
 				margin:  auto;
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
-		/*-- MOVE ----------------------------------------------------------------*/
-		[data-wd-move=box] {
+		/*-- MOVE/RESIZE ---------------------------------------------------------*/
+		[data-js-wd-move=box] {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
@@ -308,13 +308,13 @@ const wd = (function() {
 			background: rgba(255,255,255,0.7);
 			border: 2px solid black;
 		}
-		[data-wd-move=box] > * {
+		[data-js-wd-move=box] > * {
 			display: flex;
 			flex-direction: row;
 			justify-content: space-between;
 			margin: -0.5em;
 		}
-		[data-wd-move=box] > * > * {
+		[data-js-wd-move=box] > * > * {
 			width: 1em;
 			height: 1em;
 			border: 2px solid black;
@@ -322,15 +322,16 @@ const wd = (function() {
 			background: white;
 		}
 
-		[data-wd-move=box] [data-wd-move=n]  {cursor: n-resize;}
-		[data-wd-move=box] [data-wd-move=ne] {cursor: ne-resize;}
-		[data-wd-move=box] [data-wd-move=e]  {cursor: e-resize;}
-		[data-wd-move=box] [data-wd-move=se] {cursor: se-resize;}
-		[data-wd-move=box] [data-wd-move=s]  {cursor: s-resize;}
-		[data-wd-move=box] [data-wd-move=sw] {cursor: sw-resize;}
-		[data-wd-move=box] [data-wd-move=w]  {cursor: w-resize;}
-		[data-wd-move=box] [data-wd-move=nw] {cursor: nw-resize;}
-		[data-wd-move=box] [data-wd-move=c]  {cursor: move;}
+		[data-js-wd-move=box] [data-js-wd-side=c]  {cursor: move;}
+		[data-js-wd-move=box] [data-js-wd-side=n]  {cursor: n-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=ne] {cursor: ne-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=e]  {cursor: e-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=se] {cursor: se-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=s]  {cursor: s-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=sw] {cursor: sw-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=w]  {cursor: w-resize;}
+		[data-js-wd-move=box] [data-js-wd-side=nw] {cursor: nw-resize;}
+
 
 
 
@@ -4095,19 +4096,63 @@ Additional roles, states, and properties needed for the menu element are describ
 	''const object __MOVE''
 	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
 	const __MOVE = {
-		/**. '{object boxes(node node)}: Retorna os blocos do procedimento e informações a âncora do nó.**/
-		boxes: function(node) {
-			const id = node.getAttribute("aria-controls");
+		/**. '{void builder(node node)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
+		builder: function(node) {
+			const data = window.getComputedStyle(node, null);
+			const tool = {c: {}, n: {}, s: {}, w: {}, e: {}, ne: {}, nw: {}, se: {}, sw: {}};
+			const text = {id: __ID.value};
+			/*-- container principal --*/
+			node.style.position = data.position === "static" ? "relative" : data.position;
+			node.tabIndex = 0;
+			node.id = node.id.trim() === "" ? __ID.value : node.id;
+			/*-- manipuladores de redimensionamento/posicionamento --*/
+			for (let i in tool) {
+				tool[i].addEventListener    = {keydown: this, mousedown: this};
+				tool[i].dataset             = {jsWdSide: i};
+				tool[i]["aria-controls"]    = node.id;
+				tool[i]["aria-label"]       = i.toUpperCase();
+				tool[i]["aria-describedby"] = text.id;
+			}
+			/*-- caixa de manipulação --*/
+			__DOM({tag: "div", attr: {}, child: [
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: tool.nw, child: []},
+					{tag: "button", attr: tool.n,  child: []},
+					{tag: "button", attr: tool.ne, child: []}
+				]},
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: tool.w, child: []},
+					{tag: "button", attr: tool.c, child: [{tag: "span", attr: text}]},
+					{tag: "button", attr: tool.e, child: []}
+				]},
+				{tag: "div", attr: {}, child: [
+					{tag: "button", attr: tool.sw, child: []},
+					{tag: "button", attr: tool.s,  child: []},
+					{tag: "button", attr: tool.se, child: []}
+				]},
+			]}, node).tag.getElementById(text.id).focus();
+			return;
+		},
+		/**. '{object info(node node)}: Retorna os nós e valores envolvidos na manipulação:
+		|Nome|Descrição|
+		|node|Nó principal a ser manipulado|
+		|box|Nó manipulador principal que provoca o movimento|
+		|name|Valor do atributo "data-js-wd-move"|
+		|text|Elemento de texto.|**/
+		info: function(node) {
+			const main = node.getAttribute("aria-controls");
+			const text = node.getAttribute("aria-describedby");
 			return {
-				name: node.dataset.wdMove,
-				main: document.getElementById(id),
-				move: document.querySelector(`#${id} > [data-wd-move=box]`),
+				name: node.dataset.jsWdSide,
+				node: document.getElementById(main),
+				box:  document.querySelector(`#${main} > [data-js-wd-move=box]`),
+				text: document.getElementById(text),
 			}
 		},
-		/**. '{object position(node node, object data)}: Define ou retorna os valores dimensionais do nó.**/
-		position: function(node, data) {
+		/**. '{object size(node node, object data)}: Define ou retorna os valores dimensionais do nó ('{height, width, left, right, top, bottom, fontSize}).**/
+		size: function(node, data) {
 			const test = new __Type(data);
-			const info = test.object ? this.position(node) : {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0};
+			const info = test.object ? this.size(node) : {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0};
 			const css  = test.object ? null : window.getComputedStyle(node, null);
 			for (let i in info) {
 				if (!test.object)
@@ -4115,80 +4160,45 @@ Additional roles, states, and properties needed for the menu element are describ
 				else if (i in data)
 					node.style[i] = `${data[i]}px`;
 			}
-			return test.object ? this.position(node) : info;
+			return test.object ? this.size(node) : info;
 		},
-		/**. '{void open(object ev)}: Adiciona o mecanismo de ajustes ao nó.**/
-		open: function(ev) {
-			const attr = {n: {}, s: {}, w: {}, e: {}, c: {}, ne: {}, nw: {}, se: {}, sw: {}};
-			for (let i in attr) {
-				attr[i].addEventListener = {keydown: this, mousedown: this};
-				attr[i].dataset          = {wdMove: i};
-				attr[i]["aria-controls"] = ev.target.id;
-				attr[i]["aria-label"]    = i.toUpperCase();
-			}
-			__DOM({tag: "div", attr: {"data-wd-move": "box"}, child: [
-				{tag: "div", attr: {}, child: [
-					{tag: "button", attr: attr.nw, child: []},
-					{tag: "button", attr: attr.n,  child: []},
-					{tag: "button", attr: attr.ne, child: []}
-				]},
-				{tag: "div", attr: {}, child: [
-					{tag: "button", attr: attr.w, child: []},
-					{tag: "button", attr: attr.c, child: []},
-					{tag: "button", attr: attr.e, child: []}
-				]},
-				{tag: "div", attr: {}, child: [
-					{tag: "button", attr: attr.sw, child: []},
-					{tag: "button", attr: attr.s,  child: []},
-					{tag: "button", attr: attr.se, child: []}
-				]},
-			]}, ev.target);
-			ev.target.querySelector(`[data-wd-move=c]`).focus();
+		/**. '{void close(object ev)}: Manipulador para removee o mecanismo de ajustes do nó.**/
+		kill: function(ev) {
+			const info = this.info(ev.target);
+			info.box.remove();
+			info.node.focus();
 			return;
 		},
-		/**. '{void close(object ev)}: Remove o mecanismo de ajustes do nó.**/
-		close: function(ev) {
-			const find = ev.target.getAttribute("aria-controls");
-			const main = document.getElementById(find);
-			const move = main.querySelector("[data-wd-move=box]");
-			move.remove();
-			main.focus();
-			return;
-		},
-		/**. '{void jump(object ev)}: Gerencia o foco dos elementos de ajuste por teclado.**/
+		/**. '{void jump(object ev)}: Manipulador que gerencia o foco dos elementos de ajuste por teclado (kbd{Tab}).**/
 		jump: function(ev) {
-			const data = ev.target.dataset.wdMove;
-			const find = ev.target.getAttribute("aria-controls");
-			const main = document.getElementById(find);
-			const heap = ["c", "sw", "se", "nw", "ne"];
-			const item = heap.indexOf(data);
-			const plus = heap.length + (ev.shiftKey ? -1 : 1);
-			const name = heap[(item + plus)%heap.length];
-			main.querySelector(`[data-wd-move=${name}]`).focus();
+			const info = this.info(ev.target);
+			const heap = ["box", "nw", "ne", "sw", "se"];
+			const item = heap.indexOf(info.name);
+			const walk = heap.length + (ev.shiftKey ? -1 : 1);
+			const next = heap[(item + walk)%heap.length];
+			(next === "box" ? info.box : info.box.querySelector(`[data-js-wd-move=${next}]`)).focus();
 			return;
 		},
-
-//FIXME falta o texto do posicionamento
-		/**. '{void mouseDown(object ev)}: Inicializa o movimento a partir do mouse.**/
+		/**. '{void mouseDown(object ev)}: Manipulador que inicializa o movimento a partir do mouse.**/
 		mouseDown: function(ev) {
-			const data = ev.target.dataset.wdMove;
-			const find = ev.target.getAttribute("aria-controls");
-			const main = document.getElementById(find);
-			const box  = this.position(main);
-			box.data   = data;
-			main.dataset[data === "c" ? "wdMoving" : "wdResizing"] = JSON.stringify(box);
+			const info = this.info(ev.target);
+			const data = {x: ev.pageX, y: ev.pageY};
+			const attr = info.name === "box" ? "jsWdMoving" : "jsWdResizing";
+			info.node.dataset[attr] = JSON.stringify(data);
 			document.body.addEventListener("mouseup", this);
 			document.body.addEventListener("mousemove", this);
 			return;
 		},
-		/**. '{void mouseUp(object ev)}: Encerra o movimento a partir do mouse.**/
+		/**. '{void mouseUp(object ev)}: Manipulador que encerra o movimento a partir do mouse.**/
 		mouseUp: function(ev) {
-			const main = document.querySelector("[data-wd-resizing], [data-wd-moving]");
-			const find = main.querySelector("[data-wd-move=c]");
-			delete main.dataset.wdResizing;
-			delete main.dataset.wdMoving;
+			const find = "[data-js-wd-resizing] > [data-js-wd-move=box], [data-js-wd-moving] > [data-js-wd-move=box]";
+			const box  = document.querySelector(find);
+			const node = box.parentElement;
+			delete node.dataset.wdResizing;
+			delete node.dataset.wdMoving;
 			document.body.removeEventListener("mouseup", this);
 			document.body.removeEventListener("mousemove", this);
+			box.focus();
 			return;
 		},
 		/**. '{void mouseMove(object ev)}: Define o movimento a partir do mouse.**/
@@ -4254,81 +4264,71 @@ Additional roles, states, and properties needed for the menu element are describ
 
 		},
 
-
+		/**. '{string move(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua posição.**/
+		move: function(node, dx, dy) {
+			const size = this.size(node);
+			size.left   += dx;
+			size.right  -= dx;
+			size.top    += dy;
+			size.bottom -= dy;
+			const data = this.size(node, size);
+			return `${data.left + data.width/2}, ${data.top + data.height/2}`;
+		},
+		/**. '{string resize(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua dimensão.**/
+		resize: function(node, dn, de, ds, dw) {
+			const size = this.size(node);
+			/*-- vertical superior --*/
+			size.height -= dn;
+			size.top    += dn;
+			/*-- vertical inferior --*/
+			size.height += ds;
+			size.bottom -= ds;
+			/*-- horizontal direita --*/
+			size.width  -= dw;
+			size.right  += dw;
+			/*-- horizontal esquerda --*/
+			size.width  += de;
+			size.left   -= de;
+			const data = this.size(node, size);
+			return `${data.width} x ${data.height}`;
+		},
 
 
 		/**. '{void moveKey(object ev)}: Move o elemento com o teclado.**/
 		moveKey: function(ev) {
-			const find = ev.target.getAttribute("aria-controls");
-			const main = document.getElementById(find);
-			const box  = this.position(main);
-			const jump = box.fontSize/2;
+			const info = this.info(ev.target);
+			const jump = Math.max(window.screen.height, window.screen.width)/25;
 			const dy = jump * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
 			const dx = jump * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
-			box.left     += dx;
-			box.right    -= dx;
-			box.top      += dy;
-			box.bottom   -= dy;
-			this.position(main, box);
+			info.text.textContent = this.move(info.node, dx, dy);
+			return;
 		},
 		/**. '{void sizeKey(object ev)}: Altera as dimenssões do elemento com o teclado.**/
 		sizeKey: function(ev) {
-			const data = ev.target.dataset.wdMove;
-			const find = ev.target.getAttribute("aria-controls");
-			const main = document.getElementById(find);
-			const box  = this.position(main);
-			const jump = box.fontSize/2;
-			if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
-				if (data.indexOf("n") >= 0) {
-					box.height += ev.key === "ArrowUp" ? +jump : -jump;
-					box.top    += ev.key === "ArrowUp" ? -jump : +jump;
-				}
-				else if (data.indexOf("s") >= 0) {
-					box.height += ev.key === "ArrowUp" ? -jump : +jump;
-					box.bottom += ev.key === "ArrowUp" ? +jump : -jump;
-				}
-			}
-			else if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
-				if (data.indexOf("e") >= 0) {
-					box.width += ev.key === "ArrowRight" ? +jump : -jump;
-					box.right += ev.key === "ArrowRight" ? -jump : +jump;
-				}
-				else if (data.indexOf("w") >= 0) {
-					box.width += ev.key === "ArrowRight" ? -jump : +jump;
-					box.left  += ev.key === "ArrowRight" ? +jump : -jump;
-				}
-			}
-			this.position(main, box);
-			return;
-		},
-		/**. '{void builder(node node)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
-		builder: function(node) {
-			const data = window.getComputedStyle(node, null);
-			node.style.position = data.position === "static" ? "relative" : data.position;
-			node.tabIndex       = 0;
-			node.id             = node.id.trim() === "" ? __ID.value : node.id;
-			node.addEventListener("keydown", this);
-			//node.addEventListener("dblclick", this);
+			const info = this.info(ev.target);
+			const jump = Math.max(window.screen.height, window.screen.width)/25;
+			const line = {ArrowUp: "v", ArrowDown: "v", ArrowRight: "h", ArrowLeft: "h"};
+			const data = {dn: 0, ds: 0, dw: 0, de: 0};
+			if (line[ev.key] === "v" && info.name.indexOf("n") >= 0)
+				data.dn = ev.key === "ArrowUp" ? -jump : +jump;
+			else if (line[ev.key] === "v" && info.name.indexOf("s") >= 0)
+				data.ds = ev.key === "ArrowUp" ? +jump : -jump;
+			else if (line[ev.key] === "h" && info.name.indexOf("e") >= 0)
+				data.de = ev.key === "ArrowRight" ? +jump : -jump;
+			else if (line[ev.key] === "h" && info.name.indexOf("w") >= 0)
+				data.dw = ev.key === "ArrowRight" ? -jump : +jump;
+			info.text.textContent = this.resize(info.node, data.dn, data.de, data.ds, data.dw);
 			return;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
 		handleEvent: function(ev) {
-			//ev.stopPropagation();
-			/*-- alvo --*/
-			if (ev.type === "keydown" && !("wdMove" in ev.target.dataset)) {
-				const find = ev.target.querySelector("[data-wd-move=box]");
-				const info = find === null || find.parentElement !== ev.target;
-				if (info && ev.key === "Control") this.open(ev);
-				return;
-			}
-			/*-- ajustes --*/
+			ev.stopPropagation();
 			const data = ev.target.dataset.wdMove;
-			const name = data === "c" ? "moveKey" : "sizeKey";
-			const keys = {
-				Escape: "close", Control: "close", Tab: "jump",
-				ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name
-			};
+			/*-- ajustes --*/
+
 			/*-- keydown --*/
+			const name = data === "box" ? "moveKey" : "sizeKey";
+			const keys = {Escape: "close", Tab: "jump", ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name};
 			if (ev.type === "keydown" && ev.key in keys) {
 				ev.preventDefault();
 				this[keys[ev.key]](ev);
