@@ -295,7 +295,7 @@ const wd = (function() {
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
 		/*-- MOVE/RESIZE ---------------------------------------------------------*/
-		[data-js-wd-move=box] {
+		[data-js-wd-move] {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
@@ -308,13 +308,13 @@ const wd = (function() {
 			background: rgba(255,255,255,0.7);
 			border: 2px solid black;
 		}
-		[data-js-wd-move=box] > * {
+		[data-js-wd-move] > * {
 			display: flex;
 			flex-direction: row;
 			justify-content: space-between;
 			margin: -0.5em;
 		}
-		[data-js-wd-move=box] > * > * {
+		[data-js-wd-move] > * > * {
 			width: 1em;
 			height: 1em;
 			border: 2px solid black;
@@ -322,15 +322,21 @@ const wd = (function() {
 			background: white;
 		}
 
-		[data-js-wd-move=box] [data-js-wd-side=c]  {cursor: move;}
-		[data-js-wd-move=box] [data-js-wd-side=n]  {cursor: n-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=ne] {cursor: ne-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=e]  {cursor: e-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=se] {cursor: se-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=s]  {cursor: s-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=sw] {cursor: sw-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=w]  {cursor: w-resize;}
-		[data-js-wd-move=box] [data-js-wd-side=nw] {cursor: nw-resize;}
+		[data-js-wd-side=n], [data-js-wd-side=c], [data-js-wd-side=s] {
+			flex: 1 1 auto;
+		}
+
+
+
+		[data-js-wd-side=c]  {cursor: move;}
+		[data-js-wd-side=n]  {cursor: n-resize;}
+		[data-js-wd-side=ne] {cursor: ne-resize;}
+		[data-js-wd-side=e]  {cursor: e-resize;}
+		[data-js-wd-side=se] {cursor: se-resize;}
+		[data-js-wd-side=s]  {cursor: s-resize;}
+		[data-js-wd-side=sw] {cursor: sw-resize;}
+		[data-js-wd-side=w]  {cursor: w-resize;}
+		[data-js-wd-side=nw] {cursor: nw-resize;}
 
 
 
@@ -4099,11 +4105,10 @@ Additional roles, states, and properties needed for the menu element are describ
 		/**. '{void builder(node node)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
 		builder: function(node) {
 			const data = window.getComputedStyle(node, null);
-			const tool = {c: {}, n: {}, s: {}, w: {}, e: {}, ne: {}, nw: {}, se: {}, sw: {}};
+			const tool = {c: {autofocus: true}, n: {}, s: {}, w: {}, e: {}, ne: {}, nw: {}, se: {}, sw: {}};
 			const text = {id: __ID.value};
 			/*-- container principal --*/
 			node.style.position = data.position === "static" ? "relative" : data.position;
-			node.tabIndex = 0;
 			node.id = node.id.trim() === "" ? __ID.value : node.id;
 			/*-- manipuladores de redimensionamento/posicionamento --*/
 			for (let i in tool) {
@@ -4114,7 +4119,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				tool[i]["aria-describedby"] = text.id;
 			}
 			/*-- caixa de manipulação --*/
-			__DOM({tag: "div", attr: {}, child: [
+			__DOM({tag: "div", attr: {"data-js-wd-move": ""}, child: [
 				{tag: "div", attr: {}, child: [
 					{tag: "button", attr: tool.nw, child: []},
 					{tag: "button", attr: tool.n,  child: []},
@@ -4130,7 +4135,7 @@ Additional roles, states, and properties needed for the menu element are describ
 					{tag: "button", attr: tool.s,  child: []},
 					{tag: "button", attr: tool.se, child: []}
 				]},
-			]}, node).tag.getElementById(text.id).focus();
+			]}, node).tag.querySelector("[autofocus]").focus();
 			return;
 		},
 		/**. '{object info(node node)}: Retorna os nós e valores envolvidos na manipulação:
@@ -4145,7 +4150,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			return {
 				name: node.dataset.jsWdSide,
 				node: document.getElementById(main),
-				box:  document.querySelector(`#${main} > [data-js-wd-move=box]`),
+				box:  document.querySelector(`#${main} > [data-js-wd-move]`),
 				text: document.getElementById(text),
 			}
 		},
@@ -4162,7 +4167,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return test.object ? this.size(node) : info;
 		},
-		/**. '{void close(object ev)}: Manipulador para removee o mecanismo de ajustes do nó.**/
+		/**. '{void kill(object ev)}: Manipulador para removee o mecanismo de ajustes do nó.**/
 		kill: function(ev) {
 			const info = this.info(ev.target);
 			info.box.remove();
@@ -4172,30 +4177,81 @@ Additional roles, states, and properties needed for the menu element are describ
 		/**. '{void jump(object ev)}: Manipulador que gerencia o foco dos elementos de ajuste por teclado (kbd{Tab}).**/
 		jump: function(ev) {
 			const info = this.info(ev.target);
-			const heap = ["box", "nw", "ne", "sw", "se"];
+			const heap = ["nw", "ne", "c", "sw", "se"];
 			const item = heap.indexOf(info.name);
 			const walk = heap.length + (ev.shiftKey ? -1 : 1);
 			const next = heap[(item + walk)%heap.length];
-			(next === "box" ? info.box : info.box.querySelector(`[data-js-wd-move=${next}]`)).focus();
+			info.box.querySelector(`[data-js-wd-side=${next}]`).focus();
+			return;
+		},
+		/**. '{string move(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua posição.**/
+		move: function(node, dx, dy) {
+			const size = this.size(node);
+			size.left   += dx;
+			size.right  -= dx;
+			size.top    += dy;
+			size.bottom -= dy;
+			const data = this.size(node, size);
+			return `${Math.trunc(data.left + data.width/2)}, ${Math.trunc(data.top + data.height/2)}`;
+		},
+		/**. '{string resize(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua dimensão.**/
+		resize: function(node, dn, de, ds, dw) {
+			const size = this.size(node);
+			/*-- vertical superior --*/
+			size.height -= dn;
+			size.top    += dn;
+			/*-- vertical inferior --*/
+			size.height += ds;
+			size.bottom -= ds;
+			/*-- horizontal esquerda --*/
+			size.width  -= dw;
+			size.left   += dw;
+			/*-- horizontal direita --*/
+			size.width  += de;
+			size.right  -= de;
+			const data = this.size(node, size);
+			return `${Math.trunc(data.width)} x ${Math.trunc(data.height)}`;
+		},
+		/**. '{void moveKey(object ev)}: Move o elemento com o teclado.**/
+		moveKey: function(ev) {
+			const info = this.info(ev.target);
+			const jump = Math.min(window.screen.height, window.screen.width)/100;
+			const dy = jump * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
+			const dx = jump * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
+			info.text.textContent = this.move(info.node, dx, dy);
+			return;
+		},
+		/**. '{void resizeKey(object ev)}: Altera as dimenssões do elemento com o teclado.**/
+		resizeKey: function(ev) {
+			const info = this.info(ev.target);
+			const jump = Math.min(window.screen.height, window.screen.width)/100;
+			const line = {ArrowUp: "v", ArrowDown: "v", ArrowRight: "h", ArrowLeft: "h"};
+			const data = {dn: 0, ds: 0, dw: 0, de: 0};
+			if (line[ev.key] === "v" && info.name.indexOf("n") >= 0)
+				data.dn = ev.key === "ArrowUp" ? -jump : +jump;
+			else if (line[ev.key] === "v" && info.name.indexOf("s") >= 0)
+				data.ds = ev.key === "ArrowUp" ? -jump : +jump;
+			else if (line[ev.key] === "h" && info.name.indexOf("e") >= 0)
+				data.de = ev.key === "ArrowRight" ? +jump : -jump;
+			else if (line[ev.key] === "h" && info.name.indexOf("w") >= 0)
+				data.dw = ev.key === "ArrowRight" ? +jump : -jump;
+			info.text.textContent = this.resize(info.node, data.dn, data.de, data.ds, data.dw);
 			return;
 		},
 		/**. '{void mouseDown(object ev)}: Manipulador que inicializa o movimento a partir do mouse.**/
 		mouseDown: function(ev) {
 			const info = this.info(ev.target);
-			const data = {x: ev.pageX, y: ev.pageY};
-			const attr = info.name === "box" ? "jsWdMoving" : "jsWdResizing";
-			info.node.dataset[attr] = JSON.stringify(data);
+			const data = {x: ev.pageX, y: ev.pageY, name: info.name};
+			info.node.dataset.jsWdMoving = JSON.stringify(data);
 			document.body.addEventListener("mouseup", this);
 			document.body.addEventListener("mousemove", this);
 			return;
 		},
 		/**. '{void mouseUp(object ev)}: Manipulador que encerra o movimento a partir do mouse.**/
 		mouseUp: function(ev) {
-			const find = "[data-js-wd-resizing] > [data-js-wd-move=box], [data-js-wd-moving] > [data-js-wd-move=box]";
-			const box  = document.querySelector(find);
+			const box  = document.querySelector("[data-js-wd-moving] > [data-js-wd-move]");
 			const node = box.parentElement;
-			delete node.dataset.wdResizing;
-			delete node.dataset.wdMoving;
+			delete node.dataset.jsWdMoving;
 			document.body.removeEventListener("mouseup", this);
 			document.body.removeEventListener("mousemove", this);
 			box.focus();
@@ -4203,10 +4259,28 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 		/**. '{void mouseMove(object ev)}: Define o movimento a partir do mouse.**/
 		mouseMove: function(ev) {
-
-
-
-
+			const node = document.querySelector("[data-js-wd-moving]");
+			const text = document.querySelector("[data-js-wd-moving] > [data-js-wd-move] [data-js-wd-side=c] > *");
+			const data = JSON.parse(node.dataset.jsWdMoving);
+			const attr = {
+				id: data.name,
+				dx: ev.pageX - data.x,
+				dy: ev.pageY - data.y,
+				get dn() {return this.id.indexOf("n") >= 0 ? this.dy : 0;},
+				get ds() {return this.id.indexOf("s") >= 0 ? this.dy : 0;},
+				get de() {return this.id.indexOf("e") >= 0 ? this.dx : 0;},
+				get dw() {return this.id.indexOf("w") >= 0 ? this.dx : 0;},
+			};
+			/*-- redefinir referência --*/
+			data.x += attr.dx;
+			data.y += attr.dy;
+			node.dataset.jsWdMoving = JSON.stringify(data);
+			/*-- aplicar ajustes --*/
+			if (attr.id === "c")
+				text.textContent = this.move(node, attr.dx, attr.dy);
+			else
+				text.textContent = this.resize(node, attr.dn, attr.de, attr.ds, attr.dw);
+			return;
 		},
 
 
@@ -4264,71 +4338,19 @@ Additional roles, states, and properties needed for the menu element are describ
 
 		},
 
-		/**. '{string move(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua posição.**/
-		move: function(node, dx, dy) {
-			const size = this.size(node);
-			size.left   += dx;
-			size.right  -= dx;
-			size.top    += dy;
-			size.bottom -= dy;
-			const data = this.size(node, size);
-			return `${data.left + data.width/2}, ${data.top + data.height/2}`;
-		},
-		/**. '{string resize(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua dimensão.**/
-		resize: function(node, dn, de, ds, dw) {
-			const size = this.size(node);
-			/*-- vertical superior --*/
-			size.height -= dn;
-			size.top    += dn;
-			/*-- vertical inferior --*/
-			size.height += ds;
-			size.bottom -= ds;
-			/*-- horizontal direita --*/
-			size.width  -= dw;
-			size.right  += dw;
-			/*-- horizontal esquerda --*/
-			size.width  += de;
-			size.left   -= de;
-			const data = this.size(node, size);
-			return `${data.width} x ${data.height}`;
-		},
 
 
-		/**. '{void moveKey(object ev)}: Move o elemento com o teclado.**/
-		moveKey: function(ev) {
-			const info = this.info(ev.target);
-			const jump = Math.max(window.screen.height, window.screen.width)/25;
-			const dy = jump * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
-			const dx = jump * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
-			info.text.textContent = this.move(info.node, dx, dy);
-			return;
-		},
-		/**. '{void sizeKey(object ev)}: Altera as dimenssões do elemento com o teclado.**/
-		sizeKey: function(ev) {
-			const info = this.info(ev.target);
-			const jump = Math.max(window.screen.height, window.screen.width)/25;
-			const line = {ArrowUp: "v", ArrowDown: "v", ArrowRight: "h", ArrowLeft: "h"};
-			const data = {dn: 0, ds: 0, dw: 0, de: 0};
-			if (line[ev.key] === "v" && info.name.indexOf("n") >= 0)
-				data.dn = ev.key === "ArrowUp" ? -jump : +jump;
-			else if (line[ev.key] === "v" && info.name.indexOf("s") >= 0)
-				data.ds = ev.key === "ArrowUp" ? +jump : -jump;
-			else if (line[ev.key] === "h" && info.name.indexOf("e") >= 0)
-				data.de = ev.key === "ArrowRight" ? +jump : -jump;
-			else if (line[ev.key] === "h" && info.name.indexOf("w") >= 0)
-				data.dw = ev.key === "ArrowRight" ? -jump : +jump;
-			info.text.textContent = this.resize(info.node, data.dn, data.de, data.ds, data.dw);
-			return;
-		},
+
+
 		/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
 		handleEvent: function(ev) {
 			ev.stopPropagation();
-			const data = ev.target.dataset.wdMove;
+			const data = ev.target.dataset.jsWdSide;
 			/*-- ajustes --*/
 
 			/*-- keydown --*/
-			const name = data === "box" ? "moveKey" : "sizeKey";
-			const keys = {Escape: "close", Tab: "jump", ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name};
+			const name = data === "c" ? "moveKey" : "resizeKey";
+			const keys = {Escape: "kill", Tab: "jump", ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name};
 			if (ev.type === "keydown" && ev.key in keys) {
 				ev.preventDefault();
 				this[keys[ev.key]](ev);
