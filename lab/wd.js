@@ -44,6 +44,8 @@ const wd = (function() {
 			--var-js-wd-z-index-2: 9997;
 			--var-js-wd-z-index-3: 9996;
 			--var-js-wd-move-edge: 15px;
+			--var-js-wd-font-type: Verdana, sans-serif, monospace;
+			--var-js-wd-font-size: 12px;
 		}
 
 		/*-- Animações -----------------------------------------------------------*/
@@ -73,8 +75,8 @@ const wd = (function() {
 			display: inline-block;
 			padding: 0.25em;
 			margin: 0.25em 0;
-			font-size: 12px;
-			font-family: Verdana, sans-serif;
+			font-size: var(--var-js-wd-font-size);
+			font-family: var(--var-js-wd-font-type);
 			border: thin solid;
 			border-radius: 0.2em;
 		}
@@ -100,7 +102,7 @@ const wd = (function() {
 
 
 
-		/*font-family: Verdana, sans-serif */
+
 
 
 		/*-- WINDOW --------------------------------------------------------------*/
@@ -166,14 +168,13 @@ const wd = (function() {
 			padding: 0 1em 0 0.5em !important;
 			overflow: hidden !important;
 			z-index: var(--var-js-wd-z-index-0) !important;
-			font-size: 12px;
-			font-family: Verdana, sans-serif;
+			font-size: var(--var-js-wd-font-size);
+			font-family: var(--var-js-wd-font-type);
 		}
 		/*-- SIGNAL --------------------------------------------------------------*/
 		.css-wd-alert, .css-wd-dialog {
 			font-size: 14px;
-			color: black;
-			background: white;
+			font-family: var(--var-js-wd-font-type);
 			border: thin solid black;
 			border-radius: 0.25em;
 			position: relative;
@@ -201,8 +202,8 @@ const wd = (function() {
 			color: black;
 			border-radius: 0.2em;
 			border: thin solid black;
-			font-size: 12px;
-			font-family: Verdana, sans-serif;
+			font-size: var(--var-js-wd-font-size);
+			font-family: var(--var-js-wd-font-type);
 		}
 		.css-wd-menu menu {
 			list-style: none;
@@ -258,6 +259,8 @@ const wd = (function() {
 			align-items: stretch;
   		justify-content: start;
   		margin: 0;
+  		font-size: var(--var-js-wd-font-size);
+			font-family: var(--var-js-wd-font-type);
 		}
 		.css-wd-tab [role=tablist][aria-orientation=horizontal] {
 			flex: 1 1 auto;
@@ -304,6 +307,8 @@ const wd = (function() {
 			right: 0;
 			z-index: 999;
 			border: 2px dashed red;
+			font-size: var(--var-js-wd-font-size);
+			font-family: var(--var-js-wd-font-type);
 		}
 		[data-js-wd-move] > * {
 			position: absolute;
@@ -4151,7 +4156,8 @@ Additional roles, states, and properties needed for the menu element are describ
 		|node|Nó principal a ser manipulado|
 		|box|Nó manipulador principal que provoca o movimento|
 		|name|Valor do atributo "data-js-wd-move"|
-		|text|Elemento de texto.|**/
+		|text|Elemento de texto.|
+		|fire|Elemento provocado.|**/
 		info: function(node) {
 			const main = node.getAttribute("aria-controls");
 			return {
@@ -4159,6 +4165,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				node: document.getElementById(main),
 				box:  document.querySelector(`#${main} > [data-js-wd-move]`),
 				text: document.querySelector(`#${main} > [data-js-wd-move] > [data-js-wd-side=c]`),
+				fire: node,
 			};
 		},
 		/**. '{object size(node node, object data)}: Define ou retorna os valores dimensionais do nó ('{height, width, left, right, top, bottom, fontSize}).**/
@@ -4174,7 +4181,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return test.object ? this.size(node) : info;
 		},
-		/**. '{void kill(object ev)}: Manipulador para removee o mecanismo de ajustes do nó.**/
+		/**. '{void kill(object ev)}: Manipulador para remove o mecanismo de ajustes do nó.**/
 		kill: function(ev) {
 			const move = document.querySelector("[data-js-wd-move]");
 			const node = move.parentElement;
@@ -4225,12 +4232,13 @@ Additional roles, states, and properties needed for the menu element are describ
 			const data = this.size(node, size);
 			return `${Math.trunc(data.width)} x ${Math.trunc(data.height)}`;
 		},
+		/**. '{void focus(object ev)}: Manipulador para exibir o valor do posicionamento ou dimensão do nó ao mudar de foco.**/
 		focus: function(ev) {
 			const info = this.info(ev.target);
 			const text = info.name === "c" ? this.move(info.node, 0, 0) : this.resize(info.node, 0, 0, 0, 0);
 			info.text.textContent = text;
 		},
-		/**. '{void moveKey(object ev)}: Move o elemento com o teclado.**/
+		/**. '{void moveKey(object ev)}: Manipulador para mover o elemento com o teclado.**/
 		moveKey: function(ev) {
 			const info = this.info(ev.target);
 			const jump = Math.min(window.screen.height, window.screen.width)/100;
@@ -4239,7 +4247,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			info.text.textContent = this.move(info.node, dx, dy);
 			return;
 		},
-		/**. '{void resizeKey(object ev)}: Altera as dimenssões do elemento com o teclado.**/
+		/**. '{void resizeKey(object ev)}: Manipulador para altera as dimenssões do elemento com o teclado.**/
 		resizeKey: function(ev) {
 			const info = this.info(ev.target);
 			const jump = Math.min(window.screen.height, window.screen.width)/100;
@@ -4256,48 +4264,43 @@ Additional roles, states, and properties needed for the menu element are describ
 			info.text.textContent = this.resize(info.node, data.dn, data.de, data.ds, data.dw);
 			return;
 		},
+		/**. '{object moving}: Guarda informações sobre o movimento do mouse.**/
+		moving: null,
 		/**. '{void mouseDown(object ev)}: Manipulador que inicializa o movimento a partir do mouse.**/
 		mouseDown: function(ev) {
-			const info = this.info(ev.target);
-			const data = {x: ev.pageX, y: ev.pageY, name: info.name};
-			info.node.dataset.jsWdMoving = JSON.stringify(data);
+			this.moving = {x: ev.pageX, y: ev.pageY, info: this.info(ev.target)};
 			document.body.addEventListener("mouseup", this);
 			document.body.addEventListener("mousemove", this);
 			return;
 		},
 		/**. '{void mouseUp(object ev)}: Manipulador que encerra o movimento a partir do mouse.**/
 		mouseUp: function(ev) {
-			const box  = document.querySelector("[data-js-wd-moving] > [data-js-wd-move]");
-			const node = box.parentElement;
-			delete node.dataset.jsWdMoving;
 			document.body.removeEventListener("mouseup", this);
 			document.body.removeEventListener("mousemove", this);
-			box.focus();
+			this.moving.info.fire.focus();
 			return;
 		},
 		/**. '{void mouseMove(object ev)}: Define o movimento a partir do mouse.**/
 		mouseMove: function(ev) {
-			const node = document.querySelector("[data-js-wd-moving]");
-			const text = document.querySelector("[data-js-wd-moving] > [data-js-wd-move] > [data-js-wd-side=c]");
-			const data = JSON.parse(node.dataset.jsWdMoving);
 			const attr = {
-				id: data.name,
-				dx: ev.pageX - data.x,
-				dy: ev.pageY - data.y,
-				get dn() {return this.id.indexOf("n") >= 0 ? this.dy : 0;},
-				get ds() {return this.id.indexOf("s") >= 0 ? this.dy : 0;},
-				get de() {return this.id.indexOf("e") >= 0 ? this.dx : 0;},
-				get dw() {return this.id.indexOf("w") >= 0 ? this.dx : 0;},
+				node: this.moving.info.node,
+				text: this.moving.info.text,
+				id:   this.moving.info.name,
+				dx:   ev.pageX - this.moving.x,
+				dy:   ev.pageY - this.moving.y,
+				get   dn() {return this.id.indexOf("n") >= 0 ? this.dy : 0;},
+				get   ds() {return this.id.indexOf("s") >= 0 ? this.dy : 0;},
+				get   de() {return this.id.indexOf("e") >= 0 ? this.dx : 0;},
+				get   dw() {return this.id.indexOf("w") >= 0 ? this.dx : 0;},
 			};
 			/*-- redefinir referência --*/
-			data.x += attr.dx;
-			data.y += attr.dy;
-			node.dataset.jsWdMoving = JSON.stringify(data);
+			this.moving.x += attr.dx;
+			this.moving.y += attr.dy;
 			/*-- aplicar ajustes --*/
 			if (attr.id === "c")
-				text.textContent = this.move(node, attr.dx, attr.dy);
+				attr.text.textContent = this.move(attr.node, attr.dx, attr.dy);
 			else
-				text.textContent = this.resize(node, attr.dn, attr.de, attr.ds, attr.dw);
+				attr.text.textContent = this.resize(attr.node, attr.dn, attr.de, attr.ds, attr.dw);
 			return;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focus}.**/
@@ -4330,64 +4333,66 @@ Additional roles, states, and properties needed for the menu element are describ
 	''const object __DRAG''
 	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
 	const __DRAG = {
-		target: function(list) {
-			if (!Array.isArray(target)) return null;
-			const type = {copy: 0, move: 0, link: 0};
-			const data = [];
-			list.forEach(function(v,i,a) {
-				const test1 = new __Type(v);
-				if (!test.object) return;
-				const
-
-
-
-
-
-
-
-
-
-
-
-
-			});
-			return list.length === 0 ? null : list;
-
-
-
-
-
-
-
-		},
-
-
-		/**. '{void builder(node node, list target)}: Prepara o elemento para arraste até o elemento de queda. O argumento '{target} é uma lista de objetos contendo as seguintes propriedades:
-		|Propriedade|Tipo|Obrigatório|Descrição|
-		|effect|string|Não|Tipo do efeito permitido '{move} (padrão), '{copy} ou '{link}.|
-		|drop|node|Sim|Nó onde ocorrerá a queda (único para cada efeito).|
-		|call|function|Não|Função a ser chamada após a queda.|
+		/**. '{object data}: Guarda as informações sobre o arrasto**/
+		data: {},
+		/**. '{void attach(node drag, node drop, string effect, function call)}: Vincula um elemento de arrasto ao de queda:
+		|Propriedade|Descrição|
+		|drag|Elemento a ser arrastado|
+		|drop|Elemento recebedor do arrasto|
+		|effect|Tipo do efeito "copy", "move", "link"|
+		|call|Função opcional a ser chamada após a queda|
 		. A propriedade '{call} receberá como argumentos:
 		- o elemento arrastado;
 		- o elemento de queda;
 		- o efeito aplicado; e
 		- o elemento de origem do elemento arrastado.**/
-		drag: function(node, target) {
-			const list = this.target(target);
-			if (list === null) throw new TypeError("Drag data defined incorrectly.");
-			node.draggable = true;
-			node.id = node.id.trim() === "" ? __ID.value : node.id;
+		attach: function(drag, drop, effect, call) {
+			drag.id = drag.id.trim() === "" ? __ID.value : drag.id;
+			drop.id = drop.id.trim() === "" ? __ID.value : drop.id;
+			effect  = (/^(copy|link|move)$/i).test(effect) ? effect : "move";
+			/*-- adicionar dados --*/
+			const draggable = drag.id in this.data;
+			if (!draggable) this.data[drag.id] = {};
+			this.data[drag.id][drop.id] = {effect: String(effect).toLowerCase(), call: call, src: drag.parentElement};
+			/*-- adicionar comportamento --*/
+			drag.draggable = true;
+			if (!draggable) drag.addEventListener("dragstart", this);
+			return;
+			//FIXME dragstart dragover dragleave drop
+		},
+		/**. '{void detach(node drag, node drop)}: Desvincula o elemento de arrasto ao de queda, se '{drop} for informado, ou remove o arrasto de '{drag}.**/
+		detach: function(drag, drop) {
+			if (drag.id in this.data) {
+				if (drop === null || drop === undefined) {
+					drag.draggable = false;
+					drag.removeEventListener("dragstart", this);
+					delete this.data[drag.id];
+				}
+				else if (drop.id in this.data[drag.id]) {
+					delete this.data[drag.id][drop.id];
+				}
+			}
+			return;
+		},
+		/**. '{string effect(string id)}: Retorna o efeito do elemento arrastável a partir de seu '{id}.**/
+		effect: function(id) {
+			const info = {move: false, link: false, copy: false};
+			if (id in this.data)
+				for (let i in this.data[id])
+					info[this.data[id][i].effect] = true;
+			console.log(this.data, info);
+			if (info.move && info.copy && info.link)
+				return "all";
+			if (info.move && info.copy)
+				return "copyMove";
+			if (info.copy && info.link)
+				return "copyLink";
+			if (info.move && info.link)
+				return "linkMove";
+			return info.move ? "move" : (info.copy ? "copy" : (info.link ? "link" : "none"));
+		},
 
-
-
-
-
-
-
-			node.ondragover  = null;
-			node.ondragleave = null;
-			node.ondrop      = null;
-			node.ondragstart = null
+		events: function(drag, drop, remove) {
 
 
 
@@ -4395,18 +4400,74 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 
 
+		/**. '{void dragstart(object ev)}: Manipulador que inicializa o arrasto.**/
+		dragstart: function(ev) {
+			ev.dataTransfer.setData("text", ev.target.id);
+  		ev.dataTransfer.effectAllowed = this.effect(ev.target.id);
+  		ev.target.addEventListener("dragend", this);
+  		for (let i in this.data[ev.target.id]) {
+  			let drop = document.getElementById(i);
+  			drop.style.border = "2px dotted red";
+  			drop.addEventListener("dragover", this);
+  			drop.addEventListener("dragleave", this);
+  			drop.addEventListener("drop", this);
 
-		drop: function(node) {
+
+
+
+  		}
+
+
+  		console.log(ev.dataTransfer, ev.dataTransfer.getData("text"));
+		},
+
+		dragend: function(ev) {
+			ev.target.removeEventListener("dragend", this);
+			for (let i in this.data[ev.target.id]) {
+  			let drop = document.getElementById(i);
+  			drop.style.border = null;
+  			drop.removeEventListener("dragover", this);
+  			drop.removeEventListener("dragleave", this);
+  			drop.removeEventListener("drop", this);
+
+
+
+
+  		}
+
 
 
 
 		},
+
+		dragover: function(ev) {
+			ev.preventDefault();
+		},
+		dragleave: function(ev) {
+
+		},
+		drop: function(ev) {
+
+		},
+
+
+
+
+
 
 
 
 
 		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focus}.**/
-		handleEvent: function(ev) {},
+		handleEvent: function(ev) {
+			console.log(ev.type)
+			this[ev.type](ev);
+		},
+
+
+
+
+
 
 
 
@@ -12191,23 +12252,25 @@ Additional roles, states, and properties needed for the menu element are describ
 		dragstart: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
+				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
 			]
 		},
 		dragend: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
+				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
 			]
 		},
 		dragleave: {
 			target: document, preventDefault: true,
-			data: [{name: "html", call: data_wd_drop, kill: false, bind: {}}]
+			data: [
+				//{name: "html", call: data_wd_drop, kill: false, bind: {}}
+			]
 		},
 		dragover: {
 			target: document, preventDefault: true,
 			data: [
-				{name: null, call: data_wd_drop, kill: false, bind: {}}
+				//{name: null, call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
@@ -12220,21 +12283,15 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 		mousedown: {
 			target: document, preventDefault: false, extra: "leftClick",
-			data: [
-				//{name: "wdMove", call: data_wd_move, kill: false, bind: {}},
-			]
+			data: []
 		},
 		mouseup: {
 			target: document, preventDefault: false, extra: "leftClick",
-			data: [
-				//{name: "*[data-wd-moving]",   call: data_wd_move, kill: true, bind: {}},
-			]
+			data: []
 		},
 		mousemove: {
 			target: document, preventDefault: false,
-			data: [
-				//{name: "*[data-wd-moving]",   call: data_wd_move, kill: false, bind: {}},
-			]
+			data: []
 		},
 		mouseenter: {
 			target: document, preventDefault: false,
