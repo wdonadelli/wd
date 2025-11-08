@@ -299,7 +299,7 @@ const wd = (function() {
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
 		/*-- MOVE/RESIZE ---------------------------------------------------------*/
-		[data-js-wd-move] {
+		[data-js-wd-role=move] {
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -310,68 +310,68 @@ const wd = (function() {
 			font-size: var(--var-js-wd-font-size);
 			font-family: var(--var-js-wd-font-type);
 		}
-		[data-js-wd-move] > * {
+		[data-js-wd-role=move] > * {
 			position: absolute;
 			border: 0;
 			background: transparent;
 		}
 		/*-- resize vertical --*/
-		[data-js-wd-side=n], [data-js-wd-side=s] {
+		.js-wd-move-n, .js-wd-move-s {
 			height: var(--var-js-wd-move-edge);
 			left:   calc(var(--var-js-wd-move-edge) / 2);
 			right:  calc(var(--var-js-wd-move-edge) / 2);
 		}
-    [data-js-wd-side=n] {
+    .js-wd-move-n {
     	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: n-resize;
     }
-    [data-js-wd-side=s] {
+    .js-wd-move-s {
     	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: s-resize;
     }
     /*-- resize horizontal --*/
-    [data-js-wd-side=w], [data-js-wd-side=e] {
+    .js-wd-move-w, .js-wd-move-e {
 			width:  var(--var-js-wd-move-edge);
 			top:    calc(var(--var-js-wd-move-edge) / 2);
 			bottom: calc(var(--var-js-wd-move-edge) / 2);
 		}
-    [data-js-wd-side=w] {
+    .js-wd-move-w {
     	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: w-resize;
     }
-    [data-js-wd-side=e] {
+    .js-wd-move-e {
     	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: e-resize;
     }
     /*-- resize bidimensional --*/
-    [data-js-wd-side=nw], [data-js-wd-side=ne], [data-js-wd-side=sw], [data-js-wd-side=se] {
+    .js-wd-move-nw, .js-wd-move-ne, .js-wd-move-sw, .js-wd-move-se {
     	width:  var(--var-js-wd-move-edge);
 			height: var(--var-js-wd-move-edge);
 			border: 2px solid red;
 			background: white;
 			border-radius: calc(var(--var-js-wd-move-edge) / 2);
     }
-    [data-js-wd-side=nw] {
+    .js-wd-move-nw {
 			left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: nw-resize;
     }
-    [data-js-wd-side=ne] {
+    .js-wd-move-ne {
 			right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
 			top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: ne-resize;
     }
-    [data-js-wd-side=sw] {
+    .js-wd-move-sw {
 			left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: sw-resize;
     }
-    [data-js-wd-side=se] {
+    .js-wd-move-se {
 			right:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			bottom:  calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: se-resize;
     }
-    [data-js-wd-side=c] {
+    .js-wd-move-c {
 			left:   calc(var(--var-js-wd-move-edge) / 2);
 			top:    calc(var(--var-js-wd-move-edge) / 2);
 			right:  calc(var(--var-js-wd-move-edge) / 2);
@@ -732,6 +732,11 @@ const wd = (function() {
 			const id   = `id${this.init.toString(16)}`;
 			const find = document.getElementById(id);
 			return find === null ? id : this.value;
+		},
+		/**. '{string id}: Define, se inexiste, e retorna o valor da propriedade '{id}.**/
+		id: function(node) {
+			node.id = node.id.trim() === "" ? this.value : node.id;
+			return node.id;
 		},
 	};
 
@@ -4122,35 +4127,49 @@ Additional roles, states, and properties needed for the menu element are describ
 	''const object __MOVE''
 	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
 	const __MOVE = {
-		/**. '{void builder(node node)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
-		builder: function(node) {
-			/*-- impedir múltiplas caixas --*/
-			if (document.querySelector("[data-js-wd-move]") !== null)
-				this.kill({});
-			/*-- container principal --*/
-			const style = window.getComputedStyle(node, null);
-			node.style.position = style.position === "static" ? "relative" : style.position;
-			node.id = node.id.trim() === "" ? __ID.value : node.id;
-			/*-- manipuladores de redimensionamento/posicionamento --*/
-			const child = ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"];
-			const value = __ID.value;
-			child.forEach(function(v,i,a) {
-				const data = {
-					addEventListener: {keydown: this, mousedown: this, focus: this},
-					dataset:          {jsWdSide: v},
-					"aria-controls":  node.id,
-					"aria-label":    	v.toUpperCase()
-				};
-				data[v === "c" ? "id" : "aria-describedby"] = value;
-				a[i] = {tag: "button", attr: data, child: []};
+		/**. '{number delta}: Espaço entre as movimentaçoes do teclado.**/
+		delta: Math.min(window.screen.height, window.screen.width)/100,
+		/**. '{array sides}: Indentificação dos lados do manipulador com relação à posição relativa.**/
+		sides: ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"],
+		/**. '{node active}: Registra as informações do manipulador ativo.**/
+		active: null,
+		/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
+		attach: function(target) {
+			const view = __ID.value;
+			const ctrl = __ID.id(target);
+			const fire = {keydown: this, mousedown: this, focus: this};
+			const move = {tag: "div", attr: {"data-js-wd-role": "move", addEventListener: fire}, child: []};
+			/*-- manipuladores específicos --*/
+			this.sides.forEach(function(v,i,a) {
+				const attr = {className: `js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
+				attr[v === "c" ? "id" : "aria-describedby"] = view;
+				move.child.push({tag: "button", attr: attr, child: []});
 			}, this);
-			/*-- caixa de manipulação --*/
-			document.body.addEventListener("click", this);
-			const box = __DOM({tag: "div", attr: {"data-js-wd-move": ""}, child: child}, node);
-			box.tag.querySelector("[data-js-wd-side=c]").focus();
-
+			/*-- anexando manipulador e definindo propriedades --*/
+			this.active = __DOM(move, target).tag;
+			this.active.children[this.sides.indexOf("c")].focus();
 			return;
 		},
+		/**. '{void detach()}: Desanexa o manipulador do alvo.**/
+		detach: function() {
+			if (this.active !== null) {
+				this.active.parentElement.focus();
+				this.active.remove();
+			}
+			return;
+		},
+		/**. '{void init(node target)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
+		init: function(target) {
+			const style = window.getComputedStyle(target, null);
+			target.style.position = style.position === "static" ? "relative" : style.position;
+			this.detach();
+			this.attach(target);
+			return;
+		},
+
+
+
+
 		/**. '{object info(node node)}: Retorna os nós e valores envolvidos na manipulação:
 		|Nome|Descrição|
 		|node|Nó principal a ser manipulado|
@@ -4164,7 +4183,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				name: node.dataset.jsWdSide,
 				node: document.getElementById(main),
 				box:  document.querySelector(`#${main} > [data-js-wd-move]`),
-				text: document.querySelector(`#${main} > [data-js-wd-move] > [data-js-wd-side=c]`),
+				text: document.querySelector(`#${main} > [data-js-wd-move] > .js-wd-move-c`),
 				fire: node,
 			};
 		},
