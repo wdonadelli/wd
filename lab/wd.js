@@ -314,6 +314,8 @@ const wd = (function() {
 			position: absolute;
 			border: 0;
 			background: transparent;
+			font-family: inherit;
+			font-size: inherit;
 		}
 		/*-- resize vertical --*/
 		.js-wd-move-n, .js-wd-move-s {
@@ -349,7 +351,7 @@ const wd = (function() {
 			height: var(--var-js-wd-move-edge);
 			border: 2px solid red;
 			background: white;
-			border-radius: calc(var(--var-js-wd-move-edge) / 2);
+			/*border-radius: calc(var(--var-js-wd-move-edge) / 2);*/
     }
     .js-wd-move-nw {
 			left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
@@ -377,6 +379,8 @@ const wd = (function() {
 			right:  calc(var(--var-js-wd-move-edge) / 2);
 			bottom: calc(var(--var-js-wd-move-edge) / 2);
 			cursor: move;
+			color: black;
+			background: rgba(255,255,255,0.7);
     }
 
 
@@ -4121,7 +4125,6 @@ Additional roles, states, and properties needed for the menu element are describ
 		}
 	};
 
-
 /*----------------------------------------------------------------------------*/
 	/**#4 Redimensionamento
 	''const object __MOVE''
@@ -4129,99 +4132,53 @@ Additional roles, states, and properties needed for the menu element are describ
 	const __MOVE = {
 		/**. '{number delta}: Espaço entre as movimentaçoes do teclado.**/
 		delta: Math.min(window.screen.height, window.screen.width)/100,
-		/**. '{array sides}: Indentificação dos lados do manipulador com relação à posição relativa.**/
+		/**. '{array sides}: Identificação dos lados do manipulador com relação à posição relativa (ordem de focalização).**/
 		sides: ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"],
-		/**. '{node active}: Registra as informações do manipulador ativo.**/
-		active: null,
+		/**. '{object mouse}: Registra dados para manipulação do mouse.**/
+		mouse: null,
 		/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
 		attach: function(target) {
+			this.detach(target);
+			const data = window.getComputedStyle(target, null);
 			const view = __ID.value;
 			const ctrl = __ID.id(target);
-			const fire = {keydown: this, mousedown: this, focus: this};
+			const fire = {keydown: this, mousedown: this, focusin: this};
 			const move = {tag: "div", attr: {"data-js-wd-role": "move", addEventListener: fire}, child: []};
+			/*-- posicionamento --*/
+			target.style.position = data.position === "static" ? "relative" : data.position;
 			/*-- manipuladores específicos --*/
 			this.sides.forEach(function(v,i,a) {
 				const attr = {className: `js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
 				attr[v === "c" ? "id" : "aria-describedby"] = view;
 				move.child.push({tag: "button", attr: attr, child: []});
 			}, this);
-			/*-- anexando manipulador e definindo propriedades --*/
-			this.active = __DOM(move, target).tag;
-			this.active.children[this.sides.indexOf("c")].focus();
+			/*-- anexando manipulador e focalizando --*/
+			document.body.addEventListener("click", this);
+			__DOM(move, target).tag.children[this.sides.indexOf("c")].focus();
 			return;
 		},
-		/**. '{void detach()}: Desanexa o manipulador do alvo.**/
-		detach: function() {
-			if (this.active !== null) {
-				this.active.parentElement.focus();
-				this.active.remove();
+		/**. '{void detach(node target)}: Desanexa o manipulador do alvo.**/
+		detach: function(target) {
+			const find = target.querySelector("[data-js-wd-role=move]");
+			if (find !== null && find.parentElement === target) {
+				find.remove();
+				target.focus();
+				document.body.addEventListener("click", this);
 			}
 			return;
 		},
-		/**. '{void init(node target)}: Prepara o elemento para provocar a manipulação dos ajustes.**/
-		init: function(target) {
-			const style = window.getComputedStyle(target, null);
-			target.style.position = style.position === "static" ? "relative" : style.position;
-			this.detach();
-			this.attach(target);
-			return;
-		},
-
-
-
-
-		/**. '{object info(node node)}: Retorna os nós e valores envolvidos na manipulação:
-		|Nome|Descrição|
-		|node|Nó principal a ser manipulado|
-		|box|Nó manipulador principal que provoca o movimento|
-		|name|Valor do atributo "data-js-wd-move"|
-		|text|Elemento de texto.|
-		|fire|Elemento provocado.|**/
-		info: function(node) {
-			const main = node.getAttribute("aria-controls");
-			return {
-				name: node.dataset.jsWdSide,
-				node: document.getElementById(main),
-				box:  document.querySelector(`#${main} > [data-js-wd-move]`),
-				text: document.querySelector(`#${main} > [data-js-wd-move] > .js-wd-move-c`),
-				fire: node,
-			};
-		},
 		/**. '{object size(node node, object data)}: Define ou retorna os valores dimensionais do nó ('{height, width, left, right, top, bottom, fontSize}).**/
 		size: function(node, data) {
-			const test = new __Type(data);
-			const info = test.object ? this.size(node) : {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0};
-			const css  = test.object ? null : window.getComputedStyle(node, null);
+			const read = !(data !== null && typeof data === "object");
+			const info = read ? {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0} : this.size(node);
+			const css  = read ? window.getComputedStyle(node, null) : null;
 			for (let i in info) {
-				if (!test.object)
+				if (read)
 					info[i] = Number(css[i].replace(/\D+$/, ""));
 				else if (i in data)
 					node.style[i] = `${data[i]}px`;
 			}
-			return test.object ? this.size(node) : info;
-		},
-		/**. '{void kill(object ev)}: Manipulador para remove o mecanismo de ajustes do nó.**/
-		kill: function(ev) {
-			const move = document.querySelector("[data-js-wd-move]");
-			const node = move.parentElement;
-			/*-- checando se o clique foi dentro do nó --*/
-			if (ev.type === "click" && node.contains(ev.target))
-				return;
-			/*-- encerrando manipulação --*/
-			document.body.removeEventListener("click", this);
-			move.remove();
-			node.focus();
-			return;
-		},
-		/**. '{void jump(object ev)}: Manipulador que gerencia o foco dos elementos de ajuste por teclado (kbd{Tab}).**/
-		jump: function(ev) {
-			const info = this.info(ev.target);
-			const heap = ["nw", "ne", "c", "sw", "se"];
-			const item = heap.indexOf(info.name);
-			const walk = heap.length + (ev.shiftKey ? -1 : 1);
-			const next = heap[(item + walk)%heap.length];
-			info.box.querySelector(`[data-js-wd-side=${next}]`).focus();
-			return;
+			return read ? info : this.size(node);
 		},
 		/**. '{string move(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua posição.**/
 		move: function(node, dx, dy) {
@@ -4231,7 +4188,7 @@ Additional roles, states, and properties needed for the menu element are describ
 			size.top    += dy;
 			size.bottom -= dy;
 			const data = this.size(node, size);
-			return `x=${Math.trunc(data.left)}, y=${Math.trunc(data.top)}`;
+			return `(${Math.trunc(data.left)}, ${Math.trunc(data.top)})`;
 		},
 		/**. '{string resize(node node, number dx, number dy)}: Desloca o nó e retorna a descrição da sua dimensão.**/
 		resize: function(node, dn, de, ds, dw) {
@@ -4251,97 +4208,127 @@ Additional roles, states, and properties needed for the menu element are describ
 			const data = this.size(node, size);
 			return `${Math.trunc(data.width)} x ${Math.trunc(data.height)}`;
 		},
-		/**. '{void focus(object ev)}: Manipulador para exibir o valor do posicionamento ou dimensão do nó ao mudar de foco.**/
-		focus: function(ev) {
-			const info = this.info(ev.target);
-			const text = info.name === "c" ? this.move(info.node, 0, 0) : this.resize(info.node, 0, 0, 0, 0);
-			info.text.textContent = text;
+		/**. '{void data(object ev)}: Retorna os dados envolvendo manipulador ou nulo.**/
+		data: function(ev) {
+			const list = Array.prototype.slice.call(ev.currentTarget.children);
+			const item = list.indexOf(ev.target);
+			if (item < 0) return null;
+			return {
+				node: ev.currentTarget.parentElement,
+				main: ev.currentTarget,
+				side: ev.target,
+				name: this.sides[item],
+				text: list[this.sides.indexOf("c")],
+				next: list[(item + 1)%list.length],
+				prev: list[(list.length + item - 1)%list.length],
+			};
 		},
-		/**. '{void moveKey(object ev)}: Manipulador para mover o elemento com o teclado.**/
-		moveKey: function(ev) {
-			const info = this.info(ev.target);
-			const jump = Math.min(window.screen.height, window.screen.width)/100;
-			const dy = jump * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
-			const dx = jump * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
-			info.text.textContent = this.move(info.node, dx, dy);
+		/**. '{void tab(object ev, object data)}: Manipulador que gerencia a mudança de foco dos manipuladores.**/
+		tab: function(ev, data) {
+			(ev.shiftKey ? data.prev.focus() : data.next.focus());
 			return;
 		},
-		/**. '{void resizeKey(object ev)}: Manipulador para altera as dimenssões do elemento com o teclado.**/
-		resizeKey: function(ev) {
-			const info = this.info(ev.target);
-			const jump = Math.min(window.screen.height, window.screen.width)/100;
+		/**. '{void focus(object ev, object data)}: Manipulador que gerencia o foco dos elementos.**/
+		focus: function(ev, data) {
+			data.text.textContent = this[data.name === "c" ? "move" : "resize"](data.node, 0, 0, 0, 0);;
+			return;
+		},
+		/**. '{void moveKey(object ev, object data)}: Manipulador para mover o elemento com o teclado.**/
+		moveKey: function(ev, data) {
+			const dy   = this.delta * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
+			const dx   = this.delta * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
+			data.text.textContent = this.move(data.node, dx, dy);
+			return;
+		},
+		/**. '{void resizeKey(object ev, object data)}: Manipulador para altera as dimenssões do elemento com o teclado.**/
+		resizeKey: function(ev, data) {
 			const line = {ArrowUp: "v", ArrowDown: "v", ArrowRight: "h", ArrowLeft: "h"};
-			const data = {dn: 0, ds: 0, dw: 0, de: 0};
-			if (line[ev.key] === "v" && info.name.indexOf("n") >= 0)
-				data.dn = ev.key === "ArrowUp" ? -jump : +jump;
-			else if (line[ev.key] === "v" && info.name.indexOf("s") >= 0)
-				data.ds = ev.key === "ArrowUp" ? -jump : +jump;
-			else if (line[ev.key] === "h" && info.name.indexOf("e") >= 0)
-				data.de = ev.key === "ArrowRight" ? +jump : -jump;
-			else if (line[ev.key] === "h" && info.name.indexOf("w") >= 0)
-				data.dw = ev.key === "ArrowRight" ? +jump : -jump;
-			info.text.textContent = this.resize(info.node, data.dn, data.de, data.ds, data.dw);
+			const side = {dn: 0, ds: 0, dw: 0, de: 0};
+			if      (line[ev.key] === "v" && data.name.indexOf("n") >= 0)
+				side.dn = this.delta * (ev.key === "ArrowUp"    ? -1 : +1);
+			else if (line[ev.key] === "v" && data.name.indexOf("s") >= 0)
+				side.ds = this.delta * (ev.key === "ArrowUp"    ? -1 : +1);
+			else if (line[ev.key] === "h" && data.name.indexOf("e") >= 0)
+				side.de = this.delta * (ev.key === "ArrowRight" ? +1 : -1);
+			else if (line[ev.key] === "h" && data.name.indexOf("w") >= 0)
+				side.dw = this.delta * (ev.key === "ArrowRight" ? +1 : -1);
+			data.text.textContent = this.resize(data.node, side.dn, side.de, side.ds, side.dw);
 			return;
 		},
-		/**. '{object moving}: Guarda informações sobre o movimento do mouse.**/
-		moving: null,
-		/**. '{void mouseDown(object ev)}: Manipulador que inicializa o movimento a partir do mouse.**/
-		mouseDown: function(ev) {
-			this.moving = {x: ev.pageX, y: ev.pageY, info: this.info(ev.target)};
+		/**. '{void mouseDown(object ev, object data)}: Manipulador que inicializa o movimento a partir do mouse.**/
+		mouseDown: function(ev, data) {
+			this.mouse   = data;
+			this.mouse.x = ev.pageX;
+			this.mouse.y = ev.pageY;
 			document.body.addEventListener("mouseup", this);
 			document.body.addEventListener("mousemove", this);
 			return;
 		},
-		/**. '{void mouseUp(object ev)}: Manipulador que encerra o movimento a partir do mouse.**/
-		mouseUp: function(ev) {
+		/**. '{void mouseUp(object ev, object data)}: Manipulador que encerra o movimento a partir do mouse.**/
+		mouseUp: function(ev, data) {
 			document.body.removeEventListener("mouseup", this);
 			document.body.removeEventListener("mousemove", this);
-			this.moving.info.fire.focus();
+			this.mouse.side.focus();
+			this.mouse = null;
 			return;
 		},
-		/**. '{void mouseMove(object ev)}: Define o movimento a partir do mouse.**/
-		mouseMove: function(ev) {
+		/**. '{void mouseMove(object ev, object data)}: Manipulador que define o movimento a partir do mouse.**/
+		mouseMove: function(ev, data) {
 			const attr = {
-				node: this.moving.info.node,
-				text: this.moving.info.text,
-				id:   this.moving.info.name,
-				dx:   ev.pageX - this.moving.x,
-				dy:   ev.pageY - this.moving.y,
-				get   dn() {return this.id.indexOf("n") >= 0 ? this.dy : 0;},
-				get   ds() {return this.id.indexOf("s") >= 0 ? this.dy : 0;},
-				get   de() {return this.id.indexOf("e") >= 0 ? this.dx : 0;},
-				get   dw() {return this.id.indexOf("w") >= 0 ? this.dx : 0;},
+				id: this.mouse.name,
+				dx: ev.pageX - this.mouse.x,
+				dy: ev.pageY - this.mouse.y,
+				get dn() {return this.id.indexOf("n") >= 0 ? this.dy : 0;},
+				get ds() {return this.id.indexOf("s") >= 0 ? this.dy : 0;},
+				get de() {return this.id.indexOf("e") >= 0 ? this.dx : 0;},
+				get dw() {return this.id.indexOf("w") >= 0 ? this.dx : 0;},
 			};
 			/*-- redefinir referência --*/
-			this.moving.x += attr.dx;
-			this.moving.y += attr.dy;
+			this.mouse.x += attr.dx;
+			this.mouse.y += attr.dy;
 			/*-- aplicar ajustes --*/
-			if (attr.id === "c")
-				attr.text.textContent = this.move(attr.node, attr.dx, attr.dy);
+			if (this.mouse.name === "c")
+				this.mouse.text.textContent = this.move(this.mouse.node, attr.dx, attr.dy);
 			else
-				attr.text.textContent = this.resize(attr.node, attr.dn, attr.de, attr.ds, attr.dw);
+				this.mouse.text.textContent = this.resize(this.mouse.node, attr.dn, attr.de, attr.ds, attr.dw);
 			return;
 		},
-		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focus}.**/
+		/**. '{void click(object ev, object data)}: Manipulador Define o movimento a partir do mouse.**/
+		click: function(ev, data) {
+			const query = document.querySelectorAll("[data-js-wd-role=move]");
+			for (let i = 0; i < query.length; i++) {
+				let node = query[i].parentElement;
+				if (!node.contains(ev.target))
+					this.detach(node);
+			}
+			return;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focusin}.**/
 		handleEvent: function(ev) {
 			ev.stopPropagation();
-			const data = ev.target.dataset.jsWdSide;
-			const name = data === "c" ? "moveKey" : "resizeKey";
-			const keys = {Escape: "kill", Tab: "jump", ArrowUp: name, ArrowRight: name, ArrowLeft: name, ArrowDown: name};
-			if (ev.type === "keydown" && ev.key in keys) {
+			const data = this.data(ev);
+			const keys = /^(Escape|Tab|ArrowUp|ArrowRight|ArrowLeft|ArrowDown)$/;
+			if (ev.type === "keydown" && keys.test(ev.key)) {
 				ev.preventDefault();
-				this[keys[ev.key]](ev);
+				if (ev.key === "Escape")
+					this.detach(data.node);
+				else if (ev.key === "Tab")
+					this.tab(ev, data);
+				else if (data.name === "c")
+					this.moveKey(ev, data);
+				else
+					this.resizeKey(ev, data);
 			}
 			else if (ev.type === "mousedown")
-				this.mouseDown(ev);
+				this.mouseDown(ev, data);
 			else if (ev.type === "mousemove")
-				this.mouseMove(ev);
+				this.mouseMove(ev, data);
 			else if (ev.type === "mouseup")
-				this.mouseUp(ev);
-			else if (ev.type === "focus")
-				this.focus(ev);
+				this.mouseUp(ev, data);
+			else if (ev.type === "focusin")
+				this.focus(ev, data);
 			else if (ev.type === "click")
-				this.kill(ev);
+				this.click(ev, data)
 			return;
 		},
 	};
