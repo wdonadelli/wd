@@ -3908,109 +3908,111 @@ Additional roles, states, and properties needed for the menu element are describ
 	''const object __TAB''
 	Organiza um container em forma de abas.**/
 	const __TAB = {
-		/**. '{string title(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba.**/
-		title: function(panel, index) {
+		/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba.**/
+		//FIXME não apagar cabeçalho
+		label: function(panel, index) {
 			const find = "h1, h2, h3, h4, h5, h6, [role=heading]";
 			const aria = panel.hasAttribute("aria-label") ? panel.getAttribute("aria-label") : null
 			const data = panel.querySelector(find);
 			if (data !== null) data.hidden = true;
 			return data !== null ? data.innerHTML : (aria !== null ? aria : `Tab ${index}`);
 		},
-		/**. '{object tab(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
-		tab: function(panel, index) {
-			const idPanel = panel.id.trim() === "" ? __ID.value : panel.id.trim();
-			const idTab   = __ID.value;
-			const textTab = this.title(panel, index);
+		/**. '{object create(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
+		create: function(panel, index) {
+			const data = {panel: __ID.id(panel), tab: __ID.value, label: this.label(panel, index)};
 			/*-- preparando painel --*/
 			__HTML(panel, {
-				id: idPanel,
+				id: data.panel,
 				tabIndex: -1,
 				role: "tabpanel",
-				"aria-labelledby": idTab,
+				"aria-labelledby": data.tab,
 				hidden: index !== 0,
 			});
 			/*-- retornando a aba --*/
 			return {tag: "button", child: [], attr: {
 				type: "button",
-				id: idTab,
-				innerHTML: textTab,
+				innerHTML: data.label,
 				tabIndex: index === 0 ? 0 : -1,
+				id: data.tab,
 				role: "tab",
-				"aria-controls": idPanel,
-				"aria-selected": index === 0 ? "true" : "false",
-				addEventListener: {click: this, keydown: this}
+				"aria-controls": data.panel,
+				"aria-selected": index === 0 ? "true" : "false"
 			}};
 		},
 		/**. '{void builder(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
 		builder: function(node, vertical) {
+			node.style.flexDirection = vertical === true ? "row" : "column";
+			node.className = "css-wd-tab";
+			/*-- definindo abas e configurando paineis --*/
 			const data = node.children;
 			const list = {tag: "div", child: [], attr: {
 				tabIndex: -1,
 				role: "tablist",
 				"aria-orientation": vertical === true ? "vertical" : "horizontal",
+				addEventListener: {click: this, keydown: this}
 			}};
-			/*-- estilizando o container --*/
-			node.style.flexDirection = vertical === true ? "row" : "column";
-			node.className = "css-wd-tab";
-			/*-- definindo abas e configurando paineis --*/
 			for (let i = 0; i < data.length; i++)
-				list.child.push(this.tab(data[i], i));
-			/*-- adicionando a lista ao container --*/
+				list.child.push(this.create(data[i], i));
+			/*-- adicionando a lista ao container (topo) --*/
 			node.insertBefore(__DOM(list).tag, node.firstElementChild);
 			return;
 		},
-		/**. '{void setPanel(node tab)}: Exibe o painel vinculado à aba.**/
-		setPanel: function(tab) {
-			const list = tab.parentElement.parentElement.children;
-			const find = tab.getAttribute("aria-controls");
-			for (let i = 0; i < list.length; i++) {
-				if (list[i].role === "tablist") continue;
-				list[i].hidden = list[i].id !== find;
-			}
-			return;
-		},
-		/**. '{void setTab(node tab)}: Seleciona a aba.**/
-		setTab: function(tab) {
-			const list = tab.parentElement.children;
-			for (let i = 0; i < list.length; i++)
-				__HTML(list[i], {
-					tabIndex:        list[i] === tab ? 0 : -1,
-					"aria-selected": list[i] === tab ? "true" : "false",
+   	/**. '{void click(object ev)}: Manipulador que define o painel de acordo com o click na aba.**/
+   	click: function(ev) {
+   		const tab    = ev.target;
+   		const list   = ev.currentTarget;
+   		const panel  = document.getElementById(tab.getAttribute("aria-controls"));
+   		const tabs   = list.children;
+   		const panels = list.parentElement.children;
+   		/*-- definindo painel ativo --*/
+			for (let i = 0; i < panels.length; i++)
+				__HTML(panels[i], {
+					hidden: panels[i] !== list && panels[i] !== panel
+				});
+   		/*-- definindo aba ativa --*/
+   		for (let i = 0; i < tabs.length; i++)
+   			__HTML(tabs[i], {
+					tabIndex:        tabs[i] === tab ? 0 : -1,
+					"aria-selected": tabs[i] === tab ? "true" : "false",
 				});
 			tab.focus();
-			return this.setPanel(tab);
-		},
-		/**. '{void walkTab(node tab, string key)}: Navega pelas abas pelo teclado.**/
-		walkTab: function (tab, key) {
-			const list = Array.prototype.slice.call(tab.parentElement.children);
-			const item = list.indexOf(tab);
-			const walk = {
-				ArrowRight: item + 1, ArrowLeft: item - 1, Home: 0,
-				ArrowDown:  item + 1, ArrowUp:   item - 1, End:  list.length - 1
-			};
-			const next = (walk[key] + list.length)%list.length;
-			return this.setTab(list[next]);
+			return;
+   	},
+   	/**. '{void keydown(object ev)}: Manipulador para navegar pelas abas pelo teclado.**/
+		keydown: function (ev) {
+			const path = ev.currentTarget.getAttribute("aria-orientation")
+			const tabs = Array.prototype.slice.call(ev.currentTarget.children);
+			const item = tabs.indexOf(ev.target);
+			const vert = {ArrowDown:  item + 1, ArrowUp:   item - 1, Home: 0, End: tabs.length - 1}
+			const hori = {ArrowRight: item + 1, ArrowLeft: item - 1, Home: 0, End: tabs.length - 1};
+			const walk = path === "vertical" ? vert : hori;
+			const next = (walk[ev.key] + tabs.length)%tabs.length;
+			tabs[next].click();
+			return;
    	},
    	/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
 		handleEvent: function(ev) {
+			if (ev.target === ev.currentTarget) return;
 			if (ev.type === "click") {
+				ev.stopPropagation();
 				ev.preventDefault();
-				return this.setTab(ev.target);
+				this.click(ev);
 			}
 			else if (ev.type === "keydown") {
-				const keys = {
-					horizontal:  /^(ArrowRight|ArrowLeft|Home|End)$/i,
-					vertical:    /^(ArrowUp|ArrowDown|Home|End)$/i,
-					orientation: ev.target.parentElement.getAttribute("aria-orientation")
-				};
-				if (keys[keys.orientation].test(ev.key)) {
-					ev.preventDefault();
-					return this.walkTab(ev.target, ev.key);
-				}
-				else if (ev.key === "Tab" && !ev.shiftKey) {
+				const path = ev.currentTarget.getAttribute("aria-orientation");
+				const keys = path === "vertical" ? /^(ArrowUp|ArrowDown|Home|End)$/ : /^(ArrowRight|ArrowLeft|Home|End)$/;
+				/*-- sair das abas: focar no painel ativo --*/
+				if (ev.key === "Tab" && !ev.shiftKey) {
+					ev.stopPropagation();
 					ev.preventDefault();
 					const panel = ev.target.getAttribute("aria-controls");
 					document.getElementById(panel).focus();
+				}
+				/*-- navegar pelo teclado --*/
+				else if (keys.test(ev.key)) {
+					ev.stopPropagation();
+					ev.preventDefault();
+					this.keydown(ev);
 				}
 			}
 			return;
@@ -4305,6 +4307,7 @@ Additional roles, states, and properties needed for the menu element are describ
 		},
 		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focusin}.**/
 		handleEvent: function(ev) {
+			if (ev.target === ev.currentTarget) return;
 			ev.stopPropagation();
 			const data = this.data(ev);
 			const keys = /^(Escape|Tab|ArrowUp|ArrowRight|ArrowLeft|ArrowDown)$/;
