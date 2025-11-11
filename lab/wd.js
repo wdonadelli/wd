@@ -382,8 +382,24 @@ const wd = (function() {
 			color: black;
 			background: rgba(255,255,255,0.7);
     }
-
-
+    /*-- DRAG/DROP -----------------------------------------------------------*/
+    [draggable]:hover  {cursor: grab;}
+    [draggable]:active {cursor: grabbing;}
+    .css-wd-drop-copy  {outline: 2px dashed  green;}
+    .css-wd-drop-move  {outline: 2px dashed  red;}
+    .css-wd-drop-link  {outline: 2px dashed  blue;}
+    .js-wd-fake {
+			border: 1px solid black;
+			border-radius: 1em;
+			background-color: yellow;
+			width: auto;
+			min-width: 3em;
+			height: auto;
+			min-height: 2em;
+			padding: 0 1em;
+			text-align: center;
+		}
+		.js-wd-fake:after {content: "\\2690";}
 
 
 
@@ -495,46 +511,7 @@ const wd = (function() {
 		}
     .js-wd-signal-kill:focus, .js-wd-signal-kill:hover {outline: 1px solid !important;}
 
-		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
-		[data-wd-jump]   {cursor: pointer  !important;}
-		/*[data-wd-move]   {cursor: move     !important;}
-		[data-wd-moving], [data-wd-moving] [data-wd-move] {cursor: grabbing !important;}
-		[data-wd-drag]   {cursor: grab     !important;}
-		[data-wd-dropping] {
-			min-height: 4em !important;
-			background-repeat: no-repeat !important;
-			background-position: center !important;
-			background-size: inherit inherit !important;
-		}
-		[data-wd-dropping] > * {visibility: hidden !important;}
-		[data-wd-dropping="copy"], [data-wd-dropping="COPY"] {
-			outline: 2px solid rgb(30,144,255) !important;
-			background-color: rgb(204,230,255) !important;
-		}
-		[data-wd-dropping="COPY"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F4DD	</text></svg>");
-		}
-		[data-wd-dropping="move"], [data-wd-dropping="MOVE"] {
-			outline: 2px solid rgb(255,51,51)  !important;
-			background-color: rgb(255,204,204) !important;
-		}
-		[data-wd-dropping="MOVE"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F4E5</text></svg>");
-		}
-		[data-wd-dropping="link"], [data-wd-dropping="LINK"] {
-			outline: 2px solid rgb(0,153,0)     !important;
-			background-color: rgb(204,255, 204) !important;
-		}
-		[data-wd-dropping="LINK"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F517</text></svg>");
-		}
-		[data-wd-dropping="file"], [data-wd-dropping="FILE"] {
-			outline: 2px solid rgb(255,215,0)  !important;
-			background-color: rgb(255,247,204) !important;
-		}
-		[data-wd-dropping="FILE"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F5BA</text></svg>");
-		}
+
 
 		/*-- dataset -------------------------------------------------------------*/
 		[data-wd-grid] [aria-sort] {cursor: pointer !important;}
@@ -4141,13 +4118,12 @@ Additional roles, states, and properties needed for the menu element are describ
 		/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
 		attach: function(target) {
 			this.detach(target);
-			const data = window.getComputedStyle(target, null);
 			const view = __ID.value;
 			const ctrl = __ID.id(target);
 			const fire = {keydown: this, mousedown: this, focusin: this};
 			const move = {tag: "div", attr: {"data-js-wd-role": "move", addEventListener: fire}, child: []};
 			/*-- posicionamento --*/
-			target.style.position = data.position === "static" ? "relative" : data.position;
+			this.temp(target, {position: {static: "relative"}, display: {inline: "inline-block"}});
 			/*-- manipuladores específicos --*/
 			this.sides.forEach(function(v,i,a) {
 				const attr = {className: `js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
@@ -4155,7 +4131,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				move.child.push({tag: "button", attr: attr, child: []});
 			}, this);
 			/*-- anexando manipulador e focalizando --*/
-			document.body.addEventListener("click", this);
+			window.addEventListener("click", this);
 			__DOM(move, target).tag.children[this.sides.indexOf("c")].focus();
 			return;
 		},
@@ -4165,7 +4141,36 @@ Additional roles, states, and properties needed for the menu element are describ
 			if (find !== null && find.parentElement === target) {
 				find.remove();
 				target.focus();
-				document.body.addEventListener("click", this);
+				window.removeEventListener("click", this);
+			}
+			return;
+		},
+		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} e reverte-o.
+		. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujas propriedades apontam para o valor inaquedado do atributo e seu valor aponta para o novo valor a ser utilizado temporariamente.
+		. Se a propriedade '{style.display} com o valor "inline" tiver que ser alterada para o valor "inline-block", o argumento '{style} deverá ser display: {inline: "inline-block"}. Se o argumento '{style} não for informado, os valores serão reestabelecidos.**/
+		temp: function(node, style) {
+			if (style === undefined && "jsWdTemp" in node.dataset) {
+				const temp = JSON.parse(node.dataset.jsWdTemp);
+				delete node.dataset.jsWdTemp;
+				for (let i in temp) node.style[i] = temp[i];
+			}
+			else if (style !== null && typeof style === "object") {
+				const data = window.getComputedStyle(node, null);
+				const temp = "jsWdTemp" in node.dataset ? JSON.parse(node.dataset.jsWdTemp) : {};
+				for (let name in style) {
+					for (let value in style[name]) {
+						/*-- se o valor incorreto da propriedade for encontrado --*/
+						if (data[name] === value) {
+							/*-- preservar a informação original --*/
+							if (!(name in temp))
+								temp[name] = node.style[name] === "" ? null : node.style[name];
+							/*-- definindo o novo valor temporariamente --*/
+							node.style[name] = style[name][value];
+							break;
+						}
+					}
+				}
+				node.dataset.jsWdTemp = JSON.stringify(temp);
 			}
 			return;
 		},
@@ -4214,7 +4219,6 @@ Additional roles, states, and properties needed for the menu element are describ
 		data: function(ev) {
 			const list = Array.prototype.slice.call(ev.currentTarget.children);
 			const item = list.indexOf(ev.target);
-			if (item < 0) return null;
 			return {
 				node: ev.currentTarget.parentElement,
 				main: ev.currentTarget,
@@ -4262,14 +4266,14 @@ Additional roles, states, and properties needed for the menu element are describ
 			this.mouse   = data;
 			this.mouse.x = ev.pageX;
 			this.mouse.y = ev.pageY;
-			document.body.addEventListener("mouseup", this);
-			document.body.addEventListener("mousemove", this);
+			window.addEventListener("mouseup", this);
+			window.addEventListener("mousemove", this);
 			return;
 		},
 		/**. '{void mouseUp(object ev, object data)}: Manipulador que encerra o movimento a partir do mouse.**/
 		mouseUp: function(ev, data) {
-			document.body.removeEventListener("mouseup", this);
-			document.body.removeEventListener("mousemove", this);
+			window.removeEventListener("mouseup", this);
+			window.removeEventListener("mousemove", this);
 			this.mouse.side.focus();
 			this.mouse = null;
 			return;
@@ -4309,7 +4313,7 @@ Additional roles, states, and properties needed for the menu element are describ
 		handleEvent: function(ev) {
 			if (ev.target === ev.currentTarget) return;
 			ev.stopPropagation();
-			const data = this.data(ev);
+			const data = ev.currentTarget === window ? null : this.data(ev);
 			const keys = /^(Escape|Tab|ArrowUp|ArrowRight|ArrowLeft|ArrowDown)$/;
 			if (ev.type === "keydown" && keys.test(ev.key)) {
 				ev.preventDefault();
@@ -4322,7 +4326,7 @@ Additional roles, states, and properties needed for the menu element are describ
 				else
 					this.resizeKey(ev, data);
 			}
-			else if (ev.type === "mousedown")
+			else if (ev.type === "mousedown" && ev.button === 0)
 				this.mouseDown(ev, data);
 			else if (ev.type === "mousemove")
 				this.mouseMove(ev, data);
@@ -4342,8 +4346,19 @@ Additional roles, states, and properties needed for the menu element are describ
 	''const object __DRAG''
 	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
 	const __DRAG = {
-		/**. '{object data}: Guarda as informações sobre o arrasto**/
+		/**. '{object data}: Guarda as informações sobre o arrasto.**/
 		data: {},
+		/**. '{node fake}: Registra o container falso que indica a posição da queda.**/
+		fake: document.createElement("div"),
+		//FIXME fazer um link também
+
+		/**. '{void make(node drag}: Prepara as dimensões de '{fake}.**/
+		make: function(drag) {
+			this.fake.removeAttribute("style");
+			this.fake.className = "js-wd-fake";
+			this.fake.style.display = window.getComputedStyle(drag, null).display;
+			return;
+		},
 		/**. '{void attach(node drag, node drop, string effect, function call)}: Vincula um elemento de arrasto ao de queda:
 		|Propriedade|Descrição|
 		|drag|Elemento a ser arrastado|
@@ -4356,18 +4371,17 @@ Additional roles, states, and properties needed for the menu element are describ
 		- o efeito aplicado; e
 		- o elemento de origem do elemento arrastado.**/
 		attach: function(drag, drop, effect, call) {
-			drag.id = drag.id.trim() === "" ? __ID.value : drag.id;
-			drop.id = drop.id.trim() === "" ? __ID.value : drop.id;
-			effect  = (/^(copy|link|move)$/i).test(effect) ? effect : "move";
+			drag.id = __ID.id(drag);
+			drop.id = __ID.id(drop);
+			effect  = (/^(copy|link|move)$/i).test(effect) ? String(effect).toLowerCase() : "move";
 			/*-- adicionar dados --*/
-			const draggable = drag.id in this.data;
-			if (!draggable) this.data[drag.id] = {};
-			this.data[drag.id][drop.id] = {effect: String(effect).toLowerCase(), call: call, src: drag.parentElement};
-			/*-- adicionar comportamento --*/
-			drag.draggable = true;
-			if (!draggable) drag.addEventListener("dragstart", this);
+			if (!(drag.id in this.data)) {
+				this.data[drag.id] = {};
+				drag.draggable = true;
+				drag.addEventListener("dragstart", this);
+			}
+			this.data[drag.id][drop.id] = {effect: effect, call: call, src: drag.parentElement};
 			return;
-			//FIXME dragstart dragover dragleave drop
 		},
 		/**. '{void detach(node drag, node drop)}: Desvincula o elemento de arrasto ao de queda, se '{drop} for informado, ou remove o arrasto de '{drag}.**/
 		detach: function(drag, drop) {
@@ -4389,7 +4403,6 @@ Additional roles, states, and properties needed for the menu element are describ
 			if (id in this.data)
 				for (let i in this.data[id])
 					info[this.data[id][i].effect] = true;
-			console.log(this.data, info);
 			if (info.move && info.copy && info.link)
 				return "all";
 			if (info.move && info.copy)
@@ -4400,63 +4413,108 @@ Additional roles, states, and properties needed for the menu element are describ
 				return "linkMove";
 			return info.move ? "move" : (info.copy ? "copy" : (info.link ? "link" : "none"));
 		},
-
-		events: function(drag, drop, remove) {
-
-
-
-
-		},
-
-
 		/**. '{void dragstart(object ev)}: Manipulador que inicializa o arrasto.**/
 		dragstart: function(ev) {
-			ev.dataTransfer.setData("text", ev.target.id);
-  		ev.dataTransfer.effectAllowed = this.effect(ev.target.id);
-  		ev.target.addEventListener("dragend", this);
-  		for (let i in this.data[ev.target.id]) {
+			const drag = ev.target;
+			let   fire = false;
+			ev.dataTransfer.setData("text", drag.id);
+  		ev.dataTransfer.effectAllowed = this.effect(drag.id);
+  		/*-- configurando drops --*/
+  		for (let i in this.data[drag.id]) {
   			let drop = document.getElementById(i);
-  			drop.style.border = "2px dotted red";
-  			drop.addEventListener("dragover", this);
-  			drop.addEventListener("dragleave", this);
-  			drop.addEventListener("drop", this);
-
-
-
-
-  		}
-
-
-  		console.log(ev.dataTransfer, ev.dataTransfer.getData("text"));
+  			if (!drag.contains(drop)) {
+					drop.className += ` css-wd-drop-${this.data[drag.id][i].effect} `;
+					drop.addEventListener("dragover", this);
+					//FIXME drop.addEventListener("dragleave", this);
+					drop.addEventListener("drop", this);
+					fire = true;
+				}
+			}
+			if (fire) drag.addEventListener("dragend", this);
+			this.make(drag);
+			return;
 		},
-
+		/**. '{void dragend(object ev)}: Manipulador que encerra o arrasto.**/
 		dragend: function(ev) {
-			ev.target.removeEventListener("dragend", this);
-			for (let i in this.data[ev.target.id]) {
+			const drag = ev.target;
+			const css  = /\s?css\-wd\-drop\-(link|move|copy)\s?/;
+			drag.removeEventListener("dragend", this);
+			this.fake.remove();
+			for (let i in this.data[drag.id]) {
   			let drop = document.getElementById(i);
-  			drop.style.border = null;
+  			drop.className = drop.className.replace(css, " ");
   			drop.removeEventListener("dragover", this);
-  			drop.removeEventListener("dragleave", this);
+  			//FIXME drop.removeEventListener("dragleave", this);
   			drop.removeEventListener("drop", this);
-
-
-
-
   		}
-
-
-
-
+  		return;
+		},
+		/**. '{void appendFake(object ev)}: Manipulador que exibe o '{fake} conforme conteúdo de i{drop} .**/
+		appendFake: function(ev) {
+			const drop = ev.currentTarget;
+			let  child = ev.target;
+			/*-- o alvo é o fake: não fazer nada --*/
+			if (child.contains(this.fake)) return;
+			/*-- drop sem filhos: adicionar fake ao container --*/
+			if (drop.childElementCount === 0) {
+				drop.appendChild(this.fake);
+				return;
+			}
+			/*-- posicionar pelo filho --*/
+			while (child.parentElement !== drop)
+				child = child.parentElement;
+			const size = __MOVE.size(child);
+			const flow = ev.offsetY >= size.height * (1 - ev.offsetX/size.width);
+			const bros = flow ? child.nextElementSibling : child.previousElementSibling;
+			if (flow && bros === null)
+				drop.appendChild(this.fake);
+			else if (flow && bros !== this.fake)
+				drop.insertBefore(this.fake, bros);
+			else if (!flow && bros !== this.fake)
+				drop.insertBefore(this.fake, child);
+			console.log({x: ev.offsetX, y: ev.offsetY, Y: size.height * (1 - ev.offsetX/size.width), flow: flow})
+			return;
 		},
 
+
+
+		/**. '{void dragover(object ev)}: Manipulador ao navegar o drag sobre o drop.**/
 		dragover: function(ev) {
 			ev.preventDefault();
-		},
-		dragleave: function(ev) {
+			ev.stopPropagation();
+			const drag = document.getElementById(ev.dataTransfer.getData("text"));
+			const drop = ev.currentTarget;
+			const data = this.data[drag.id][drop.id];
+			ev.dataTransfer.dropEffect = data.effect;
+			//__ICON.background(this.fake, data.effect === "copy" ? "1F4DD" : "1F4E5");
+			if (data.effect === "copy" || data.effect === "move")
+				this.appendFake(ev);
 
+
+
+			return;
+		},
+		/**. '{void dragleave(object ev)}: Manipulador ao tirar o drag sobre o drop.**/
+		dragleave: function(ev) {
+			return;
 		},
 		drop: function(ev) {
+			const drag = document.getElementById(ev.dataTransfer.getData("text"));
+			const drop = ev.currentTarget;
+			const data = this.data[drag.id][drop.id];
+			if (data.effect === "copy") {
+				const clone = drag.cloneNode(true);
+				clone.id = __ID.value;
+				drop.insertBefore(clone, this.fake);
+			}
+			else if (data.effect === "move") {
+				drop.insertBefore(drag, this.fake);
+			}
+			else
+				console.log(data.effect)
 
+			this.fake.remove();
+			return;
 		},
 
 
