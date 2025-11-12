@@ -3078,22 +3078,7 @@ const wd = (function() {
 		},
 	};
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Obter Propriedades/Atributos
-	''const object __GET_HTML''
-	Define um conjunto de métodos para obter as propriedades de elementos HTML de forma personalizada.**/
-	const __GET_HTML = {
-		/**. '{string className(node node)}: Retorna o valor do atributo '{class}.**/
-		className: function(node) {
-			const attr = node.getAttribute("class");
-			const text = attr === null ? "" : attr.replace(/\s+/g, " ").trim();
-			const list = text.split(" ").filter(function(v,i,a) {return a.indexOf(v) === i;});
-			const data = list.sort().join(" ");
-			if (attr !== null && attr !== data)
-				node.setAttribute("class", data);
-			return data;
-		},
-	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Definir Propriedades/Atributos
@@ -3185,8 +3170,9 @@ const wd = (function() {
 				this.classList(node, value);
 			}
 			else if (check.chars) {
-				node.setAttribute("class", value);
-				__GET_HTML.className(node);
+				const list = value.replace(/\s+/g, " ").trim().split(" ");
+				const heap = list.filter(function(v,i,a) {return a.indexOf(v) === i;});
+				node.setAttribute("class", heap.sort().join(" "));
 			}
 			return;
 		},
@@ -3201,7 +3187,9 @@ const wd = (function() {
 			const check = __CHECK.test(value);
 			if (check.type === "object") {
 				const prop = ["replace", "toggle", "add", "remove"];
-				let   list = __GET_HTML.className(node).split(" ");
+				const name = node.getAttribute("class");
+				this.className(node, name === null ? "" : name);
+				let   list = name === null ? [] : node.getAttribute("class").split(" ");
 				for (let i = 0; i < prop.length; i++) {
 					if (prop[i] in value) {
 						let css = String(value[prop[i]]).replace(/\s+/g, " ").trim().split(" ");
@@ -3720,6 +3708,56 @@ const wd = (function() {
 	- A propriedade '{detail} do evento disparado conterá o conteúdo do respectivo item do array;
 	- Somente valores presentes no formato JSON poderão ser utilizados.**/
 	const __MENU = {
+		label: function(input) {
+			const test = new __Type(input);
+			if (test.object)
+				return "label" in input ? String(input.label) : null;
+			if (test.array && input.length > 0)
+				return this.label(input[0]);
+			if (test.null || test.undefined)
+				return null;
+			return String(input);
+		},
+
+
+		design: function(list, home, chain, main) {
+			home   = typeof home  !== "string" ? null : home;
+			chain  = typeof chain !== "string" ?  "0" : chain;
+			main   = !Array.isArray(main)      ?   [] : main;
+			/*-- obter dados e estruturar menu --*/
+			const menu = {id: __ID.value, item: [], data: {}, sub: [], chain: chain, home: home};
+			list.forEach(function(v,i,a) {
+				const test  = new __Type(v);
+				const label = this.label(v);
+				if (i === 0) {
+					menu.label = label === null ? `Menu ${index}` : label;
+				}
+				else {
+					const array = test.array && v.length > 0;
+					const item  = {};
+					item.id     = __ID.value;
+					item.label  = label === null ? `Item ${index}.${i}` : label;
+					item.open   = array ? __ID.value : null;
+					menu.item.push(item);
+					menu.data[item.id] = array ? v[0] : v;
+					/*-- submenu --*/
+					if (array) {
+						const subitem = v.slice();
+						subitem.splice(1, 0, a[0]);
+						menu.sub.push({list: subitem, home: item.id, chain: `${chain}.${menu.sub.length}`});
+					}
+				}
+			}, this);
+			menu.data = JSON.stringify(menu.data);
+			main.push(menu);
+			for (let i = 0; i < menu.sub.length; i++)
+				this.design(menu.sub[i].list, menu.sub[i].home, menu.sub[i].chain, main);
+			return main;
+		},
+
+
+
+
 		//FIXME manter propriedade help?
 		/**. '{object data(any input, string base)}: Extraí e retorna os valores do texto (`{text}) da descrição (`{help}) de '{input}**/
 		data: function(input, base) {
@@ -3888,11 +3926,16 @@ Additional roles, states, and properties needed for the menu element are describ
 		/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba.**/
 		//FIXME não apagar cabeçalho
 		label: function(panel, index) {
-			const find = "h1, h2, h3, h4, h5, h6, [role=heading]";
-			const aria = panel.hasAttribute("aria-label") ? panel.getAttribute("aria-label") : null
-			const data = panel.querySelector(find);
-			if (data !== null) data.hidden = true;
-			return data !== null ? data.innerHTML : (aria !== null ? aria : `Tab ${index}`);
+			const query = panel.querySelector("h1, h2, h3, h4, h5, h6, [role=heading]");
+			const label = panel.hasAttribute("aria-label")      ? panel.getAttribute("aria-label").trim()      : null;
+			const outer = panel.hasAttribute("aria-labelledby") ? panel.getAttribute("aria-labelledby").trim() : null;
+			if (label !== null && label !== "")
+				return label;
+			if (outer !== null && document.getElementById(outer) !== null)
+				return document.getElementById(outer).textContent.trim();
+			if (query !== null)
+				return query.textContent.trim();
+			return `Tab ${index}`;
 		},
 		/**. '{object create(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
 		create: function(panel, index) {
@@ -4145,9 +4188,9 @@ Additional roles, states, and properties needed for the menu element are describ
 			}
 			return;
 		},
-		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} e reverte-o.
-		. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujas propriedades apontam para o valor inaquedado do atributo e seu valor aponta para o novo valor a ser utilizado temporariamente.
-		. Se a propriedade '{style.display} com o valor "inline" tiver que ser alterada para o valor "inline-block", o argumento '{style} deverá ser display: {inline: "inline-block"}. Se o argumento '{style} não for informado, os valores serão reestabelecidos.**/
+		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} preservando-as para a reversão. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujas propriedades apontam para o valor inaquedado do atributo e seu valor aponta para o novo valor a ser utilizado temporariamente caso o valor inadequado seja encontrado. Se o argumento '{style} não for informado, os valores serão reestabelecidos.
+			. Exemplificando, caso o valor "inline" para a propriedade '{display} seja inadequado, devendo ser alterado temporariamente para "inline-block", o argumento '{style} deverá ser definindo como:
+		''{display: {inline: "inline-block"}}''**/
 		temp: function(node, style) {
 			if (style === undefined && "jsWdTemp" in node.dataset) {
 				const temp = JSON.parse(node.dataset.jsWdTemp);
@@ -11348,7 +11391,6 @@ Additional roles, states, and properties needed for the menu element are describ
 			pin:      {value: function(){return __Pin.apply(null, Array.prototype.slice.call(arguments));}},
 			ID:       {value: __ID},
 			SETHTML:  {value: __SET_HTML},
-			GETHTML:  {value: __GET_HTML},
 			HTML:     {value: __HTML},
 			DOM:      {value: __DOM},
 			FORM:     {value: __FORM},
