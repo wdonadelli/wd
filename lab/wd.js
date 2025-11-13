@@ -308,7 +308,7 @@ const wd = (function() {
 			}
 			.css-wd-icon-circle {border-radius: 0.5em;}
 		/*-- MOVE/RESIZE ---------------------------------------------------------*/
-		[data-js-wd-role=move] {
+		.css-wd-move {
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -319,7 +319,7 @@ const wd = (function() {
 			font-size: var(--var-js-wd-font-size);
 			font-family: var(--var-js-wd-font-type);
 		}
-		[data-js-wd-role=move] > * {
+		.css-wd-move > * {
 			position: absolute;
 			border: 0;
 			background: transparent;
@@ -327,62 +327,62 @@ const wd = (function() {
 			font-size: inherit;
 		}
 		/*-- resize vertical --*/
-		.js-wd-move-n, .js-wd-move-s {
+		.css-wd-move-n, .css-wd-move-s {
 			height: var(--var-js-wd-move-edge);
 			left:   calc(var(--var-js-wd-move-edge) / 2);
 			right:  calc(var(--var-js-wd-move-edge) / 2);
 		}
-    .js-wd-move-n {
+    .css-wd-move-n {
     	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: n-resize;
     }
-    .js-wd-move-s {
+    .css-wd-move-s {
     	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: s-resize;
     }
     /*-- resize horizontal --*/
-    .js-wd-move-w, .js-wd-move-e {
+    .css-wd-move-w, .css-wd-move-e {
 			width:  var(--var-js-wd-move-edge);
 			top:    calc(var(--var-js-wd-move-edge) / 2);
 			bottom: calc(var(--var-js-wd-move-edge) / 2);
 		}
-    .js-wd-move-w {
+    .css-wd-move-w {
     	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: w-resize;
     }
-    .js-wd-move-e {
+    .css-wd-move-e {
     	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
     	cursor: e-resize;
     }
     /*-- resize bidimensional --*/
-    .js-wd-move-nw, .js-wd-move-ne, .js-wd-move-sw, .js-wd-move-se {
+    .css-wd-move-nw, .css-wd-move-ne, .css-wd-move-sw, .css-wd-move-se {
     	width:  var(--var-js-wd-move-edge);
 			height: var(--var-js-wd-move-edge);
 			border: 2px solid red;
 			background: white;
 			/*border-radius: calc(var(--var-js-wd-move-edge) / 2);*/
     }
-    .js-wd-move-nw {
+    .css-wd-move-nw {
 			left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: nw-resize;
     }
-    .js-wd-move-ne {
+    .css-wd-move-ne {
 			right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
 			top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: ne-resize;
     }
-    .js-wd-move-sw {
+    .css-wd-move-sw {
 			left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: sw-resize;
     }
-    .js-wd-move-se {
+    .css-wd-move-se {
 			right:   calc(-1 * var(--var-js-wd-move-edge) / 2);
 			bottom:  calc(-1 * var(--var-js-wd-move-edge) / 2);
 			cursor: se-resize;
     }
-    .js-wd-move-c {
+    .css-wd-move-c {
 			left:   calc(var(--var-js-wd-move-edge) / 2);
 			top:    calc(var(--var-js-wd-move-edge) / 2);
 			right:  calc(var(--var-js-wd-move-edge) / 2);
@@ -3910,8 +3910,8 @@ const wd = (function() {
 				return query.textContent.trim();
 			return `Tab ${index}`;
 		},
-		/**. '{object create(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
-		create: function(panel, index) {
+		/**. '{object design(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
+		design: function(panel, index) {
 			const data = {panel: __ID.id(panel), tab: __ID.value, label: this.label(panel, index)};
 			/*-- preparando painel --*/
 			__HTML(panel, {
@@ -3932,8 +3932,8 @@ const wd = (function() {
 				"aria-selected": index === 0 ? "true" : "false"
 			}};
 		},
-		/**. '{void builder(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
-		builder: function(node, vertical) {
+		/**. '{void create(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
+		create: function(node, vertical) {
 			node.style.flexDirection = vertical === true ? "row" : "column";
 			node.className = "css-wd-tab";
 			/*-- definindo abas e configurando paineis --*/
@@ -3945,68 +3945,59 @@ const wd = (function() {
 				addEventListener: {click: this, keydown: this}
 			}};
 			for (let i = 0; i < data.length; i++)
-				list.child.push(this.create(data[i], i));
+				list.child.push(this.design(data[i], i));
 			/*-- adicionando a lista ao container (topo) --*/
 			node.insertBefore(__DOM(list).tag, node.firstElementChild);
 			return;
 		},
-   	/**. '{void click(object ev)}: Manipulador que define o painel de acordo com o click na aba.**/
-   	click: function(ev) {
-   		const tab    = ev.target;
-   		const list   = ev.currentTarget;
-   		const panel  = document.getElementById(tab.getAttribute("aria-controls"));
-   		const tabs   = list.children;
-   		const panels = list.parentElement.children;
-   		/*-- definindo painel ativo --*/
-			for (let i = 0; i < panels.length; i++)
-				__HTML(panels[i], {
-					hidden: panels[i] !== list && panels[i] !== panel
-				});
-   		/*-- definindo aba ativa --*/
-   		for (let i = 0; i < tabs.length; i++)
-   			__HTML(tabs[i], {
-					tabIndex:        tabs[i] === tab ? 0 : -1,
-					"aria-selected": tabs[i] === tab ? "true" : "false",
-				});
+		/**. '{void open(node tab)}: Abre o paineil a partir da aba.**/
+		open: function(tab) {
+			const list   = tab.parentElement;
+			const tabs   = list.children;
+			const panel  = document.getElementById(tab.getAttribute("aria-controls"));
+			const panels = panel.parentElement.children;
+			/*-- manipulado os paineis --*/
+			for (let i = 0; i < panels.length; i++) {
+				panels[i].hidden = panels[i] !== list && panels[i] !== panel;
+			}
+			/*-- manipulado as abas --*/
+			for (let i = 0; i < tabs.length; i++) {
+				tabs[i].tabIndex = tabs[i] === tab ? 0 : -1;
+				tabs[i].setAttribute("aria-selected", tabs[i] === tab ? "true" : "false");
+			}
 			tab.focus();
 			return;
-   	},
+		},
    	/**. '{void keydown(object ev)}: Manipulador para navegar pelas abas pelo teclado.**/
 		keydown: function (ev) {
-			const path = ev.currentTarget.getAttribute("aria-orientation")
 			const tabs = Array.prototype.slice.call(ev.currentTarget.children);
 			const item = tabs.indexOf(ev.target);
-			const vert = {ArrowDown:  item + 1, ArrowUp:   item - 1, Home: 0, End: tabs.length - 1}
-			const hori = {ArrowRight: item + 1, ArrowLeft: item - 1, Home: 0, End: tabs.length - 1};
-			const walk = path === "vertical" ? vert : hori;
-			const next = (walk[ev.key] + tabs.length)%tabs.length;
-			tabs[next].click();
+			const jump = {
+				ArrowDown:  item + 1, ArrowUp:   item - 1, Home: 0,
+				ArrowRight: item + 1, ArrowLeft: item - 1, End: tabs.length - 1
+			};
+			const next = (tabs.length + jump[ev.key])%tabs.length;
+			this.open(tabs[next]);
 			return;
    	},
    	/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
 		handleEvent: function(ev) {
-			if (ev.target === ev.currentTarget) return;
-			if (ev.type === "click") {
+			if (ev.target.tagName.toLowerCase() !== "button") return;
+			const path = ev.currentTarget.getAttribute("aria-orientation");
+			const keys = path === "vertical" ? /^(ArrowUp|ArrowDown|Home|End)$/ : /^(ArrowRight|ArrowLeft|Home|End)$/;
+			const stop = {click: true, keydown: (ev.key === "Tab" && !ev.shiftKey) || keys.test(ev.key)};
+			if (ev.type in stop && stop[ev.type]) {
 				ev.stopPropagation();
 				ev.preventDefault();
-				this.click(ev);
 			}
-			else if (ev.type === "keydown") {
-				const path = ev.currentTarget.getAttribute("aria-orientation");
-				const keys = path === "vertical" ? /^(ArrowUp|ArrowDown|Home|End)$/ : /^(ArrowRight|ArrowLeft|Home|End)$/;
-				/*-- sair das abas: focar no painel ativo --*/
-				if (ev.key === "Tab" && !ev.shiftKey) {
-					ev.stopPropagation();
-					ev.preventDefault();
-					const panel = ev.target.getAttribute("aria-controls");
-					document.getElementById(panel).focus();
-				}
-				/*-- navegar pelo teclado --*/
-				else if (keys.test(ev.key)) {
-					ev.stopPropagation();
-					ev.preventDefault();
+			if (ev.type === "click") {
+				this.open(ev.target);
+			}
+			else if (ev.type === "keydown" && stop.keydown) {
+				if (ev.key === "Tab")
+					document.getElementById(ev.target.getAttribute("aria-controls")).focus();
+				else
 					this.keydown(ev);
-				}
 			}
 			return;
 		},
@@ -4131,34 +4122,43 @@ const wd = (function() {
 		sides: ["nw", "n", "ne", "w", "c", "e", "sw", "s", "se"],
 		/**. '{object mouse}: Registra dados para manipulação do mouse.**/
 		mouse: null,
+		/**. '{array heap}: Registra os identificadores dos manipuladores abertos.**/
+		heap: [],
 		/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
 		attach: function(target) {
 			this.detach(target);
 			const view = __ID.value;
 			const ctrl = __ID.id(target);
 			const fire = {keydown: this, mousedown: this, focusin: this};
-			const move = {tag: "div", attr: {"data-js-wd-role": "move", addEventListener: fire}, child: []};
+			const move = {tag: "div", attr: {className: "css-wd-move", addEventListener: fire, id: __ID.value}, child: []};
 			/*-- posicionamento --*/
 			this.temp(target, {position: {static: "relative"}, display: {inline: "inline-block"}});
 			/*-- manipuladores específicos --*/
 			this.sides.forEach(function(v,i,a) {
-				const attr = {className: `js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
+				const attr = {className: `css-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
 				attr[v === "c" ? "id" : "aria-describedby"] = view;
 				move.child.push({tag: "button", attr: attr, child: []});
 			}, this);
 			/*-- anexando manipulador e focalizando --*/
-			window.addEventListener("click", this);
 			__DOM(move, target).tag.children[this.sides.indexOf("c")].focus();
+			if (this.heap.length === 0)
+				window.addEventListener("click", this);
+			this.heap.push(move.attr.id);
 			return;
 		},
 		/**. '{void detach(node target)}: Desanexa o manipulador do alvo.**/
 		detach: function(target) {
-			const find = target.querySelector("[data-js-wd-role=move]");
-			if (find !== null && find.parentElement === target) {
-				find.remove();
-				target.focus();
+			this.heap = this.heap.filter(function(v,i,a) {
+				const find = document.getElementById(v);
+				if (find !== null && find.parentElement === target) {
+					find.remove();
+					target.focus();
+					return false;
+				}
+				return true;
+			});
+			if (this.heap.length === 0)
 				window.removeEventListener("click", this);
-			}
 			return;
 		},
 		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} preservando-as para a reversão. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujas propriedades apontam para o valor inaquedado do atributo e seu valor aponta para o novo valor a ser utilizado temporariamente caso o valor inadequado seja encontrado. Se o argumento '{style} não for informado, os valores serão reestabelecidos.
@@ -4257,23 +4257,25 @@ const wd = (function() {
 		},
 		/**. '{void moveKey(object ev, object data)}: Manipulador para mover o elemento com o teclado.**/
 		moveKey: function(ev, data) {
-			const dy   = this.delta * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
-			const dx   = this.delta * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
+			const di = this.delta * (ev.shiftKey ? 5 : 1);
+			const dy = di * (ev.key === "ArrowUp"   ? -1 : (ev.key === "ArrowDown"  ? 1 : 0));
+			const dx = di * (ev.key === "ArrowLeft" ? -1 : (ev.key === "ArrowRight" ? 1 : 0));
 			data.text.textContent = this.move(data.node, dx, dy);
 			return;
 		},
 		/**. '{void resizeKey(object ev, object data)}: Manipulador para altera as dimenssões do elemento com o teclado.**/
 		resizeKey: function(ev, data) {
+			const di   = this.delta * (ev.shiftKey ? 5 : 1);
 			const line = {ArrowUp: "v", ArrowDown: "v", ArrowRight: "h", ArrowLeft: "h"};
 			const side = {dn: 0, ds: 0, dw: 0, de: 0};
 			if      (line[ev.key] === "v" && data.name.indexOf("n") >= 0)
-				side.dn = this.delta * (ev.key === "ArrowUp"    ? -1 : +1);
+				side.dn = di * (ev.key === "ArrowUp"    ? -1 : +1);
 			else if (line[ev.key] === "v" && data.name.indexOf("s") >= 0)
-				side.ds = this.delta * (ev.key === "ArrowUp"    ? -1 : +1);
+				side.ds = di * (ev.key === "ArrowUp"    ? -1 : +1);
 			else if (line[ev.key] === "h" && data.name.indexOf("e") >= 0)
-				side.de = this.delta * (ev.key === "ArrowRight" ? +1 : -1);
+				side.de = di * (ev.key === "ArrowRight" ? +1 : -1);
 			else if (line[ev.key] === "h" && data.name.indexOf("w") >= 0)
-				side.dw = this.delta * (ev.key === "ArrowRight" ? +1 : -1);
+				side.dw = di * (ev.key === "ArrowRight" ? +1 : -1);
 			data.text.textContent = this.resize(data.node, side.dn, side.de, side.ds, side.dw);
 			return;
 		},
@@ -4317,10 +4319,11 @@ const wd = (function() {
 		},
 		/**. '{void click(object ev, object data)}: Manipulador Define o movimento a partir do mouse.**/
 		click: function(ev, data) {
-			const query = document.querySelectorAll("[data-js-wd-role=move]");
-			for (let i = 0; i < query.length; i++) {
-				let node = query[i].parentElement;
-				if (!node.contains(ev.target))
+			const heap = this.heap.slice();
+			for (let i = 0; i < heap.length; i++) {
+				let find = document.getElementById(heap[i]);
+				let node = find !== null ? find.parentElement : null;
+				if (node !== null && !node.contains(ev.target))
 					this.detach(node);
 			}
 			return;
