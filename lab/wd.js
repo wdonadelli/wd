@@ -196,7 +196,7 @@ const wd = (function() {
 			border: 0;
 		}
 		/*-- MENU ----------------------------------------------------------------*/
-		[data-js-wd-role=menu] {
+		.css-wd-menu {
 			padding: 0.3em;
 			margin: 0;
 			color: black;
@@ -205,31 +205,31 @@ const wd = (function() {
 			font-size: var(--var-js-wd-font-size);
 			font-family: var(--var-js-wd-font-type);
 		}
-		[data-js-wd-role=menu] * {
+		.css-wd-menu * {
 			font-size: inherit;
 			font-family: inherit;
 		}
-		[data-js-wd-role=menu] menu {
+		.css-wd-menu menu {
 			list-style: none;
 			padding: 0;
 			margin: 0
 		}
-		[data-js-wd-role=menu] li {
+		.css-wd-menu li {
 			padding: 0;
 			margin: 0.3em 0 0 0;
 		}
-		[data-js-wd-role=menu] > *:first-child {
+		.css-wd-menu > *:first-child {
 			text-align: center;
 			font-weight: bold;
 			padding: 0;
 			margin: 0.3em 0 0 0;
 		}
-		[data-js-wd-role=menu] button {
+		.css-wd-menu button {
 			text-align: left;
 			font-weight: normal;
 			cursor: pointer;
 		}
-		[data-js-wd-role=menu] button {
+		.css-wd-menu button {
 			position: relative;
 			display: block;
 			width: 100%;
@@ -239,7 +239,7 @@ const wd = (function() {
 			font-family: inherit;
 			border-radius: 0.2em;
 		}
-		[data-js-wd-role=menu] [aria-controls]:after {
+		.css-wd-menu [aria-controls]:after {
 			display: inline-block;
 			position: absolute;
 			width: 2em;
@@ -247,7 +247,7 @@ const wd = (function() {
 			content: "\\276E";
 			left: 0;
 		}
-		[data-js-wd-role=menu] [aria-controls][aria-expanded]:after {
+		.css-wd-menu [aria-controls][aria-expanded]:after {
 			content: "\\276F";
 			left: auto;
 			right: 0;
@@ -3750,6 +3750,7 @@ const wd = (function() {
 					item.back  = back ? home : null;
 					item.id    = back ? main.back[home] : __ID.value;
 					item.value = JSON.stringify(open || back ? "" : v);
+					item.focus = main.menus.length === 0 && i === 1;
 					menu.items.push(item);
 					if (open) {
 						main.back[item.id] = item.open;
@@ -3770,9 +3771,14 @@ const wd = (function() {
 		},
 		/**. '{object createMenuItem(object data)}: Retorna a estrutura do item de menu.**/
 		createMenuItem: function(data) {
-			const fire = {mouseenter: this}
-			const attr = {id: data.id, innerHTML: data.label, type: "button", addEventListener: fire, value: data.value};
-			const item = {tag: "button", child: [], attr: attr};
+			const item = {tag: "button", child: [], attr: {
+				id: data.id,
+				innerHTML: data.label,
+				type: "button",
+				value: data.value,
+				autofocus: data.focus,
+				tabIndex: data.focus ? 0 : -1,
+			}};
 			if (data.open !== null) {
 				item.attr["aria-controls"] = data.open;
 				item.attr["aria-haspopup"] = "true";
@@ -3809,15 +3815,19 @@ const wd = (function() {
 		createBox: function(data) {console.log(data);
 			const head = this.createHead(data);
 			const menu = this.createMenu(data);
-			const attr = {dataset: {jsWdRole: "menu"}, hidden: data.step.length > 1, "aria-labelledby": head.attr.id};
-			return {tag: "section", attr: attr, child: [head, menu]};
+			return {tag: "section", child: [head, menu], attr: {
+				className: "css-wd-menu",
+				hidden: data.step.length > 1,
+				"aria-labelledby": head.attr.id,
+			}};
+			return ;
 		},
-		/**. '{node create(array list)}: Retorna o menu em forma de formulário HTML.**/
+		/**. '{node create(array list)}: Retorna o menu.**/
 		create: function(list) {
 			if (!Array.isArray(list)) return null;
 			const data = this.design(list);
-			const fire = {click: this, keydown: this};
-			const form = {tag: "form", attr: {addEventListener: fire}, child: []};
+			const fire = {click: this, keydown: this, mouseover: this, focusin: this, focusout: this};
+			const form = {tag: "div", attr: {addEventListener: fire}, child: []};
 			for (let i = 0; i < data.menus.length; i++)
 				form.child.push(this.createBox(data.menus[i]));
 			return __DOM(form, document.body).tag;
@@ -3871,20 +3881,27 @@ const wd = (function() {
 				this.view(ev.target.getAttribute("aria-controls"), ev.target.id);
 			return;
 		},
-		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click} e {mouseenter}.**/
+		/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click}, '{focusin}, '{focuout} e {mouseover}.**/
 		handleEvent: function(ev) {
-			const btn = ev.target.tagName.toLowerCase() === "button";
+			if (ev.target.tagName.toLowerCase() !== "button") return;
 			const re  = /^(ArrowDown|ArrowUp|ArrowRight|ArrowLeft|Home|End)$/;
-			if (ev.type === "mouseenter" && btn) {
-				ev.stopPropagation();
+			ev.stopPropagation();
+			if (ev.type === "mouseover") {
 				ev.target.focus();
 			}
-			else if (ev.type === "click" && btn) {
-				ev.stopPropagation();
+			else if (ev.type === "focusin") {
+				ev.target.tabIndex  = 0;
+				ev.target.autofocus = false;
+			}
+			else if (ev.type === "focusout") {
+				const exit = ev.relatedTarget === null || !ev.currentTarget.contains(ev.relatedTarget);
+				if (!exit) ev.target.tabIndex = -1;
+			}
+			else if (ev.type === "click") {
 				this.click(ev);
 			}
-			else if (ev.type === "keydown" && btn && re.test(ev.key)) {
-				ev.stopPropagation();
+			else if (ev.type === "keydown" && re.test(ev.key)) {
+				ev.preventDefault();
 				this.keydown(ev);
 			}
 			return;
@@ -3896,23 +3913,26 @@ const wd = (function() {
 	''const object __TAB''
 	Organiza um container em forma de abas.**/
 	const __TAB = {
-		/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba.**/
-		//FIXME não apagar cabeçalho
+		/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 		label: function(panel, index) {
 			const query = panel.querySelector("h1, h2, h3, h4, h5, h6, [role=heading]");
 			const label = panel.hasAttribute("aria-label")      ? panel.getAttribute("aria-label").trim()      : null;
 			const outer = panel.hasAttribute("aria-labelledby") ? panel.getAttribute("aria-labelledby").trim() : null;
+			const text  = panel.innerText.trim().split("\n")[0].replace(/\s+/g, " ").replace(/^\W+|\W+$/, "");
 			if (label !== null && label !== "")
 				return label;
 			if (outer !== null && document.getElementById(outer) !== null)
 				return document.getElementById(outer).textContent.trim();
 			if (query !== null)
 				return query.textContent.trim();
-			return `Tab ${index}`;
+			if (text.length > 0)
+				return text.split(" ").slice(0,5).join(" ");
+			return null;
 		},
 		/**. '{object design(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
 		design: function(panel, index) {
-			const data = {panel: __ID.id(panel), tab: __ID.value, label: this.label(panel, index)};
+			const text = this.label(panel);
+			const data = {panel: __ID.id(panel), tab: __ID.value, label: text ===  null ? `Tab ${index}` : text};
 			/*-- preparando painel --*/
 			__HTML(panel, {
 				id: data.panel,
@@ -4098,10 +4118,10 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. '{void icon(node node, string code, string size, string data)}: Define um plano de fundo com o ícone. O argumento '{data} pode se referir à posição x,y (com a unidade de medida, separada por espaço, sem repetição) ou o tipo de repetição.**/
+		/**. '{void background(node node, string code, string size, string data)}: Define um plano de fundo com o ícone. O argumento '{data} pode se referir à posição x,y, com a unidade de medida separada por espaço (sem repetição) ou o tipo de repetição.**/
 		background: function(node, code, size, data) {
 			data = String(data).replace(/\s+/g, " ").trim().toLowerCase()
-			const mult = /^(space|round|repeat\-x|repeat\-y)$/;
+			const mult = /^(space|round|repeat(\-[xy])?)$/;
 			const site = /^(0|\d+(\.\d+)?(\%|[a-z]+))\ (0|\d+(\.\d+)?(\%|[a-z]+))$/;
 			if (mult.test(data))
 				return this.style(node, {code: code}, size, data);
@@ -4369,15 +4389,6 @@ const wd = (function() {
 		data: {},
 		/**. '{node fake}: Registra o container falso que indica a posição da queda.**/
 		fake: document.createElement("div"),
-		//FIXME fazer um link também
-
-		/**. '{void make(node drag}: Prepara as dimensões de '{fake}.**/
-		make: function(drag) {
-			this.fake.removeAttribute("style");
-			this.fake.className = "js-wd-fake";
-			this.fake.style.display = window.getComputedStyle(drag, null).display;
-			return;
-		},
 		/**. '{void attach(node drag, node drop, string effect, function call)}: Vincula um elemento de arrasto ao de queda:
 		|Propriedade|Descrição|
 		|drag|Elemento a ser arrastado|
@@ -4444,13 +4455,18 @@ const wd = (function() {
   			if (!drag.contains(drop)) {
 					drop.className += ` css-wd-drop-${this.data[drag.id][i].effect} `;
 					drop.addEventListener("dragover", this);
-					//FIXME drop.addEventListener("dragleave", this);
+					drop.addEventListener("dragleave", this);
 					drop.addEventListener("drop", this);
 					fire = true;
 				}
 			}
-			if (fire) drag.addEventListener("dragend", this);
-			this.make(drag);
+			if (fire) {
+				drag.addEventListener("dragend", this);
+				this.fake = drag.cloneNode(true);
+				this.fake.id = __ID.value;
+				this.fake.style.outline = "thin solid";
+				this.fake.style.borderRadius = "0.2em";
+			}
 			return;
 		},
 		/**. '{void dragend(object ev)}: Manipulador que encerra o arrasto.**/
@@ -4463,7 +4479,7 @@ const wd = (function() {
   			let drop = document.getElementById(i);
   			drop.className = drop.className.replace(css, " ");
   			drop.removeEventListener("dragover", this);
-  			//FIXME drop.removeEventListener("dragleave", this);
+  			drop.removeEventListener("dragleave", this);
   			drop.removeEventListener("drop", this);
   		}
   		return;
@@ -4480,8 +4496,10 @@ const wd = (function() {
 				return;
 			}
 			/*-- posicionar pelo filho --*/
+			if (ev.target === drop) return;
 			while (child.parentElement !== drop)
 				child = child.parentElement;
+			__MOVE.temp(child, {display: {inline: "inline-block"}});
 			const size = __MOVE.size(child);
 			const flow = ev.offsetY >= size.height * (1 - ev.offsetX/size.width);
 			const bros = flow ? child.nextElementSibling : child.previousElementSibling;
@@ -4491,30 +4509,26 @@ const wd = (function() {
 				drop.insertBefore(this.fake, bros);
 			else if (!flow && bros !== this.fake)
 				drop.insertBefore(this.fake, child);
-			console.log({x: ev.offsetX, y: ev.offsetY, Y: size.height * (1 - ev.offsetX/size.width), flow: flow})
+			__MOVE.temp(child);
 			return;
 		},
-
-
-
 		/**. '{void dragover(object ev)}: Manipulador ao navegar o drag sobre o drop.**/
 		dragover: function(ev) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			const drag = document.getElementById(ev.dataTransfer.getData("text"));
 			const drop = ev.currentTarget;
+			const icon = {copy: "1F5B6", move: "1F588", link: "1F587" /*"1F517"*/};
 			const data = this.data[drag.id][drop.id];
 			ev.dataTransfer.dropEffect = data.effect;
-			//__ICON.background(this.fake, data.effect === "copy" ? "1F4DD" : "1F4E5");
-			if (data.effect === "copy" || data.effect === "move")
-				this.appendFake(ev);
-
-
-
+			__ICON.background(this.fake, icon[data.effect], "1.5em", "space");
+			this.appendFake(ev);
 			return;
 		},
 		/**. '{void dragleave(object ev)}: Manipulador ao tirar o drag sobre o drop.**/
 		dragleave: function(ev) {
+			if (!ev.currentTarget.contains(ev.relatedTarget))
+				this.fake.remove();
 			return;
 		},
 		drop: function(ev) {
@@ -4529,24 +4543,21 @@ const wd = (function() {
 			else if (data.effect === "move") {
 				drop.insertBefore(drag, this.fake);
 			}
-			else
-				console.log(data.effect)
-
+			else if (data.effect === "link") {
+				__ID.id(drag);
+				const text = __TAB.label(drag);
+				const link = __HTML("a", {
+					href: `#${drag.id}`,
+					textContent: text === null ? "Link" : text,
+					"aria-describedby": drag.id
+				});
+				drop.insertBefore(link, this.fake);
+			}
 			this.fake.remove();
 			return;
 		},
-
-
-
-
-
-
-
-
-
-		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focus}.**/
+		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 		handleEvent: function(ev) {
-			console.log(ev.type)
 			this[ev.type](ev);
 		},
 
