@@ -8,8 +8,7 @@ function darkMode() {
 
 
 function doc() {
-	wd({url: "wd.js", trigger: function(x) {
-		//console.log(x)
+	wd({url: "wd.js", call: function(x) {
 		if (x.ok) {
 			const doc  = new wd.parser(x.response).wdComment("/**", "**/").html;
 			document.querySelector("main").innerHTML = doc;
@@ -17,22 +16,6 @@ function doc() {
 		}
 	}}).send();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -5306,7 +5306,7 @@ const wd = (function() {
 		main.timeout = Number.isInteger(main.timeout) && main.timeout >= 0 ? main.timeout : 0;
 		main.headers = new __DataSet("headers" in data ? data.headers : {});
 		Object.defineProperties(this, {
-			data: {value: Object.freeze(main)},
+			data: {value: main},
 			info: {value: null, writable: true},
 		});
 	}
@@ -5323,9 +5323,7 @@ const wd = (function() {
 					const events  = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
 					const types   = {text: "text", buffer: "arraybuffer", blob: "blob", doc: "document", json: "json"};
 					const attr    = types[this.data.type in types ? this.data.type : "text"];
-					request.open(
-						this.data.method,
-						this.data.url,
+					request.open(this.data.method, this.data.url,
 						this.data.async !== false,
 						"user"     in this.data ? this.data.user     : null,
 						"password" in this.data ? this.data.password : null
@@ -5344,9 +5342,9 @@ const wd = (function() {
 					}, this);
 					/*-- executar a requisição --*/
 					this.info = {id: __PROGRESS.open(), init: Date.now(), target: request};
-					request.send("body" in this.data ? this.data.body : undefined);
+					request.send(this.data.body);
 				}
-				catch(e) {throw new Error(e);}
+				catch(e) {console.error(e);}
 				return;
 			},
 		},
@@ -5379,7 +5377,7 @@ const wd = (function() {
 					this.info = {id: __PROGRESS.open(), init: Date.now(), target: request};
 					request[method](this.data.url);
 				}
-				catch(e) {throw new Error(e);}
+				catch(e) {console.error(e);}
 				return;
 			},
 		},
@@ -5394,35 +5392,45 @@ const wd = (function() {
 				}
 				try {
 					window.addEventListener("wdfetch", this);
-					const types  = {text: "text", buffer: "arrayBuffer", blob: "blob", json: "json", data: "forData"};
-					const method = types[this.data.type in types ? this.data.type : "text"];
-					this.info    = {id: __PROGRESS.open(), init: Date.now(), target: null};
+					const types   = {text: "text", buffer: "arrayBuffer", blob: "blob", json: "json", data: "formData"};
+					const method  = types[this.data.type in types ? this.data.type : "text"];
+					const control = typeof window.AbortController === "function" ? new AbortController() : null;
+					this.info     = {id: __PROGRESS.open(), init: Date.now(), target: control};
+					this.data.signal = control.signal;
 					trigger("loadstart", null, null);
 					fetch(this.data.url, this.data)
 						.then(function(response) {
 							trigger(response.ok ? "load" : "loadend", response, null);
 							if (response.ok)
 								response[method]()
-									.then(function (result) {trigger("loadend", response, result);console.log(method, "ok")})
-									.catch(function(fail)   {trigger("loadend", response, null);console.log(method, "falha")});
+									.then(function (result) {trigger("loadend", response, result);})
+									.catch(function(fail)   {trigger("loadend", response, null);});
 						})
-						.catch(function(error) {trigger("error", null, null);});
+						.catch(function(error) {trigger("error", {ok: false, headers: null, status: "", statusText: error}, null);});
 				}
-				catch(e) {throw new Error(e);}
+				catch(e) {console.error(e);}
 				return;
 			}
 		},
-
+		/**. '{void abort()}: Aborta a requisição ou leitura ativa.**/
 		abort: {
 			value: function() {
-				if (this.info === null) return;
-				if (this.info.target instanceof XMLHttpRequest || this.info.target instanceof FileReader)
-					this.info.target.abort();
+				if (this.info === null || this.info.target === null) return;
+				this.info.target.abort();
 				return;
 			}
 		},
-
-
+		/**. '{void handleEvent(object ev)}: Disparador que provoca os eventos de requisição e leitura. Para o método '{fetch}, é disparado o evento '{wdfetch} para cada interação. O disparador '{call} informado no contrutor recebe como argumento um objeto com as seguintes propriedades:
+		|Nome|Tipo|Descrição|
+		|event|object|O evento que provocou a interação.|
+		|done|boolean|Informa se a requisição ou leitura terminou.|
+		|ok|boolean|Informa se a requisição ou leitura terminou com sucesso.|
+		|status|string|Uma mensagem sobre a requisição.|
+		|headers|object|Dados do cabeçalho retornado.|
+		|response|any|Conteúdo retornado na requisição ou leitura.|
+		|contentType|string|Tipo de conteúdo retornado.|
+		|elapsedTime|integer|Tempo decorrido desde o início da chamada.|
+		|progress|number|Valor do progresso da requisição.|**/
 		handleEvent: {
 			value: function(ev) {
 				if (this.info === null) return;
