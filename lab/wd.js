@@ -4181,22 +4181,25 @@ const wd = (function() {
 				window.removeEventListener("click", this);
 			return;
 		},
-		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} preservando-as para a reversão. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujas propriedades apontam para o valor inaquedado do atributo e seu valor aponta para o novo valor a ser utilizado temporariamente caso o valor inadequado seja encontrado. Se o argumento '{style} não for informado, os valores serão reestabelecidos.
+		/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} preservando-as para a reversão. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujo nome da propriedades aponta para o valor inaquedado (utilize o caractere * como nome da propriedade para definir qualquer valor} enquanto que seu valor aponta para o novo estilo a ser atualizado temporariamente. Se o argumento '{style} não for informado, os valores serão reestabelecidos. b{Cuidado com o nome das cores e as medidas}, dentre outros atributos, pois, respectivamente, não são sensibilizadas pelo nome ou são definidas em unidade de medida padrão. Se precisar alterá-las, utilize o caractere coringa.
 			. Exemplificando, caso o valor "inline" para a propriedade '{display} seja inadequado, devendo ser alterado temporariamente para "inline-block", o argumento '{style} deverá ser definindo como:
 		''{display: {inline: "inline-block"}}''**/
 		temp: function(node, style) {
-			if (style === undefined && "jsWdTemp" in node.dataset) {
+			const undo = !(typeof style === "object" && style !== null);
+			if (undo && "jsWdTemp" in node.dataset) {
 				const temp = JSON.parse(node.dataset.jsWdTemp);
 				delete node.dataset.jsWdTemp;
 				for (let i in temp) node.style[i] = temp[i];
 			}
-			else if (style !== null && typeof style === "object") {
+			else if (!undo) {
 				const data = window.getComputedStyle(node, null);
 				const temp = "jsWdTemp" in node.dataset ? JSON.parse(node.dataset.jsWdTemp) : {};
+				/*-- percorrendo as propriedades do argumento style (tipo do estilo) --*/
 				for (let name in style) {
+					/*-- percorrendo os valores do estilo a ser encontrado (valor do estilo) --*/
 					for (let value in style[name]) {
 						/*-- se o valor incorreto da propriedade for encontrado --*/
-						if (data[name] === value) {
+						if (data[name] === value || value === "*") {
 							/*-- preservar a informação original --*/
 							if (!(name in temp))
 								temp[name] = node.style[name] === "" ? null : node.style[name];
@@ -4379,27 +4382,31 @@ const wd = (function() {
 		},
 	};
 
-
 /*----------------------------------------------------------------------------*/
-	/**#4 Arrasto
+	/**#4 Arrasto de Elementos
 	''const object __DRAG''
-	Define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.**/
+	Define elemento de arrasto, de soltura e o respectivo comportamento.**/
 	const __DRAG = {
 		/**. '{object data}: Guarda as informações sobre o arrasto.**/
 		data: {},
 		/**. '{node fake}: Registra o container falso que indica a posição da queda.**/
 		fake: document.createElement("div"),
+		/**. '{node color}: Define as cores para identificar o effeito do arrasto (, ).**/
+		color: {
+			move: {line: "rgb( 34, 139,  34)", back: "rgba( 34, 139,  34, 0.3)", name: "ForestGreen"},
+			copy: {line: "rgb(147, 112, 219)", back: "rgba(147, 112, 219, 0.3)", name: "MediumPurple"},
+			link: {line: "rgb( 30, 144, 255)", back: "rgba( 30, 144, 255, 0.3)", name: "DodgerBlue"},
+		},
 		/**. '{void attach(node drag, node drop, string effect, function call)}: Vincula um elemento de arrasto ao de queda:
 		|Propriedade|Descrição|
 		|drag|Elemento a ser arrastado|
 		|drop|Elemento recebedor do arrasto|
-		|effect|Tipo do efeito "copy", "move", "link"|
-		|call|Função opcional a ser chamada após a queda|
+		|effect|Tipo do efeito: "copy", "move" ou "link"|
+		|call|Função opcional a ser chamada após a queda do elemento|
 		. A propriedade '{call} receberá como argumentos:
 		- o elemento arrastado;
-		- o elemento de queda;
-		- o efeito aplicado; e
-		- o elemento de origem do elemento arrastado.**/
+		- o elemento de queda; e
+		- o efeito aplicado.**/
 		attach: function(drag, drop, effect, call) {
 			drag.id = __ID.id(drag);
 			drop.id = __ID.id(drop);
@@ -4410,7 +4417,7 @@ const wd = (function() {
 				drag.draggable = true;
 				drag.addEventListener("dragstart", this);
 			}
-			this.data[drag.id][drop.id] = {effect: effect, call: call, src: drag.parentElement};
+			this.data[drag.id][drop.id] = {effect: effect, call: call};
 			return;
 		},
 		/**. '{void detach(node drag, node drop)}: Desvincula o elemento de arrasto ao de queda, se '{drop} for informado, ou remove o arrasto de '{drag}.**/
@@ -4453,7 +4460,8 @@ const wd = (function() {
   		for (let i in this.data[drag.id]) {
   			let drop = document.getElementById(i);
   			if (!drag.contains(drop)) {
-					drop.className += ` css-wd-drop-${this.data[drag.id][i].effect} `;
+  				let effect = this.data[drag.id][i].effect;
+					__MOVE.temp(drop, {outline: {"*": `medium dashed ${this.color[effect].line}`}});
 					drop.addEventListener("dragover", this);
 					drop.addEventListener("dragleave", this);
 					drop.addEventListener("drop", this);
@@ -4464,20 +4472,17 @@ const wd = (function() {
 				drag.addEventListener("dragend", this);
 				this.fake = drag.cloneNode(true);
 				this.fake.id = __ID.value;
-				this.fake.style.outline = "thin solid";
-				this.fake.style.borderRadius = "0.2em";
 			}
 			return;
 		},
 		/**. '{void dragend(object ev)}: Manipulador que encerra o arrasto.**/
 		dragend: function(ev) {
 			const drag = ev.target;
-			const css  = /\s?css\-wd\-drop\-(link|move|copy)\s?/;
 			drag.removeEventListener("dragend", this);
 			this.fake.remove();
 			for (let i in this.data[drag.id]) {
   			let drop = document.getElementById(i);
-  			drop.className = drop.className.replace(css, " ");
+  			__MOVE.temp(drop);
   			drop.removeEventListener("dragover", this);
   			drop.removeEventListener("dragleave", this);
   			drop.removeEventListener("drop", this);
@@ -4518,10 +4523,11 @@ const wd = (function() {
 			ev.stopPropagation();
 			const drag = document.getElementById(ev.dataTransfer.getData("text"));
 			const drop = ev.currentTarget;
-			const icon = {copy: "1F5B6", move: "1F588", link: "1F587" /*"1F517"*/};
+			const icon = {copy: "1F5B6", move: "1F588", link: "1F587"};
 			const data = this.data[drag.id][drop.id];
 			ev.dataTransfer.dropEffect = data.effect;
-			__ICON.background(this.fake, icon[data.effect], "1.5em", "space");
+			__ICON.background(this.fake, icon[data.effect], "1.5em", "50% 50%");
+			__MOVE.temp(this.fake, {backgroundColor: {"*": this.color[data.effect].back}});
 			this.appendFake(ev);
 			return;
 		},
@@ -4531,6 +4537,7 @@ const wd = (function() {
 				this.fake.remove();
 			return;
 		},
+		/**. '{void drop(object ev)}: Manipulador ao soltar o drag sobre o drop.**/
 		drop: function(ev) {
 			const drag = document.getElementById(ev.dataTransfer.getData("text"));
 			const drop = ev.currentTarget;
@@ -4554,133 +4561,188 @@ const wd = (function() {
 				drop.insertBefore(link, this.fake);
 			}
 			this.fake.remove();
+			if (typeof data.call === "function")
+				data.call(drag, drop, data.effect);
 			return;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 		handleEvent: function(ev) {
-			this[ev.type](ev);
+		return this[ev.type](ev);
 		},
-
-
-
-
-
-
-
-
-		sdfhslkdjhflsd: function() {
-
-
-		function clearDrops() {
-			WD.$$("[data-wd-dropping], [data-wd-dragging]").forEach(function(node) {
-				node.removeAttribute("data-wd-dropping");
-				node.removeAttribute("data-wd-dragging");
-				node.ondragover  = null;
-				node.ondragleave = null;
-				node.ondrop      = null;
-			});
-			window.getSelection().removeAllRanges();
-			return;
-		}
-		/*-- Habilitando configuração de arrasto ---------------------------------*/
-		if (event.type === "mouseover") {
-			 target.draggable = true;
-		}
-		/*-- Definindo drops -----------------------------------------------------*/
-		else if (event.type === "dragstart") {
-			const effects = {link: 0, move: 0, copy: 0};
-			const parent  = target.parentElement;
-			/*-- looping pelos grupos --*/
-			for (let i = 0; i < data.length; i++) {
-				let query  = data[i].$$ || data[i].$ || null;
-				let effect = String(data[i].effect).toLowerCase();
-				let caller = new __Type(data[i].drop).function ? data[i].drop : function (drop, drag, effect) {
-					if (effect === "move") {
-						drop.appendChild(drag);
-					}
-					else if (effect === "copy") {
-						drop.appendChild(drag.cloneNode(true));
-					}
-					else if (effect === "link") {
-						if (drag.id.trim() === "")
-							drag.id = "ID_drag_link_" + String(new Date().valueOf());
-						if (drop.tagName.toLowerCase() === "a") {
-							drop.href = `#${drag.id}`;
-						} else {
-							drop.style.cursor = "pointer";
-							drop.tabIndex     = 0;
-							drop.onclick      = function(ev) {location.hash = drag.id;}
-							drop.onkeypress   = function(ev) {
-								if ((/enter/i).test(ev.key)) ev.target.click();
-							}
-						}
-						drop.focus();
-					}
-					return;
-				}
-				/*-- efeito confirmado, drop existentes: definir disparadores --*/
-				if (effect in effects && query !== null) {
-					effects[effect] = 1;
-					WD(query).forEach(function(node) {
-						if (node !== parent && !target.contains(node)) {
-							node.dataset.wdDropping = effect;
-							node.ondragover = function(ev) {
-								ev.preventDefault();
-								if ((/^(on)?dragover$/i).test(ev.type)) {
-									ev.target.dataset.wdDropping = effect.toUpperCase();
-									ev.dataTransfer.dropEffect   = effect;
-								}
-								else if ((/^(on)?dragleave$/i).test(ev.type)) {
-									ev.target.dataset.wdDropping = effect;
-								}
-								else if ((/^(on)?drop$/i).test(ev.type)) {
-									caller(ev.target, target, effect);
-									clearDrops();
-								}
-								return;
-							}
-							node.ondragleave = node.ondragover;
-							node.ondrop      = node.ondragover;
-						}
-					});
-				}
-			}
-			/*-- definindo o tipo de drag permitido ao elemento arrastável --*/
-			if (effects.move > 0 && effects.copy > 0 && effects.link > 0)
-				event.dataTransfer.effectAllowed = "all";
-			else if (effects.move > 0 && effects.copy > 0)
-				event.dataTransfer.effectAllowed = "copyMove";
-			else if (effects.copy > 0 && effects.link > 0)
-				event.dataTransfer.effectAllowed = "copyLink";
-			else if (effects.move > 0 && effects.link > 0)
-				event.dataTransfer.effectAllowed = "linkMove";
-			else if (effects.move > 0)
-				event.dataTransfer.effectAllowed = "move";
-			else if (effects.copy > 0)
-				event.dataTransfer.effectAllowed = "copy";
-			else if (effects.link > 0)
-				event.dataTransfer.effectAllowed = "link";
-			else
-				event.dataTransfer.effectAllowed = "none";
-			if (event.dataTransfer.effectAllowed !== "none")
-				target.dataset.wdDragging = event.dataTransfer.effectAllowed;
-		}
-		/*-- Encerrando arrasto --------------------------------------------------*/
-		else if (event.type === "dragend") {
-			clearDrops();
-		}
-		},
-
-
-
-
-
-
-
-
 	};
 
-
+/*----------------------------------------------------------------------------*/
+	/**#4 Soltura de arquivos
+	''const object __DROP''
+	Define elemento e o comportamento para soltura de arquivos.**/
+	const __DROP = {
+		/**. '{object data}: Guarda as informações sobre o elemento de soltura.**/
+		data: {},
+		/**. '{boolean hasDrop}: Retorna se há elementos de soltura anexados.**/
+		get hasDrop() {
+			for (let i in this.data) return true;
+			return false;
+		},
+		/**. '{boolean enable}: Informa se o arrasto já foi implementado durante o dragover.**/
+		enabled: false,
+		/**. '{void attach(node drop, string effect, function call)}: Habilita o elemento para receber a soltura de arquivos:
+		|Argumento|Descrição|
+		|drop|Elemento a receber o arrasto de arquivos|
+		|effect|Efeito do arrasto.|
+		|call|Função a ser chamada na queda dos arquivos|
+		. A função '{call} receberá como argumentos a informação dos arquivos arrastados (objeto '{Files}), o elemento de soltura e o efeito aplicado. Se ausente, um comportamento padrão será aplicado:
+		|Efeito|Comportamento padrão|
+		|link|Adicionará um link para o arquivo no elemento de soltura (padrão).|
+		|copy|Copiará o conteúdo do arquivo para o elemento de soltura.|
+		|move|Tentará carregar o arquivo no elemento de soltura.|**/
+		attach: function(drop, effect, call) {
+			drop.id = __ID.id(drop);
+			effect  = (/^(copy|link|move)$/i).test(effect) ? String(effect).toLowerCase() : "link";
+			this.data[drop.id] = {effect: effect, call: call};
+			if (!this.enabled && this.hasDrop) {
+				window.addEventListener("dragenter", this);
+				this.enabled = true;
+			}
+			return;
+		},
+		/**. '{void detach(node drop)}: Desabilita o elemento para receber a soltura de arqvuivos.**/
+		detach: function(drop) {
+			drop.id = __ID.id(drop);
+			if (drop.id in this.data)
+				delete this.data[drop.id];
+			if (this.enabled && !this.hasDrop) {
+				window.removeEventListener("dragenter", this);
+				this.enabled = false;
+			}
+			return;
+		},
+		/**. '{void enable()}: Alterna a definição de manipuladores ao navegar os arquivos sobre a janela '{window}.**/
+		enable: function(show) {
+			show = show !== false;
+			console.log({show: show, enable: this.enabled})
+			if (show !== this.enabled) {
+				const fire = show ? "addEventListener" : "removeEventListener";
+				for (let i in this.data) {
+					let data = this.data[i];
+					let drop = document.getElementById(i);
+					let temp = show ? {outline: {"*": `medium dashed ${__DRAG.color[data.effect].line}`}} : null;
+					drop[fire]("drop", this);
+					__MOVE.temp(drop, temp);
+				}
+				window[fire]("dragleave", this);
+				this.enabled = show;
+			}
+			return;
+		},
+		/**. '{void dragenter(object ev)}: Manipulador ao entrar com arquivos na janela i{window}.**/
+		dragenter: function(ev) {
+			if (ev.currentTarget === window) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				window.removeEventListener("dragenter", this);
+				window.addEventListener("dragleave", this);
+				for (let i in this.data) {
+					let data = this.data[i];
+					let drop = document.getElementById(i);
+					let temp = {outline: {"*": `medium dashed ${__DRAG.color[data.effect].line}`}};
+					drop.addEventListener("dragover", this);
+					drop.addEventListener("drop", this);
+					__MOVE.temp(drop, temp);
+				}
+			}
+			return;
+		},
+		/**. '{void dragleave(object ev)}: Manipulador ao sair com arquivos da janela i{window}.**/
+		dragleave: function(ev) {
+			if (ev.currentTarget === window && ev.relatedTarget === null) {
+				window.removeEventListener("dragleave", this);
+				window.addEventListener("dragenter", this);
+				for (let i in this.data) {
+					let data = this.data[i];
+					let drop = document.getElementById(i);
+					drop.removeEventListener("dragover", this);
+					drop.removeEventListener("drop", this);
+					__MOVE.temp(drop);
+				}
+			}
+			return;
+		},
+		/**. '{void dragover(object ev)}: Manipulador ao navegar os arquivos sobre o elemento de queda.**/
+		dragover: function(ev) {
+			const drop = ev.currentTarget;
+			if (drop !== null && drop.id in this.data) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				ev.dataTransfer.dropEffect = this.data[drop.id].effect;
+			}
+			return;
+		},
+		/**. '{void drop(object ev)}: Manipulador ao soltar o arquivo sobre o elemento de soltura.**/
+		drop: function(ev) {
+			const drop = ev.currentTarget;
+			if (drop !== null && drop.id in this.data) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				const data   = this.data[drop.id];
+				const effect = ev.dataTransfer.dropEffect;
+				const files  = ev.dataTransfer.files;
+				/*-- definição da ação a aser executada --*/
+				if (typeof data.call === "function")
+					data.call(files, drop, effect);
+				else
+					this.create(files, drop, effect)
+				/*-- zerar comportamento --*/
+				window.removeEventListener("dragleave", this);
+				window.addEventListener("dragenter", this);
+				for (let i in this.data) {
+					let data = this.data[i];
+					let drop = document.getElementById(i);
+					drop.removeEventListener("dragover", this);
+					drop.removeEventListener("drop", this);
+					__MOVE.temp(drop);
+				}
+			}
+			return;
+		},
+		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
+		handleEvent: function(ev) {
+			console.log(ev.type)
+			return this[ev.type](ev);
+		},
+		/**. '{void create(object files, node drop, string effect)}: Atualiza '{drop} conforme '{files} e '{effect}.**/
+		create: function(files, drop, effect) {console.log(arguments);
+			const node = {tag: "div", attr: {}, child: []};
+			const type = {link: "url", copy: "text", move: "url"};
+			drop.setAttribute("aria-busy", "true");
+			for (let i = 0; i < files.length; i++) {
+				let file = new __Request({url: files[i], type: type[effect]});
+				let info = files[i];
+				file.read(function(x) {console.log(x)
+					if (x.ok) {
+						console.log(x)
+						const elem = null;
+						if (effect === "copy")
+							elem = {tag: "pre", attr: {innerText: x.response}, child: []};
+						else if (effect === "link")
+							elem = {tag: "a", attr: {href: x.response, textContent: info.name, target: "_blank", type: info.type}, child: []};
+						else if (effect === "move")
+							elem = {tag: "object", attr: {data: x.response, type: info.type}, child: [
+								{tag: "em", attr: {innerText: `${files[i].name} (${files[i].type})`}}
+							]};
+						/*-- anexa elemento ao nó --*/
+						node.child.push(elem);
+						/*-- anexa o nó ao drop ao fim do processo --*/
+						if (node.child.length === files.length) {
+							drop.innerHTML = "";
+							__DOM(node, drop);
+							drop.removeAttribute("aria-busy");
+						}
+					}
+				});
+			}
+			return;
+		},
+	};
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Fixação
@@ -5216,427 +5278,240 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __RESPONSETYPES''
-	Registra os tipos de respostas para as requisições:
-	|Nível|Nome|Descrição|
-	|1|-|Tipo de resposta|
-	|2|-|Método de envio ou leitura (objeto utilizado para a requisição)|
-	|3|type|Tipo de leitura original do método|
-	|3|parser|String que identifica a cadeira modificadora da resposta conforme MIMETYPE ou '{type} (modificador principal)|
-	Tipos de resposta:
-	|Nome|Descrição|**/
-	const __RESPONSETYPES = {
-		/**|text|Fornece parâmetros para o retorno do conteúdo em forma de texto|**/
-		text: {
-			send:  {type: "text",       parser: {type: null}},
-			read:  {type: "readAsText", parser: {type: null}},
-			fetch: {type: "text",       parser: {type: null}},
-		},
-		/**|blob|Fornece parâmetros para o retorno do conteúdo como arquivo, exceto no caso em '{read} que retorna uma string|**/
-		blob:   {
-			send:  {type: "blob",               parser: {type: null}},
-			read:  {type: "readAsBinaryString", parser: {type: null}},
-			fetch: {type: "blob",               parser: {type: null}},
-		},
-		/**|html|Fornece parâmetros para o retorno do conteúdo como HTML|**/
-		html:   {
-			send:  {type: "document",   parser: {type: null}},
-			read:  {type: "readAsText", parser: {type: "stringHTML"}},
-			fetch: {type: "text",       parser: {type: "stringHTML"}},
-		},
-		/**|xml|Fornece parâmetros para o retorno do conteúdo como XML|**/
-		xml:    {
-			send:  {type: "text",       parser: {type: "stringXML"}},
-			read:  {type: "readAsText", parser: {type: "stringXML"}},
-			fetch: {type: "text",       parser: {type: "stringXML"}},
-		},
-		/**|json|Fornece parâmetros para o retorno do conteúdo como objeto javaScript|**/
-		json:   {
-			send:  {type: "json",       parser: {type: null}},
-			read:  {type: "readAsText", parser: {type: "stringJSON"}},
-			fetch: {type: "json",       parser: {type: null}},
-		},
-		/**|buffer|Fornece parâmetros para o retorno do conteúdo como Array Buffer|**/
-		buffer: {
-			send:  {type: "arraybuffer",       parser: {type: null}},
-			read:  {type: "readAsArrayBuffer", parser: {type: null}},
-			fetch: {type: "arrayBuffer",       parser: {type: null}},
-		},
-		/**|url|Fornece parâmetros para o retorno do conteúdo como URL|**/
-		url:    {
-			send:  {type: "blob",          parser: {type: "fileURL"}},
-			read:  {type: "readAsDataURL", parser: {type: null}},
-			fetch: {type: "blob",          parser: {type: "fileURL"}},
-		},
-		/**|matrix|Fornece parâmetros para o retorno do conteúdo CSV como um array de duas dimensões|**/
-		matrix: {
-			send:  {type: "text",       parser: {type: "csvTable.tableValues"}},
-			read:  {type: "readAsText", parser: {type: "csvTable.tableValues"}},
-			fetch: {type: "text",       parser: {type: "csvTable.tableValues"}},
-		},
-		/**|object|Fornece parâmetros para o retorno do conteúdo CSV como um array de objetos|**/
-		object: {
-			send:  {type: "text",       parser: {type: "csvTable.tableValues.matrixList"}},
-			read:  {type: "readAsText", parser: {type: "csvTable.tableValues.matrixList"}},
-			fetch: {type: "text",       parser: {type: "csvTable.tableValues.matrixList"}}
-		},
-		/**|table|Fornece parâmetros para o retorno do conteúdo CSV ou JSON como uma tabela HTML|**/
-		table:  {
-			send:  {type: "text",       parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}},
-			read:  {type: "readAsText", parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}},
-			fetch: {type: "text",       parser: {type: "csvTable", json: "stringJSON.matrixCSV.csvTable"}}
-		},
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**#4 Resposta
-	''constructor object __Response(__Request object)''
-	Construtor para respostas a a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"] efetuadas por meio do objeto __Request, que deve ser seu argumento. A cada interação, a função '{trigger}, se definida em __Request, será disparada recebendo um objeto com as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|done|boolean|Indica o fim do processo|
-	|ok|boolean|Indica, ao fim do processo, o sucesso ao obter os dados|
-	|status|string|Traz informações sobre o processo ou nulo|
-	|time|integer|Indica o tempo de execução do processo|
-	|size|integer|Indica a quantidade de trabalho do processo|
-	|progress|float|Indica o progresso do processo (de 0 a 1)|
-	|headers|object|Traz, ao fim do processo, o cabeçalho de retorno ('{Headers object}) ou nulo|
-	|response|any|Traz, ao fim do processo, o conteúdo do procedimento ou nulo.|
-	|abort|function|Uma função para abortar o procedimento ou nulo.|
-	|mime|string|Retorna o tipo de arquivo proveniente do cabeçalho ou nulo.|**/
-	function __Response(request) {
-		if (!(this instanceof __Response)) return new __Response(request);
-		if (typeof request !== "object" || !(request instanceof __Request))
-			throw new TypeError("Input value must be an instance of __Request.");
-		const date = new Date();
-		Object.defineProperties(this, {
-			id:       {value: __PROGRESS.open()},
-			request:  {value: request},
-			start:    {value: new Date()},
-			/*-- retornam ao usuário --*/
-			time:     {value: 0,     writable: true},
-			done:     {value: false, writable: true},
-			ok:       {value: false, writable: true},
-			status:   {value: null,  writable: true},
-			size:     {value: 0,     writable: true},
-			progress: {value: 0,     writable: true},
-			headers:  {value: null,  writable: true},
-			response: {value: null,  writable: true},
-			abort:    {value: null,  writable: true},
-			mime:     {value: null,  writable: true},
-		});
-	}
-	Object.defineProperties(__Response.prototype, {
-		constructor: {value: __Response},
-		/**. '{void _changes(string type, string caller)}: Define o formato da resposta ('{_response.response}) conforme tipo ('{type}) e o método ('{caller}).**/
-		handleEvent: {
-			value: function(ev) {
-				if (!this.done) {
-					/*-- obter o tempo de execução (time) --*/
-					const date = new Date();
-					const time = date.valueOf() - this.start.valueOf();
-					this.time  = time%2 === 0 ? time : time+1;
-					/*-- Obter dados conforme método chamado em __Request --*/
-					let call;
-					if (typeof ev !== "object")
-						throw new Error("__Response: The event value must be an object.");
-					else if (ev.target instanceof XMLHttpRequest)
-						call = "send";
-					else if (ev.target instanceof FileReader)
-						call = "read";
-					else if (ev instanceof Response)
-						call = "fetch";
-					else if (ev instanceof Error)
-						call = "error";
-					else
-						throw new Error("__Response: Unknown event.");
-					this[call](ev);
-					/*-- renderizar progresso --*/
-					__PROGRESS.value(this.id, this.progress);
-					/*-- headers/mime --*/
-					if (this.headers !== null) {
-						const header = new __DataSet(this.headers);
-						this.headers = header.toHeaders;
-						const list   = header.getAll("content-type");
-						this.mime    = list.length > 0 ? list[0] : null;
-					}
-					/*-- response --*/
-					if (this.response !== null) {
-						const data    = this.request.data[call].responseTypeParser;
-						const chain   = this.mime in data ? data[this.mime] : data.type;
-						const names   = chain === null ? [] : chain.split(".");
-						let   parser  = new __Parser(this.response);
-						names.forEach(function(v,i,a) {parser = parser[v];});
-						this.response = parser.get();
-					}
-					/*-- chamando o método --*/
-					if (this.request.trigger !== null) {
-						/*-- definindo o argumento --*/
-						const arg = {
-							done:    this.done,    ok:    this.ok,   status:   this.status,
-							time:    this.time,    size:  this.size, progress: this.progress,
-							headers: this.headers, mime:  this.mime, response: this.response,
-							abort:   this.abort,   error: this.error
-						};
-						/*-- não se sabe quanto tempo vai demorar a função do usuário --*/
-						if (this.done) __PROGRESS.value(this.id);
-						try      {this.request.trigger(arg);}
-						catch(e) {this.done = true;}
-					}
-					/*-- encerrando o progresso --*/
-					if (this.done) __PROGRESS.close(this.id);
-				}
-			}
-		},
-		/**. '{void error(object ev)}: Obtém os dados para o disparador invocado por um erro.**/
-		error: {
-			value: function(ev) {
-				this.progress = 1;
-				this.done     = true;
-				this.ok       = false;
-				this.status   = `${ev.name} ${ev.message}`;
-				return;
-			}
-		},
-		/**. '{void send(object ev)}: Obtém os dados para o disparador invocado pelo método '{send} de __Request.**/
-		send: {
-			value: function(ev) {
-				/*-- atributos gerais --*/
-				this.abort    = this.abort === null ? function() {ev.target.abort();} : this.abort;
-				this.size     = ev.lengthComputable ? ev.total : this.size;
-				this.progress = ev.lengthComputable && ev.total !== 0 ? ev.loaded/ev.total : this.progress;
-				this.status   = `${ev.target.status} ${ev.target.statusText}`;
-				/*-- fim da requisição --*/
-				const done    = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				if (ev.type in done) {
-					const fail  = done[ev.type] === 0;
-					this.done   = true;
-					this.status = fail ? ev.type : this.status;
-					this.ok     = fail ? false : (ev.target.status >= 200 && ev.target.status < 300);
-				}
-				/*-- Requisição encerrada com sucesso --*/
-				if (this.ok) {
-					this.headers  = ev.target.getAllResponseHeaders();
-					this.response = ev.target.response;
-				}
-				return;
-			}
-		},
-		/**. '{void read(object ev)}: Obtém os dados para o disparador invocado pelo método '{read} de __Request.**/
-		read: {
-			value: function(ev) {
-				/*-- checando timeout forçado --*/
-				const status  = ["EMPTY", "LOADING", "DONE"];
-				const timeout = this.request.data.read.timeout;
-				const expired = timeout > 0 && this.time > timeout;
-				/*-- atributos gerais --*/
-				this.abort    = this.abort === null ? function() {ev.target.abort();} : this.abort;
-				this.size     = ev.lengthComputable ? ev.total : this.size;
-				this.progress = ev.lengthComputable && ev.total !== 0 ? ev.loaded/ev.total : this.progress;
-				this.status   = `${ev.target.readyState} ${status[ev.target.readyState]}`;
-				/*-- fim da requisição --*/
-				const done = {loadend: 1, error: 0, abort: 0};
-				if (ev.type in done || expired) {
-					const fail = done[ev.type] === 0 || expired;
-					this.done  = true;
-					this.status = fail ? (expired ? "timeout" : ev.type) : this.status;
-					this.ok     = !fail;
-					if (expired) ev.target.abort();
-				}
-				/*-- Requisição encerrada com sucesso --*/
-				if (this.ok) {
-					this.headers  = {
-						"content-length": this.request.data.read.url.size,
-						"content-type":   this.request.data.read.url.type,
-					};
-					this.response = ev.target.result;
-				}
-				return;
-			}
-		},
-		/**. '{void fetch(object ev)}: Obtém os dados para o disparador invocado pelo método '{fetch} de __Request.**/
-		fetch: {
-			value: function(ev) {
-				const data = this.request.data.fetch;
-				/*-- primeira iteração --*/
-				if (this.progress === 0) {
-					/*-- erro na requisição: encerrar --*/
-					if (!ev.ok) {
-						this.done     = true;
-						this.ok       = false;
-						this.progress = 1;
-						this.status   = `${ev.status} ${ev.statusText}`;
-					}
-					/*-- sucesso na requisição: carregar dados --*/
-					else {
-						/*-- carregar dados: em processo --*/
-						this.status   = "LOADING";
-						this.progress = 0.45;
-						this.size     = ev.headers.has("content-length") ? Number(ev.headers.get("content-length")) : 0;
-						const type    = this.request.data.fetch.responseTypeData;
-						const self    = this;
-						/*-- processo de carregamento --*/
-						return ev[type]()
-						.then(function(value) {
-							self.status        = "READY";
-							self.progress      = 0.90;
-							data.fetchResponse = value;
-							self.handleEvent(ev);
-						})
-						.catch(function(error) {
-							self.status   = `${error.name} ${error.message}`;
-							self.progress = 0.90;
-							self.handleEvent(ev);
-						});
-					}
-				}
-				/*-- carregar dados: encerrado --*/
-				else if (this.progress >= 0.90) {
-					this.done     = true;
-					this.ok       = true;
-					this.status   = `${ev.status} ${ev.statusText}`;
-					this.progress = 1;
-					this.headers  = ev.headers;
-					this.response = "fetchResponse" in data ? data.fetchResponse : null;
-				}
-				return;
-			}
-		},
-	});
-
-/*----------------------------------------------------------------------------*/
 	/**#4 Requisição
-	''constructor object __Request(object config)''
-	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. O argumento '{config} aceita os mesmos valores do objeto '{__Dataset} e contém as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
-	|Nome|Referência|Aplicação|Padrão|
-	|url|Alvo da requisição ou da leitura, não necessariamento um URL|'{send read fetch}||
-	|method|a{Método da requisição}[href="https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods"]|'{send fetch}|"post"|
-	|type|Tipo de resposta a retornar|'{send read fetch}|"text"|
-	|headers|Cabeçalhos a enviar (ver __DataSet)|'{send fetch}||
-	|body|Dados a enviar na requisição|'{send fetch}||
-	|timeout|Tempo de espera pela resposta|'{send read}|0|
-	|trigger|Disparador a ser chamado durante o progresso|'{send read fetch}|**/
-	function __Request(config) {
-		if (!(this instanceof __Request)) return new __Request(config);
-		const info   = new __DataSet(config);
-		const data   = info.toObject;
-		const method = ["post", "connect", "delete", "get", "head", "options", "patch", "put", "trace"];
-		/*-- acertando dados gerais --*/
-		data.type    = String(data.type).toLowerCase();
-		data.type    = data.type in __RESPONSETYPES ? data.type : "text";
-		data.method  = String(data.method).toLowerCase();
-		data.method  = method.indexOf(data.method) >= 0 ? data.method : method[0];
-		data.headers = new __DataSet(data.headers);
-		data.timeout = isFinite(data.timeout) && Number(data.timeout) > 0 ? Math.trunc(Number(data.timeout)) : 0;
-		if ("body" in data && data.method === "get" || data.method === "head")
-			delete data.body;
-		/*-- copiando dados para main (exceto type e trigger) --*/
-		const main = {send: {}, read: {}, fetch: {}};
-		for (let i in main) {
-			main[i].responseTypeData   = __RESPONSETYPES[data.type][i].type;
-			main[i].responseTypeParser = __RESPONSETYPES[data.type][i].parser;
-			for (let j in data)
-				main[i][j] = data[j];
-		}
-		/*-- acertando dados específicos --*/
-		main.send.headers  = main.send.headers.toObjectHeaders;
-		main.read.headers  = {};
-		main.fetch.headers = main.fetch.headers.toHeaders;
-		/*-- para send --*/
-		const send = {async: true, user: null, password: null};
-		for (let i in send)
-			main.send[i] = i in main.send ? main.send[i] : send[i];
- 		Object.defineProperties(this, {
- 			trigger: {value: typeof data.trigger === "function" ? data.trigger : null},
- 			data:    {value: main},
+	''constructor object __Request(object data)''
+	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. Os os e valores nomes das propriedades do argumento '{data} dependem do método de leitura escolhido. As propriedades abaixo são comuns aos três métodos de leitura:
+	|Propriedade|Descrição|
+	|url|Alvo da requisição ou da leitura, não necessariamente uma URL, é obrigatória.|
+	|call|Função que define o disparador a ser chamado a cada interação.|
+	|type|O tipo da resposta de retorno|
+	A propriedade '{type} substitui os seguintes propriedades ou métodos:
+	|Valor|send (responseType)|read|fetch|
+	|text|text|readAsText|text|
+	|buffer|arraybuffer|readAsArrayBuffer|arrayBuffer|
+	|blob|blob|readAsBinaryString|blob|
+	|doc|document|-||
+	|json|json|-|json|
+	|url|-|readAsDataURL|-|
+	|data|-|-|formData|**/
+	function __Request(data) {
+		if (!(this instanceof __Request)) return new __Request(data);
+		if (data === null || typeof data !== "object")   throw new TypeError("The request argument must be an object!");
+		if (data.url === null || data.url === undefined) throw new TypeError("The url property is required for the request!");
+		const reMt = /^post|connect|delete|get|head|options|patch|put|trace$/i;
+		const main = {};
+		for (let i in data) main[i] = data[i]
+		main.call    = typeof main.call === "function" ? main.call : null;
+		main.method  = reMt.test(main.method) ? main.method.toLowerCase() : "post";
+		main.timeout = Number.isInteger(main.timeout) && main.timeout >= 0 ? main.timeout : 0;
+		main.headers = new __DataSet("headers" in data ? data.headers : {});
+		Object.defineProperties(this, {
+			data: {value: Object.freeze(main)},
+			info: {value: null, writable: true},
 		});
 	}
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**. '{void send()}: Envia uma requisição ao servidor via '{XMLHttpRequest}. Propriedades opcionais específicas:
-		|Nome|Descrição|
-		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
-		|user|Usuário (padrão nulo)|
-		|password|Senha (padrão nulo)|
-		|withCredentials|Aplica-se à propriedade de mesmo nome|
-		|overrideMimeType|Aplica-se ao método de mesmo nome|**/
+		/**. '{void send()}: Envia os dados de '{body} uma requisição ao servidor via a{XMLHttpRequest}[href="https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest" target="_blank"]. As propriedades específicas são '{method}, {async}, '{user}, '{password}, '{withCredentials}, '{overrideMimeType}, '{responseType}, '{headers} e '{timeout}.**/
 		send: {
-			value: function(trigger) {
-				const data     = this.data.send;
-				const request  = new XMLHttpRequest();
-				const response = new __Response(this);
+			value: function(body) {
+				if (this.info !== null) return;
 				try {
-					request.open(data.method, data.url, data.async, data.user, data.password);
-					request.responseType = data.responseTypeData;
-					request.timeout      = data.timeout;
-					for (let i in data.headers)
-						request.setRequestHeader(i, data.headers[i]);
-					if ("withCredentials" in data)
-						request.withCredentials = data.withCredentials;
-					if ("overrideMimeType" in data)
-						request.overrideMimeType(data.overrideMimeType);
+					const request = new XMLHttpRequest();
+					const headers = this.data.headers.toObjectHeaders;
+					const mime    = "overrideMimeType" in this.data ? this.data.overrideMimeType : null;
+					const events  = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
+					const types   = {text: "text", buffer: "arraybuffer", blob: "blob", doc: "document", json: "json"};
+					const attr    = types[this.data.type in types ? this.data.type : "text"];
+					request.open(
+						this.data.method,
+						this.data.url,
+						this.data.async !== false,
+						"user"     in this.data ? this.data.user     : null,
+						"password" in this.data ? this.data.password : null
+					);
+					request.responseType    = attr;
+					request.withCredentials = this.data.withCredentials === true;
+					request.timeout         = this.data.timeout;
+					for (let i in headers) request.setRequestHeader(i, headers[i]);
+					if  (mime !== null)    request.overrideMimeType(mime);
 					/*-- atribuindo disparadores aos eventos --*/
-					const events = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
-					events.forEach(function(event,i,a) {
-						if (`on${event}` in request)
-							request.addEventListener(event, response);
-						if (`on${event}` in request.upload)
-							request.upload.addEventListener(event, response);
-					});
+					events.forEach(function(ev,i,a) {
+						if (`on${ev}` in request)
+							request.addEventListener(ev, this);
+						if (`on${ev}` in request.upload)
+							request.upload.addEventListener(ev, this);
+					}, this);
 					/*-- executar a requisição --*/
-					request.send(data.body);
-				} catch(e) {
-					response.handleEvent(e);
+					this.info = {id: __PROGRESS.open(), init: Date.now(), target: request};
+					request.send("body" in this.data ? this.data.body : undefined);
 				}
+				catch(e) {throw new Error(e);}
 				return;
 			},
 		},
-		/**. '{void read()}: Lê um arquivo via '{FileReader}.**/
+		/**. '{void read()}: Lê um arquivo via a{FileReader}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader" target="_blank"].**/
 		read: {
 			value: function() {
-				const data = this.data.read;
-				const test = new __Type(data.url);
-				/*-- se for uma lista de arquivos, chamar para cada um deles --*/
-				if (test.instanceOf("FileList")) {
-					const list = data.url;
-					for (let i = 0; i < list.length; i++) {
-						data.url = list[i];
-						let request = new __Request(data);
-						request.read();
-					}
-					return;
-				}
-				/*-- um único arquivo --*/
-				const request  = new FileReader();
-				const response = new __Response(this);
+				if (this.info !== null) return;
 				try {
-					/*-- atribuindo disparadores aos eventos --*/
-					const events = ["abort", "error", "load", "loadend", "loadstart", "progress", "timeout"];
-					events.forEach(function(event,i,a) {
-						if (`on${event}` in request)
-							request.addEventListener(event, response);
-					});
+					const test = new __Type(this.data.url);
+					/*-- se for uma lista de arquivos, chamar para cada um deles --*/
+					if (test.instanceOf("FileList")) {
+						const list = data.url;
+						for (let i = 0; i < list.length; i++) {
+							this.data.url = list[i];
+							let request = new __Request(this.data);
+							request.read();
+						}
+						return;
+					}
+					/*-- um único arquivo --*/
+					const request = new FileReader();
+					const events  = ["abort", "error", "load", "loadend", "loadstart", "progress"];
+					const types   = {text: "readAsText", buffer: "readAsArrayBuffer", blob: "readAsBinaryString", url: "readAsDataURL"};
+					const method  = types[this.data.type in types ? this.data.type : "text"];
+					events.forEach(function(ev,i,a) {
+						if (`on${ev}` in request)
+							request.addEventListener(ev, this);
+					}, this);
 					/*-- executar a requisição --*/
-					request[data.responseTypeData](data.url);
-				} catch(e) {
-					response.handleEvent(e);
+					this.info = {id: __PROGRESS.open(), init: Date.now(), target: request};
+					request[method](this.data.url);
 				}
+				catch(e) {throw new Error(e);}
 				return;
 			},
 		},
-		/**. '{void fetch()}: Envia uma requisição ao servidor via '{fetch}. As propriedades são iguais a do método nativo, exceto i{url}.**/
+		/**. '{void fetch()}: Envia uma requisição ao servidor via a{fetch}[href="https://developer.mozilla.org/pt-BR/docs/Web/API/Fetch_API/Using_Fetch" target="_blank"]. As propriedades específicas são '{method}, {headers}, '{body}, '{mode}, '{cache}, '{credentials}, e '{redirect}.'{fetch}.**/
 		fetch: {
 			value: function() {
-				const response = new __Response(this);
-				try {
-					fetch(this.data.fetch.url, this.data.fetch)
-					.then(function(output)  {response.handleEvent(output);})
-					.catch(function(output) {response.handleEvent(output);});
-				} catch(e) {
-					response.handleEvent(e);
+				function trigger(status, response, result) {
+					const detail = {status: status, response: response, result: result};
+					const event  = new CustomEvent("wdfetch", {detail: detail, bubbles: false});
+					window.dispatchEvent(event);
+					return;
 				}
+				try {
+					window.addEventListener("wdfetch", this);
+					const types  = {text: "text", buffer: "arrayBuffer", blob: "blob", json: "json", data: "forData"};
+					const method = types[this.data.type in types ? this.data.type : "text"];
+					this.info    = {id: __PROGRESS.open(), init: Date.now(), target: null};
+					trigger("loadstart", null, null);
+					fetch(this.data.url, this.data)
+						.then(function(response) {
+							trigger(response.ok ? "load" : "loadend", response, null);
+							if (response.ok)
+								response[method]()
+									.then(function (result) {trigger("loadend", response, result);console.log(method, "ok")})
+									.catch(function(fail)   {trigger("loadend", response, null);console.log(method, "falha")});
+						})
+						.catch(function(error) {trigger("error", null, null);});
+				}
+				catch(e) {throw new Error(e);}
 				return;
 			}
-		}
+		},
+
+		abort: {
+			value: function() {
+				if (this.info === null) return;
+				if (this.info.target instanceof XMLHttpRequest || this.info.target instanceof FileReader)
+					this.info.target.abort();
+				return;
+			}
+		},
+
+
+		handleEvent: {
+			value: function(ev) {
+				if (this.info === null) return;
+				const info = {
+					event:       ev,
+					done:        false,
+					ok:          false,
+					status:      null,
+					headers:     null,
+					response:    null,
+					contentType: null,
+					elapsedTime: Date.now() - this.info.init,
+					progress:    ev.lengthComputable === true && ev.total > 0 ? ev.loaded/ev.total : undefined,
+				};
+				/*-- método send -----------------------------------------------------*/
+				if (ev.target instanceof XMLHttpRequest) {
+					const done    = {loadend: 1, error: 0, abort: 0, timeout: 0};
+					info.status   = `${ev.target.status} ${ev.target.statusText}`;
+					if (ev.type in done) {
+						const fail    = done[ev.type] === 0;
+						info.done     = true;
+						info.status   = fail ? ev.type : info.status;
+						info.ok       = fail ? false : (ev.target.status >= 200 && ev.target.status < 300);
+						info.progress = 1;
+					}
+					if (info.ok) {
+						info.headers  = ev.target.getAllResponseHeaders();
+						info.response = ev.target.response;
+					}
+				}
+				/*-- método read -----------------------------------------------------*/
+				else if (ev.target instanceof FileReader) {
+					const status  = ["EMPTY", "LOADING", "DONE"];
+					const done    = {loadend: 1, error: 0, abort: 0};
+					/*-- atributos gerais --*/
+					info.status   = `${ev.target.readyState} ${status[ev.target.readyState]}`;
+					/*-- fim da requisição --*/
+					if (ev.type in done) {
+						const fail  = done[ev.type] === 0;
+						info.done   = true;
+						info.status = fail ? ev.type : info.status;
+						info.ok     = !fail;
+						info.progress = 1;
+					}
+					/*-- Requisição encerrada com sucesso --*/
+					if (info.ok) {
+						info.response = ev.target.result;
+						info.headers  = {
+							"content-length": this.data.url.size,
+							"content-type":   this.data.url.type,
+						};
+					}
+				}
+				/*-- método fetch ----------------------------------------------------*/
+				else if (ev.type === "wdfetch") {
+					const data    = ev.detail;
+					const done    = {loadend: 1, error: 0, abort: 0};
+					const step    = {loadstart: 1/3, load: 1/2, loadend: 1, error: 1, abort: 1};
+					info.done     = data.status in done;
+					info.ok       = data.response === null ? false : (info.done && data.response.ok);
+					info.status   = data.response === null ? data.status : `${data.response.status} ${data.response.statusText}`;
+					info.response = data.result;
+					info.progress = step[data.status];
+					info.headers  = info.done ? data.response.headers : null;
+					if (info.done) window.removeEventListener("wdfetch", this);
+				}
+				/*-- cabeçalho --*/
+				if (info.headers !== null) {
+					const data = new __DataSet(info.headers);
+					const list = data.getAll("content-type");
+					info.headers     = data.toHeaders;
+					info.contentType = list.length > 0 ? list[0] : null;
+				}
+				/*-- barra de progresso --*/
+				__PROGRESS.value(this.info.id, info.progress);
+
+				/*-- disparador --*/
+				if (this.data.call !== null)
+					this.data.call(info);
+				/*-- encerramento --*/
+				if (info.done) {
+					__PROGRESS.close(this.info.id);
+					this.info = null;
+				}
+
+			}
+		},
+
+
 	});
 
 /*============================================================================*/
@@ -11368,7 +11243,6 @@ const wd = (function() {
 			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
-			response: {value: function(){return __Response.apply(null, Array.prototype.slice.call(arguments));}},
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
@@ -11386,12 +11260,12 @@ const wd = (function() {
 			ICON:     {value: __ICON},
 			MOVE:     {value: __MOVE},
 			DRAG:     {value: __DRAG},
+			DROP:     {value: __DROP},
 			FTYPES:   {value: __FTYPES},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
-			RESPONSE: {value: __RESPONSETYPES},
 			WINDOW:   {value: __WINDOW},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
@@ -12048,87 +11922,7 @@ const wd = (function() {
 	|Nome|Tipo|Descrição|
 	|drop|function|Função a ser chamada ao derrubar os arquivos|
 	A função i{drop} receberá como argumentos o elemento drop e os arquivos arrastáveis (FileList) e, se não informada, uma ação padrão será realizada. Nessa ação padrão, tentar-se-á carregar o arquivo na página (o primeiro arquivo de tamanho até 1000000 Bytes apenas).**/
-	function data_wd_drop(target, event, wdArray) {
-		const data  = wdArray[0];
-		const file  = event.dataTransfer.types.indexOf("Files") >= 0;
-		const time  = new Date();
-		const ready = document.querySelectorAll("[data-wd-drop][data-wd-dropping]").length > 0;
-		function clearDrops() {
-			document.body.removeAttribute("data-wd-file-drop-time");
-			WD.$$("[data-wd-dropping]").forEach(function(node) {
-				node.removeAttribute("data-wd-dropping");
-				node.ondragover  = null;
-				node.ondragleave = null;
-				node.ondrop      = null;
-			});
-			window.getSelection().removeAllRanges();
-			return;
-		};
-		/*-- somente atuar em caso de arquivos --*/
-		if (file)
-			document.body.dataset.wdFileDropTime = time.valueOf();
-		else
-			return;
-		/*-- Definindo visualização de queda -------------------------------------*/
-		if (event.type === "dragover" && !ready) {
-			const caller = new __Type(data.drop).function ? data.drop : function (drop, files) {
-				for (let i = 0; i < files.length; i++) {
-					if (files[i].size <= 10000000) {
-						drop.innerHTML = "";
-						let file = new __Request({url: files[i], type: "url",});
-						file.read(function(x) {
-							if (x.ok) {
-								const object   = document.createElement("OBJECT");
-								const span     = document.createElement("em");
-								object.data    = x.response;
-								object.type    = files[i].type;
-								span.innerHTML = `&#x1F6A7; ${files[i].name} (${files[i].type})`;
-								drop.appendChild(object);
-								object.appendChild(span);
-							}
-						});
-						break;
-					}
-					return;
-				}
-			};
-			event.dataTransfer.dropEffect = "none";
-			WD.$$("[data-wd-drop]").forEach(function(node) {
-				node.dataset.wdDropping = "file";
-				node.ondragover = function(ev) {
-					ev.preventDefault();
-					if ((/^(on)?dragover$/i).test(ev.type)) {
-						ev.target.dataset.wdDropping = "FILE";
-						ev.dataTransfer.dropEffect   = "copy";
-					}
-					else if ((/^(on)?dragleave$/i).test(ev.type)) {
-						ev.target.dataset.wdDropping = "file";
-					}
-					else if ((/^(on)?drop$/i).test(ev.type)) {
-						caller(ev.target, ev.dataTransfer.files);
-						clearDrops();
-					}
-					return;
-				}
-				node.ondragleave = node.ondragover;
-				node.ondrop      = node.ondragover;
-			});
-		}
-		/*-- Apagando visualização de queda --------------------------------------*/
-		else if (event.type === "dragleave" && ready) {
-			const delta = 200;
-			window.setTimeout(function() {
-				const now = new Date();
-				const val = Number(document.body.dataset.wdFileDropTime);
-				if (now.valueOf() - val >= delta) clearDrops();
-			}, delta);
-		}
-	}
-
-
-
-
-
+	function data_wd_drop(target, event, wdArray) {}
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wdTsort(node  e, object event)''
 	Função vinculada ao atributo HTML '{data-wd-tsort} cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
@@ -12556,9 +12350,9 @@ const wd = (function() {
 		return;
 	};
 
-	/*-- defininir eventos e disparadores --*/
-	for (let ev in __EVENTS)
-		__EVENTS[ev].target.addEventListener(ev, eventManager, false);
+	/*-- defininir eventos e disparadores --*/ //FIXME desabilitei isso aqui, ligar depois
+	/*for (let ev in __EVENTS)
+		__EVENTS[ev].target.addEventListener(ev, eventManager, false);*/
 
 
 
