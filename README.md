@@ -11,7 +11,7 @@ doideira
 <dt>loucura</dt>
 <dd>teste 1</dd>
 <dd>teste 2</dd>
-</dt>doideira</dt>
+<dt>doideira</dt>
 <dd>teste 3</dd>
 </dl>
 
