@@ -15,6 +15,18 @@ doideira
 <dd>teste 3</dd>
 </dl>
 
+###### `void loko(string teste)`
+```javascript
+void loko(string teste) {return new Blob();}
+```
+
+```js
+void loko(string teste) {return new Blob();}
+```
+
+
+
+
 
 This project consists of the distribution of two libraries for web application development.
 
