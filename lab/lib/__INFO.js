@@ -1,8 +1,6 @@
 /**
-### Dados da Biblioteca
-
-O objeto `__INFO` registra os dados da biblioteca:
-
+#3 Dados da Biblioteca
+O objeto `{__INFO} registra os dados (string) da biblioteca:
 |Propriedade|Descrição|
 |name|Nome da biblioteca|
 |version|Versão|
