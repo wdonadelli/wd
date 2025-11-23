@@ -26,16 +26,6 @@
 "use strict";
 
 const wd = (function() {
-	/**#1 Biblioteca JavaScript
-	#2 Documentação para Manutenção
-	#0 Menu
-	#3 Constantes
-	|Nome|Tipo|Descrição|
-	|__VERSION|string|Registra a versão da biblioteca|
-	|__UNDERMAINTENANCE|boolean|Se verdadeiro, libera em WD métodos em teste e imprime cascata de disparadores|
-	|__CSS|string|Folha de estilos básica da biblioteca|**/
-	const __VERSION = "WD JS v5.0.0";
-	const __UNDERMAINTENANCE = true;
 	const __CSS = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
@@ -1209,6 +1199,7 @@ const wd = (function() {
 						});
 				}
 			}
+			//FIXME para verificar objeto primitivo {} utilizar a comparação Object.prototype === Object.getPrototypeOf(teste)
 			return data;
 		}
 	};
@@ -3812,7 +3803,7 @@ const wd = (function() {
 			return head;
 		},
 		/**. '{object createBox(object data)}: Retorna a estrutura do container do menu.**/
-		createBox: function(data) {console.log(data);
+		createBox: function(data) {
 			const head = this.createHead(data);
 			const menu = this.createMenu(data);
 			return {tag: "section", child: [head, menu], attr: {
@@ -3820,7 +3811,6 @@ const wd = (function() {
 				hidden: data.step.length > 1,
 				"aria-labelledby": head.attr.id,
 			}};
-			return ;
 		},
 		/**. '{node create(array list)}: Retorna o menu.**/
 		create: function(list) {
@@ -4689,8 +4679,12 @@ const wd = (function() {
 				/*-- definição da ação a aser executada --*/
 				if (typeof data.call === "function")
 					data.call(files, drop, effect);
-				else
-					this.create(files, drop, effect)
+				else if (effect === "link")
+					this.createLink(files, drop);
+				else if (effect === "copy")
+					this.createCopy(files, drop);
+				else if (effect === "move")
+					this.createMove(files, drop);
 				/*-- zerar comportamento --*/
 				window.removeEventListener("dragleave", this);
 				window.addEventListener("dragenter", this);
@@ -4705,44 +4699,207 @@ const wd = (function() {
 			return;
 		},
 		/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
-		handleEvent: function(ev) {
-			console.log(ev.type)
-			return this[ev.type](ev);
+		handleEvent: function(ev) {return this[ev.type](ev);},
+		/**. '{object headers(object headers)}: Retorna um objeto contendo os dados do cabeçalho ('{input}), se existente:
+		|Propriedade|Descrição|
+		|type|a{MIME Type}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"]|
+		|name|Nome do arquivo|
+		|length|Tamanho dos dados|
+		|last|ùltima modificação|**/
+		headers: function(input) {
+			const data = new __DataSet(input);
+			const info = {};
+			data.forEach(function(v,i,a) {
+				switch(i.toLowerCase()) {
+					case "content-disposition": info.name   = v; break;
+					case "content-type":        info.type   = v; break;
+					case "content-length":      info.length = v; break;
+					case "last-modified":       info.last   = v; break;
+				}
+			});
+			if ("name" in info)
+				info.name = info.name.match(/filename\=\"([^\"]+)\"/)[1];
+			if ("type" in info)
+				info.type = info.type.split(";")[0].toLowerCase();
+			return info;
 		},
-		/**. '{void create(object files, node drop, string effect)}: Atualiza '{drop} conforme '{files} e '{effect}.**/
-		create: function(files, drop, effect) {console.log(arguments);
-			const node = {tag: "div", attr: {}, child: []};
-			const type = {link: "url", copy: "text", move: "url"};
-			drop.setAttribute("aria-busy", "true");
-			for (let i = 0; i < files.length; i++) {
-				let file = new __Request({url: files[i], type: type[effect]});
-				let info = files[i];
-				file.read(function(x) {console.log(x)
-					if (x.ok) {
-						console.log(x)
-						const elem = null;
-						if (effect === "copy")
-							elem = {tag: "pre", attr: {innerText: x.response}, child: []};
-						else if (effect === "link")
-							elem = {tag: "a", attr: {href: x.response, textContent: info.name, target: "_blank", type: info.type}, child: []};
-						else if (effect === "move")
-							elem = {tag: "object", attr: {data: x.response, type: info.type}, child: [
-								{tag: "em", attr: {innerText: `${files[i].name} (${files[i].type})`}}
-							]};
-						/*-- anexa elemento ao nó --*/
-						node.child.push(elem);
-						/*-- anexa o nó ao drop ao fim do processo --*/
-						if (node.child.length === files.length) {
-							drop.innerHTML = "";
-							__DOM(node, drop);
-							drop.removeAttribute("aria-busy");
-						}
-					}
-				});
-			}
+		/**. '{void createLink(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "link".**/
+		createLink: function(files, drop) {
+			const file = new __Request({url: files, type: "url", call: function(x) {
+				drop.setAttribute("aria-busy", "true");
+				if (x.ok) {
+					const data = __DROP.headers(x.headers);
+					const attr = {href: x.response, textContent: data.name, download: data.name, type: data.type};
+					__DOM({tag: "a", child: [], attr: attr}, drop);
+					drop.setAttribute("aria-busy", "false");
+				}
+				return;
+			}});
+			file.read();
 			return;
 		},
+		/**. '{void createCopy(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "copy".**/
+		createCopy: function(files, drop) {
+			const file = new __Request({url: files, type: "text", call: function(x) {
+				drop.setAttribute("aria-busy", "true");
+				if (x.ok) {
+					const data = __DROP.headers(x.headers);
+					const attr = {textContent: `-- ${data.name} --\n${x.response}`, style: {overflow: "auto"}};
+					__DOM({tag: "pre", child: [], attr: attr}, drop);
+					drop.setAttribute("aria-busy", "false");
+				}
+				return;
+			}});
+			file.read();
+			return;
+		},
+		/**. '{void createMove(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "move".**/
+		createMove: function(files, drop) {
+			const file = new __Request({url: files, type: "url", call: function(x) {
+				drop.setAttribute("aria-busy", "true");
+				if (x.ok) {
+					const data = __DROP.headers(x.headers);
+					const main = data.type.split("/")[0].toLowerCase();
+					const link = {tag: "a", attr: {href: x.response, textContent: data.name, type: data.type, download: data.name}, child: []};
+					if (main === "audio")
+						__DOM({tag: "audio", attr: {src: x.response, controls: true}, child: [link]}, drop);
+					else if (main === "video")
+						__DOM({tag: "video", attr: {src: x.response, controls: true}, child: [link]}, drop);
+					else if (main === "image")
+						__DOM({tag: "img", attr: {src: x.response, alt: `${data.type}: ${data.name}`}, child: [link]}, drop);
+					else if (main === "text" || main === "application")
+						__DOM({tag: "iframe", attr: {src: x.response}, child: [link]}, drop);
+					else
+						__DOM({tag: "object", attr: {data: x.response, type: data.type}, child: [link]}, drop);
+					drop.setAttribute("aria-busy", "false");
+				}
+				return;
+			}});
+			file.read();
+			return;
+		},
+
+
+		loadFile: function(url, name, type) {
+			const link = {tag: "a", attr: {href: url, textContent: name, type: type, download: name}, child: []};
+			if (type === "audio")
+				return __DOM({tag: "audio", attr: {src: url, controls: true}, child: [link]}).tag;
+			if (type === "video")
+				return __DOM({tag: "video", attr: {src: url, controls: true}, child: [link]}).tag;
+			if (type === "image")
+				return __DOM({tag: "img", attr: {src: url, alt: `${type}: ${name}`}, child: [link]}).tag;
+			if (type === "text" || type === "application")
+				return __DOM({tag: "iframe", attr: {src: url}, child: [link]}).tag;
+			return __DOM({tag: "object", attr: {data: url, type: type}, child: [link]}).tag;
+		},
+
+
+
 	};
+
+/*----------------------------------------------------------------------------*/
+	/**#4 Carregamento e Repetições
+	''const object __LOADER''
+	Define elemento e o comportamento para soltura de arquivos.**/
+	const __LOADER = {
+		/**. '{object model}: Registra os modelos dos elementos.**/
+		model: {},
+		/**. '{void repeat(node node, array list)}: Repete o código HTML do elemento filho de '{node} conforme as informações presentes na lista de objetos ('{list}). O método extraí a informação textual do elemento filho original para fins de modelo e o repete a cada iteração da lista. Cada item da lista será um objeto e, se alguma propriedade desse objeto estiver presente entre duas chaves no modelo, esse conteúdo será substituído pelo valor da propriedade. Apenas as informações extraídas do u{código HTML} serão trabalhadas, portanto não se trata de clonagens do elemento filho original.**/
+		repeat: function(node, list) {
+			node.id    = __ID.id(node);
+			list       = Array.isArray(list) ? list : [];
+			let   html = node.innerHTML;
+			const find = /\{\{([^}]+)\}\}/g;
+			const load = [];
+			/*-- modelo: conteúdo dos filhos com  {{name}} ou modelo gravado --*/
+			if (find.test(html))
+				this.model[node.id] = html;
+			else if (node.id in this.model)
+				html = this.model[node.id];
+			else
+				return;
+			/*-- clonando e substituindo --*/
+			node.setAttribute("aria-busy", "true");
+			list.forEach(function(v,i,a) {
+				if (v === null || typeof v !== "object") return;
+				let inner = html;
+				for (let name in v)
+					inner = inner.split(`{{${name}}}`).join(v[name]);
+				inner = inner.replace(find, "");
+				load.push(inner);
+			});
+			__HTML(node, {innerHTML: load.join("\n")});
+			node.setAttribute("aria-busy", "false");
+			return;
+		},
+		/**. '{object requestRepeat(node node, object data)}: Faz o mesmo procedimento do método '{repeat}, mas utilizando arquivos. Retorna a instância do contrutor '{__Request}, sendo os dados da requisição definidos pelo argumento '{data} sendo possível a repetição a partir de arquivos JSON (array de objetos) e CSV, em que a linha inicial conterá os nomes das propriedades e as linhas seguintes os respectivos valores.**/
+		requestRepeat: function(node, data) {
+			if (data === null || typeof data !== "object") return;
+			__LOADER.repeat(node, []);
+			node.setAttribute("aria-busy", "true");
+			data.type = "text";
+			data.call = function(x) {
+				if (x.ok) {
+					const info = new __Parser(x.response);
+					const head = __DROP.headers(x.headers);
+					const mime = head.type.split("/");
+					if (mime[1] === "json")
+						__LOADER.repeat(node, info.stringJSON.get());
+					else if (mime[1] === "csv")
+						__LOADER.repeat(node, info.csvTable.tableValues.matrixList.get());
+				}
+				else if (x.done) {
+					node.setAttribute("aria-busy", "false");
+				}
+				return;
+			};
+			return new __Request(data);
+		},
+
+
+		/**. '{object requestHTML(node node, object data)}: Carrega o código página HTML a partir de arquivos externos. Retorna a instância do contrutor '{__Request}, sendo os dados da requisição definidos pelo argumento '{data}. O argumento '{replace}, se verdadeiro, substituirá o nó pelo conteúdo, caso contrário, o carregará como conteúdo interno.**/
+		requestHTML: function(node, data, replace) {
+			if (data === null || typeof data !== "object") return;
+			node.setAttribute("aria-busy", "true");
+			data.type = "text";
+			data.call = function(x) {
+				if (x.ok) {
+					const info = new __Parser(x.response);
+					const head = __DROP.headers(x.headers);
+					const mime = head.type.split("/");
+					const attr = {}
+					if (mime[1] === "html")
+						attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringHTML.get();
+					else if (mime[1] === "xml")
+						attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringXML.get();
+					else if (mime[1] === "svg")
+						attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringSVG.get();
+					else if (mime[0] === "text" || mime[0] === "application")
+						attr[replace === true ? "outerText" : "innerText"] = x.response;
+
+
+
+
+
+
+				}
+				else if (x.done) {
+					node.setAttribute("aria-busy", "false");
+				}
+				return;
+			};
+			return new __Request(data);
+		},
+
+
+
+
+
+	};
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Fixação
@@ -5265,19 +5422,6 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Constantes
-	''const object __MIME''
-	Registra tipos a{MIME}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"] mais usados.**/
-	const __MIME = {
-		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
-		"text/xml":    "xml", "text/html": "html", "text/javascript": "js",
-		"application/octet-stream": "default",
-		"application/json": "json", "application/javascript": "js",
-		"application/xml":   "xml",
-		"image/svg+xml": "svg",
-	};
-
-/*----------------------------------------------------------------------------*/
 	/**#4 Requisição
 	''constructor object __Request(object data)''
 	Construtor para a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. Os os e valores nomes das propriedades do argumento '{data} dependem do método de leitura escolhido. As propriedades abaixo são comuns aos três métodos de leitura:
@@ -5296,8 +5440,8 @@ const wd = (function() {
 	|data|-|-|formData|**/
 	function __Request(data) {
 		if (!(this instanceof __Request)) return new __Request(data);
-		if (data === null || typeof data !== "object")   throw new TypeError("The request argument must be an object!");
-		if (data.url === null || data.url === undefined) throw new TypeError("The url property is required for the request!");
+		if (data     === null || typeof data !== "object") throw new TypeError("The request argument must be an object!");
+		if (data.url === null || data.url === undefined)   throw new TypeError("The url property is required for the request!");
 		const reMt = /^post|connect|delete|get|head|options|patch|put|trace$/i;
 		const main = {};
 		for (let i in data) main[i] = data[i]
@@ -5356,10 +5500,9 @@ const wd = (function() {
 					const test = new __Type(this.data.url);
 					/*-- se for uma lista de arquivos, chamar para cada um deles --*/
 					if (test.instanceOf("FileList")) {
-						const list = data.url;
+						const list = this.data.url;
 						for (let i = 0; i < list.length; i++) {
-							this.data.url = list[i];
-							let request = new __Request(this.data);
+							let request = new __Request({url: list[i], type: this.data.type, call: this.data.call});
 							request.read();
 						}
 						return;
@@ -5428,7 +5571,6 @@ const wd = (function() {
 		|status|string|Uma mensagem sobre a requisição.|
 		|headers|object|Dados do cabeçalho retornado.|
 		|response|any|Conteúdo retornado na requisição ou leitura.|
-		|contentType|string|Tipo de conteúdo retornado.|
 		|elapsedTime|integer|Tempo decorrido desde o início da chamada.|
 		|progress|number|Valor do progresso da requisição.|**/
 		handleEvent: {
@@ -5441,7 +5583,6 @@ const wd = (function() {
 					status:      null,
 					headers:     null,
 					response:    null,
-					contentType: null,
 					elapsedTime: Date.now() - this.info.init,
 					progress:    ev.lengthComputable === true && ev.total > 0 ? ev.loaded/ev.total : undefined,
 				};
@@ -5477,10 +5618,17 @@ const wd = (function() {
 					}
 					/*-- Requisição encerrada com sucesso --*/
 					if (info.ok) {
+						/*FIXME entender melhor esse RFC5987 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#encoding_for_content-disposition_and_link_headers*/
+						const RFC5987 = String(this.data.url.name).normalize("NFC").split("").map(function(v,i,a) {
+							const code = (/['()*]/).test(v) ? `%${v.charCodeAt(0).toString(16).toUpperCase()}` : encodeURIComponent(v);
+							return (/[|`^]/).test(v) ? v : code;
+						}).join("");
 						info.response = ev.target.result;
 						info.headers  = {
 							"content-length": this.data.url.size,
 							"content-type":   this.data.url.type,
+							"last-modified":  this.data.url.lastModified,
+							"content-disposition": `attachment; filename="${this.data.url.name}"; filename*=UTF-8''${RFC5987}`,
 						};
 					}
 				}
@@ -5497,29 +5645,23 @@ const wd = (function() {
 					info.headers  = info.done ? data.response.headers : null;
 					if (info.done) window.removeEventListener("wdfetch", this);
 				}
-				/*-- cabeçalho --*/
+				/*-- cabeçalho -------------------------------------------------------*/
 				if (info.headers !== null) {
-					const data = new __DataSet(info.headers);
-					const list = data.getAll("content-type");
-					info.headers     = data.toHeaders;
-					info.contentType = list.length > 0 ? list[0] : null;
+					const data   = new __DataSet(info.headers);
+					info.headers = data.toHeaders;
 				}
-				/*-- barra de progresso --*/
+				/*-- barra de progresso ----------------------------------------------*/
 				__PROGRESS.value(this.info.id, info.progress);
-
-				/*-- disparador --*/
+				/*-- disparador ------------------------------------------------------*/
 				if (this.data.call !== null)
 					this.data.call(info);
-				/*-- encerramento --*/
+				/*-- encerramento ----------------------------------------------------*/
 				if (info.done) {
 					__PROGRESS.close(this.info.id);
 					this.info = null;
 				}
-
 			}
 		},
-
-
 	});
 
 /*============================================================================*/
@@ -8175,37 +8317,10 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. '{void repeat(array list)}: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos ('{list}). O elemento filho que contiver o nome do atributo do objeto entre duas chaves ({{nome}}) terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
-		repeat: {
-			value: function(list) {
-				if (!__Type(list).array) list = [];
-				let   html = this.node.innerHTML;
-				const re   = /\{\{([^}]+)\}\}/;
-				/*-- definindo modelo oriundo de innerHTML {{name}} --*/
-				if (re.test(html))
-					this.node.dataset.wdRepeatModel = html;
-				/*-- capturando modelo em data-wd-repeat-model --*/
-				else if ("wdRepeatModel" in this.node.dataset)
-					html = this.node.dataset.wdRepeatModel;
-				/*-- modelo não encontrado --*/
-				else
-					return;
 
-				/*-- contruindo lista de conteúdo --*/
-				const load = [];
-				for (let i = 0; i < list.length; i++) {
-					let inner = html;
-					let data  = new __Type(list[i]).object ? list[i] : {};
-					for (let j in data)
-						inner = inner.split(`{{${j}}}`).join(data[j]);
-					load.push(inner);
-				}
-				/*-- limpando e renderizando --*/
-				const repeat   = load.join("").replace(/\{\{[^}]+\}\}/g, "");
-				this.innerHTML = repeat;
-				return;
-			}
-		},
+
+
+		repeat: {value: function(list) {}},
 		/**. '{boolean show}: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			//FIXME por que eu criei [data-js-wd-hide]:not([data-js-wd-show])
@@ -11269,6 +11384,7 @@ const wd = (function() {
 			MOVE:     {value: __MOVE},
 			DRAG:     {value: __DRAG},
 			DROP:     {value: __DROP},
+			LOADER:   {value: __LOADER},
 			FTYPES:   {value: __FTYPES},
 			FIELDS:   {value: __FIELDS},
 			LANG:     {value: __LANG},
@@ -11276,7 +11392,6 @@ const wd = (function() {
 			PROGRESS: {value: __PROGRESS},
 			WINDOW:   {value: __WINDOW},
 			SIGNAL:   {value: __SIGNAL},
-			MIME:     {value: __MIME},
 			CSS:      {value: __CSS},
 			DATETIME: {value: __DATETIME},
 			NUMBER:   {value: __NUMBER},
