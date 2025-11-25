@@ -1,5 +1,5 @@
 /**
-#4 Ancoragem para Elementos Fixos
+#3 Ancoragem para Elementos Fixos
 O objeto '{__HASH} ajusta margens e posição do elementos ancorados na tela.
 **/
 const __HASH = {

@@ -1,6 +1,6 @@
 /**
 #3 Carregamento e Repetições HTML
-O objeto '{__LOADER} ....................TODO.
+O objeto '{__LOADER} Tem o objetivo de carregar informações no documento HTML repetindo, definindo ou substituindo-os.
 **/
 const __LOADER = {
 	/**. '{object model}: Registra os modelos dos elementos.**/
@@ -42,11 +42,10 @@ const __LOADER = {
 		data.call = function(x) {
 			if (x.ok) {
 				const info = new __Parser(x.response);
-				const head = __DROP.headers(x.headers);
-				const mime = head.type.split("/");
-				if (mime[1] === "json")
+				const head = __FILE.fromHeaders(x.headers);
+				if (head.type === "application/json")
 					__LOADER.repeat(node, info.stringJSON.get());
-				else if (mime[1] === "csv")
+				else if (head.type === "text/csv")
 					__LOADER.repeat(node, info.csvTable.tableValues.matrixList.get());
 			}
 			else if (x.done) {
@@ -56,44 +55,28 @@ const __LOADER = {
 		};
 		return new __Request(data);
 	},
-
-
 	/**. '{object requestHTML(node node, object data)}: Carrega o código página HTML a partir de arquivos externos. Retorna a instância do contrutor '{__Request}, sendo os dados da requisição definidos pelo argumento '{data}. O argumento '{replace}, se verdadeiro, substituirá o nó pelo conteúdo, caso contrário, o carregará como conteúdo interno.**/
 	requestHTML: function(node, data, replace) {
 		if (data === null || typeof data !== "object") return;
+		replace = replace === true;
 		node.setAttribute("aria-busy", "true");
 		data.type = "text";
 		data.call = function(x) {
 			if (x.ok) {
 				const info = new __Parser(x.response);
-				const head = __DROP.headers(x.headers);
-				const mime = head.type.split("/");
+				const head = __FILE.fromHeaders(x.headers);
 				const attr = {}
-				if (mime[1] === "html")
-					attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringHTML.get();
-				else if (mime[1] === "xml")
-					attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringXML.get();
-				else if (mime[1] === "svg")
-					attr[replace === true ? "outerHTML" : "innerHTML"] = info.stringSVG.get();
-				else if (mime[0] === "text" || mime[0] === "application")
-					attr[replace === true ? "outerText" : "innerText"] = x.response;
-
-
-
-
-
-
+				if (head.type === "text/html" || head.type === "application/xml+html")
+					attr[replace ? "outerHTML" : "innerHTML"] = info.stringHTML.get().body.innerHTML;
+				else if (head.type === "image/svg+xml")
+					attr[replace ? "outerHTML" : "innerHTML"] = info.stringSVG.get();
+				else if ((/^(application|text)\//).test(head.type))
+					attr[replace ? "outerText" : "innerText"] = x.response;
+				__HTML(node, attr);
 			}
-			else if (x.done) {
-				node.setAttribute("aria-busy", "false");
-			}
+			if (x.done) node.setAttribute("aria-busy", "false");
 			return;
 		};
 		return new __Request(data);
 	},
-
-
-
-
-
 };

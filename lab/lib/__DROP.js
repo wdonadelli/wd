@@ -113,15 +113,25 @@ const __DROP = {
 			const data   = this.data[drop.id];
 			const effect = ev.dataTransfer.dropEffect;
 			const files  = ev.dataTransfer.files;
-			/*-- definição da ação a aser executada --*/
-			if (typeof data.call === "function")
+			/*-- ação personalizada --*/
+			if (typeof data.call === "function") {
 				data.call(files, drop, effect);
-			else if (effect === "link")
-				this.createLink(files, drop);
-			else if (effect === "copy")
-				this.createCopy(files, drop);
-			else if (effect === "move")
-				this.createMove(files, drop);
+			}
+			/*-- ação padrão --*/
+			else {
+				const attr = {copy: "text", link: "link", move: "frame"};
+				const file = new __Request({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
+					drop.setAttribute("aria-busy", "true");
+					if (x.ok) {
+						const head = __FILE.fromHeaders(x.headers);
+						const node = __FILE[attr[effect]](x.response, head.name, head.type);
+						drop.appendChild(node);
+					}
+					if (x.done) drop.setAttribute("aria-busy", "false");
+					return;
+				}});
+				file.read();
+			}
 			/*-- zerar comportamento --*/
 			window.removeEventListener("dragleave", this);
 			window.addEventListener("dragenter", this);
@@ -137,99 +147,4 @@ const __DROP = {
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 	handleEvent: function(ev) {return this[ev.type](ev);},
-	/**. '{object headers(object headers)}: Retorna um objeto contendo os dados do cabeçalho ('{input}), se existente:
-	|Propriedade|Descrição|
-	|type|a{MIME Type}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"]|
-	|name|Nome do arquivo|
-	|length|Tamanho dos dados|
-	|last|ùltima modificação|**/
-	headers: function(input) {
-		const data = new __DataSet(input);
-		const info = {};
-		data.forEach(function(v,i,a) {
-			switch(i.toLowerCase()) {
-				case "content-disposition": info.name   = v; break;
-				case "content-type":        info.type   = v; break;
-				case "content-length":      info.length = v; break;
-				case "last-modified":       info.last   = v; break;
-			}
-		});
-		if ("name" in info)
-			info.name = info.name.match(/filename\=\"([^\"]+)\"/)[1];
-		if ("type" in info)
-			info.type = info.type.split(";")[0].toLowerCase();
-		return info;
-	},
-	/**. '{void createLink(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "link".**/
-	createLink: function(files, drop) {
-		const file = new __Request({url: files, type: "url", call: function(x) {
-			drop.setAttribute("aria-busy", "true");
-			if (x.ok) {
-				const data = __DROP.headers(x.headers);
-				const attr = {href: x.response, textContent: data.name, download: data.name, type: data.type};
-				__DOM({tag: "a", child: [], attr: attr}, drop);
-				drop.setAttribute("aria-busy", "false");
-			}
-			return;
-		}});
-		file.read();
-		return;
-	},
-	/**. '{void createCopy(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "copy".**/
-	createCopy: function(files, drop) {
-		const file = new __Request({url: files, type: "text", call: function(x) {
-			drop.setAttribute("aria-busy", "true");
-			if (x.ok) {
-				const data = __DROP.headers(x.headers);
-				const attr = {textContent: `-- ${data.name} --\n${x.response}`, style: {overflow: "auto"}};
-				__DOM({tag: "pre", child: [], attr: attr}, drop);
-				drop.setAttribute("aria-busy", "false");
-			}
-			return;
-		}});
-		file.read();
-		return;
-	},
-	/**. '{void createMove(object files, node drop)}: Procedimento padrão para soltura de arquivo com efeito "move".**/
-	createMove: function(files, drop) {
-		const file = new __Request({url: files, type: "url", call: function(x) {
-			drop.setAttribute("aria-busy", "true");
-			if (x.ok) {
-				const data = __DROP.headers(x.headers);
-				const main = data.type.split("/")[0].toLowerCase();
-				const link = {tag: "a", attr: {href: x.response, textContent: data.name, type: data.type, download: data.name}, child: []};
-				if (main === "audio")
-					__DOM({tag: "audio", attr: {src: x.response, controls: true}, child: [link]}, drop);
-				else if (main === "video")
-					__DOM({tag: "video", attr: {src: x.response, controls: true}, child: [link]}, drop);
-				else if (main === "image")
-					__DOM({tag: "img", attr: {src: x.response, alt: `${data.type}: ${data.name}`}, child: [link]}, drop);
-				else if (main === "text" || main === "application")
-					__DOM({tag: "iframe", attr: {src: x.response}, child: [link]}, drop);
-				else
-					__DOM({tag: "object", attr: {data: x.response, type: data.type}, child: [link]}, drop);
-				drop.setAttribute("aria-busy", "false");
-			}
-			return;
-		}});
-		file.read();
-		return;
-	},
-
-
-	loadFile: function(url, name, type) {
-		const link = {tag: "a", attr: {href: url, textContent: name, type: type, download: name}, child: []};
-		if (type === "audio")
-			return __DOM({tag: "audio", attr: {src: url, controls: true}, child: [link]}).tag;
-		if (type === "video")
-			return __DOM({tag: "video", attr: {src: url, controls: true}, child: [link]}).tag;
-		if (type === "image")
-			return __DOM({tag: "img", attr: {src: url, alt: `${type}: ${name}`}, child: [link]}).tag;
-		if (type === "text" || type === "application")
-			return __DOM({tag: "iframe", attr: {src: url}, child: [link]}).tag;
-		return __DOM({tag: "object", attr: {data: url, type: type}, child: [link]}).tag;
-	},
-
-
-
 };
