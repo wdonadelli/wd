@@ -40,4 +40,36 @@ const __CSS = {
 		document.head.appendChild(node);
 		return;
 	},
+	/**. '{void temp(node target, object style)}: Define temporariamente as propriedades do atributo '{style} preservando-as para a reversão. O argumento '{style} é um objeto cujas propriedades fazem referência às propriedades do atributo '{style}. O valor dessas propriedades também são objetos cujo nome da propriedades aponta para o valor inaquedado (utilize o caractere * como nome da propriedade para definir qualquer valor} enquanto que seu valor aponta para o novo estilo a ser atualizado temporariamente. Se o argumento '{style} não for informado, os valores serão reestabelecidos. b{Cuidado com o nome das cores e as medidas}, dentre outros atributos, pois, respectivamente, não são sensibilizadas pelo nome ou são definidas em unidade de medida padrão. Se precisar alterá-las, utilize o caractere coringa.
+		. Exemplificando, caso o valor "inline" para a propriedade '{display} seja inadequado, devendo ser alterado temporariamente para "inline-block", o argumento '{style} deverá ser definindo como:
+	''{display: {inline: "inline-block"}}''**/
+	temp: function(node, style) {
+		const undo = !(typeof style === "object" && style !== null);
+		if (undo && "jsWdTemp" in node.dataset) {
+			const temp = JSON.parse(node.dataset.jsWdTemp);
+			delete node.dataset.jsWdTemp;
+			for (let i in temp) node.style[i] = temp[i];
+		}
+		else if (!undo) {
+			const data = window.getComputedStyle(node, null);
+			const temp = "jsWdTemp" in node.dataset ? JSON.parse(node.dataset.jsWdTemp) : {};
+			/*-- percorrendo as propriedades do argumento style (tipo do estilo) --*/
+			for (let name in style) {
+				/*-- percorrendo os valores do estilo a ser encontrado (valor do estilo) --*/
+				for (let value in style[name]) {
+					/*-- se o valor incorreto da propriedade for encontrado --*/
+					if (data[name] === value || value === "*") {
+						/*-- preservar a informação original --*/
+						if (!(name in temp))
+							temp[name] = node.style[name] === "" ? null : node.style[name];
+						/*-- definindo o novo valor temporariamente --*/
+						node.style[name] = style[name][value];
+						break;
+					}
+				}
+			}
+			node.dataset.jsWdTemp = JSON.stringify(temp);
+		}
+		return;
+	},
 };

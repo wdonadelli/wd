@@ -5,7 +5,7 @@ O objeto '{__PROGRESS} registra a barra de progresso das requisições da biblio
 const __PROGRESS = {
 	//TODO https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/progress#describing_a_particular_region
 
-	/**. '{integer CSS}: Registra o CSS do elemento de progresso.**/
+	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- PROGRESS --*/
 [data-js-wd-window="progress"] {
 	position: fixed !important;

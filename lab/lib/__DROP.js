@@ -3,7 +3,7 @@
 O objeto '{__DROP} define elemento e o comportamento para soltura de arquivos.
 **/
 const __DROP = {
-	/**. '{object data}: Guarda as informações sobre o elemento de soltura.**/
+	/**. '{object data}: Guarda as informações sobre o elemento de soltura '{DROP.id -> (effect, call)}.**/
 	data: {},
 	/**. '{boolean hasDrop}: Retorna se há elementos de soltura anexados.**/
 	get hasDrop() {
@@ -43,25 +43,7 @@ const __DROP = {
 		}
 		return;
 	},
-	/**. '{void enable()}: Alterna a definição de manipuladores ao navegar os arquivos sobre a janela '{window}.**/
-	enable: function(show) {
-		show = show !== false;
-		console.log({show: show, enable: this.enabled})
-		if (show !== this.enabled) {
-			const fire = show ? "addEventListener" : "removeEventListener";
-			for (let i in this.data) {
-				let data = this.data[i];
-				let drop = document.getElementById(i);
-				let temp = show ? {outline: {"*": `medium dashed ${__DRAG.color[data.effect].line}`}} : null;
-				drop[fire]("drop", this);
-				__MOVE.temp(drop, temp);
-			}
-			window[fire]("dragleave", this);
-			this.enabled = show;
-		}
-		return;
-	},
-	/**. '{void dragenter(object ev)}: Manipulador ao entrar com arquivos na janela i{window}.**/
+	/**. '{void dragenter(object ev)}: Manipulador ao entrar com arquivos na janela i{window} ou sobre o elemento de soltura.**/
 	dragenter: function(ev) {
 		if (ev.currentTarget === window) {
 			ev.preventDefault();
@@ -71,26 +53,39 @@ const __DROP = {
 			for (let i in this.data) {
 				let data = this.data[i];
 				let drop = document.getElementById(i);
-				let temp = {outline: {"*": `medium dashed ${__DRAG.color[data.effect].line}`}};
+				drop.addEventListener("dragenter", this);
 				drop.addEventListener("dragover", this);
+				drop.addEventListener("dragleave", this);
 				drop.addEventListener("drop", this);
-				__MOVE.temp(drop, temp);
+				__DRAG.dropZone(drop, data.effect, "dragstart")
 			}
+		}
+		else {
+			const drop = ev.currentTarget;
+			__DRAG.dropZone(drop, this.data[drop.id].effect, ev.type)
 		}
 		return;
 	},
 	/**. '{void dragleave(object ev)}: Manipulador ao sair com arquivos da janela i{window}.**/
 	dragleave: function(ev) {
-		if (ev.currentTarget === window && ev.relatedTarget === null) {
-			window.removeEventListener("dragleave", this);
-			window.addEventListener("dragenter", this);
-			for (let i in this.data) {
-				let data = this.data[i];
-				let drop = document.getElementById(i);
-				drop.removeEventListener("dragover", this);
-				drop.removeEventListener("drop", this);
-				__MOVE.temp(drop);
+		if (ev.currentTarget === window) {
+			if (ev.relatedTarget === null) {
+				window.removeEventListener("dragleave", this);
+				window.addEventListener("dragenter", this);
+				for (let i in this.data) {
+					let data = this.data[i];
+					let drop = document.getElementById(i);
+					drop.removeEventListener("dragenter", this);
+					drop.removeEventListener("dragover", this);
+					drop.removeEventListener("dragleave", this);
+					drop.removeEventListener("drop", this);
+					__DRAG.dropZone(drop);
+				}
 			}
+		}
+		else if (ev.relatedTarget === null || !ev.currentTarget.contains(ev.relatedTarget)) {
+			const drop = ev.currentTarget;
+			__DRAG.dropZone(drop, this.data[drop.id].effect, ev.type);
 		}
 		return;
 	},
@@ -138,9 +133,11 @@ const __DROP = {
 			for (let i in this.data) {
 				let data = this.data[i];
 				let drop = document.getElementById(i);
+				drop.removeEventListener("dragenter", this);
 				drop.removeEventListener("dragover", this);
+				drop.removeEventListener("dragleave", this);
 				drop.removeEventListener("drop", this);
-				__MOVE.temp(drop);
+				__DRAG.dropZone(drop);
 			}
 		}
 		return;
