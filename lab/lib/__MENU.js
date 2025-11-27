@@ -16,6 +16,64 @@ O objeto '{__MENU} cria elementos de menus a partir de arrays:
 - Somente valores aceitos no formato JSON poderão ser utilizados.
 **/
 const __MENU = {
+	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
+	CSS: __CSS.data.push(`/*-- MENU --*/
+.css-wd-menu {
+	padding: 0.3em;
+	margin: 0;
+	color: black;
+	border-radius: 0.2em;
+	border: thin solid black;
+	font-size: var(--var-js-wd-font-size);
+	font-family: var(--var-js-wd-font-type);
+}
+.css-wd-menu * {
+	font-size: inherit;
+	font-family: inherit;
+}
+.css-wd-menu menu {
+	list-style: none;
+	padding: 0;
+	margin: 0
+}
+.css-wd-menu li {
+	padding: 0;
+	margin: 0.3em 0 0 0;
+}
+.css-wd-menu > *:first-child {
+	text-align: center;
+	font-weight: bold;
+	padding: 0;
+	margin: 0.3em 0 0 0;
+}
+.css-wd-menu button {
+	text-align: left;
+	font-weight: normal;
+	cursor: pointer;
+}
+.css-wd-menu button {
+	position: relative;
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 0.25em 2em;
+	font-size: inherit;
+	font-family: inherit;
+	border-radius: 0.2em;
+}
+.css-wd-menu [aria-controls]:after {
+	display: inline-block;
+	position: absolute;
+	width: 2em;
+	text-align: center;
+	content: "\\276E";
+	left: 0;
+}
+.css-wd-menu [aria-controls][aria-expanded]:after {
+	content: "\\276F";
+	left: auto;
+	right: 0;
+}`),
 	/**. '{string label(any input)}: Devolve o valor do rótulo conforme item do array ou nulo.**/
 	label: function(input) {
 		const test = new __Type(input);
