@@ -6,7 +6,7 @@ const __DRAG = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- DRAG --*/
 [draggable]:hover  {cursor: grab;}
-[draggable]:active {cursor: grabbing;}`)-1,
+[draggable]:active {cursor: grabbing;}`),
 	/**. '{object data}: Guarda as informações sobre o arrasto '{DRAG.id -> DROP.id -> (effect, call)}**/
 	data: {},
 	/**. '{node fake}: Registra o container falso que indica a posição da queda.**/

@@ -1,10 +1,18 @@
 /**
 #3 Janelas
-O objeto '{__WINDOW} administra paredes e janelas. Conceitos
-- frame: Parede de profundidade baixa e posição invariável e fixa à tela permitindo a adição de múltiplas janelas sem restrição.
-- float: Parede de profundidade intermediária e posição variável e fixa à tela ou FIXME absoluta a um elemento permitindo a adição de uma única janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc} ou por um clique externo. É incompatível com a parede "modal" ou com outra janela "float".
-- modal: Parede de profundidade alta e posiçã__Pino fixa à tela, ocupando toda a área, permitindo a adição de múltiplas janelas organizadas por meio de uma fila, exibindo apenas uma janela a cada interação. Pode ser fechada por meio da tecla kbd{Esc}. Elementos fora da janela ficarão inertes.
-A cada mudança na janela, o evento i{wdwindow} será disparado podendo ser vinculado à janela para acompanhar a mudança no '{status}.
+O objeto '{__WINDOW} administra paredes e janelas:
+. frame: Parede de profundidade baixa e posição fixa que permite múltiplas janelas.
+. float: Parede de profundidade intermediária e posição variável que permite apenas uma janela a cada interação.
+. modal: Parede de profundidade superior posição fixa que permite múltiplas janelas renderizadas em fila.
+Características:
+- A janela "modal" derruba a janela "float" aberta e impede a exibição de novas janelas "float" ou "frame";
+- Uma nova janela "float" derruba a que estiver aberta;
+- Uma mesma janela não pode ser renderizada mais de uma vez ao mesmo tempo;
+- A tecla ESC derruba as janelas "modal" ou "float";
+- Um clique fora da janela "float" a derruba;
+- A janela "modal" deixa o documento inerte;
+- A janela "float" deixa o documento estático;
+- A cada mudança no estado da janela, um evento i{wdwindow} será disparado na janela (ver método '{fire}).
 **/
 const __WINDOW = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
@@ -74,8 +82,6 @@ const __WINDOW = {
 	|status|string|Estado da janela|
 	|focus|node|Valor de '{pin} ou do nó com foco ativo no momento da fixação|**/
 	heap: [],
-
-	trash: [],
 	/**. '{boolean check(object data, object item)}: Checa se os dados de '{data} conferem com os dados de '{heap}.**/
 	check: function(data, heap) {
 		let test = false;
@@ -170,13 +176,13 @@ const __WINDOW = {
 	/**. '{void fire(string status, object data)}: Dispara os eventos de mutação da janela ('{wdwindow}) cuja propriedade '{detail} do evento contem os dados informados durante sua anexação acrescido da propriedade '{status}:
 	|Status|Descrição|
 	|avoid|A janela foi rejeitada.|
-	|wait|A janela modal aguarda renderização (está no '{heap}).|
+	|wait|A janela modal aguarda renderização.|
 	|open|A janela foi renderizada.|
-	|close|A janela foi fechada.|
-	|escape|A janela foi descartada.|
+	|close|A janela foi fechada (sai do '{heap}).|
+	|escape|A janela foi descartada (sai do '{heap}).|
 	. Motivos para o status "avoid":
 	- Tentativa de anexação de janela já renderizada;
-	- Anexação de janela "float" ou "frame" com modal aberto;
+	- Anexação de janela "float" ou "frame" com "modal" aberto;
 	. Motivos para o status "escape":
 	- Botão ESC pressionado com janelas "modal" ou "float" aberta;
 	- Clique fora da janela "float";
@@ -190,11 +196,9 @@ const __WINDOW = {
 		this.heap[item].status = status;
 		this.update();
 		heap.window.dispatchEvent(fire);
-		/*-- jogando itens descartados para a lixeira: evitar processamento --*/
-		if (status === "avoid" || status === "escape" || status === "close") {
-			this.trash.push(heap);
+		/*-- jogando fora itens descartados --*/
+		if (status === "avoid" || status === "escape" || status === "close")
 			this.heap = this.heap.filter(function(v,i,a) {return v !== heap;}, this);
-		}
 		return;
 	},
 	/**. '{void focus(node win)}: Define o foco da janela renderizada na seguinte ordem:

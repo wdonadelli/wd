@@ -8,12 +8,17 @@ const __PROGRESS = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- PROGRESS --*/
 .css-wd-progress {
-	padding: 0.5em;
+	padding: 0.25em 0.5em;
 	border: thin solid black;
 	border-radius: 0.25em;
 	background-color: white;
+	color: black;
+	text-align: right;
+	opacity: 0.75;
+	font-family: var(--var-js-wd-font-type);
+	font-size: var(--var-js-wd-font-size);
 }
-.css-wd-progress > progress {
+.css-wd-progress * {
 	width: 100%;
 }`),
 	/**. '{object heap}: Pilha de processos em andamento.**/
@@ -22,25 +27,32 @@ const __PROGRESS = {
 	box:	__DOM({
 		tag: "div",
 		attr: {role: "alert", className: "css-wd-progress"},
-		child: [{tag: "progress", attr: {}, child: []}]
+		child: [
+			{tag: "label", attr: {}, child: [
+				{tag: "progress", attr: {}, child: []}
+			]},
+			{tag: "div", attr: {}, child: []}
+		]
 	}).tag,
 	/**. '{void calc()}: Calcula o valor da barra de progresso.**/
 	calc: function() {
 		const val = {sum: 0, len: 0};
-		const bar = this.box.firstElementChild;
+		const bar = this.box.firstElementChild.firstElementChild;
+		const txt = this.box.lastElementChild;
 		for (let i in this.heap) {
-			if (this.heap[i] === null) {
-				bar.removeAttribute("value");
-				bar.setAttribute("aria-label", "?")
-				return;
-			}
+			val.sum = val.sum === null || this.heap[i] === null ? null : val.sum + this.heap[i];
 			val.len++;
-			val.sum += this.heap[i];
 		}
-		const value = val.len === 0 ? 0 : val.sum/val.len;
-		const label = value.toLocaleString(__LANG.value, {style: "percent", maximumFractionDigits: 0});
-		bar.value   = value;
-		bar.setAttribute("aria-label", label);
+		if (val.sum === null || val.len === 0) {
+			bar.removeAttribute("value")
+			txt.textContent = "...";
+		}
+		else {
+			const value = val.sum/val.len;
+			const label = value.toLocaleString(__LANG.value, {style: "percent", maximumFractionDigits: 0});
+			bar.value = value;
+			txt.textContent = label;
+		}
 		return;
 	},
 	/**. '{boolean empty}: Informa se heap está vazio.**/
