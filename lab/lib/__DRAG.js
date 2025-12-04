@@ -2,6 +2,7 @@
 #3 Arrasto de Elementos
 O objeto '{__DRAG} define elemento de arrasto, de soltura e o respectivo comportamento.
 **/
+//FIXME borda pequena ao acionar o drop e borda grande ao entrar
 const __DRAG = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- DRAG --*/

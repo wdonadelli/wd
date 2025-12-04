@@ -24,14 +24,9 @@ const __DOCODE = {
 			next: function() {
 				if (this.i >= this.list.length) {
 					this[this.type].push(this.temp.join(""));
-					return null;
+					return false;
 				}
 				const match = this.match();
-				/*console.log({
-					temp: this.temp.join(""),
-					match: match,
-					list: this.list.slice(this.i).join("")
-				});*/
 				if (match === 0) {
 					this.temp.push(this.list[this.i]);
 					this.i++;
@@ -42,9 +37,10 @@ const __DOCODE = {
 					this.type = this.type === "src" ? "doc" : "src";
 					this.i += match;
 				}
+				return true;
 			}
 		};
-		while (data.next() !== null);
+		while (data.next());
 		return {
 			src: data.src.join("").replace(/\n+/g, "\n"),
 			doc: data.doc.join("").replace(/\n+/g, "\n"),
@@ -52,44 +48,137 @@ const __DOCODE = {
 	},
 //__Request({url: "lib/__DOCODE.js", call: (x) => {if (x.ok) {console.log(__DOCODE.split(x.response, "/**", "**/").doc)}}}).send()
 
-
-
-
-
-/**. '{object wdComment(string open, string close)}: .**/
-	wdComment: {
-		value: function(open, close) {
-			if (!this._check.string) return null;
-
-			const data = this._data.trim().normalize();
-			const list = data.split("");
-			let txt, end, index = 0, type = "src";
-			/*-- separar código e comentários ------------------------------------*/
-			while (index < list.length) {
-				end = index + (type === "src" ? open.length : close.length);
-				txt = data.slice(index, end);
-				if (type === "src" && txt === open) {
-					src.push("\n");
-					type  = "doc";
-					index = end;
-				}
-				else if (type === "doc" && txt === close) {
-					doc.push("\n");
-					type = "src";
-					index = end;
-				}
-				else {
-					type === "doc" ? doc.push(data[index]) : src.push(data[index]);
-					index++;
-				}
-			}
-			return {
-				src:  src.join("").replace(/\n+/g, "\n"),
-				doc:  doc.join(""),
-				get html() {return new __Parser(this.doc).wdDoc.get();}
-			};
-		}
+	/**. '{object marks}: Registra as notações da codificação:**/
+	marks: {
+		ul:    /^\-\s+(.+)$/,     ol: /^\+\s+(.+)$/,   dl: /^\.\s+(.+)$/,
+		h1:    /^\#1\s+(.+)$/,    h2: /^\#2\s+(.+)$/,  h3: /^\#3\s+(.+)$/,
+		h4:    /^\#4\s+(.+)$/,    h5: /^\#5\s+(.+)$/,  h6: /^\#6\s+(.+)$/,
+		table: /^\|(.+)\|$/,   quote: /^\`()$/,       pre: /^\:()$/,
 	},
+	/**. '{object info(string line)}: Retorna valor ('{value}) e tipo ('{type}) da notação da linha ('{line}) conforme '{marks}**/
+	info: function(line) {
+		line = line.trim();
+		let info = null;
+		for (let name in this.marks) {
+			if (info === null && this.marks[name].test(line))
+				info = {type: name, value: line.match(this.marks[name])[1]};
+		}
+		return info === null ? {type: "p", value: line} : info;
+	},
+/*
+`
+Esse é um texto longo
+Tá ligado?
+`
+:
+Esse é um texto longo
+Tá ligado?
+:
+//FIXME '{code} &{unicode} a{link}[]
+*/
+
+	html: function(code) {
+		const line = String(code).normalize().split("\n");
+		const main = [];
+		let   type = null;
+		/*-- obter dados de cada linha --*/
+		line.map(function(v,i,a) {
+			const info = this.info(v);
+			/*-- bloco de texto aberto --*/
+			if (type === "pre" || type === "quote") {
+				type = info.type === type ? null : type;
+				return type === null ? null : {type: type, value: type === "pre" ? v : v.trim()};
+			}
+			/*-- abrir bloco de texto --*/
+			if (info.type === "pre" || info.type === "quote") {
+				type = info.type;
+				return null;
+			}
+			return info.value === "" ? null : info;
+		}, this)
+		/*-- agrupar ordenadamente por tipo em main --*/
+		.forEach(function(v,i,a) {
+			if (v !== null) {
+				const last = main.length === 0 ? {} : main[main.length - 1];
+				if (v.type !== last.type)
+					main.push({type: v.type, value: [v.value]});
+				else
+					main[main.length - 1].value.push(v.value);
+			}
+			return;
+		});
+		/*-- registrar os elementos filhos --*/
+		return {tag: "section", attr: {}, child: main.map(function(v,i,a) {
+			return this[v.type](v.value);
+		}, this)};
+	},
+	/**. '{string inline(string inner)}: Retorna o valor de '{innerHTML} para formatar os elementos filhos profundos**/
+	inline: function(inner) {
+		const long  = /([a-z]+)\{([^\}]+)\}\[([^\]]+)\]/g;
+		const short = /([a-z]+)\{([^\}]+)\}/g;
+		const code  = /\'\{([^\}]+)\}/g;
+		const ding  = /\&amp\;\{([^\}]+)\}/g;
+		inner = inner.replace(/\&/g, "&amp;").replace(/\>/g, "&gt;").replace(/\</g, "&lt;")
+		if (long.test(inner))
+			inner = inner.replace(long, `<$1 $3>$2</$1>`);
+		if (short.test(inner))
+			inner = inner.replace(short, `<$1>$2</$1>`);
+		if (code.test(inner))
+			inner = inner.replace(code, `<code translate="no">$1</code>`);
+		if (ding.test(inner))
+			inner = inner.replace(ding, `&$1;`);
+		return inner;
+	},
+	/**. '{object ul(array list)}: Retorna a estrutura do elemento '{ul}.**/
+	ul: function(list) {
+		return {tag: "ul", attr: {}, child: list.map(function(v,i,a) {
+			return {tag: "li", attr: {innerHTML: this.inline(v)}, child: []};
+		}, this)}
+	},
+	/**. '{object ol(array list)}: Retorna a estrutura do elemento '{ol}.**/
+	ol: function(list) {
+		return {tag: "ol", attr: {}, child: list.map(function(v,i,a) {
+			return {tag: "li", attr: {innerHTML: this.inline(v)}, child: []};
+		}, this)}
+	},
+	/**. '{object pre(array list)}: Retorna a estrutura do elemento '{pre}.**/
+	pre: function(list) {
+		return {tag: "pre", attr: {innerText: list.join("\n"), setAttribute: ["translate", "no"]}, child: []};
+	},
+	/**. '{object quote(array list)}: Retorna a estrutura do elemento '{blockquote}.**/
+	quote: function(list) {
+		return {tag: "blockquote", attr: {}, child: list.map(function(v,i,a) {
+			return {tag: "p", attr: {innerHTML: this.inline(v.trim())}, child: []};
+		}, this)}
+	},
+
+	//FIXME o que fazer com p? [p1,p2,p3] o que retornar? um div? o mesmo ocorre com h
+	/**. '{object p(array list)}: Retorna a estrutura do elemento '{p}.**/
+	p: function(list, head) {
+		return {tag: "p", attr: {innerHTML: this.inline(v)}, child: []};
+	},
+	/**. '{object h1(array list, integer n)}: Retorna a estrutura do elemento '{h1}.**/
+	h1: function(list, n) {
+		return {tag: `h${n === undefined ? 1 : n}`, attr: {innerHTML: this.inline(list.join("").trim()}, child: []};
+	},
+	/**. '{object h2(array list)}: Retorna a estrutura do elemento '{h2}.**/
+	h2: function(list) {return this.h1(list, 2);},
+	/**. '{object h3(array list)}: Retorna a estrutura do elemento '{h3}.**/
+	h3: function(list) {return this.h1(list, 3);},
+	/**. '{object h4(array list)}: Retorna a estrutura do elemento '{h4}.**/
+	h4: function(list) {return this.h1(list, 4);},
+	/**. '{object h5(array list)}: Retorna a estrutura do elemento '{h5}.**/
+	h5: function(list) {return this.h1(list, 5);},
+	/**. '{object h6(array list)}: Retorna a estrutura do elemento '{h6}.**/
+	h6: function(list) {return this.h1(list, 6);},
+
+
+
+
+
+
+
+
 	/**. '{string wdDoc}: Transforma os dados segregados do método '{wdComment} em notação HTML (tag main) adotando as seguintes regras de notação:
 	|Element|Tipo|Ocorrência|Descrição|
 	|Citação|Bloco|Parágrafo|Inicia e termina com duas aspas duplas.|
