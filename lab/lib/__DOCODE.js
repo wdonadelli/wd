@@ -48,12 +48,38 @@ const __DOCODE = {
 	},
 //__Request({url: "lib/__DOCODE.js", call: (x) => {if (x.ok) {console.log(__DOCODE.split(x.response, "/**", "**/").doc)}}}).send()
 
-	/**. '{object marks}: Registra as notações da codificação:**/
+	/**. '{object marks}: Registra as notações da codificação que são analisadas a cada quebra de linha:
+	|Blocos|Notação|
+	|Citação|O caracter &{#x0022} delimita o início e o fim do bloco, as linhas entre os caracteres definirão seu conteúdo.|
+	|Código|O caracter &{#x0027} delimita o início e o fim do bloco, as linhas entre os caracteres definirão seu conteúdo.|
+	|Tabela|Utilize o caracter &{#x007C} como separador de coluna, iniciando e terminando a linha com ele.|
+	|Lista Desordenada|Utilize o caracter &{#x002D} para definir um item desordenado.|
+	|Lista Ordenada|Utilize o caracter &{#x002B} para definir um item ordenado.|
+	|Lista Descritiva|Utilize o caracter &{#x002E} para definir um item descritivo.|
+	|Títulos|Utilize o caracter &{#x0023} seguindo do número (1-6) para definir um título e seu nível.|
+	- Linhas vazias não são consideradas, mas não interrompem a sequência do bloco;
+	- Os caracteres de abertura e fechamento dos blocos de citação e código não podem conter outros caracteres;
+	- Os caracteres de lista e título devem estar no começo da linha e seguido de um espaço e o seu conteúdo;
+	- Utilize o caracter &{#x003A} para separar o título do item de sua descrição na lista descritiva; e
+	- Se nenhuma notação acima for utilizada, será considerado um parágrafo;
+
+	|Mídia|Bloco|Linha|Inicia com "@MIMETYPE " seguido do link entre os caracteres "< >" e o texto em caso de falha.|
+
+
+
+
+
+
+	|Formatação|Em linha|Conteúdo|Nome da tag HTML seguindo do conteúdo limitado pelos caracteres "{ }".|
+	- O valor MIMETYPE deve ser alterado conforme o tipo de arquivo a ser carregado;
+	- Atributos de elementos em linha são informados após o caracter "}" delimitado por colchetes "[attr]" (opcional); e
+	- Não é possível efetuar formatações dentro do conteúdo dos elementos em linha.
+	**/
 	marks: {
 		ul:    /^\-\s+(.+)$/,     ol: /^\+\s+(.+)$/,   dl: /^\.\s+(.+)$/,
 		h1:    /^\#1\s+(.+)$/,    h2: /^\#2\s+(.+)$/,  h3: /^\#3\s+(.+)$/,
 		h4:    /^\#4\s+(.+)$/,    h5: /^\#5\s+(.+)$/,  h6: /^\#6\s+(.+)$/,
-		table: /^\|(.+)\|$/,   quote: /^\`()$/,       pre: /^\:()$/,
+		table: /^\|(.+)\|$/,   quote: /^\"()$/,       pre: /^\'()$/,
 	},
 	/**. '{object info(string line)}: Retorna valor ('{value}) e tipo ('{type}) da notação da linha ('{line}) conforme '{marks}**/
 	info: function(line) {
@@ -65,17 +91,7 @@ const __DOCODE = {
 		}
 		return info === null ? {type: "p", value: line} : info;
 	},
-/*
-`
-Esse é um texto longo
-Tá ligado?
-`
-:
-Esse é um texto longo
-Tá ligado?
-:
-//FIXME '{code} &{unicode} a{link}[]
-*/
+
 
 	html: function(code) {
 		const line = String(code).normalize().split("\n");
@@ -99,11 +115,13 @@ Tá ligado?
 		/*-- agrupar ordenadamente por tipo em main --*/
 		.forEach(function(v,i,a) {
 			if (v !== null) {
-				const last = main.length === 0 ? {} : main[main.length - 1];
-				if (v.type !== last.type)
+				const item = main.length - 1;
+				const last = item < 0 ? {} : main[item];
+				const unit = (/^(p|h[1-6])$/).test(v.type);
+				if (v.type !== last.type || unit)
 					main.push({type: v.type, value: [v.value]});
 				else
-					main[main.length - 1].value.push(v.value);
+					main[item].value.push(v.value);
 			}
 			return;
 		});
@@ -112,7 +130,13 @@ Tá ligado?
 			return this[v.type](v.value);
 		}, this)};
 	},
-	/**. '{string inline(string inner)}: Retorna o valor de '{innerHTML} para formatar os elementos filhos profundos**/
+	/**. '{string inline(string inner)}: Retorna o valor de '{innerHTML} para formatar os elementos filhos profundos e possibilitar a definição de elementos i{inline}:
+'
+COM ATRIBUTOS:  tag{texto}[atributo1="valor1" atributo2="valor2"]
+SEM ATRIBUTOS:  tag{texto}
+CODE ABREVIADO: '{texto}
+CARACTERES:     &{code}
+'**/
 	inline: function(inner) {
 		const long  = /([a-z]+)\{([^\}]+)\}\[([^\]]+)\]/g;
 		const short = /([a-z]+)\{([^\}]+)\}/g;
@@ -129,18 +153,14 @@ Tá ligado?
 			inner = inner.replace(ding, `&$1;`);
 		return inner;
 	},
-	/**. '{object ul(array list)}: Retorna a estrutura do elemento '{ul}.**/
-	ul: function(list) {
-		return {tag: "ul", attr: {}, child: list.map(function(v,i,a) {
+	/**. '{object ul(array list, boolean ol)}: Retorna a estrutura do elemento '{ul}.**/
+	ul: function(list, ol) {
+		return {tag: ol === true ? "ol" : "ul", attr: {}, child: list.map(function(v,i,a) {
 			return {tag: "li", attr: {innerHTML: this.inline(v)}, child: []};
 		}, this)}
 	},
 	/**. '{object ol(array list)}: Retorna a estrutura do elemento '{ol}.**/
-	ol: function(list) {
-		return {tag: "ol", attr: {}, child: list.map(function(v,i,a) {
-			return {tag: "li", attr: {innerHTML: this.inline(v)}, child: []};
-		}, this)}
-	},
+	ol: function(list) {return this.ul(list, true);},
 	/**. '{object pre(array list)}: Retorna a estrutura do elemento '{pre}.**/
 	pre: function(list) {
 		return {tag: "pre", attr: {innerText: list.join("\n"), setAttribute: ["translate", "no"]}, child: []};
@@ -151,15 +171,14 @@ Tá ligado?
 			return {tag: "p", attr: {innerHTML: this.inline(v.trim())}, child: []};
 		}, this)}
 	},
-
-	//FIXME o que fazer com p? [p1,p2,p3] o que retornar? um div? o mesmo ocorre com h
 	/**. '{object p(array list)}: Retorna a estrutura do elemento '{p}.**/
-	p: function(list, head) {
-		return {tag: "p", attr: {innerHTML: this.inline(v)}, child: []};
+	p: function(list) {
+		return {tag: "p", attr: {innerHTML: this.inline(list[0])}, child: []};
 	},
 	/**. '{object h1(array list, integer n)}: Retorna a estrutura do elemento '{h1}.**/
 	h1: function(list, n) {
-		return {tag: `h${n === undefined ? 1 : n}`, attr: {innerHTML: this.inline(list.join("").trim()}, child: []};
+		n = Number.isInteger(n) ? n : 1;
+		return {tag: `h${n}`, attr: {id: __ID.value, textContent: list[0]}, child: []};
 	},
 	/**. '{object h2(array list)}: Retorna a estrutura do elemento '{h2}.**/
 	h2: function(list) {return this.h1(list, 2);},
@@ -171,208 +190,48 @@ Tá ligado?
 	h5: function(list) {return this.h1(list, 5);},
 	/**. '{object h6(array list)}: Retorna a estrutura do elemento '{h6}.**/
 	h6: function(list) {return this.h1(list, 6);},
-
-
-
-
-
-
-
-
-	/**. '{string wdDoc}: Transforma os dados segregados do método '{wdComment} em notação HTML (tag main) adotando as seguintes regras de notação:
-	|Element|Tipo|Ocorrência|Descrição|
-	|Citação|Bloco|Parágrafo|Inicia e termina com duas aspas duplas.|
-	|Código|Bloco|Parágrafo|Inicia e termina com duas aspas simples.|
-	|Tabela|Bloco|Linha|Inicia, termina e separa células com barra vertical, a primeira linha é o cabeçalho.|
-	|Lista|Bloco|Linha|Inicia com "- " seguido do conteúdo.|
-	|Descrição|Bloco|Linha|Inicia com ". " seguido do conteúdo.|
-	|Títulos|Bloco|Linha|Inicia com "#0-6 " seguido do conteúdo.|
-	|Mídia|Bloco|Linha|Inicia com "@MIMETYPE " seguido do link entre os caracteres "< >" e o texto em caso de falha.|
-	|Parágrafo|Bloco|Linha|Quando não seguir as regras anteriores.|
-	|Formatação|Em linha|Conteúdo|Nome da tag HTML seguindo do conteúdo limitado pelos caracteres "{ }".|
-	- Se a descrição conter um caractere ":" intermediário, a parte anterior será título (dt) e a posterior a descrição (dd);
-	- O número do título indica seu tipo, o valor zero cria um menu referenciando os títulos do tipo 3 a 5;
-	- O valor MIMETYPE deve ser alterado conforme o tipo de arquivo a ser carregado;
-	- A tag HTML i{code} pode ser abreviada por um caracteres de aspas simples;
-	- Atributos de elementos em linha são informados após o caracter "}" delimitado por colchetes "[attr]" (opcional); e
-	- Não é possível efetuar formatações dentro do conteúdo dos elementos em linha.**/
-	wdDoc: {
-		get: function() {
-			if ("wdDoc" in this._saved)
-				return new __Parser(this._saved.wdDoc);
-			let data = null;
-			try {
-				if (this._check.string) {
-					const menu = new __Tree();
-					const note = this._data.trim().normalize();
-					const code = note.split("\n");
-					const tree = new __Tree();
-					const type = {
-						/*-- blocos múltiplas linhas --*/
-						quote: /^(\"\")(.+)/,
-						pre:   /^(\'\')(.+)/,
-						/*-- blocos de consistência --*/
-						table: /^\|(.+)\|$/,
-						ul:    /^(\-)\s+(.+)$/,
-						dl:    /^(\.)\s+(.+)$/,
-						/*-- blocos de linha única --*/
-						head:  /^\#([0-6])\s+(.+)$/,
-						media: /^\@([a-z/]+)\s+\<([^>]+)\>(.*)$/i,
-					};
-					/*-- função para elementos inline --*/
-					function inline(tree, input) {
-						const code = input.split("");
-						const find = /^([a-z\-0-9]+|\')\{([^}]+)\}(\[[^\]]+\])?/i;
-						let txt, val, tag, index = 0;
-						while (index < code.length) {
-							tag = tree.level;
-							txt = code.slice(index).join("");
-							val = code[index];
-							if (find.test(txt)) {
-								let base = txt.match(find)[0];
-								let elem = base.replace(find, "$1");
-								let text = base.replace(find, "$2");
-								let attr = base.replace(find, "$3").replace(/^\[/, "").replace(/\]$/, "");
-								if (elem === "'") elem = "code";
-								tree.open(`${elem} ${attr}`).add(text).close();
-								index += base.length;
-							} else {
-								tree.add(val);
-								index++
-							}
-						}
-						return;
-					};
-					/*----------------------------------------------------------------*/
-					let tag, txt, key, index = 0, title = -1;
-					tree.xml = true;
-					while (index < code.length) {
-						tag = tree.level;
-						txt = code[index].trim();
-						key = null;
-						for (let i in type)
-							if (key === null && type[i].test(txt)) key = i;
-						/*--------------------------------------------------------------*/
-						if (tag === null) {
-							switch(key) {
-								/*-- blocos de consistência --*/
-								case "table": {tree.open("table");      break;}
-								case "ul":    {tree.open("ul");         break;}
-								case "dl":    {tree.open("dl");         break;}
-								/*-- blocos múltiplas linhas --*/
-								case "pre":   {code[index] = txt.slice(2); tree.open("pre");        break;}
-								case "quote": {code[index] = txt.slice(2); tree.open("blockquote"); break;}
-								/*-- blocos de linha única --*/
-								case "head":  {
-									let head = Number(txt.replace(type.head, "$1"));
-									let text = txt.replace(type.head, "$2").trim();
-									let href = `head_${++title}`;
-									if (head === 0)
-										tree.open(`h3`).add(text).close().
-										open("menu").add("%MENUITEM%").close();
-									else
-										tree.open(`h${head} id="${href}"`).add(text).close();
-									if (head > 2 && head < 6)
-										menu.open("li").add((". . . . ").repeat(head - 3))
-										.open(`a href="#${href}"`).add(text).close().close();
-									index++;
-									break;
-								}
-								case "media":  {
-									/^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/
-									let mime = txt.replace(type.media, "$1");
-									let data = txt.replace(type.media, "$2");
-									let text = txt.replace(type.media, "$3");
-									tree.open(`object type="${mime}" data="${data}"`).add(text).close();
-									index++;
-									break;
-								}
-								default: {
-									if (txt !== "")
-										tree.open("p").add(inline(tree, txt)).close();
-									index++;
-								}
-							}
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "table") {
-							let th = txt.replace(type.table, "$1").split("|");
-							tree.open("thead").open("tr");
-							for (let i = 0; i < th.length; i++)
-								tree.open("th").add(inline(tree, th[i])).close();
-							tree.close().close().open("tbody");
-							index++;
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "tbody") {
-							if (key !== "table") {
-								tree.close().close();
-							}
-							else {
-								let td = txt.replace(type.table, "$1").split("|");
-								tree.open("tr");
-								for (let i = 0; i < td.length; i++)
-									tree.open("td").add(inline(tree, td[i])).close();
-								tree.close();
-								index++;
-							}
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "dl") {
-							if (key !== "dl") {
-								tree.close();
-							}
-							else {
-								let re = /^([^:]+)\:(.+)$/;
-								let dl = txt.replace(type.dl, "$2").trim();
-								let dt = re.test(dl) ? dl.replace(re, "$1").trim() : null;
-								let dd = re.test(dl) ? dl.replace(re, "$2").trim() : dl;
-								if (dt !== null)
-									tree.open("dt").add(inline(tree, dt)).close();
-								tree.open("dd").add(inline(tree, dd)).close();
-								index++;
-							}
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "ul") {
-							if (key !== "ul") {
-								tree.close();
-							} else {
-								let li = txt.replace(type.ul, "$2");
-								tree.open("li").add(inline(tree, li)).close();
-								index++;
-							}
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "pre") {
-							let re  = /(\'\')$/;
-							let end = re.test(txt);
-							let pre = end ? txt.replace(re, "") : txt;
-							tree.add(pre).add(end ? "" : "\n");
-							if (end) tree.close();
-							index++;
-						}
-						/*--------------------------------------------------------------*/
-						else if (tag === "blockquote") {
-							let re    = /(\"\")$/;
-							let end   = re.test(txt);
-							let quote = end ? txt.replace(re, "") : txt;
-							tree.open("p").add(inline(tree, quote)).close();
-							if (end) tree.close();
-							index++;
-						}
-						else throw new Error("tag not found.")
-					}
-					tree.finish();
-					menu.finish();
-					data = tree.valueOf().replace("<menu>%MENUITEM%</menu>", `<menu>${menu.valueOf()}</menu>`);
-				}
+	/**. '{object table(array list)}: Retorna a estrutura do elemento '{table}.**/
+	table: function(list) {
+		const rows = list.map(function(v,i,a) {return v.split("|");});
+		const head = rows.slice(0,1);
+		const body = rows.slice(1);
+		return {tag: "table", attr: {border: 1}, child: [
+			{tag: "thead", attr: {}, child: head.map(function(row,i,a) {
+				return {tag: "tr", attr: {}, child: row.map(function(col,y,z) {
+					return {tag: "th", attr: {innerHTML: this.inline(col)}, child: []};
+				}, this)};
+			}, this)},
+			{tag: "tbody", attr: {}, child: body.map(function(row,i,a) {
+				return {tag: "tr", attr: {}, child: row.map(function(col,y,z) {
+					return {tag: "td", attr: {innerHTML: this.inline(col)}, child: []};
+				}, this)};
+			}, this)},
+		]};
+	},
+	/**. '{object dl(array list)}: Retorna a estrutura do elemento '{dl}.**/
+	dl: function(list) {
+		const dl = {tag: "dl", attr: {}, child: []};
+		const re = /^([^:]+)\:(.+)$/;
+		list.forEach(function(v,i,a) {
+			if (re.test(v)) {
+				dl.child.push({tag: "dt", attr: {innerHTML: this.inline(v.trim().replace(re, "$1"))}, child:[]});
+				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v.trim().replace(re, "$2"))}, child:[]});
+			} else {
+				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v)}, child:[]});
 			}
-			catch(e) {
-				console.info(e)
-			}
-			this._saved["wdDoc"] = data;
-			return this.wdDoc;
-		}
-	}
+		}, this);
+		return dl;
+	},
+
+	/*
+case "media":  {//@video
+	/^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/
+	let mime = txt.replace(type.media, "$1");
+	let data = txt.replace(type.media, "$2");
+	let text = txt.replace(type.media, "$3");
+	tree.open(`object type="${mime}" data="${data}"`).add(text).close();
+	index++;
+	break;
+}
+*/
 };
