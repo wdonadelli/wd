@@ -3,7 +3,6 @@
 O objeto '{__DOCODE} segrega as linhas de comentário do código fonte podendo ser traduzido o conteúdo para notação HTML caso seja escrito com determinadas regras de notação.
 **/
 const __DOCODE = {
-
 	/**. '{object split(string code, string open, string stop)}: Separa o código conforme caracteres de abertura e fechamento de comentário ('{open/stop}) retornando um objeto contendo informação da fonte ('{src}) e dos comentários ('{doc}).
 	. Os caracteres de abertura e fechamento de comentários não podem estar contidos em strings!**/
 	split: function(code, open, stop) {
@@ -13,27 +12,34 @@ const __DOCODE = {
 			list: String(code).normalize().split(""),
 			src:  [],
 			doc:  [],
+			/*-- registra o tipo de caractere em vigor --*/
 			type: "src",
+			/*-- registra os caracteres de src ou doc até a mundança de type --*/
 			temp: [],
 			i: 0,
+			/*-- identifica se os próximo caracteres casam com open ou stop e retorna sua quantidade --*/
 			match: function() {
 				const find = this.type === "src" ? this.open : this.stop;
 				const text = this.list.slice(this.i, this.i + find.length).join("");
 				return find === text ? find.length : 0;
 			},
 			next: function() {
+				/*-- encerrar looping --*/
 				if (this.i >= this.list.length) {
 					this[this.type].push(this.temp.join(""));
 					return false;
 				}
 				const match = this.match();
+				/*-- caracteres não casados, registra em temp e avança 1 --*/
 				if (match === 0) {
 					this.temp.push(this.list[this.i]);
 					this.i++;
 				}
+				/*-- caracteres casados, define o valor e avança a quantidade casada --*/
 				else {
+					const line = this.list.slice(this.i, this.i + match).indexOf("\n") >= 0;
 					this[this.type].push(this.temp.join(""));
-					this.temp = [this.type === "doc" && (/\n/).test(this.stop) ? "\n" : ""];
+					this.temp = [this.type === "src" || line ? "\n" : ""];
 					this.type = this.type === "src" ? "doc" : "src";
 					this.i += match;
 				}
@@ -42,12 +48,10 @@ const __DOCODE = {
 		};
 		while (data.next());
 		return {
-			src: data.src.join("").replace(/\n+/g, "\n"),
-			doc: data.doc.join("").replace(/\n+/g, "\n"),
+			src: data.src.join("").replace(/\n(\s+)?\n/g, "\n"),
+			doc: data.doc.join(""),
 		};
 	},
-//__Request({url: "lib/__DOCODE.js", call: (x) => {if (x.ok) {console.log(__DOCODE.split(x.response, "/**", "**/").doc)}}}).send()
-
 	/**. '{object marks}: Registra as notações da codificação que são analisadas a cada quebra de linha:
 	|Blocos|Notação|
 	|Citação|O caracter &{#x0022} delimita o início e o fim do bloco, as linhas entre os caracteres definirão seu conteúdo.|
@@ -57,24 +61,11 @@ const __DOCODE = {
 	|Lista Ordenada|Utilize o caracter &{#x002B} para definir um item ordenado.|
 	|Lista Descritiva|Utilize o caracter &{#x002E} para definir um item descritivo.|
 	|Títulos|Utilize o caracter &{#x0023} seguindo do número (1-6) para definir um título e seu nível.|
-	- Linhas vazias não são consideradas, mas não interrompem a sequência do bloco;
+	- Linhas vazias não são consideradas e não interrompem a sequência do bloco;
 	- Os caracteres de abertura e fechamento dos blocos de citação e código não podem conter outros caracteres;
 	- Os caracteres de lista e título devem estar no começo da linha e seguido de um espaço e o seu conteúdo;
 	- Utilize o caracter &{#x003A} para separar o título do item de sua descrição na lista descritiva; e
-	- Se nenhuma notação acima for utilizada, será considerado um parágrafo;
-
-	|Mídia|Bloco|Linha|Inicia com "@MIMETYPE " seguido do link entre os caracteres "< >" e o texto em caso de falha.|
-
-
-
-
-
-
-	|Formatação|Em linha|Conteúdo|Nome da tag HTML seguindo do conteúdo limitado pelos caracteres "{ }".|
-	- O valor MIMETYPE deve ser alterado conforme o tipo de arquivo a ser carregado;
-	- Atributos de elementos em linha são informados após o caracter "}" delimitado por colchetes "[attr]" (opcional); e
-	- Não é possível efetuar formatações dentro do conteúdo dos elementos em linha.
-	**/
+	- Se nenhuma notação acima for utilizada, será considerado um parágrafo.**/
 	marks: {
 		ul:    /^\-\s+(.+)$/,     ol: /^\+\s+(.+)$/,   dl: /^\.\s+(.+)$/,
 		h1:    /^\#1\s+(.+)$/,    h2: /^\#2\s+(.+)$/,  h3: /^\#3\s+(.+)$/,
@@ -91,8 +82,7 @@ const __DOCODE = {
 		}
 		return info === null ? {type: "p", value: line} : info;
 	},
-
-
+	/**. '{node html(string code)}: Retorna um nó HTML contendo o código renderizado nessa linguagem.**/
 	html: function(code) {
 		const line = String(code).normalize().split("\n");
 		const main = [];
@@ -126,9 +116,13 @@ const __DOCODE = {
 			return;
 		});
 		/*-- registrar os elementos filhos --*/
-		return {tag: "section", attr: {}, child: main.map(function(v,i,a) {
+		return __DOM({tag: "section", attr: {}, child: main.map(function(v,i,a) {
 			return this[v.type](v.value);
-		}, this)};
+		}, this)}).tag;
+	},
+	/**. '{node doc(string code, string open, string stop)}`: Retorna os comentários renderizados como documento.**/
+	doc: function(code, open, stop) {
+		return this.html(this.split(code, open, stop).doc);
 	},
 	/**. '{string inline(string inner)}: Retorna o valor de '{innerHTML} para formatar os elementos filhos profundos e possibilitar a definição de elementos i{inline}:
 '
@@ -213,25 +207,15 @@ CARACTERES:     &{code}
 		const dl = {tag: "dl", attr: {}, child: []};
 		const re = /^([^:]+)\:(.+)$/;
 		list.forEach(function(v,i,a) {
+			console.log(v, re.test(v))
+
 			if (re.test(v)) {
-				dl.child.push({tag: "dt", attr: {innerHTML: this.inline(v.trim().replace(re, "$1"))}, child:[]});
-				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v.trim().replace(re, "$2"))}, child:[]});
+				dl.child.push({tag: "dt", attr: {innerHTML: this.inline(v.replace(re, "$1").trim())}, child:[]});
+				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v.replace(re, "$2").trim())}, child:[]});
 			} else {
 				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v)}, child:[]});
 			}
 		}, this);
 		return dl;
 	},
-
-	/*
-case "media":  {//@video
-	/^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/
-	let mime = txt.replace(type.media, "$1");
-	let data = txt.replace(type.media, "$2");
-	let text = txt.replace(type.media, "$3");
-	tree.open(`object type="${mime}" data="${data}"`).add(text).close();
-	index++;
-	break;
-}
-*/
 };

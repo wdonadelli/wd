@@ -66,6 +66,7 @@ const __DRAG = {
 		(effect in icon ? __ICON.background(this.fake, icon[effect], "1.5em", "50% 50%") : this.fake.remove());
 		return;
 	},
+	//FIXME pensar melhor nisso aqui, porque o fake está meio estranho
 	/**. '{void appendFake(object ev)}: Manipulador que exibe o '{fake} conforme conteúdo de i{drop} .**/
 	appendFake: function(ev) {
 		const drop = ev.currentTarget;
@@ -94,21 +95,22 @@ const __DRAG = {
 		__CSS.temp(child);
 		return;
 	},
-	/**. '{void dropZone(node drop, string effect, string event)}: Define o estilo do elemento a depender do evento e do efeito. Se '{effect} for diferente de "copy", "move" ou "link" ou '{event} for diferente de "dragstart", "dragleave", "dragover" ou "dragenter", a configuração será removida do elemento de solutura.**/
+	/**. '{object color}: Registra uma cor para cada efeito de soltura.**/
+	color: {move: "ForestGreen", copy: "MediumPurple", link: "DodgerBlue"},
+	/**. '{void dropZone(node drop, string effect, string event)}: Define o comportamento do estilo do elemento de soltura a depender do evento e do efeito. Se '{effect} for diferente de "copy", "move" ou "link" ou '{event} for diferente de "dragstart", "dragleave", "dragover" ou "dragenter", a configuração será removida do elemento de solutura.**/
 	dropZone: function(drop, effect, event) {
 		__CSS.temp(drop);
-		const rgba = {
-			move: {line: "rgb( 34, 139,  34)", back: "rgba( 34, 139,  34, 0.3)", name: "ForestGreen"},
-			copy: {line: "rgb(147, 112, 219)", back: "rgba(147, 112, 219, 0.3)", name: "MediumPurple"},
-			link: {line: "rgb( 30, 144, 255)", back: "rgba( 30, 144, 255, 0.3)", name: "DodgerBlue"},
-		};
-		const type = /^drag(start|leave|over|enter)$/;
-		const data = !type.test(event) || !(effect in rgba) ? {name: null} : rgba[effect];
-		const info = {size: {"*": "1em"}, line: {"*": `medium dashed ${data.line}`}, back: {"*": data.back}};
-		const temp = {outline: info.line, minWidth: info.size, minHeight: info.size, display: {inline: "inline-block"}};
-		if (event === "dragover" || event === "dragenter")
-			temp.backgroundColor = info.back;
-		return __CSS.temp(drop, data.name === null ? null : temp);
+		const line = {move: "ForestGreen", copy: "MediumPurple", link: "DodgerBlue"};
+		const temp = {minWidth: {"*": "1em"}, minHeight: {"*": "1em"}, display: {inline: "inline-block"}};
+		if (effect in this.color) {
+			if (event === "dragstart" || event === "dragleave")
+				temp.outline = {"*": `medium dashed ${this.color[effect]}`};
+			else if (event === "dragover" || event === "dragenter")
+				temp.outline = {"*": `medium solid  ${this.color[effect]}`};
+			if ("outline" in temp)
+				__CSS.temp(drop, temp);
+		}
+		return;
 	},
 	/**. '{string effect(string id)}: Retorna o efeito do elemento arrastável a partir de seu '{id}.**/
 	effect: function(id) {

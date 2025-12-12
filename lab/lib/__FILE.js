@@ -20,7 +20,7 @@ const __FILE = {
 		const data = new __DataSet();
 		if (file.type)         data.append("content-type",   file.type);
 		if (file.size)         data.append("content-length", file.size);
-		if (file.lastModified) data.append("last-modified", file.lastModified);
+		if (file.lastModified) data.append("last-modified",  file.lastModified);
 		if (file.name) {
 			const RFC5987 = this.RFC5987(file.name);
 			data.append("content-disposition", `attachment; filename="${file.name}"; filename*=UTF-8''${RFC5987}`);
