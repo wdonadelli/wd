@@ -3,17 +3,18 @@
 #3 Código Fonte
 O objeto '{__CODE} renderiza um código para o formato HTML.
 **/
-const __XML = {
+const __CODE = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- CODE --*/
-.css-wd-code-root      {color: black; background-color: snow; padding: 1em}
-.css-wd-code-tag       {color: royalblue;}
-.css-wd-code-value     {color: green;}
-.css-wd-code-attribute {color: orange;}
-.css-wd-code-doctype   {color: red;}
-.css-wd-code-comment   {color: gray;}
-.css-wd-code-style     {background-color: yellow;}
-.css-wd-code-script    {background-color: yellow;}
+.css-wd-code-root       {color: black; background-color: snow; padding: 1em}
+.css-wd-code-tag        {color: royalblue;}
+.css-wd-code-value      {color: green;}
+.css-wd-code-attribute  {color: orange;}
+.css-wd-code-doctype    {color: red;}
+.css-wd-code-comment    {color: gray;}
+.css-wd-code-flag       {font-weight: bold;}
+.css-wd-code-style      {color: black; font-style: italic;}
+.css-wd-code-script     {color: black; font-style: italic;}
 `),
 	/**. '{string swap(string str)}: Retorna a string transformada em formato HTML (caracteres especiais).**/
 	swap: function(str) {
@@ -24,12 +25,24 @@ const __XML = {
 	},
 	/**. '{string attr(string str)}: Retorna a string em formato HTMl para os atributos HTML.**/
 	attr: function(str) {
-		const re = /(\=\s*)(\"[^"]*\"|\'[^']*\'|\`[^`]*\`|\S*)/g;
+		/*-- ver item 3 da explicação da expressão regular de tag --*/
+		const re = /(\=\s*)(\"(?:\\\"|[^"])*\"|\'(?:\\\'|[^'])*\'|\`(?:\\\`|[^`])\`|\S*)/g;
 		return str.replace(re, `$1<span class="css-wd-code-value">$2</span>`);
 	},
-	/**. '{object tag(string str)}: Retorna os dados da string caso esteja no formato de uma tag.**/
+	/**. '{object tag(string str)}: Retorna os dados da string caso esteja no formato de uma tag HTML.**/
 	tag: function(str) {
-		const re = /^(\<[?!/]?[a-zA-Z_][a-zA-Z0-9_:-]*\s*)((?:\s*[a-zA-Z_][a-zA-Z0-9_:-]*(?:\s*\=\s*(?:\"[^"]*\"|\'[^']*\'|\`[^`]*\`|\S*))?\s*)*)(\/?\>)/i;
+		/*-- partes da expressão regular --
+		1) Captura a tag desde o caractere < até o espaço após o nome, se houver
+			^(\<[?!/]?[a-zA-Z_][a-zA-Z0-9_:-]*\s*)
+		2) Captura os atributos com ou sem sinal de igual
+			((?:\s*[a-zA-Z_][a-zA-Z0-9_:-]*
+		3) Captura os valores dos atributos (após o sinal de =) delimitados por ", ', ` ou sem delimitadores
+			(?:\s*\=\s*(?:\"(?:\\\"|[^"])*\"|\'(?:\\\'|[^'])*\'|\`(?:\\\`|[^`])\`|\S*))?\s*)*)
+		4) Encerra o caractere de tag >
+			(\/?\>)
+		----------------------------------------
+		*/
+		const re = /^(\<[?!/]?[a-zA-Z_][a-zA-Z0-9_:-]*\s*)((?:\s*[a-zA-Z_][a-zA-Z0-9_:-]*(?:\s*\=\s*(?:\"(?:\\\"|[^"])*\"|\'(?:\\\'|[^'])*\'|\`(?:\\\`|[^`])\`|\S*))?\s*)*)(\/?\>)/;
 		const find = str.match(re);
 		if (find === null) return null;
 		const name = find[1].replace("<", "").trim().toLowerCase();
@@ -49,25 +62,32 @@ const __XML = {
 		}, this);
 		return {length: find[0].length, html: html.join("")};
 	},
-
-	comment: function(str) {
-
+	/**. '{string flags(string str)}: Retorna a string com as i{flags} de comentários envolvidas em tag HTML.**/
+	flags: function(str) {
+		const re = /(\s?TODO|FIXME|OPTIMIZE|HACK|REVIEW\s?)/g;
+		return str.replace(re, `<span class="css-wd-code-flag">$1</span>`);
 	},
-
-
-
-	code: function(str) {
+	/**. '{object comment(string str)}: Retorna os dados da string caso esteja no formato de comentário HTML.**/
+	comment: function(str) {
+		const re   = /^(?:\<\!\-\-(?:(?!\-\-\>)(?:.|\s))*\-\-\>)/;
+		const find = str.match(re);
+		const html = find === null ? null : this.flags(this.swap(find[0]));
+		return html === null ? null : {length: find[0].length, html: `<span class="css-wd-code-comment">${html}</span>`};
+	},
+	/**. '{string xml(string str)}: Retorna os texto do código no formato HTML.**/
+	xml: function(str) {
 		const code = String(str).normalize();
 		const html = [];
 		let i = 0;
 		while (i <= code.length) {
 			let txt = code.slice(i);
 			let tag = this.tag(txt);
-			if (tag !== null) {
-				html.push(tag.html);
-				i += tag.length;
+			let cmt = this.comment(txt);
+			let xml = tag !== null ? tag : (cmt !== null ? cmt : null);
+			if (xml !== null) {
+				html.push(xml.html);
+				i += xml.length;
 			}
-
 			else {
 				html.push(code[i]);
 				i++;
@@ -76,6 +96,48 @@ const __XML = {
 		const data = html.join("").replace(/\n/g, "<br>");
 		return `<pre class="css-wd-code-root">${data}</pre>`;
 	},
+	/**. '{regexp trim(string open, string close, boolean ignore)}: Retorna a expressão regular para blocos delimitados.**/
+	trim: function(open, close, ignore) {
+		const init = open.replace(/([\W])/g, `\\$1`);
+		const last = close.replace(/([\W])/g, `\\$1`);
+		const flag = ignore === true ? "i" : "";
+		/*-- modelo aspas: /^(\"(?:\\\"|[^"])*\")/ --*/
+		if (close.length === 1)
+			return new RegExp(`^(?:${init}(?:\\\\${last}|[^${last}])*${last})`, flag);
+		/*-- modelo tag: /^(?:\<\!\-\-(?:(?!\-\-\>)(?:.|\s))*\-\-\>)/ --*/
+		return new RegExp(`^(?:${init}(?:(?!${last})(?:.|\\s))*${last})`, flag);
+	},
+
+
+			/*_string:  {writable: true,  value: []},
+			_comment: {writable: true,  value: []},
+			_word:    {writable: true,  value: []},
+			_value:   {writable: true,  value: []},*/
+
+
+
+	blocks: function(data) {
+		const block = [];
+		for (let i in data) {
+			if (data.type === "string" || data.type === "comment")
+				block.push({length: data.open.length, re: this.trim(data.open, data.close, data.ignore)});
+
+
+
+
+
+		}
+
+
+
+
+
+
+
+	},
+
+
+
 };
 
 
@@ -93,159 +155,6 @@ const __XML = {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const __XXXML = {
-	/**. '{node line(node tree)}: Adiciona e retorna uma linha da árvore.**/
-	line: function(tree) {
-		const line = __HTML("span", {className: "css-wd-code-line"});
-		tree.appendChild(line);
-		return line;
-	},
-	/**. '{node root(node tree)}: Retorna o último ancestral da árvore.**/
-	root: function(tree) {
-		let root = tree;
-		while(root.parentElement !== null) root = root.parentElement;
-		return root;
-	},
-	/**. '{void erase(node node)}: Apaga todos os nós de texto do nó.**/
-	erase: function(node) {
-		const nodes = Array.prototype.slice.call(node.childNodes);
-		for (let i = 0; i < nodes.length; i++) {
-			console.log(nodes[i], nodes[i].nodeType)
-			if (nodes[i].nodeType === 3)
-				nodes[i].remove();
-			else if (nodes[i].nodeType === 1)
-				this.erase(nodes[i]);
-		}
-		return;
-	},
-	/**. '{node deep(node tree)}: Retorna o nó mais profundo da árvore.**/
-	deep: function(tree) {
-		let deep = tree;
-		while(deep.lastElementChild !== null) deep = deep.lastElementChild;
-		return deep;
-	},
-	/**. '{node break(node tree)}: Adiciona uma nova linha ao root e retorna novo ponto de retorno.**/
-	break: function(tree) {
-		const root = this.root(tree);
-		const last = root.lastElementChild;
-		const node = last.lastElementChild;
-		const type = node === null ? null : node.nodeType;
-		/*-- adicionar nova linha ao root --*/
-		root.appendChild(__HTML("br"));
-		const line = this.line(root);
-		/*-- último elemento da linha anterior é nó --*/
-		if (type === 1) {
-			const fake = node.cloneNode(true);
-			this.erase(fake);
-			return this.deep(fake);
-		}
-		return line
-	},
-	/**. '{string type(node tree)}: Retorna o tipo do fragmento.**/
-	type: function(tree) {return tree.className.replace("css-wd-code-", "")},
-
-
-	//FIXME provisório
-	xml: [
-		{name: "comment", call: "box", parent: null, open: "<!--", close: "-->"}
-
-	],
-	//TODO melhorar isso
-	/**. '{string match(any test, string text)}: A string casada no texto conforme o valor de teste.**/
-	match: function(test, text) {
-		if (typeof test === "string")
-			return test === text.slice(0, test.length) ? test : null;
-		const find = text.match(test);
-		return find === null ? null : find[0];
-	},
-	/**. '{object check(...node tree)}: Retorna os dados do casamento do texto ou nulo.**/
-	check: function(tree, code, rule, index) {
-		const type = this.type(tree);
-		const text = code.slice(index);
-		const data = rule.filter(function(v,i,a) {
-			if (v.parent !== null && type !== v.parent) return false;
-			return this.match(v.open, text) !== null;
-		}, this);
-		return data.length === 0 ? null : data[0];
-	},
-	/**. '{void main(node tree, string code, array rule, integer index)}: Executa a rotina de montagem do código.**/
-	main: function(tree, code, rule, index) {
-		/*-- checar o fim do código --*/
-		if (index >= code.length) return;
-		/*-- checar notação --*/
-		const check = this.check(tree, code, rule, index);
-		if (check !== null)
-			return this[check.call](tree, code, rule, index, check);
-		/*-- texto puro --*/
-		const newline = code[index] === "\n";
-		tree.innerText += newline ? "" : code[index];
-		return this.main(newline ? this.break(tree) : tree, code, rule, ++index);
-	},
-
-	html: function(code, rule) {
-		const list = String(code).normalize();
-		const root = __HTML("div", {className: "css-wd-code-root"});
-		//TODO
-		rule = this.xml;
-		//TODO
-		this.main(this.line(root), list, rule, 0);
-		console.log(root.outerHTML)
-		return root;
-	},
-	box: function(tree, code, rule, index, check) {
-		/*-- abertura da caixa --*/
-		let find = this.match(check.open, code.slice(index));
-		let elem = __HTML("b", {className: `css-wd-code-${check.name}`});
-		let base;
-		tree.appendChild(elem);
-		elem.innerText = find;
-		index += find.length;
-		/*-- fechamento da caixa --*/
-		while (index <= code.length) {
-			base = code.slice(index);
-			find = this.match(check.close, base);
-			/*-- não casou --*/
-			if (find === null) {
-				if (code[index] === "\n")
-					elem = this.break(elem);
-				else
-					elem.innerText += code[index];
-				index++;
-			}
-			/*-- casou --*/
-			else {
-				index += find === "\n" ? 0 : find.length;
-				if (find !== "\n") elem.innerText += find;
-				return this.main(elem.parentElement, code, rule, index);
-			}
-		}
-		return;
-	},
-
-
-
-
-
-
-
-};
 
 
 
