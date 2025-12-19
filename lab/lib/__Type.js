@@ -31,7 +31,7 @@ function __Type(input) {
 
 Object.defineProperties(__Type.prototype, {
 	constructor: {value: __Type},
-	_re_email: {value: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/},
+	_re_email: {value: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/},
 	/*-- Strings -------------------------------------------------------------*/
 	/**. '{boolean string}: Checa se o valor é uma string u{diferente de número, data ou tempo}.**/
 	string: {get: function() {return this.type === "string";}},

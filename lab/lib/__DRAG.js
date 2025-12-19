@@ -233,6 +233,6 @@ const __DRAG = {
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 	handleEvent: function(ev) {
-	return this[ev.type](ev);
+		return this[ev.type](ev);
 	},
 };
