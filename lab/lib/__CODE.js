@@ -6,7 +6,127 @@ O objeto '{__CODE} renderiza um código para o formato HTML.
 const __CODE = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- CODE --*/
-.css-wd-code-root  {padding: 1em; font-family: Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace;}
+		[data-wd-encoding="code"] {
+			display: block !important;
+			position: relative !important;
+			width:  auto !important;
+			height: auto !important;
+			padding: 0 !important;
+			border-radius: 0.2em !important;
+			border: thin solid #000000 !important;
+			overflow: hidden !important;
+		}
+		[data-wd-encoding="code"] > * {
+			display: block !important;
+			width:  auto !important;
+			height: auto !important;
+			margin:  0 !important;
+			padding: 0.5em !important;
+			overflow: hidden !important;
+			font-family: monospace !important;
+			font-size: 14px !important;
+			text-decoration: none !important;
+			font-style: normal !important;
+			font-weight: normal !important;
+			text-align: left !important;
+			color: black !important;
+			white-space: pre-wrap !important;
+			letter-spacing: normal;
+			word-break: break-all;
+			border: none !important;
+		}
+		[data-wd-encoding="mask"] {
+			position: relative !important;
+			z-index: 0 !important;
+			counter-reset: lines !important;
+		}
+		[data-wd-encoding="text"] {
+			position: absolute !important;
+			top: 0 !important;
+			bottom: 0 !important;
+			right: 0 !important;
+			left: 0 !important;
+			z-index: 1 !important;
+			-webkit-text-fill-color: transparent !important;
+			resize: none !important;
+		}
+		[data-wd-encoding="line"]        {position: relative !important;}
+		/*-- linhas --*/
+		[data-wd-encoding="line"]::after {content: " " !important;}
+		[data-wd-encoding-lines] [data-wd-encoding="line"]::before {
+			display: inline-block !important;
+			position: absolute !important;contains
+			top: 0;
+			padding: 0 0.2em 0 0 !important;
+			text-align: right !important;
+			counter-increment: lines !important;
+			content: counter(lines) !important;
+		}
+		[data-wd-encoding-lines="0"] [data-wd-encoding="line"]::before {
+			left: -1em !important;
+			width: 1em !important;
+		}
+		[data-wd-encoding-lines="0"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="0"] [data-wd-encoding="text"] {
+			padding-left: 1em !important;
+		}
+		[data-wd-encoding-lines="1"] [data-wd-encoding="line"]::before {
+			left: -2em !important;
+			width: 2em !important;
+		}
+		[data-wd-encoding-lines="1"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="1"] [data-wd-encoding="text"] {
+			padding-left: 2em !important;
+		}
+		[data-wd-encoding-lines="2"] [data-wd-encoding="line"]::before {
+			left: -3em !important;
+			width: 3em !important;
+		}
+		[data-wd-encoding-lines="2"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="2"] [data-wd-encoding="text"] {
+			padding-left: 3em !important;
+		}
+		[data-wd-encoding-lines="3"] [datcontainsa-wd-encoding="line"]::before {
+			left: -4em !important;
+			width: 4em !important;
+		}
+		[data-wd-encoding-lines="3"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="3"] [data-wd-encoding="text"] {
+			padding-left: 4em !important;
+		}
+		[data-wd-encoding-lines="4"] [data-wd-encoding="line"]::before {
+			left: -5em !important;
+			width: 5em !important;
+		}
+		[data-wd-encoding-lines="4"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="4"] [data-wd-encoding="text"] {
+			padding-left: 5em !important;
+		}
+		/*-- cores --*/
+		[data-wd-encoding="text"]         {color: white !important; background-color: transparent !important;}
+		[data-wd-encoding="mask"]         {color: snow  !important; background-color: black !important;}
+		[data-wd-encoding="line"]         {color: inherit !important;}
+		[data-wd-encoding="line"]::before {color: WhiteSmoke !important;}
+		[data-wd-encoding="comment"]      {color: silver !important; font-style: italic !important;}
+		[data-wd-encoding="flag"]         {color: khaki !important; font-weight: bold !important;}
+		[data-wd-encoding="doc"]          {color: MediumPurple !important; font-weight: bold !important;}
+		[data-wd-encoding="tag"]          {color: DodgerBlue !important;}
+		[data-wd-encoding="attr"]         {color: teal !important;}
+		[data-wd-encoding="script"]       {color: aqua !important; font-style: italic !important;}
+		[data-wd-encoding="value"]        {color: violet !important;}
+		[data-wd-encoding="number"]       {color: violet !important;}
+		[data-wd-encoding="string"]       {color: violet !important;}
+		[data-wd-encoding="word"]         {color: DodgerBlue !important; font-weight: bold !important;}
+		[data-wd-encoding="scope"]        {color: orange !important; font-weight: bold !important;}
+		[data-wd-encoding="trash"]        {color: red !important; text-decoration: underline !important;}
+
+
+
+
+
+
+
+.css-wd-code-root  {padding: 1em; font-family: var(--var-js-wd-font-code)}
 /*-- cores --*/
 .css-wd-code-root    {color: black; background-color: snow;}
 .css-wd-code-doctype {color: red; font-weight: bold;}
@@ -106,6 +226,7 @@ const __CODE = {
 	/**. '{string xml(string str)}: Retorna a string XML/HTML renderizado no formato HTML.**/
 	xml: function(str) {
 		const code = String(str).normalize();
+		const HTML = (/\<\s*\/\s*html\s*\>/).test(str);
 		const html = [];
 		let i = 0;
 		while (i < code.length) {
@@ -121,11 +242,22 @@ const __CODE = {
 			}
 			/*-- não casou --*/
 			else {
-				html.push(this.swap(code[i]));
-				i++;
+				const ahead = this.text(txt);
+				html.push(this.swap(ahead.value));
+				i += ahead.length;
 			}
 		}
-		return `<pre class="css-wd-code-root">${html.join("")}</pre>`;
+		/*-- renderizar --*/
+		const render = __HTML("pre", {innerHTML: html.join(""), className: "css-wd-code-root"});
+		if (HTML) {
+			const script = render.querySelectorAll(".css-wd-code-script");
+			const style  = render.querySelectorAll(".css-wd-code-style");
+			for (let i = 0; i < script.length; i++)
+				script[i].innerHTML = this.code(script[i].innerText, this.JS).innerHTML;
+			for (let i = 0; i < style.length; i++)
+				style[i].innerHTML  = this.code(style[i].innerText, this.CSS).innerHTML;
+		}
+		return render;
 	},
 	/**. '{string atom(any base, boolean line)}: Retorna a string nos moldes de expressão regular para a particula '{base} que pode ser uma string ou expressão regular ou nulo. O argumento '{end}, se verdadeiro, equipara a quebra de linha ao fim da string.**/
 	atom: function(base, end) {
@@ -193,15 +325,6 @@ const __CODE = {
 			}
 			return rule.re === null ? null : rule;
 		}, this).filter(function(v,i,a) {return v !== null;});
-
-
-		/*-- número decimal FIXME delimitador?--* /
-		rules.push({type: "value", re: /^([+-]?(?:\.?\d+|\d+\.\d+)(?:[eE][+-]?\d+)?)(?:\W)/, apart: true});
-		/*-- número hexadecimal FIXME delimitador?--* /
-		rules.push({type: "value", re: /^([+-]?0x[0-9a-fA-F]+)(?:[^0-9a-fA-F])/, apart: true});
-		/*-- número binário FIXME delimitador? --* /
-		rules.push({type: "value", re: /^([+-]?0[bB][01]+)(?:[^01])/, apart: true});*/
-
 		return rules;
 	},
 	/**. '{object match(string str, array rules)}: Retorna os dados do casamento da expressão acrescentando às propriedades:
@@ -220,6 +343,15 @@ const __CODE = {
 			};
 		}
 		return null;
+	},
+	/**. '{object text(string str)}: Retorna os dados do casamento de caracteres ou espaços (´{value} e '{length})**/
+	text: function(str) {
+		const text = /^(?:\w+|\s+)/;
+		const find = str.match(text);
+		return {
+			length: find === null ?      1 : find[0].length,
+			value:  find === null ? str[0] : find[0]
+		};
 	},
 	/**. '{string code(string str, array rules)}: Retorna a string renderizada no formato HTML conforme regras:
 	- O argumento '{rules} é uma lista de objetos que contém as regras de renderização;
@@ -242,7 +374,6 @@ const __CODE = {
 	code: function(str, rules) {
 		const code = String(str).normalize();
 		const rule = this.rules(rules);
-		const pass = /^(?:\w+|\s+)/;
 		const html = [];
 		let i = 0;
 		console.log(rule);//TODO apagar essa linha
@@ -251,22 +382,13 @@ const __CODE = {
 			let find = this.match(text, rule);
 			/*-- fragmento não casado --*/
 			if (find === null) {
-				//FIXME fazer situações para ignorar e avançar (\w|\s)+
-				const ahead = text.match(pass);
-				//console.log(ahead);
-				html.push(this.swap(ahead === null ? text[0] : ahead[0]));
-				i += ahead === null ? 1 : ahead[0].length;
-
-				//FIXME original
-				//html.push(this.swap(text[0]));
-				//i++;
+				const ahead = this.text(text);
+				html.push(this.swap(ahead.value));
+				i += ahead.length;
 			}
 			/*-- fragmento casado --*/
 			else {
 				const data = find.data.map(function(v,i,a) {return this.swap(v);}, this);
-
-
-
 				/*-- flags especiais --*/
 				if (find.look === "string" || find.look === "comment")
 					data[1] = this[find.look](data[1]);
@@ -279,21 +401,16 @@ const __CODE = {
 					html.push(data[0] + this.span(find.look, data[1]) + data[2]);
 				else if (find.type === "right")
 					html.push(data[0] + this.span(find.look, data.slice(1).join("")));
-
-				//console.log(find.data, find.type, data, html[html.length -1]); //FIXME
-
-				/*-- avançar --*/
 				i += find.length;
 			}
 		}
-		return `<pre class="css-wd-code-root">${html.join("")}</pre>`;
+		//return `<pre class="css-wd-code-root">${html.join("")}</pre>`;
+		return __HTML("pre", {className: "css-wd-code-root", innerHTML: html.join("")})
 	},
-
-
+	/**. '{array JS}: Lista com regras básicas para JavaScript.**/
 	JS: [
-		//FIXME
-
-
+		/*-- números hexadecimal, binário, octal e decimal --*/
+		{look: "value", list: /(:?0x[a-fA-F0-9]+|0[bB][01]+|0o[0-7]+|(:?(?:\.?\d+|\d+\.\d+)(?:[eE][+-]?\d+)?)|\d+n)/},
 		{look: "doctype", init: `"use strict"`, close: ";"},
 		{look: "string",  init: `"`},
 		{look: "string",  init: `'`},
@@ -303,6 +420,14 @@ const __CODE = {
 		{look: "value",   init: /\/[^/]/, last: "/"},
 		{look: "value",   list: "false null true undefined NaN Infinity"},
 		{look: "keyword", list: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async this"},
-
 	],
+	/**. '{array CSS}: Lista com regras básicas para CSS.**/
+	CSS: [
+		{look: "string",  init: `"`},
+		{look: "keyword", init: /[a-zA-Z][a-zA-Z-]+/, close: /\s*\:/},
+		{look: "doctype", init: /\S+/, close: /\s*\{/},
+		//{look: "value",   list: /[^;]+\;/},
+	]
+
+
 };

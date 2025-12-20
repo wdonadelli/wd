@@ -13,6 +13,7 @@ const __CSS = {
 	--var-js-wd-z-index-3: 9996;
 	--var-js-wd-move-edge: 15px;
 	--var-js-wd-font-type: Verdana, sans-serif, monospace;
+	--var-js-wd-font-code: Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace;
 	--var-js-wd-font-size: 12px;
 }
 /*-- Animações --*/
