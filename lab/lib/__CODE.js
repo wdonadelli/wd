@@ -6,119 +6,43 @@ O objeto '{__CODE} renderiza um código para o formato HTML.
 const __CODE = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- CODE --*/
-		[data-wd-encoding="code"] {
-			display: block !important;
-			position: relative !important;
-			width:  auto !important;
-			height: auto !important;
-			padding: 0 !important;
-			border-radius: 0.2em !important;
-			border: thin solid #000000 !important;
-			overflow: hidden !important;
-		}
-		[data-wd-encoding="code"] > * {
-			display: block !important;
-			width:  auto !important;
-			height: auto !important;
-			margin:  0 !important;
-			padding: 0.5em !important;
-			overflow: hidden !important;
-			font-family: monospace !important;
-			font-size: 14px !important;
-			text-decoration: none !important;
-			font-style: normal !important;
-			font-weight: normal !important;
-			text-align: left !important;
-			color: black !important;
-			white-space: pre-wrap !important;
-			letter-spacing: normal;
-			word-break: break-all;
-			border: none !important;
-		}
-		[data-wd-encoding="mask"] {
-			position: relative !important;
-			z-index: 0 !important;
-			counter-reset: lines !important;
-		}
-		[data-wd-encoding="text"] {
-			position: absolute !important;
-			top: 0 !important;
-			bottom: 0 !important;
-			right: 0 !important;
-			left: 0 !important;
-			z-index: 1 !important;
-			-webkit-text-fill-color: transparent !important;
-			resize: none !important;
-		}
-		[data-wd-encoding="line"]        {position: relative !important;}
-		/*-- linhas --*/
-		[data-wd-encoding="line"]::after {content: " " !important;}
-		[data-wd-encoding-lines] [data-wd-encoding="line"]::before {
-			display: inline-block !important;
-			position: absolute !important;contains
-			top: 0;
-			padding: 0 0.2em 0 0 !important;
-			text-align: right !important;
-			counter-increment: lines !important;
-			content: counter(lines) !important;
-		}
-		[data-wd-encoding-lines="0"] [data-wd-encoding="line"]::before {
-			left: -1em !important;
-			width: 1em !important;
-		}
-		[data-wd-encoding-lines="0"] [data-wd-encoding="mask"],
-		[data-wd-encoding-lines="0"] [data-wd-encoding="text"] {
-			padding-left: 1em !important;
-		}
-		[data-wd-encoding-lines="1"] [data-wd-encoding="line"]::before {
-			left: -2em !important;
-			width: 2em !important;
-		}
-		[data-wd-encoding-lines="1"] [data-wd-encoding="mask"],
-		[data-wd-encoding-lines="1"] [data-wd-encoding="text"] {
-			padding-left: 2em !important;
-		}
-		[data-wd-encoding-lines="2"] [data-wd-encoding="line"]::before {
-			left: -3em !important;
-			width: 3em !important;
-		}
-		[data-wd-encoding-lines="2"] [data-wd-encoding="mask"],
-		[data-wd-encoding-lines="2"] [data-wd-encoding="text"] {
-			padding-left: 3em !important;
-		}
-		[data-wd-encoding-lines="3"] [datcontainsa-wd-encoding="line"]::before {
-			left: -4em !important;
-			width: 4em !important;
-		}
-		[data-wd-encoding-lines="3"] [data-wd-encoding="mask"],
-		[data-wd-encoding-lines="3"] [data-wd-encoding="text"] {
-			padding-left: 4em !important;
-		}
-		[data-wd-encoding-lines="4"] [data-wd-encoding="line"]::before {
-			left: -5em !important;
-			width: 5em !important;
-		}
-		[data-wd-encoding-lines="4"] [data-wd-encoding="mask"],
-		[data-wd-encoding-lines="4"] [data-wd-encoding="text"] {
-			padding-left: 5em !important;
-		}
-		/*-- cores --*/
-		[data-wd-encoding="text"]         {color: white !important; background-color: transparent !important;}
-		[data-wd-encoding="mask"]         {color: snow  !important; background-color: black !important;}
-		[data-wd-encoding="line"]         {color: inherit !important;}
-		[data-wd-encoding="line"]::before {color: WhiteSmoke !important;}
-		[data-wd-encoding="comment"]      {color: silver !important; font-style: italic !important;}
-		[data-wd-encoding="flag"]         {color: khaki !important; font-weight: bold !important;}
-		[data-wd-encoding="doc"]          {color: MediumPurple !important; font-weight: bold !important;}
-		[data-wd-encoding="tag"]          {color: DodgerBlue !important;}
-		[data-wd-encoding="attr"]         {color: teal !important;}
-		[data-wd-encoding="script"]       {color: aqua !important; font-style: italic !important;}
-		[data-wd-encoding="value"]        {color: violet !important;}
-		[data-wd-encoding="number"]       {color: violet !important;}
-		[data-wd-encoding="string"]       {color: violet !important;}
-		[data-wd-encoding="word"]         {color: DodgerBlue !important; font-weight: bold !important;}
-		[data-wd-encoding="scope"]        {color: orange !important; font-weight: bold !important;}
-		[data-wd-encoding="trash"]        {color: red !important; text-decoration: underline !important;}
+.css-wd-code {
+	display:  block;
+	position: relative;
+	width:    auto;
+	height:   auto;
+	padding:  0;
+	overflow: hidden;
+	border:   thin solid #000000;
+	border-radius: 0.2em;
+}
+.css-wd-code-root, .css-wd-code-edit {
+	display:         block;
+	width:           auto;
+	height:          auto;
+	margin:          0;
+	padding:         1em;
+	overflow:        hidden;
+	border:          none;
+	font-family:     var(--var-js-wd-font-code);
+	font-size:       var(--var-js-wd-font-size);
+	font-style:      normal;
+	font-weight:     normal;
+	text-align:      left;
+	text-decoration: none;
+	white-space:     pre-wrap;
+	letter-spacing:  normal;
+	word-break:      break-all;
+
+
+	color: black !important;
+}
+
+
+.css-wd-code-root {
+	position: relative;
+	z-index:  0;
+}
 
 
 
@@ -126,9 +50,28 @@ const __CODE = {
 
 
 
-.css-wd-code-root  {padding: 1em; font-family: var(--var-js-wd-font-code)}
+.css-wd-code-edit {
+	position: absolute;
+	top:      0;
+	bottom:   0;
+	right:    0;
+	left:     0;
+	z-index:  1;
+	resize:   none;
+	-webkit-text-fill-color: transparent;
+}
+
+
+
+
+
+
+
+
+[data-wd-encoding="line"]::after {content: " ";}
 /*-- cores --*/
-.css-wd-code-root    {color: black; background-color: snow;}
+.css-wd-code-edit    {color: black; background-color: transparent;}
+.css-wd-code-root    {color: black; background-color: white;}
 .css-wd-code-doctype {color: red; font-weight: bold;}
 .css-wd-code-comment {color: silver;}
 .css-wd-code-keyword {color: orange;}
@@ -427,7 +370,88 @@ const __CODE = {
 		{look: "keyword", init: /[a-zA-Z][a-zA-Z-]+/, close: /\s*\:/},
 		{look: "doctype", init: /\S+/, close: /\s*\{/},
 		//{look: "value",   list: /[^;]+\;/},
-	]
+	],
+	/**. '{object heap}: Guarda os registros da regras aplicadas aos códigos para edição.**/
+	heap: {},
+	/**. '{void render(node edit)}: Obtem o código da área de edição e transfere renderizado para um novo elemento.**/
+	render: function(edit) {
+		const data = edit.id in this.heap ? this.heap[edit.id] : null;
+		const code = edit.value;
+		const swap = edit.parentElement.querySelector(".css-wd-code-root");
+		let   root = null;
+		if (data === null) return;
+		/*-- definindo root --*/
+		if (data.rules === "JS" || data.rules === "CSS")
+			root = this.code(code, data.rules === "JS" ? this.JS : this.CSS);
+		else if (data.rules === "XML" || rules === "HTML")
+			root = this.xml(code);
+		else
+			root = this.code(code, data.rules);
+		root = root === null ? this.code(code, []) : root;
+		/*-- renderizando root --*/
+		if (swap === null)
+			edit.parentElement.appendChild(root);
+		else
+			edit.parentElement.replaceChild(root, swap);
+		return;
+	},
+	/**. '{void attach(node node, any rules, boolean editable)}: Prepara o elemento HTML para recepção de renderização e edição de código. O argumento '{rules} pode ser, além de um array de objetos, as strings "JS", "CSS", "XML" e "HTML". O argumento '{editable}, se verdadeiro, permitirá a edição do código.**/
+	attach: function(node, rules, editable) {
+		const find = node.querySelector("textarea.css-wd-code-edit");
+		const area = find !== null && find.id in this.heap ? find : null;
+		const edit = area !== null ? area : __HTML("textarea", {
+			className:  "css-wd-code-edit",
+			readOnly:   true,
+			id:         __ID.value,
+			value:      node.innerText,
+			spellcheck: false,
+			translate:  false,
+			addEventListener: {keydown: this, input: this,}
 
-
+		});
+		/*-- configurando container --*/
+		this.heap[edit.id] = {rules: rules, editable: editable === true};
+		__HTML(node, {innerHTML: "", className: "css-wd-code", translate: false,});
+		node.appendChild(edit);
+		this.render(edit);
+		return;
+	},
+	/**. '{void keydown(object ev)}: Manipulador para habilitar e desabilitar a edição do código.**/
+	keydown: function(ev) {
+		const editable = !ev.target.readOnly;
+		/*-- ativar edição --*/
+		if (!editable && ev.key === "Enter") {
+			ev.preventDefault();
+			ev.target.readOnly = false;
+			return;
+		}
+		/*-- desativar edição --*/
+		if (editable && ev.key === "Escape") {
+			ev.target.readOnly = true;
+			ev.target.focus();
+			return;
+		}
+		/*-- habilitar tab na edição --*/
+		if (editable && ev.key === "Tab") {
+			ev.preventDefault();
+			const start = ev.target.selectionStart;
+      const end   = ev.target.selectionEnd;
+      const value = ev.target.value;
+      ev.target.value          = value.substring(0, start) + '\t' + value.substring(end);
+      ev.target.selectionStart = this.selectionEnd = start + 1;
+      this.render(ev.target);
+		}
+		return;
+	},
+	/**. '{void input(object ev)}: Manipulador para editar o código.**/
+	input: function(ev) {
+		return this.render(ev.target);
+	},
+	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{input}.**/
+	handleEvent: function(ev) {
+		if (!(ev.target.id in this.heap))      return;
+		if (!this.heap[ev.target.id].editable) return;
+		if (ev.type in this) this[ev.type](ev);
+		return;
+	},
 };
