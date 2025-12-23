@@ -73,4 +73,63 @@ const __CSS = {
 		}
 		return;
 	},
+	/**. '{number ration(integer color)}: Ajusta a cor (0-255) para o cálculo da luminância.**/
+	ratio: function(color) {
+		const min = 0.03928;
+		const rgb = (color < 0 ? 0 : (color > 255 ? 255 : color))/255;
+		return rgb <= min ? (rgb/12.92) : Math.pow(((rgb + 0.055)/1.055), 2.4);
+	},
+	/**. '{number luminance(integer r, integer g, integer b)}: Retorna a luminância da cor.**/
+	luminance: function(r, g, b) {
+		return (0.2126 * this.ratio(r)) + (0.7152 * this.ratio(g)) + (0.0722 * this.ratio(b));
+	},
+	/**. '{number contrast(number l1, number l2)}: Retorna o contraste entre luminância '{l1} (clara) e '{l2} (escura).**/
+	contrast: function(l1, l2) {
+		/*-- L1 (cor clara, maior luminância) --*/
+		const L1 = l1 >= l2 ? l1 : l2;
+		/*-- L2 (cor escura, menor luminância) --*/
+		const L2 = l1 >= l2 ? l2 : l1;
+		/*-- 21 é o maior nível --*/
+		return L2 === 0 ? 21 : (L1 + 0.05) / (L2 + 0.05);
+	},
+	/**. '{string level(number value, boolean heavy)}: Retorna o nível do contraste '{value} (A, AA, AAA) conforme texto '{heavy}.**/
+	level: function (value, heavy) {
+		/*-- texto grande: negrito ou fonte 18pt/24px --*/
+		return heavy === true ? (value >= 4.5 ? "AAA" : (value >= 3 ? "AA" : "A")) : (value >= 7 ? "AAA" : (value >= 4.5 ? "AA" : "A"));
+	},
+
+	back: function(r, g, b, heavy) {
+		const rgb  = [];
+		const lum1 = this.luminance(r, g, b);
+		for (let R = 0; R <= 255; R += 10) {
+			for (let G = 0; G <= 255; G += 10) {
+				for (let B = 0; B <= 255; B += 10) {
+					let lum2 = this.luminance(R, G, B);
+					let diff = this.contrast(lum1, lum2);
+					let data = this.level(diff, heavy);
+					if (data === "AAA")
+						rgb.push({r: R, g: G, b: B, level: data});
+				}
+			}
+		}
+		return rgb;
+	},
+
+	palette: function(r, g, b, heavy) {
+		const back = this.back(r, g, b, heavy);
+		const html = back.map(function(v,i,a) {
+			return `<p style="color: rgb(${v.r}, ${v.g}, ${v.b});" >${v.level} (${v.r}, ${v.g}, ${v.b})</p>`;
+		});
+		const main = document.createElement("DIV");
+		main.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+		main.innerHTML = html.join("");
+		return main;
+	},
+
+
+
+
+
+
+
 };

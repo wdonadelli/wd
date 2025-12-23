@@ -25,7 +25,7 @@ const __CODE = {
 	overflow:        hidden;
 	border:          none;
 	font-family:     var(--var-js-wd-font-code);
-	font-size:       var(--var-js-wd-font-size);
+	font-size:       16px;/*var(--var-js-wd-font-size);*/
 	font-style:      normal;
 	font-weight:     normal;
 	text-align:      left;
@@ -33,9 +33,6 @@ const __CODE = {
 	white-space:     pre-wrap;
 	letter-spacing:  normal;
 	word-break:      break-all;
-
-
-	color: black !important;
 }
 
 
@@ -43,12 +40,6 @@ const __CODE = {
 	position: relative;
 	z-index:  0;
 }
-
-
-
-
-
-
 
 .css-wd-code-edit {
 	position: absolute;
@@ -70,15 +61,15 @@ const __CODE = {
 
 [data-wd-encoding="line"]::after {content: " ";}
 /*-- cores --*/
-.css-wd-code-edit    {color: black; background-color: transparent;}
-.css-wd-code-root    {color: black; background-color: white;}
-.css-wd-code-doctype {color: red; font-weight: bold;}
-.css-wd-code-comment {color: silver;}
+.css-wd-code-edit    {color: white; background-color: transparent;}
+.css-wd-code-root    {color: white; background-color: black;}
+.css-wd-code-doctype {color: HotPink;}
+.css-wd-code-comment {color: yellow;}
 .css-wd-code-keyword {color: orange;}
-.css-wd-code-value   {color: green;}
-.css-wd-code-string  {color: green;}
-.css-wd-code-tag     {color: royalblue;}
-.css-wd-code-flag    {font-weight: bold;}
+.css-wd-code-value   {color: MediumSpringGreen;}
+.css-wd-code-string  {color: MediumSpringGreen;}
+.css-wd-code-tag     {color: DeepSkyBlue;}
+.css-wd-code-flag    {color: Orchid;}
 
 
 `),
@@ -259,7 +250,7 @@ const __CODE = {
 				/*-- delimitadores --*/
 				let init  = "init" in v ? v.init : ("open"  in v ? v.open  : null);
 				let last  = "last" in v ? v.last : ("close" in v ? v.close : null);
-				last      = last === null ? init : last;
+				last      = last === null ? /\1/ : last;
 				/*-- tipo de captura e expressão regular --*/
 				let left  = "init" in v;
 				let right = "last" in v ? true : ("close" in v ? false : left);
@@ -355,9 +346,7 @@ const __CODE = {
 		/*-- números hexadecimal, binário, octal e decimal --*/
 		{look: "value", list: /(:?0x[a-fA-F0-9]+|0[bB][01]+|0o[0-7]+|(:?(?:\.?\d+|\d+\.\d+)(?:[eE][+-]?\d+)?)|\d+n)/},
 		{look: "doctype", init: `"use strict"`, close: ";"},
-		{look: "string",  init: `"`},
-		{look: "string",  init: `'`},
-		{look: "string",  init: "`"},
+		{look: "string",  init: /["'`]/},
 		{look: "comment", init: "/*", last: "*/"},
 		{look: "comment", init: "//", close: "\n"},
 		{look: "value",   init: /\/[^/]/, last: "/"},
