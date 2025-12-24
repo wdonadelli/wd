@@ -73,63 +73,222 @@ const __CSS = {
 		}
 		return;
 	},
-	/**. '{number ration(integer color)}: Ajusta a cor (0-255) para o cálculo da luminância.**/
-	ratio: function(color) {
-		const min = 0.03928;
-		const rgb = (color < 0 ? 0 : (color > 255 ? 255 : color))/255;
-		return rgb <= min ? (rgb/12.92) : Math.pow(((rgb + 0.055)/1.055), 2.4);
+	/**. '{array rgb(string color)}: Retorna os valores de [red, green, blue] a partir do nome da cor ou formato hex.**/
+	rgb: function(color) {
+		if (Array.isArray(color)) return color;
+		color = String(color).trim().toLowerCase();
+		const re  = /^([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F])$/;
+		const hex = color in this.colors ? this.colors[color] : (re.test(color) ? color : "000000");
+		return hex.match(re).slice(1).map(function(v,i,a) {return parseInt(v, 16);});
 	},
-	/**. '{number luminance(integer r, integer g, integer b)}: Retorna a luminância da cor.**/
-	luminance: function(r, g, b) {
-		return (0.2126 * this.ratio(r)) + (0.7152 * this.ratio(g)) + (0.0722 * this.ratio(b));
+	/**. '{number ration(integer value)}: Ajusta a cor de linear (0-255) para racional (0-1).**/
+	ratio: function(value) {
+		const ref = 0.04045;
+		const val = (value < 0 ? 0 : (value > 255 ? 255 : value))/255;
+		return val <= ref ? (val/12.92) : Math.pow(((val + 0.055)/1.055), 2.4);
 	},
-	/**. '{number contrast(number l1, number l2)}: Retorna o contraste entre luminância '{l1} (clara) e '{l2} (escura).**/
-	contrast: function(l1, l2) {
+	/**. '{number luminance(string color)}: Retorna a luminância da cor (ver método '{rgb}).**/
+	luminance: function(color) {
+		const rgb = this.rgb(color).map(function(v,i,a) {return this.ratio(v);}, this);
+		return (0.2126 * rgb[0]) + (0.7152 * rgb[1]) + (0.0722 * rgb[2]);
+	},
+	/**. '{number contrast(string color1, string color2)}: Retorna o contraste entre as cores (ver método '{rgb}).**/
+	contrast: function(color1, color2) {
+		const l1 = this.luminance(color1);
+		const l2 = this.luminance(color2);
 		/*-- L1 (cor clara, maior luminância) --*/
-		const L1 = l1 >= l2 ? l1 : l2;
+		const L1 = l2 > l1 ? l2 : l1;
 		/*-- L2 (cor escura, menor luminância) --*/
-		const L2 = l1 >= l2 ? l2 : l1;
-		/*-- 21 é o maior nível --*/
-		return L2 === 0 ? 21 : (L1 + 0.05) / (L2 + 0.05);
+		const L2 = l2 > l1 ? l1 : l2;
+		/*-- retorno --*/
+		return (L1 + 0.05) / ((L2 === 0 ? this.luminance("000001") : L2) + 0.05);
 	},
-	/**. '{string level(number value, boolean heavy)}: Retorna o nível do contraste '{value} (A, AA, AAA) conforme texto '{heavy}.**/
-	level: function (value, heavy) {
-		/*-- texto grande: negrito ou fonte 18pt/24px --*/
-		return heavy === true ? (value >= 4.5 ? "AAA" : (value >= 3 ? "AA" : "A")) : (value >= 7 ? "AAA" : (value >= 4.5 ? "AA" : "A"));
+	/**. '{integer WCAG(string color1, string color2, boolean big)}: Retorna a nível de acessibilidade do contraste de cores em 1, 2 ou 3 (quantidade de As). O argumento '{big} deverá ser verdadeiro para negrito ou fonte maior que 18pt/24px.**/
+	WCAG: function (color1, color2, big) {
+		const diff = this.contrast(color1, color2);
+		return big !== true ? (diff >= 7 ? 3 : (diff >= 4.5 ? 2 : 1)) : (diff >= 4.5 ? 3 : (diff >= 3 ? 2 : 1));
 	},
-
-	back: function(r, g, b, heavy) {
-		const rgb  = [];
-		const lum1 = this.luminance(r, g, b);
-		for (let R = 0; R <= 255; R += 10) {
-			for (let G = 0; G <= 255; G += 10) {
-				for (let B = 0; B <= 255; B += 10) {
-					let lum2 = this.luminance(R, G, B);
-					let diff = this.contrast(lum1, lum2);
-					let data = this.level(diff, heavy);
-					if (data === "AAA")
-						rgb.push({r: R, g: G, b: B, level: data});
+	/**. '{object (string color, integer wacg, boolean big)}: Retorna as opções de melhor contraste '{wacg} à cor '{color}.**/
+	better: function(color, wacg, big) {
+		const list = {};
+		for (let i in this.colors) {
+			if (this.WCAG(color, i) >= wacg)
+				list[i] = this.colors[i];
+		}
+		return list;
+	},
+	/**. '{void test(node node, string color, integer wacg, boolean big)}: Exibe no nó as cores que passaram no teste.**/
+	test: function(node, color, wacg, big) {
+		node.style.backgroundColor = `rgb(${this.rgb(color).join(",")})`;
+		node.innerHTML = "";
+		let index = 0;
+		const list = this.better(color, wacg, big);
+		for (let i in list) node.appendChild(__HTML("span", {
+			textContent: `${++index}) ${i} [#${list[i]}] | `,
+			style: {color: `#${list[i]}`, fontWeight: big === true ? "bold" : "normal"},
+		}));
+		return;
+	},
+	/**. '{void supreme(node node, string color, boolean big)}: Semelhante ao '{test} para cores não nominais.**/
+	supreme: function(node, color, big) {
+		node.style.backgroundColor = `rgb(${this.rgb(color).join(",")})`;
+		node.innerHTML = "";
+		const gap = 17;
+		for (let b = 0; b < 256; b += gap) {
+			for (let g = 0; g < 256; g += gap) {
+				for (let r = 0; r < 256; r += gap) {
+					if (this.WCAG(color, [r, g, b], big) > 2)
+						node.appendChild(__HTML("span", {
+							textContent: `span RGB[${r}, ${g}, ${b}] | `,
+							style: {color: `rgb(${r}, ${g}, ${b})`, fontWeight: big === true ? "bold" : "normal"},
+						}));
 				}
 			}
 		}
-		return rgb;
+		return;
 	},
-
-	palette: function(r, g, b, heavy) {
-		const back = this.back(r, g, b, heavy);
-		const html = back.map(function(v,i,a) {
-			return `<p style="color: rgb(${v.r}, ${v.g}, ${v.b});" >${v.level} (${v.r}, ${v.g}, ${v.b})</p>`;
-		});
-		const main = document.createElement("DIV");
-		main.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-		main.innerHTML = html.join("");
-		return main;
+	/**. '{object colors}: Retorna dados das cores nominais.**/
+	colors: {
+		pink: "ffc0cb",
+		lightpink: "ffb6c1",
+		hotpink: "ff69b4",
+		deeppink: "ff1493",
+		palevioletred: "db7093",
+		mediumvioletred: "c71585",
+		lavender: "e6e6fa",
+		thistle: "d8bfd8",
+		plum: "dda0dd",
+		orchid: "da70d6",
+		violet: "ee82ee",
+		fuchsia: "ff00ff",
+		magenta: "ff00ff",
+		mediumorchid: "ba55d3",
+		darkorchid: "9932cc",
+		darkviolet: "9400d3",
+		blueviolet: "8a2be2",
+		darkmagenta: "8b008b",
+		purple: "800080",
+		mediumpurple: "9370db",
+		mediumslateblue: "7b68ee",
+		slateblue: "6a5acd",
+		darkslateblue: "483d8b",
+		rebeccapurple: "663399",
+		indigo: "4b0082",
+		lightsalmon: "ffa07a",
+		salmon: "fa8072",
+		darksalmon: "e9967a",
+		lightcoral: "f08080",
+		indianred: "cd5c5c",
+		crimson: "dc143c",
+		red: "ff0000",
+		firebrick: "b22222",
+		darkred: "8b0000",
+		orange: "ffa500",
+		darkorange: "ff8c00",
+		coral: "ff7f50",
+		tomato: "ff6347",
+		orangered: "ff4500",
+		gold: "ffd700",
+		yellow: "ffff00",
+		lightyellow: "ffffe0",
+		lemonchiffon: "fffacd",
+		lightgoldenrodyellow: "fafad2",
+		papayawhip: "ffefd5",
+		moccasin: "ffe4b5",
+		peachpuff: "ffdab9",
+		palegoldenrod: "eee8aa",
+		khaki: "f0e68c",
+		darkkhaki: "bdb76b",
+		greenyellow: "adff2f",
+		chartreuse: "7fff00",
+		lawngreen: "7cfc00",
+		lime: "00ff00",
+		limegreen: "32cd32",
+		palegreen: "98fb98",
+		lightgreen: "90ee90",
+		mediumspringgreen: "00fa9a",
+		springgreen: "00ff7f",
+		mediumseagreen: "3cb371",
+		seagreen: "2e8b57",
+		forestgreen: "228b22",
+		green: "008000",
+		darkgreen: "006400",
+		yellowgreen: "9acd32",
+		olivedrab: "6b8e23",
+		darkolivegreen: "556b2f",
+		mediumaquamarine: "66cdaa",
+		darkseagreen: "8fbc8f",
+		lightseagreen: "20b2aa",
+		darkcyan: "008b8b",
+		teal: "008080",
+		aqua: "00ffff",
+		cyan: "00ffff",
+		lightcyan: "e0ffff",
+		paleturquoise: "afeeee",
+		aquamarine: "7fffd4",
+		turquoise: "40e0d0",
+		mediumturquoise: "48d1cc",
+		darkturquoise: "00ced1",
+		cadetblue: "5f9ea0",
+		steelblue: "4682b4",
+		lightsteelblue: "b0c4de",
+		lightblue: "add8e6",
+		powderblue: "b0e0e6",
+		lightskyblue: "87cefa",
+		skyblue: "87ceeb",
+		cornflowerblue: "6495ed",
+		deepskyblue: "00bfff",
+		dodgerblue: "1e90ff",
+		royalblue: "4169e1",
+		blue: "0000ff",
+		mediumblue: "0000cd",
+		darkblue: "00008b",
+		navy: "000080",
+		midnightblue: "191970",
+		cornsilk: "fff8dc",
+		blanchedalmond: "ffebcd",
+		bisque: "ffe4c4",
+		navajowhite: "ffdead",
+		wheat: "f5deb3",
+		burlywood: "deb887",
+		tan: "d2b48c",
+		rosybrown: "bc8f8f",
+		sandybrown: "f4a460",
+		goldenrod: "daa520",
+		darkgoldenrod: "b8860b",
+		peru: "cd853f",
+		chocolate: "d2691e",
+		olive: "808000",
+		saddlebrown: "8b4513",
+		sienna: "a0522d",
+		brown: "a52a2a",
+		maroon: "800000",
+		white: "ffffff",
+		snow: "fffafa",
+		honeydew: "f0fff0",
+		mintcream: "f5fffa",
+		azure: "f0ffff",
+		aliceblue: "f0f8ff",
+		ghostwhite: "f8f8ff",
+		whitesmoke: "f5f5f5",
+		seashell: "fff5ee",
+		beige: "f5f5dc",
+		oldlace: "fdf5e6",
+		floralwhite: "fffaf0",
+		ivory: "fffff0",
+		antiquewhite: "faebd7",
+		linen: "faf0e6",
+		lavenderblush: "fff0f5",
+		mistyrose: "ffe4e1",
+		gainsboro: "dcdcdc",
+		lightgray: "d3d3d3",
+		silver: "c0c0c0",
+		darkgray: "a9a9a9",
+		dimgray: "696969",
+		gray: "808080",
+		lightslategray: "778899",
+		slategray: "708090",
+		darkslategray: "2f4f4f",
+		black: "000000",
 	},
-
-
-
-
-
-
-
 };
