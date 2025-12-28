@@ -108,8 +108,8 @@ const __CSS = {
 		const diff = this.contrast(color1, color2);
 		return big !== true ? (diff >= 7 ? 3 : (diff >= 4.5 ? 2 : 1)) : (diff >= 4.5 ? 3 : (diff >= 3 ? 2 : 1));
 	},
-	/**. '{object (string color, integer wacg, boolean big)}: Retorna as opções de melhor contraste '{wacg} à cor '{color}.**/
-	better: function(color, wacg, big) {
+	/**. '{object wacgList(string color, integer wacg, boolean big)}: Retorna as opções de melhor contraste '{wacg} à cor '{color}.**/
+	wacgList: function(color, wacg, big) {
 		const list = {};
 		for (let i in this.colors) {
 			if (this.WCAG(color, i) >= wacg)
@@ -117,30 +117,32 @@ const __CSS = {
 		}
 		return list;
 	},
-	/**. '{void test(node node, string color, integer wacg, boolean big)}: Exibe no nó as cores que passaram no teste.**/
-	test: function(node, color, wacg, big) {
+	/**. '{void wacgName(node node, string color, integer wacg, boolean big)}: Exibe no nó as cores que passaram no teste.**/
+	wacgName: function(node, color, wacg, big) {
 		node.style.backgroundColor = `rgb(${this.rgb(color).join(",")})`;
 		node.innerHTML = "";
-		let index = 0;
-		const list = this.better(color, wacg, big);
+		const font = big === true ? "bold" : "normal"
+		let  index = 0;
+		const list = this.wacgList(color, wacg, big);
 		for (let i in list) node.appendChild(__HTML("span", {
-			textContent: `${++index}) ${i} [#${list[i]}] | `,
-			style: {color: `#${list[i]}`, fontWeight: big === true ? "bold" : "normal"},
+			textContent: `${++index}) ${i} HEX[#${list[i]}] `,
+			style: {color: `#${list[i]}`, fontWeight: font, display: "inline-block", padding: ".5em"},
 		}));
 		return;
 	},
-	/**. '{void supreme(node node, string color, boolean big)}: Semelhante ao '{test} para cores não nominais.**/
-	supreme: function(node, color, big) {
+	/**. '{void wacgRGB(node node, string color, boolean big)}: Semelhante ao '{wacgName} para cores não nominais.**/
+	wacgRGB: function(node, color, big) {
 		node.style.backgroundColor = `rgb(${this.rgb(color).join(",")})`;
 		node.innerHTML = "";
-		const gap = 17;
+		const font = big === true ? "bold" : "normal"
+		const gap  = 17;
 		for (let b = 0; b < 256; b += gap) {
 			for (let g = 0; g < 256; g += gap) {
 				for (let r = 0; r < 256; r += gap) {
 					if (this.WCAG(color, [r, g, b], big) > 2)
 						node.appendChild(__HTML("span", {
-							textContent: `span RGB[${r}, ${g}, ${b}] | `,
-							style: {color: `rgb(${r}, ${g}, ${b})`, fontWeight: big === true ? "bold" : "normal"},
+							textContent: `RGB[${r}, ${g}, ${b}] `,
+							style: {color: `rgb(${r}, ${g}, ${b})`, fontWeight: font, display: "inline-block", padding: ".5em"},
 						}));
 				}
 			}

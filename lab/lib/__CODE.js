@@ -21,7 +21,7 @@ const __CODE = {
 	width:           auto;
 	height:          auto;
 	margin:          0;
-	padding:         1em;
+	padding:         1em 1em 1em 3em;
 	overflow:        hidden;
 	border:          none;
 	font-family:     var(--var-js-wd-font-code);
@@ -34,13 +34,11 @@ const __CODE = {
 	letter-spacing:  normal;
 	word-break:      break-all;
 }
-
-
 .css-wd-code-root {
 	position: relative;
 	z-index:  0;
+	counter-reset: line;
 }
-
 .css-wd-code-edit {
 	position: absolute;
 	top:      0;
@@ -51,25 +49,27 @@ const __CODE = {
 	resize:   none;
 	-webkit-text-fill-color: transparent;
 }
+.css-wd-code-line:before {
+	counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5em;
+  margin-left: -3em;
+  text-align: right;
+  opacity: 0.3;
+}
 
-
-
-
-
-
-
-
-[data-wd-encoding="line"]::after {content: " ";}
 /*-- cores --*/
-.css-wd-code-edit    {color: white; background-color: transparent;}
-.css-wd-code-root    {color: white; background-color: black;}
-.css-wd-code-doctype {color: HotPink;}
-.css-wd-code-comment {color: yellow;}
-.css-wd-code-keyword {color: orange;}
-.css-wd-code-value   {color: MediumSpringGreen;}
-.css-wd-code-string  {color: MediumSpringGreen;}
-.css-wd-code-tag     {color: DeepSkyBlue;}
-.css-wd-code-flag    {color: Orchid;}
+.css-wd-code-edit    {color: black; background-color: transparent;}
+.css-wd-code-root    {color: black; background-color: white;}
+.css-wd-code-doctype {color: darkred;}
+.css-wd-code-comment {color: darkslategray;}
+.css-wd-code-keyword {color: saddlebrown;}
+.css-wd-code-value   {color: darkgreen;}
+.css-wd-code-string  {color: darkgreen;}
+.css-wd-code-tag     {color: blue;}
+.css-wd-code-flag    {color: purple;}
+.css-wd-code-line    {color: darkslategray;}
 
 
 `),
@@ -181,17 +181,31 @@ const __CODE = {
 				i += ahead.length;
 			}
 		}
-		/*-- renderizar --*/
-		const render = __HTML("pre", {innerHTML: html.join(""), className: "css-wd-code-root"});
-		if (HTML) {
-			const script = render.querySelectorAll(".css-wd-code-script");
-			const style  = render.querySelectorAll(".css-wd-code-style");
-			for (let i = 0; i < script.length; i++)
-				script[i].innerHTML = this.code(script[i].innerText, this.JS).innerHTML;
-			for (let i = 0; i < style.length; i++)
-				style[i].innerHTML  = this.code(style[i].innerText, this.CSS).innerHTML;
+		return this.pre(html.join(""), true);
+	},
+	/**. '{node pre(string code, boolean xml)}: Recebe a string do documento HTML do código e retorna o elemento HTML a renderizar.**/
+	pre: function(code, xml) {
+		const line = `<span class="css-wd-code-line"></span>`;
+		const html = xml === true && (/\&lt\;\s*\/\s*html\s*\&gt\;/i).test(code);
+		const pre  = __HTML("pre", {innerHTML: code, className: "css-wd-code-root"});
+		/*-- se HTML --*/
+		if (html) {
+			/*-- transformar script --*/
+			const script = pre.querySelectorAll(".css-wd-code-script");
+			for (let i = 0; i < script.length; i++) {
+				let inner = this.code(script[i].innerText, this.JS).innerHTML;
+				script[i].innerHTML = inner.split(line).join("");
+			}
+			/*-- transformar style --*/
+			const style = pre.querySelectorAll(".css-wd-code-style");
+			for (let i = 0; i < style.length; i++) {
+				let inner = this.code(style[i].innerText, this.CSS).innerHTML;
+				style[i].innerHTML = inner.split(line).join("");
+			}
 		}
-		return render;
+		/*-- adicionar linhas --*/
+		pre.innerHTML = line + pre.innerHTML.replace(/\n/g, `\n${line}`);
+		return pre;
 	},
 	/**. '{string atom(any base, boolean line)}: Retorna a string nos moldes de expressão regular para a particula '{base} que pode ser uma string ou expressão regular ou nulo. O argumento '{end}, se verdadeiro, equipara a quebra de linha ao fim da string.**/
 	atom: function(base, end) {
@@ -211,7 +225,7 @@ const __CODE = {
 		init = this.atom(init);
 		last = this.atom(last, true);
 		if (init === null || last === null) return null;
-		const flag = caSe === true ? "i" : ""
+		const flag = caSe === false ? "i" : ""
 		const re   = `^(${init})((?:[^\\\\]|\\\\.)*?)(${last})`;
 		/*-- Capturas da Expressão Regular --
 		1) ^(init)          => caracteres de abertura
@@ -227,7 +241,7 @@ const __CODE = {
 		.split("\\\n")
 		.sort(function(a,b)  {return a.length > b.length ? -1 : 1;})
 		.join("|");
-		const flag = caSe === true ? "i" : "";
+		const flag = caSe === false ? "i" : "";
 		const re   = `^()(${keys})(\\W|$)`;
 		return new RegExp(re, flag);
 	},
@@ -300,6 +314,7 @@ const __CODE = {
 	- A propriedade '{close} define os caracteres de fechamento, não participando do destaque;
 	- A propriedade '{last} é prevalente sobre '{close};
 	- Os delimitadores não encerram na quebra de linha, a menos que definam seu término nesse caractere;
+	- A propriedade '{case}, se falsa, ignorará o tamanho da caixa do texto;
 	- A propriedade '{look} é uma string que define o estilo do destaque;
 	- O valor de '{look} pode ser "value", "string", "comment" e "doctype", cada um com destaque personalizado;
 	- Os valores "string" e "comment" possuem bandeiras especiais;
@@ -323,6 +338,8 @@ const __CODE = {
 			/*-- fragmento casado --*/
 			else {
 				const data = find.data.map(function(v,i,a) {return this.swap(v);}, this);
+				console.log(find, data)
+
 				/*-- flags especiais --*/
 				if (find.look === "string" || find.look === "comment")
 					data[1] = this[find.look](data[1]);
@@ -339,7 +356,7 @@ const __CODE = {
 			}
 		}
 		//return `<pre class="css-wd-code-root">${html.join("")}</pre>`;
-		return __HTML("pre", {className: "css-wd-code-root", innerHTML: html.join("")})
+		return this.pre(html.join(""), false);
 	},
 	/**. '{array JS}: Lista com regras básicas para JavaScript.**/
 	JS: [
@@ -355,10 +372,14 @@ const __CODE = {
 	],
 	/**. '{array CSS}: Lista com regras básicas para CSS.**/
 	CSS: [
-		{look: "string",  init: `"`},
-		{look: "keyword", init: /[a-zA-Z][a-zA-Z-]+/, close: /\s*\:/},
-		{look: "doctype", init: /\S+/, close: /\s*\{/},
-		//{look: "value",   list: /[^;]+\;/},
+		{look: "string",  init: /['"`]/},
+		{look: "comment", init: "/*", last: "*/"},
+		{look: "value",   list: /(?:\d+|\d*\.?\d+)(?:em|ch|rem|vw|vh|vmin|vmax|%|cm|mm|in|px|pt|pc)?/, case: false},
+		{look: "value",   list: /\#[a-fA-F0-9]{6}/},
+		{look: "keyword", list: /[a-zA-Z][a-zA-Z0-9\-]+\s*\:/,},
+		{look: "value",   init: /[a-zA-Z][a-zA-Z0-9\-]+\s*\(/, last: ")"},
+		//FIXME
+		{look: "value",   list: Object.keys(__CSS.colors).join(" "), case: false}
 	],
 	/**. '{object heap}: Guarda os registros da regras aplicadas aos códigos para edição.**/
 	heap: {},
@@ -372,7 +393,7 @@ const __CODE = {
 		/*-- definindo root --*/
 		if (data.rules === "JS" || data.rules === "CSS")
 			root = this.code(code, data.rules === "JS" ? this.JS : this.CSS);
-		else if (data.rules === "XML" || rules === "HTML")
+		else if (data.rules === "XML" || data.rules === "HTML")
 			root = this.xml(code);
 		else
 			root = this.code(code, data.rules);
@@ -384,26 +405,46 @@ const __CODE = {
 			edit.parentElement.replaceChild(root, swap);
 		return;
 	},
-	/**. '{void attach(node node, any rules, boolean editable)}: Prepara o elemento HTML para recepção de renderização e edição de código. O argumento '{rules} pode ser, além de um array de objetos, as strings "JS", "CSS", "XML" e "HTML". O argumento '{editable}, se verdadeiro, permitirá a edição do código.**/
-	attach: function(node, rules, editable) {
-		const find = node.querySelector("textarea.css-wd-code-edit");
-		const area = find !== null && find.id in this.heap ? find : null;
-		const edit = area !== null ? area : __HTML("textarea", {
-			className:  "css-wd-code-edit",
-			readOnly:   true,
-			id:         __ID.value,
-			value:      node.innerText,
-			spellcheck: false,
-			translate:  false,
-			addEventListener: {keydown: this, input: this,}
-
-		});
-		/*-- configurando container --*/
-		this.heap[edit.id] = {rules: rules, editable: editable === true};
-		__HTML(node, {innerHTML: "", className: "css-wd-code", translate: false,});
-		node.appendChild(edit);
-		this.render(edit);
+	/**. '{void attach(node textarea, any rules, boolean editable)}: Prepara o '{textarea} para renderização do código e, se '{editable} for verdadeiro, sua edição. O argumento '{rules} pode ser, além de um array de objetos, as strings "JS", "CSS", "XML" e "HTML". **/
+	attach: function(textarea, rules, editable) {
+		if (textarea.tagName.toLowerCase() !== "textarea") return;
+		/*-- construir editor ainda não definido --*/
+		if (!(textarea.id in this.heap)) {
+			__HTML(textarea, {
+				className:  "css-wd-code-edit",
+				readOnly:   true,
+				id:         __ID.id(textarea),
+				spellcheck: false,
+				translate:  false,
+				disabled:   false,
+				addEventListener: {keydown: this, input: this}
+			});
+			const frame = __HTML("div", {className: "css-wd-code", translate: false});
+			textarea.parentElement.replaceChild(frame, textarea);
+			frame.appendChild(textarea);
+		}
+		/*-- adicionar à pilha --*/
+		this.heap[textarea.id] = {rules: rules, editable: editable === true};
+		this.render(textarea);
 		return;
+	},
+	/**. '{void insertKey(node textarea, string char)}: Adiciona o caractere '{char} na posição atual do seletor no '{textarea}.**/
+	insertKey: function(textarea, char) {
+		const start = textarea.selectionStart;
+    const end   = textarea.selectionEnd;
+		/*-- moderno --*/
+		if ("setRangeText" in textarea) {
+			textarea.setRangeText(char, start, end, "end");
+			textarea.selectionStart = textarea.selectionEnd = textarea.selectionStart;
+		}
+		/*-- antigo --*/
+		else {
+	    const before = textarea.value.substring(0, start);
+	    const after  = textarea.value.substring(end);
+	    textarea.value = before + char + after;
+  	  textarea.selectionStart = start + char.length;
+  	  textarea.selectionEnd   = start + char.length;
+		}
 	},
 	/**. '{void keydown(object ev)}: Manipulador para habilitar e desabilitar a edição do código.**/
 	keydown: function(ev) {
@@ -416,6 +457,7 @@ const __CODE = {
 		}
 		/*-- desativar edição --*/
 		if (editable && ev.key === "Escape") {
+			const start = ev.target.selectionStart;
 			ev.target.readOnly = true;
 			ev.target.focus();
 			return;
@@ -423,17 +465,13 @@ const __CODE = {
 		/*-- habilitar tab na edição --*/
 		if (editable && ev.key === "Tab") {
 			ev.preventDefault();
-			const start = ev.target.selectionStart;
-      const end   = ev.target.selectionEnd;
-      const value = ev.target.value;
-      ev.target.value          = value.substring(0, start) + '\t' + value.substring(end);
-      ev.target.selectionStart = this.selectionEnd = start + 1;
+			this.insertKey(ev.target, "\t");
       this.render(ev.target);
 		}
 		return;
 	},
 	/**. '{void input(object ev)}: Manipulador para editar o código.**/
-	input: function(ev) {
+	input: function(ev) {console.log(1);
 		return this.render(ev.target);
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{input}.**/
