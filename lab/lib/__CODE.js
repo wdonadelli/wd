@@ -183,6 +183,27 @@ const __CODE = {
 		}
 		return this.pre(html.join(""), true);
 	},
+	/**. '{boolean isHTML(string code)}: Retorna verdadeiro se o código tiver características de marcação HTML (tag HTML).**/
+	isHTML: function(code) {
+		code = code.normalize().replace(/\s+/, " ").trim();
+		const html = /\<html(\s.*?|\s*)\>(.*)\<\/html(\s+)?\>$/i;
+		return code[0] === "<" && html.test(code);
+	},
+	/**. '{node pre(string html, boolean line)}: Recebe a estrutura HTML e devolve o nó com linhas, se '{line} for verdadeiro.**/
+	pre2: function(html, line) {//FIXME mudar o nome e acabar com o outro método
+		const line = `<span class="css-wd-code-line"></span>`;
+		const base = line === true ? line + html.replace(/\n/g, `\n${line}`) : html;
+		return __HTML("pre", {innerHTML: html, className: "css-wd-code-root"});
+	},
+	/**. '{string replace(string html, string query, array rules)}: Recebe a estrutura HTML trocando o conteúdo dos elementos que casam com '{query} pelas novas regras e retorna a nova estrutura.**/
+	replace: function(html, query, rules) {
+		const temp = this.pre(html);
+		const data = temp.querySelectorAll(query);
+		for (let i = 0; i < data.length; i++)
+			data[i].innerHTML = this.code(data[i].innerText, rules, false);
+		return temp.innerHTML;
+	},
+	//FIXME descaracterizar essa função
 	/**. '{node pre(string code, boolean xml)}: Recebe a string do documento HTML do código e retorna o elemento HTML a renderizar.**/
 	pre: function(code, xml) {
 		const line = `<span class="css-wd-code-line"></span>`;
@@ -301,7 +322,30 @@ const __CODE = {
 			value:  find === null ? str[0] : find[0]
 		};
 	},
-	/**. '{string code(string str, array rules)}: Retorna a string renderizada no formato HTML conforme regras:
+	/**. '{string join(object match)}: Recebe o retorno de '{match} e retorna a estrutura HTML da informação casada.**/
+	join: function(match) {
+		const data = match.data.map(function(v,i,a) {return this.swap(v);}, this);
+		/*-- flags especiais --*/
+		if (match.look === "string" || match.look === "comment")
+			data[1] = this[match.look](data[1]);
+		/*-- juntando as partes --*/
+		if (match.type === "all")
+			return this.span(match.look, data.join(""));
+		if (match.type === "left")
+			return this.span(match.look, data.slice(0,2).join("")) + data[2];
+		if (match.type === "center")
+			return data[0] + this.span(match.look, data[1]) + data[2];
+		if (match.type === "right")
+			return data[0] + this.span(match.look, data.slice(1).join(""));
+	},
+
+
+
+
+
+
+	/**. '{string code(string str, array rules, boolean line)}: Retorna a string renderizada no formato HTML conforme regras:
+	- O argumento line, se verdadeiro, define se a linha será numerada;
 	- O argumento '{rules} é uma lista de objetos que contém as regras de renderização;
 	- Há dois tipos de regras: destaque por listagem ou por delimitadores;
 	- A listagem é definida pela presença da propriedade '{list};
@@ -320,7 +364,7 @@ const __CODE = {
 	- Os valores "string" e "comment" possuem bandeiras especiais;
 	- O valor da propriedade '{look} também pode ser uma cor no formato hexadecimal '{#000000}; e
 	- O método não tem por objetivo corrigir erros no código fonte, apenas define uma forma de destaque genérico.**/
-	code: function(str, rules) {
+	code: function(str, rules, line) {
 		const code = String(str).normalize();
 		const rule = this.rules(rules);
 		const html = [];
@@ -337,26 +381,11 @@ const __CODE = {
 			}
 			/*-- fragmento casado --*/
 			else {
-				const data = find.data.map(function(v,i,a) {return this.swap(v);}, this);
-				console.log(find, data)
-
-				/*-- flags especiais --*/
-				if (find.look === "string" || find.look === "comment")
-					data[1] = this[find.look](data[1]);
-				/*-- juntando as partes --*/
-				if (find.type === "all")
-					html.push(this.span(find.look, data.join("")));
-				else if (find.type === "left")
-					html.push(this.span(find.look, data.slice(0,2).join("")) + data[2]);
-				else if (find.type === "center")
-					html.push(data[0] + this.span(find.look, data[1]) + data[2]);
-				else if (find.type === "right")
-					html.push(data[0] + this.span(find.look, data.slice(1).join("")));
+				html.push(this.join(find));
 				i += find.length;
 			}
 		}
-		//return `<pre class="css-wd-code-root">${html.join("")}</pre>`;
-		return this.pre(html.join(""), false);
+		return this.pre(html.join(""), line);
 	},
 	/**. '{array JS}: Lista com regras básicas para JavaScript.**/
 	JS: [
