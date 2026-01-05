@@ -62,17 +62,19 @@ const __CODE = {
 /*-- cores --*/
 .css-wd-code-edit    {color: black; background-color: transparent;}
 .css-wd-code-root    {color: black; background-color: white;}
-.css-wd-code-doctype {color: darkred;}
-.css-wd-code-comment {color: darkslategray;}
-.css-wd-code-keyword {color: saddlebrown;}
-.css-wd-code-value   {color: darkgreen;}
-.css-wd-code-string  {color: darkgreen;}
-.css-wd-code-tag     {color: blue;}
-.css-wd-code-flag    {color: purple;}
+.css-wd-code-base    {color: black;}
 .css-wd-code-line    {color: darkslategray;}
+.css-wd-code-flag    {color: purple;}
+.css-wd-code-comment {color: darkslategray;}
+.css-wd-code-name    {color: saddlebrown;}
+.css-wd-code-value   {color: darkgreen;}
+.css-wd-code-scope   {color: blue;}
 
 
 `),
+//darkred darkslategray saddlebrown darkgreen blue purple
+
+
 	/**. '{string swap(string str)}: Retorna a string transformada em formato HTML (caracteres especiais).**/
 	swap: function(str) {
 		return str
@@ -211,88 +213,72 @@ const __CODE = {
 
 
 
-
-
-	//	const re   = /([a-zA-Z_][a-zA-Z0-9_:-]*)((\s*\=\s*)(\"(?:[^\\]|\\.)*?\"|\'(?:[^\\]|\\.)*?\'|\`(?:[^\\]|\\.)*?\`|\S*))?(\s*)/g;
-
-
-
-	//const re = /^(\<[?!/]?[a-zA-Z_][a-zA-Z0-9_:-]*\s*)((?:[a-zA-Z_][a-zA-Z0-9_:-]*(?:\s*\=\s*(?:\"(?:[^\\]|\\.)*?\"|\'(?:[^\\]|\\.)*?\'|\`(?:[^\\]|\\.)*?\`|\S*))?\s*)*)(\/?\>)/;
-
-
-
-
-	//const re = /^(\<[?!/]?[a-zA-Z_][a-zA-Z0-9_:-]*\s*)((?:[a-zA-Z_][a-zA-Z0-9_:-]*(?:\s*\=\s*(?:\"(?:[^\\]|\\.)*?\"|\'(?:[^\\]|\\.)*?\'|\`(?:[^\\]|\\.)*?\`|\S*))?\s*)*)(\/?\>)/;
-	//const re = /^(:?\<\!\-\-)((?:[^\\]|\\.)*?)(:?\-\-\>)/;
-
-
-
 	get format() {
 		const data = {};
-		/*-- flags/code --*/
-		data.escape  = {init: "\\", last: /./,    look: "css-wd-code-flag",   rules: []};
-		data.strCode = {init: "${", last: "}",    look: "css-wd-code-flag",   rules: []};
-		data.xmlCode = {init: `&`, last: /\w+\;/, look: "css-wd-code-value",  rules: []};
-		data.flags   = {init: /(TODO|FIXME|OPTIMIZE|HACK|REVIEW)/, close: /./, look: "css-wd-code-flag", rules: []};
 		/*-- strings --*/
-		data.quotes = {init: `"`, last: `"`,     look: "css-wd-code-string", rules: [data.escape]};
-		data.quote  = {init: `'`, last: `'`,     look: "css-wd-code-string", rules: [data.escape]};
-		data.string = {init: "`", last: "`",     look: "css-wd-code-string", rules: [data.escape, data.strCode]};
+		data.escape  = {init: "\\", last: /./, look: "css-wd-code-flag",   rules: []};
+		data.quotes  = {init: `"`,  last: `"`, look: "css-wd-code-value", rules: [data.escape]};
+		data.quote   = {init: `'`,  last: `'`, look: "css-wd-code-value", rules: [data.escape]};
+		data.strCode = {init: "${", last: "}", look: "css-wd-code-flag",   rules: [data.quotes, data.quote,]};
+		data.string  = {init: "`",  last: "`", look: "css-wd-code-value", rules: [data.escape, data.strCode]};
 		/*-- comments --*/
+		data.flags = {init: /(TODO|FIXME|OPTIMIZE|HACK|REVIEW)(?!\w)/, close: /./, look: "css-wd-code-flag", rules: []};
 		data.jsComment1 = {init: "//",   close: "\n",  look: "css-wd-code-comment", rules: [data.flags]};
 		data.jsComment2 = {init: "/*",   last: "*/",   look: "css-wd-code-comment", rules: [data.flags]};
 		data.cssComment = data.jsComment2;
 		data.xmlComment = {init: "<!--", last: "-->",  look: "css-wd-code-comment", rules: [data.flags]};
+		/*-- number --*/
+		data.number  = {init: /(0x[a-fA-F0-9]+|0[bB][01]+|0o[0-7]+|d+n|(\.?\d+|\d+\.\d+)([eE][+-]?\d+)?)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
+		/*-- Javascript --*/
+		data.jsFlags   = {init: "use strict", close: /\W/, look: "css-wd-code-flag", rules: []};
+		data.jsValues  = {init: /(false|null|true|undefined|NaN|Infinity)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
+		data.jsKeys    = {init: /(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|throw|try|typeof|var|void|while|with|let|static|yied|await|async|this)(?!\w)/, close: /./, look: "css-wd-code-name", rules: []};
+		data.jsReList = {init: "[",             last: "]",  look: "",                  rules: [data.escape]};
+		data.jsRegExp = {open: /[[(,=?:]\s*\//, close: "/", look: "css-wd-code-value", rules: [data.escape, data.jsReList]};
+		data.JS = [data.quotes, data.quote, data.string, data.jsComment1, data.jsComment2, data.number, data.jsValues, data.jsKeys, data.jsRegExp, data.jsFlags];
+		/*-- css --*/
+		data.cssHigh  = {init: "!important", close: ";", look: "css-wd-code-flag", rules:[]}
+		data.cssData  = {open: ":", close: ";", look: "css-wd-code-value", rules: [data.cssComment, data.quotes, data.quote, data.cssHigh]};
+		data.cssMain  = {open: "{", close: "}", look: "css-wd-code-name",  rules: [data.cssComment, data.cssData]};
+		data.cssQuery = {init: /[[*.#a-z]/i, last:  "}", look: "css-wd-code-scope", rules: [data.cssComment, data.quotes, data.quote, data.cssMain]};
+
+		data.cssApply = {open: "{",  close: "}", look: "css-wd-code-base",  rules: [data.cssComment, data.cssQuery]};
+		data.cssRule  = {init: "@",   last: "}", look: "css-wd-code-flag",  rules: [data.cssComment, data.quotes, data.quote, data.cssApply]};
+
+
+
+
+		data .CSS     = [data.cssComment, data.cssRule, data.cssQuery];
+
 		/*-- xml --*/
-		data.xmlAttr = {init: /[a-zA-Z_](\w|[:-])*/,      close: /./, look: "css-wd-code-value", rules: []};
-		data.xmlTag  = {init: /\<\/?[a-zA-Z_](\w|[:-])*/, last: ">",  look: "css-wd-code-tag", rules: [data.xmlAttr, data.quotes, data.quote]};
-		data.xmlDoc  = {init: /\<[!?][a-zA-Z_](\w|[:-])*/, last: ">",  look: "css-wd-code-doctype", rules: [data.xmlAttr, data.quotes, data.quote]};
-
-
-
-		/*-- modelos --*/
-
-		data.HTML = [data.xmlCode, data.xmlComment, data.xmlTag, data.xmlDoc]
-
-
+		data.xmlCode  = {init: `&`,                   last: /\w+\;/,   look: "css-wd-code-flag",  rules: []};
+		data.xmlName  = {init: /[a-zA-Z_](\w|[:-])*/, close: /./,      look: "css-wd-code-name",  rules: []};
+		data.xmlValue = {open: /\=\s*/,               close: /\W/,     look: "css-wd-code-value", rules: [data.quotes, data.quote]};
+		data.xmlTag   = {init: /\<\/?[a-zA-Z_](\w|[:-])*/, last: ">",  look: "css-wd-code-scope", rules: [data.xmlName, data.xmlValue]};
+		data.xmlDoc   = {init: /\<[!?][a-zA-Z_](\w|[:-])*/, last: ">", look: "css-wd-code-flag",  rules: [data.xmlName, data.xmlValue]};
+		data.XML      = [data.xmlCode, data.xmlComment, data.xmlTag, data.xmlDoc];
+		/*-- html --*/
+		data.htmlJS    = {open: ">", close: /\<\/\s*script/i, look: "css-wd-code-base", rules: data.JS};
+		data.tagScript = {init: /\<script\s*/i, close: /./, look: "css-wd-code-scope", rules: [data.xmlName, data.xmlValue, data.htmlJS]};
+		data.HTML      = [data.xmlCode, data.xmlComment, data.tagScript, data.xmlTag, data.xmlDoc];
 		return data;
+	},
 
 
-
-
-
-
-
+	get chupa() {
+		const data = this.format;
+		const info = [];
+		for (let i in data) {
+			if (Array.isArray(data[i])) continue;
+			if (info.indexOf(data[i].look) >= 0) continue;
+			info.push(data[i].look);
+		}
+		return info;
 
 
 	},
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**. '{array JS}: Lista com regras básicas para JavaScript.**/
-	JS: [
-		/*-- números hexadecimal, binário, octal e decimal --*/
-		{look: "value", list: /(:?0x[a-fA-F0-9]+|0[bB][01]+|0o[0-7]+|(:?(?:\.?\d+|\d+\.\d+)(?:[eE][+-]?\d+)?)|\d+n)/},
-		{look: "doctype", init: `"use strict"`, close: ";"},
-		{look: "string",  init: /["'`]/},
-		{look: "comment", init: "/*", last: "*/"},
-		{look: "comment", init: "//", close: "\n"},
-		{look: "value",   init: /\/[^/]/, last: "/"},
-		{look: "value",   list: "false null true undefined NaN Infinity"},
-		{look: "keyword", list: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async this"},
-	],
 	/**. '{array CSS}: Lista com regras básicas para CSS.**/
 	CSS: [
 		{look: "string",  init: /['"`]/},
