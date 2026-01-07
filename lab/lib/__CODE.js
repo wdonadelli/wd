@@ -100,15 +100,29 @@ const __CODE = {
 			return new RegExp("^"+base.source.replace(/^\^/, ""), base.flags);
 		return new RegExp("^"+String(base).normalize().replace(/(\W)/g, `\\$1`));
 	},
-	/**. '{array rules(array list)}: Adequa as regras fornecidas para efetuar capturas de escopo:
+	/**. '{array rules(array list)}: Adequa as regras de capturas de escopo e renderização para uso da ferramenta.
+	. Cada item da lista é um objeto que obedece às seguintes regras:
+	- As regras são analisadas na ordem estabelecida no array, sendo o critério para definir prioridades;
+	- Cada escopo pode conter regras internas que seguem a mesma lógica;
+	- As regras são baseadas em escopos identificados por caracteres de abertura e encerramento;
+	- Os caracteres de abertura e encerramento podem ser expressões regulares ou strings;
+	- A propriedade '{init} define a captura de abertura, participando do destaque;
+	- A propriedade '{open} define a captura de abertura, não participando do destaque;
+	- A propriedade '{init} é prevalente sobre '{open}, sendo obrigatória uma delas;
+	- A propriedade '{last} define a captura de encerramento, participando do destaque;
+	- A propriedade '{close} define a captura de encerramento, não participando do destaque;
+	- A propriedade '{last} é prevalente sobre '{close}, sendo obrigatória uma delas;
+	- Na propriedade '{last} há avanço na leitura do código, o que não ocorre com a propriedade '{close};
+	- A propriedade '{look} é uma string que define o nome do estilo CSS a ser aplicado ao escopo;
+	- A propriedade '{rules} define as regras internas de cada escopo;
+	. O método retorna uma lista de objetos com as seguintes propriedades transformadas:
 	|Propriedade|Tipo|Descrição|
 	|init|regexp|Captura de início de escopo inclusivo|
 	|open|regexp|Captura de início de escopo não inclusivo|
 	|last|regexp|Captura de fim de escopo inclusivo|
 	|close|regexp|Captura de fim de escopo não inclusivo|
 	|rules|array|Lista de regras internas do escopo|
-	|look|string|Nome da classe (CSS) a ser aplicada à regra|
-	As propriedades '{init} e '{open} são incompatíveis assim como '{last} e '{close}, sendo '{init} e '{last} prevalentes.**/
+	|look|string|Nome da classe (CSS) a ser aplicada à regra|**/
 	rules: function(list) {
 		return !Array.isArray(list) ? [] : list.map(function(v,i,a) {
 			/*-- checando item --*/
@@ -186,56 +200,43 @@ const __CODE = {
 		}
 		return data;
 	},
-	/**. 'FIXME {string code(string code, array rules, boolean line)}: Retorna a string renderizada no formato HTML conforme regras:
-	- O argumento line, se verdadeiro, define se as linhas serão numeradas; FIXME
-	- O argumento '{rules} é uma lista de objetos que contém as regras de captura e renderização;
-	- As regras são analisadas na ordem estabelecida no array, critério para definir prioridades;
-	- Cada escopo pode conter regras internas que seguem o mesmo formato;
-	- As regras são baseadas em escopos identificados por  abertura e encerramento dentro do código;
-	- As propriedades de abertura e encerramento podem ser expressões regulares ou strings;
-	- A propriedade '{init} define a captura de abertura, participando do destaque;
-	- A propriedade '{open} define a captura de abertura, não participando do destaque;
-	- A propriedade '{init} é prevalente sobre '{open}, sendo obrigatória uma delas;
-	- A propriedade '{last} define a captura de encerramento, participando do destaque;
-	- A propriedade '{close} define a captura de encerramento, não participando do destaque;
-	- A propriedade '{last} é prevalente sobre '{close}, sendo obrigatória uma delas;
-	- Na propriedade '{last} há avanço na leitura do código, na propriedade '{close} não, retornando do mesmo ponto.//FIXME
-	- A propriedade '{look} é uma string que define o nome do estilo CSS a ser aplicado ao escopo;
-	- A propriedade '{rules} define as regras internas de cada escopo;
-	- O valor de '{look} pode ser "value", "string", "comment" e "doctype", cada um com destaque personalizado;FIXME
-	- O método não tem por objetivo corrigir erros no código fonte, apenas define uma forma de destaque genérico.**/
+	/**. '{string code(string code, array rules)}: Retorna a string renderizada do código no formato HTML. O método não tem por objetivo corrigir erros no código fonte, apenas define uma forma de destaque genérico. O argumento '{rules} deve ser o retorno do método '{rules}.**/
 	code: function(code, rules) {
+		const line = `<span class="css-wd-code-line"></span>`;
 		const data = {code: String(code).normalize(), html: [], i: 0};
-		this.encode(data, null, this.rules(rules));
-		return `<pre class="css-wd-code-root">${data.html.join("")}</pre>`;
+		this.encode(data, null, rules);
+		const html = data.html.join("").split("\n");
+		return line + html.join("\n" + line);
 	},
-
-
-
-
-	get format() {
+	/**. '{object template}: Fornece modelos simplificados (HTML, XML, JS e CSS) de sistemas de capturas**/
+	get template() {
 		const data = {};
 		const type = {};
+
 		/*-- strings --*/
 		data.escape  = {init: "\\", last: /./, look: "css-wd-code-flag",   rules: []};
 		data.quotes  = {init: `"`,  last: `"`, look: "css-wd-code-string", rules: [data.escape]};
 		data.quote   = {init: `'`,  last: `'`, look: "css-wd-code-string", rules: [data.escape]};
 		data.strCode = {init: "${", last: "}", look: "css-wd-code-flag",   rules: [data.quotes, data.quote]};
 		data.string  = {init: "`",  last: "`", look: "css-wd-code-string", rules: [data.escape, data.strCode]};
+
 		/*-- comments --*/
 		data.flagComment  = {init: /(TODO|FIXME|OPTIMIZE|HACK|REVIEW)(?!\w)/, close: /./, look: "css-wd-code-flag", rules: []};
 		data.lineComment  = {init: "//",   close: "\n",  look: "css-wd-code-comment", rules: [data.flagComment]};
 		data.blockComment = {init: "/*",   last: "*/",   look: "css-wd-code-comment", rules: [data.flagComment]};
 		data.xmlComment   = {init: "<!--", last: "-->",  look: "css-wd-code-comment", rules: [data.flagComment]};
+
 		/*-- number --*/
 		data.number  = {init: /(0x[a-fA-F0-9]+|0[bB][01]+|0o[0-7]+|d+n|(\.?\d+|\d+\.\d+)([eE][+-]?\d+)?)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
+
 		/*-- JAVASCRIPT ----------------------------------------------------------*/
 		data.jsRule  = {init: `"use strict"`, close: /./, look: "css-wd-code-rule", rules: []};
 		data.jsValue = {init: /(false|null|true|undefined|NaN|Infinity)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
 		data.jsName  = {init: /(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|throw|try|typeof|var|void|while|with|let|static|yied|await|async|this)(?!\w)/, close: /./, look: "css-wd-code-name", rules: []};
 		data.jsReList = {init: "[",             last: "]",  look: "",                  rules: [data.escape]};
-		data.jsRegExp = {open: /[[(,=?:]\s*\//, close: "/", look: "css-wd-code-value", rules: [data.escape, data.jsReList]};
+		data.jsRegExp = {open: /[[(,=?:]\s*\/(?!\/)/, close: "/", look: "css-wd-code-value", rules: [data.escape, data.jsReList]};//FIXME
 		type.JS = [data.jsRule, data.quotes, data.quote, data.string, data.lineComment, data.blockComment, data.number, data.jsValue, data.jsName, data.jsRegExp];
+
 		/*-- CSS -----------------------------------------------------------------*/
 		data.cssFlag  = {init: "!important", close: /./, look: "css-wd-code-flag", rules:[]}
 		data.cssFunc  = {init: /[a-z-]+\(/i,  last: ")", look: "css-wd-code-flag", rules:[data.blockComment, data.quotes, data.quote]}
@@ -252,7 +253,7 @@ const __CODE = {
 		data.xmlTag   = {init: /\<\/?[a-zA-Z_](\w|[:-])*/,  last: ">",      look: "css-wd-code-scope", rules: [data.xmlName]};
 		data.xmlDoc   = {init: /\<\?[a-zA-Z_](\w|[:-])*/,   last: ">",      look: "css-wd-code-rule",  rules: [data.xmlName]};
 		type.XML      = [data.xmlCode, data.xmlComment, data.xmlTag, data.xmlDoc];
-		/*-- html --*/
+		/*-- HTML --*/
 		data.htmlDoc   = {init: /\<\![a-zA-Z_](\w|[:-])*/, last: ">",      look: "css-wd-code-rule",  rules: [data.xmlName]};
 		data.htmlJS    = {open: ">", close: /\<\/script\s*\>/i, look: "css-wd-code-base", rules: type.JS};
 		data.htmlCSS   = {open: ">", close: /\<\/style\s*\>/i,  look: "css-wd-code-base", rules: type.CSS};
@@ -263,56 +264,28 @@ const __CODE = {
 	},
 
 
-	get chupa() {
-		const data = this.format;
-		const info = [];
-		for (let i in data) {
-			if (Array.isArray(data[i])) continue;
-			if (info.indexOf(data[i].look) >= 0) continue;
-			info.push(data[i].look);
-		}
-		return info;
 
-
-	},
-
-
-	/**. '{array CSS}: Lista com regras básicas para CSS.**/
-	CSS: [
-		{look: "string",  init: /['"`]/},
-		{look: "comment", init: "/*", last: "*/"},
-		{look: "value",   list: /(?:\d+|\d*\.?\d+)(?:em|ch|rem|vw|vh|vmin|vmax|%|cm|mm|in|px|pt|pc)?/, case: false},
-		{look: "value",   list: /\#[a-fA-F0-9]{6}/},
-		{look: "keyword", list: /[a-zA-Z][a-zA-Z0-9\-]+\s*\:/,},
-		{look: "value",   init: /[a-zA-Z][a-zA-Z0-9\-]+\s*\(/, last: ")"},
-		//FIXME
-		{look: "value",   list: Object.keys(__CSS.colors).join(" "), case: false}
-	],
 	/**. '{object heap}: Guarda os registros da regras aplicadas aos códigos para edição.**/
 	heap: {},
-	/**. '{void render(node edit)}: Obtem o código da área de edição e transfere renderizado para um novo elemento.**/
-	render: function(edit) {
-		const data = edit.id in this.heap ? this.heap[edit.id] : null;
-		const code = edit.value;
-		const swap = edit.parentElement.querySelector(".css-wd-code-root");
-		let   root = null;
-		if (data === null) return;
-		/*-- definindo root --*/
-		if (data.rules === "JS" || data.rules === "CSS")
-			root = this.code(code, data.rules === "JS" ? this.JS : this.CSS);
-		else if (data.rules === "XML" || data.rules === "HTML")
-			root = this.xml(code);
-		else
-			root = this.code(code, data.rules);
-		root = root === null ? this.code(code, []) : root;
-		/*-- renderizando root --*/
-		if (swap === null)
-			edit.parentElement.appendChild(root);
-		else
-			edit.parentElement.replaceChild(root, swap);
+	/**. '{void render(node textarea)}: Obtem o valor do elemento i{textarea} e o transfere renderizado para elemento de fundo.**/
+	render: function(textarea) {
+		if (textarea.id in this.heap) {
+			const code = this.code(textarea.value, this.heap[textarea.id].rules);
+			const swap = textarea.parentElement.querySelector(".css-wd-code-root");
+			const root = __HTML("pre", {className: "css-wd-code-root", innerHTML: code});
+			if (swap === null)
+				textarea.parentElement.appendChild(root);
+			else
+				textarea.parentElement.replaceChild(root, swap);
+		}
 		return;
 	},
-	/**. '{void attach(node textarea, any rules, boolean editable)}: Prepara o '{textarea} para renderização do código e, se '{editable} for verdadeiro, sua edição. O argumento '{rules} pode ser, além de um array de objetos, as strings "JS", "CSS", "XML" e "HTML". **/
+	/**. '{void attach(node textarea, any rules, boolean editable)}: Prepara o '{textarea} para renderização do código:
+	|Argumento|Tipo|Descrição|
+	|textarea|node|Campo de formulário para definir o texto do código|
+	|rules|array|Uma lista de objetos contendo as regras de captura (ver método '{rules})|
+	|rules|string|Carrega um modelo de capturas pré-definido (ver propriedade '{template})|
+	|editable|boolean|Se verdadeiro, será permitida a edição do código|**/
 	attach: function(textarea, rules, editable) {
 		if (textarea.tagName.toLowerCase() !== "textarea") return;
 		/*-- construir editor ainda não definido --*/
@@ -330,8 +303,17 @@ const __CODE = {
 			textarea.parentElement.replaceChild(frame, textarea);
 			frame.appendChild(textarea);
 		}
-		/*-- adicionar à pilha --*/
-		this.heap[textarea.id] = {rules: rules, editable: editable === true};
+		/*-- configurando a pilha --*/
+		this.heap[textarea.id] = {editable: editable === true};
+		/*-- definindo regras --*/
+		const model = this.template;
+		if (Array.isArray(rules))
+			this.heap[textarea.id].rules = this.rules(rules);
+		else if (String(rules).toUpperCase() in model)
+			this.heap[textarea.id].rules = this.rules(model[rules.toUpperCase()]);
+		else
+			this.heap[textarea.id].rules = this.rules(this.isHTML(textarea.value) ? model.HTML : model.JS);
+		/*-- renderização inicial --*/
 		this.render(textarea);
 		return;
 	},
@@ -388,26 +370,4 @@ const __CODE = {
 		if (ev.type in this) this[ev.type](ev);
 		return;
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 };
