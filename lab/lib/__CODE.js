@@ -122,7 +122,16 @@ const __CODE = {
 	|last|regexp|Captura de fim de escopo inclusivo|
 	|close|regexp|Captura de fim de escopo não inclusivo|
 	|rules|array|Lista de regras internas do escopo|
-	|look|string|Nome da classe (CSS) a ser aplicada à regra|**/
+	|look|string|Nome da classe (CSS) a ser aplicada à regra|
+	. A biblioteca dispõe dos seguintes estilos CSS:
+	- css-wd-code-base
+	- css-wd-code-comment
+	- css-wd-code-flag
+	- css-wd-code-name
+	- css-wd-code-value
+	- css-wd-code-string
+	- css-wd-code-rule
+	- css-wd-code-scope**/
 	rules: function(list) {
 		return !Array.isArray(list) ? [] : list.map(function(v,i,a) {
 			/*-- checando item --*/
@@ -233,16 +242,15 @@ const __CODE = {
 		data.jsRule  = {init: `"use strict"`, close: /./, look: "css-wd-code-rule", rules: []};
 		data.jsValue = {init: /(false|null|true|undefined|NaN|Infinity)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
 		data.jsName  = {init: /(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|throw|try|typeof|var|void|while|with|let|static|yied|await|async|this)(?!\w)/, close: /./, look: "css-wd-code-name", rules: []};
-		data.jsReList = {init: "[",             last: "]",  look: "",                  rules: [data.escape]};
-		data.jsRegExp = {open: /[[(,=?:]\s*\/(?!\/)/, close: "/", look: "css-wd-code-value", rules: [data.escape, data.jsReList]};//FIXME
-		type.JS = [data.jsRule, data.quotes, data.quote, data.string, data.lineComment, data.blockComment, data.number, data.jsValue, data.jsName, data.jsRegExp];
+		data.jsRegex = {init: /\/(?:\[(:?\\\]|[^\]])*\]|\\.|[^/])*\/[gimuy]?/i, close: /./, look: "css-wd-code-value", rules: []};
+		type.JS = [data.jsRule, data.quotes, data.quote, data.string, data.lineComment, data.blockComment, data.number, data.jsValue, data.jsName, data.jsRegex];
 
 		/*-- CSS -----------------------------------------------------------------*/
 		data.cssFlag  = {init: "!important", close: /./, look: "css-wd-code-flag", rules:[]}
 		data.cssFunc  = {init: /[a-z-]+\(/i,  last: ")", look: "css-wd-code-flag", rules:[data.blockComment, data.quotes, data.quote]}
 		data.cssValue = {open: ":", close: ";", look: "css-wd-code-value", rules: [data.blockComment, data.quotes, data.quote, data.cssFlag, data.cssFunc]};
 		data.cssName  = {open: "{",          close: "}", look: "css-wd-code-name",  rules: [data.blockComment, data.cssValue]};
-		data.cssQuery = {init: /[[*.#a-z]/i, last:  "}", look: "css-wd-code-scope", rules: [data.blockComment, data.quotes, data.quote, data.cssName]};
+		data.cssQuery = {init: /[[*.#a-z:]/i, last:  "}", look: "css-wd-code-scope", rules: [data.blockComment, data.quotes, data.quote, data.cssName]};
 		data.cssRuleScope = {open: "{",  close: "}", look: "css-wd-code-base",  rules: [data.blockComment, data.cssQuery]};
 		data.cssRule      = {init: "@",   last: "}", look: "css-wd-code-rule",  rules: [data.blockComment, data.quotes, data.quote, data.cssRuleScope]};
 		type.CSS     = [data.blockComment, data.cssRule, data.cssQuery];
