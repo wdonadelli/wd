@@ -1,4 +1,3 @@
-"use strict";
 /**
 #3 Código Fonte
 O objeto '{__CODE} renderiza um código para o formato HTML.
@@ -33,6 +32,7 @@ const __CODE = {
 	white-space:     pre-wrap;
 	letter-spacing:  normal;
 	word-break:      break-all;
+	tab-size: 4;
 }
 .css-wd-code-root {
 	position: relative;
@@ -72,9 +72,6 @@ const __CODE = {
 .css-wd-code-rule    {color: orange;}
 .css-wd-code-scope   {color: cyan;}
 `),
-//darkred darkslategray saddlebrown darkgreen blue purple
-
-
 	/**. '{string swap(string str)}: Retorna a string transformada em formato HTML (caracteres especiais).**/
 	swap: function(str) {
 		return str
@@ -87,12 +84,6 @@ const __CODE = {
 		code = code.normalize().replace(/\s+/, " ").trim();
 		const html = /\<html(\s.*?|\s*)\>(.*)\<\/html(\s+)?\>$/i;
 		return code[0] === "<" && html.test(code);
-	},
-	/**. '{node pre(string html, boolean line)}: Recebe a estrutura HTML e devolve o nó com linhas, se '{line} for verdadeiro.**/
-	pre: function(html, line) {//FIXME mudar o nome e acabar com o outro método
-		const span = `<span class="css-wd-code-line"></span>`;
-		const base = line === true ? span + html.replace(/\n/g, `\n${span}`) : html;
-		return __HTML("pre", {innerHTML: html, className: "css-wd-code-root"});
 	},
 	/**. '{regexp atom(any base)}: Adequa o valor recebido para expressão regular destinada a captura de escopos.**/
 	atom: function(base) {
@@ -240,7 +231,7 @@ const __CODE = {
 
 		/*-- JAVASCRIPT ----------------------------------------------------------*/
 		data.jsRule  = {init: `"use strict"`, close: /./, look: "css-wd-code-rule", rules: []};
-		data.jsValue = {init: /(false|null|true|undefined|NaN|Infinity)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
+		data.jsValue = {init: /(false|null|true|undefined|NaN|Infinity|\d+n)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
 		data.jsName  = {init: /(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|throw|try|typeof|var|void|while|with|let|static|yied|await|async|this)(?!\w)/, close: /./, look: "css-wd-code-name", rules: []};
 		data.jsRegex = {init: /\/(?:\[(:?\\\]|[^\]])*\]|\\.|[^/])*\/[gimuy]?/i, close: /./, look: "css-wd-code-value", rules: []};
 		type.JS = [data.jsRule, data.quotes, data.quote, data.string, data.lineComment, data.blockComment, data.number, data.jsValue, data.jsName, data.jsRegex];
@@ -249,11 +240,12 @@ const __CODE = {
 		data.cssFlag  = {init: "!important", close: /./, look: "css-wd-code-flag", rules:[]}
 		data.cssFunc  = {init: /[a-z-]+\(/i,  last: ")", look: "css-wd-code-flag", rules:[data.blockComment, data.quotes, data.quote]}
 		data.cssValue = {open: ":", close: ";", look: "css-wd-code-value", rules: [data.blockComment, data.quotes, data.quote, data.cssFlag, data.cssFunc]};
-		data.cssName  = {open: "{",          close: "}", look: "css-wd-code-name",  rules: [data.blockComment, data.cssValue]};
+		data.cssName  = {open: "{",           close: "}", look: "css-wd-code-name",  rules: [data.blockComment, data.cssValue]};
 		data.cssQuery = {init: /[[*.#a-z:]/i, last:  "}", look: "css-wd-code-scope", rules: [data.blockComment, data.quotes, data.quote, data.cssName]};
 		data.cssRuleScope = {open: "{",  close: "}", look: "css-wd-code-base",  rules: [data.blockComment, data.cssQuery]};
 		data.cssRule      = {init: "@",   last: "}", look: "css-wd-code-rule",  rules: [data.blockComment, data.quotes, data.quote, data.cssRuleScope]};
 		type.CSS     = [data.blockComment, data.cssRule, data.cssQuery];
+
 		/*-- XML -----------------------------------------------------------------*/
 		data.xmlCode  = {init: `&`,                         last: /\w+\;/,  look: "css-wd-code-flag",  rules: []};
 		data.xmlValue = {open: /\=\s*/,                     close: /\W/,    look: "css-wd-code-value", rules: [data.quotes, data.quote]};
@@ -261,18 +253,17 @@ const __CODE = {
 		data.xmlTag   = {init: /\<\/?[a-zA-Z_](\w|[:-])*/,  last: ">",      look: "css-wd-code-scope", rules: [data.xmlName]};
 		data.xmlDoc   = {init: /\<\?[a-zA-Z_](\w|[:-])*/,   last: ">",      look: "css-wd-code-rule",  rules: [data.xmlName]};
 		type.XML      = [data.xmlCode, data.xmlComment, data.xmlTag, data.xmlDoc];
-		/*-- HTML --*/
+
+		/*-- HTML ----------------------------------------------------------------*/
 		data.htmlDoc   = {init: /\<\![a-zA-Z_](\w|[:-])*/, last: ">",      look: "css-wd-code-rule",  rules: [data.xmlName]};
 		data.htmlJS    = {open: ">", close: /\<\/script\s*\>/i, look: "css-wd-code-base", rules: type.JS};
 		data.htmlCSS   = {open: ">", close: /\<\/style\s*\>/i,  look: "css-wd-code-base", rules: type.CSS};
 		data.tagScript = {init: /\<script/i, last: /\<\/script\s*\>/i, look: "css-wd-code-scope", rules: [data.xmlName, data.htmlJS]};
 		data.tagStyle  = {init: /\<style/i,  last: /\<\/style\s*\>/i,  look: "css-wd-code-scope", rules: [data.xmlName, data.htmlCSS]};
 		type.HTML      = [data.xmlCode, data.xmlComment, data.tagScript, data.tagStyle, data.xmlTag, data.htmlDoc];
+
 		return type;
 	},
-
-
-
 	/**. '{object heap}: Guarda os registros da regras aplicadas aos códigos para edição.**/
 	heap: {},
 	/**. '{void render(node textarea)}: Obtem o valor do elemento i{textarea} e o transfere renderizado para elemento de fundo.**/
@@ -280,7 +271,7 @@ const __CODE = {
 		if (textarea.id in this.heap) {
 			const code = this.code(textarea.value, this.heap[textarea.id].rules);
 			const swap = textarea.parentElement.querySelector(".css-wd-code-root");
-			const root = __HTML("pre", {className: "css-wd-code-root", innerHTML: code});
+			const root = __HTML("pre", {className: "css-wd-code-root", innerHTML: code, tabIndex: -1, translate: false});
 			if (swap === null)
 				textarea.parentElement.appendChild(root);
 			else
@@ -293,7 +284,8 @@ const __CODE = {
 	|textarea|node|Campo de formulário para definir o texto do código|
 	|rules|array|Uma lista de objetos contendo as regras de captura (ver método '{rules})|
 	|rules|string|Carrega um modelo de capturas pré-definido (ver propriedade '{template})|
-	|editable|boolean|Se verdadeiro, será permitida a edição do código|**/
+	|editable|boolean|Se verdadeiro, será permitida a edição do código via teclado|
+	. Quando o argumento '{editable} for definido como verdadeiro e o foco estiver sobre o editor, a tecla kbd{Esc} permitirá alternar a habilitação da edição do texto possibilitando o uso da tecla kbd{Tab} para manipular o código ou navegar pela página.**/
 	attach: function(textarea, rules, editable) {
 		if (textarea.tagName.toLowerCase() !== "textarea") return;
 		/*-- construir editor ainda não definido --*/
@@ -343,38 +335,34 @@ const __CODE = {
   	  textarea.selectionEnd   = start + char.length;
 		}
 	},
-	/**. '{void keydown(object ev)}: Manipulador para habilitar e desabilitar a edição do código.**/
+	/**. '{void keydown(object ev)}: Manipulador para habilitar e desabilitar a edição do código e tecla kbd{tab}.**/
 	keydown: function(ev) {
-		const editable = !ev.target.readOnly;
-		/*-- ativar edição --*/
-		if (!editable && ev.key === "Enter") {
-			ev.preventDefault();
-			ev.target.readOnly = false;
-			return;
-		}
-		/*-- desativar edição --*/
-		if (editable && ev.key === "Escape") {
-			const start = ev.target.selectionStart;
-			ev.target.readOnly = true;
-			ev.target.focus();
-			return;
+		/*-- habilitar/desabilitar edição --*/
+		if (ev.key === "Escape") {
+			ev.target.readOnly = !ev.target.readOnly;
+			if (ev.target.readOnly) ev.target.focus();
 		}
 		/*-- habilitar tab na edição --*/
-		if (editable && ev.key === "Tab") {
+		else 	if (ev.key === "Tab" && !ev.target.readOnly) {
 			ev.preventDefault();
-			this.insertKey(ev.target, "\t");
-      this.render(ev.target);
+			if (!ev.shiftKey) {
+				this.insertKey(ev.target, "\t");
+      	this.render(ev.target);
+      }
 		}
 		return;
 	},
 	/**. '{void input(object ev)}: Manipulador para editar o código.**/
-	input: function(ev) {console.log(1);
+	input: function(ev) {
 		return this.render(ev.target);
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{input}.**/
 	handleEvent: function(ev) {
+		/*-- retornar se o textarea não estiver na pilha --*/
 		if (!(ev.target.id in this.heap))      return;
+		/*-- retornar ao manipular quando não permitido --*/
 		if (!this.heap[ev.target.id].editable) return;
+		/*-- chamar eventos --*/
 		if (ev.type in this) this[ev.type](ev);
 		return;
 	},
