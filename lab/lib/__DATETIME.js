@@ -14,59 +14,64 @@ O objeto `{__DATETIME} estabelece as regras para extrair data e tempo a partir d
 |Antes do ano 0|P|"-" ou "+" (opcional)|||||||
 **/
 const __DATETIME = {
-	/**. '{string lang}: Registra o identificador da linguagem local para fins de atualização.**/
+	/**. '{string lang}: Identifica a linguagem utilizada para carregar meses e dias da semana.**/
 	lang: null,
-	/**. '{object local}: Registra os nomes dos meses e dias, curtos e longos da linguagem local.**/
-	local: null,
-	/**. '{object base}: Registra as unidades de tempo para fins de montagem dos modelos.**/
-	base: {
-		Y:   "([0-9]+)",                    YYYY: "([0-9][0-9][0-9][0-9]+)",
-		M:   "(0?[1-9]|1[0-2])",            MM:   "(0[1-9]|1[0-2])",
-		MMM: null,                          MMMM: null,
-		D:   "(0?[1-9]|[12][0-9]|3[01])",   DD:   "(0[1-9]|[12][0-9]|3[01])",
-		d:   "(0?[1-7])",                   dd:   "0[1-7]",
-		ddd: null,                          dddd: null,
-		w:   "(0?[1-9]|[1-4][0-9]|5[0-3])", ww:   "(0[1-9]|[1-4][0-9]|5[0-3])",
-		H:   "([01]?[0-9]|2[0-4])",         HH:   "([01][0-9]|2[0-4])",
-		h:   "(0?[1-9]|1[0-2])",            hh:   "(0[1-9]|1[0-2])",
-		m:   "([0-5]?[0-9])",               mm:   "([0-5][0-9])",
-		s:   "([0-5]?[0-9]|[0-5]?[0-9]\\.[0-9][0-9]?[0-9]?)",
-		ss:  "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
-		p:   "([AP]M)", P: "([\\+\\-]?)"
+	/**. '{object names}: Registra os nomes dos meses e dias, curtos e longos, conforme linguagem '{lang}.**/
+	names: null,
+	/**. '{array template}: Registra a lista de modelos de data/tempo e suas configurações:
+	|Nome|Tipo|Descrição|
+	|re|regexp|Expressão regular para checar casamento e capturar dados|
+	|data|object|Posição das unidades básicas no modelo|
+	|type|string|Tipo do modelo|**/
+	templates: null,
+	/**. '{object unit}: Registra as unidades básicas de data e tempo.**/
+	unit: {
+		Y:   /(\d+)/,                        YYYY: /(\d{4,})/,
+		M:   /(0?[1-9]|1[0-2])/,             MM:   /(0[1-9]|1[0-2])/,
+		MMM: null,                           MMMM: null,
+		D:   /(0?[1-9]|[12]\d|3[01])/,       DD:   /(0[1-9]|[12]\d|3[01])/,
+		d:   /(0?[1-7])/,                    dd:   /(0[1-7])/,
+		ddd: null,                           dddd: null,
+		w:   /(0?[1-9]|[1-4]\d|5[0-3])/,     ww:   /(0[1-9]|[1-4]\d|5[0-3])/,
+		H:   /([01]?\d|2[0-4])/,             HH:   /([01]\d|2[0-4])/,
+		h:   /(0?[1-9]|1[0-2])/,             hh:   /(0[1-9]|1[0-2])/,
+		m:   /([0-5]?\d)/,                   mm:   /([0-5]\d)/,
+		s:   /([0-5]?\d|[0-5]?\d\.\d{1,3})/, ss:   /([0-5]\d|[0-5]\d\.\d{1,3})/,
+		p:   /([AP]M)/,                       P:   /([+\-]?)/
 	},
-	/**. '{array templates}: Registra os modelos de tempo e suas configurações.**/
-	templates: [
+	/**. '{array template}: Registra os modelos de tempo e suas configurações.**/
+	base: [
 		/*-- datas: meses numéricos --*/
-		{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY-MM-DD"},
-		{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PDD/MM/YYYY"},
-		{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMM-DD-YYYY"},
+		{P: 1, Y: 2, M: 3, D: 4, type: "date", model: "(P)(YYYY)-(MM)-(DD)"},
+		{P: 1, D: 2, M: 3, Y: 4, type: "date", model: "(P)(DD)/(MM)/(YYYY)"},
+		{P: 1, M: 2, D: 3, Y: 4, type: "date", model: "(P)(MM)-(DD)-(YYYY)"},
 		/*-- datas: meses nominais --*/
-		{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY MMM D"},
-		{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY MMMM D"},
-		{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PD MMM YYYY"},
-		{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PD MMMM YYYY"},
-		{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMMM D YYYY"},
-		{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMMMM D YYYY"},
+		{P: 1, Y: 2, M: 3, D: 4, type: "date", model: "(P)(YYYY) (MMM) (D)"},
+		{P: 1, Y: 2, M: 3, D: 4, type: "date", model: "(P)(YYYY) (MMMM) (D)"},
+		{P: 1, D: 2, M: 3, Y: 4, type: "date", model: "(P)(D) (MMM) (YYYY)"},
+		{P: 1, D: 2, M: 3, Y: 4, type: "date", model: "(P)(D) (MMMM) (YYYY)"},
+		{P: 1, M: 2, D: 3, Y: 4, type: "date", model: "(P)(MMM) (D) (YYYY)"},
+		{P: 1, M: 2, D: 3, Y: 4, type: "date", model: "(P)(MMMM) (D) (YYYY)"},
 		/*-- mêses numéricos --*/
-		{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY-MM"},
-		{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMM/YYYY"},
-		{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMM-YYYY"},
+		{P: 1, Y: 2, M: 3, type: "month", model: "(P)(YYYY)-(MM)"},
+		{P: 1, M: 2, Y: 3, type: "month", model: "(P)(MM)/(YYYY)"},
+		{P: 1, M: 2, Y: 3, type: "month", model: "(P)(MM)-(YYYY)"},
 		/*-- mêses nominais --*/
-		{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMMM YYYY"},
-		{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMMMM YYYY"},
-		{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY MMM D"},
-		{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY MMMM D"},
+		{P: 1, M: 2, Y: 3, type: "month", model: "(P)(MMM) (YYYY)"},
+		{P: 1, M: 2, Y: 3, type: "month", model: "(P)(MMMM) (YYYY)"},
+		{P: 1, Y: 2, M: 3, type: "month", model: "(P)(YYYY) (MMM)"},
+		{P: 1, Y: 2, M: 3, type: "month", model: "(P)(YYYY) (MMMM)"},
 		/*-- semanas --*/
-		{re: null, P: "$1", Y: "$2", w: "$3", type: "week", model: "PYYYY-Www"},
+		{P: 1, Y: 2, w: 3, type: "week", model: "(P)(YYYY)-W(ww)"},
 		/*-- tempo --*/
-		{re: null, H: "$1", m: "$2", s: "$3",          type: "time", model: "H:mm:ss"},
-		{re: null, H: "$1", m: "$2",                   type: "time", model: "H:mm"},
-		{re: null, h: "$1", m: "$2", s: "$3", p: "$4", type: "time", model: "h:mm:ss p"},
-		{re: null, h: "$1", m: "$2", p: "$3",          type: "time", model: "h:mm p"},
+		{H: 1, m: 2, s: 3,       type: "time", model: "(H):(mm):(ss)"},
+		{H: 1, m: 2,             type: "time", model: "(H):(mm)"},
+		{h: 1, m: 2, s: 3, p: 4, type: "time", model: "(h):(mm):(ss) (p)"},
+		{h: 1, m: 2, p: 3,       type: "time", model: "(h):(mm) (p)"},
 		//TODO week	WWYYYY	01, 2010 (semana de 01-54)
 	],
-	/**. '{object names(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
-	names: function(lang) {
+	/**. '{object getNames(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
+	getNames: function(lang) {
 		const data = {ddd: Array(7), dddd: Array(7), MMM: Array(12), MMMM: Array(12)};
 		const date = new Date(1970, 0, 15, 12, 0, 0, 0);
 		for (let i = 0; i < 12; i++) {
@@ -81,6 +86,107 @@ const __DATETIME = {
 		}
 		return data;
 	},
+	/**. '{void setTemplates(array lang)}: Define a propriedade '{templates} quando necessário.**/
+	setTemplates: function() {
+		const lang = __LANG.value;
+		const fail = this.lang === null || this.templates === null || lang.join(",") !== this.lang.join(",");
+		if (!fail) return;
+		/*-- definir lang, names e unit --*/
+		this.lang  = lang;
+		this.names = this.getNames(lang);
+		for (let i in this.names) {
+			let names    = this.names[i].map(function(v,i,a) {return v.replace(/(\W)/g, "\\$1");});
+			this.unit[i] = new RegExp(`(${names.join("|")})`);
+		}
+		/*-- construir templates --*/
+		const list = [];
+		const date = [];
+		const time = [];
+		const swap = /([^()a-zA-Z])/g;
+		/*-- looping pelos típos básicos --*/
+		for (let i = 0; i < this.base.length; i++) {
+			let base  = this.base[i];
+			let data = {};
+			/*-- definindo data --*/
+			data.data = {P: null, D: null, M: null, Y: null, h: null, m: null, s: null, p: null, w: null};
+			for (let x in data.data)
+				data.data[x] = x in base ? base[x] : null;
+			/*-- definindo expressão regular --*/
+			let model = base.model.replace(/([^()a-zA-Z])/g, "\\$1");
+			for (let x in this.unit)
+				model = model.replace(`(${x})`, this.unit[x].source);
+			data.re = new RegExp(`^\\s*${model}\\s*$`, "i");
+			/*-- definindo tipo --*/
+			data.type = base.type;
+			list.push(data);
+			if (data.type === "date") date.push(data);
+			if (data.type === "time") time.push(data);
+		}
+		/*-- construindo datetime --*/
+		for (let i = 0; i < date.length; i++) {
+			for (let j = 0; j < time.length; j++) {
+				let dateModel = date[i].re.source.replace("\\s*$", "");
+				let timeModel = time[j].re.source.replace("^\\s*", "");
+				let maxMatch  = 0;
+				let datetime  = {};
+				datetime.re   = new RegExp(`${dateModel}(?:\\ |T|\\,\\ )${timeModel}`, "i");
+				datetime.type = "datetime";
+				datetime.data = {P: null, D: null, M: null, Y: null, h: null, m: null, s: null, p: null, w: null};
+				for (let k in date[i].data) {
+					if (date[i].data[k] !== null) {
+						datetime.data[k] = date[i].data[k];
+						maxMatch = date[i].data[k] < maxMatch ? maxMatch : date[i].data[k];
+					}
+				}
+				for (let k in time[j].data) {
+					if (time[j].data[k] !== null) {
+						datetime.data[k] = time[j].data[k] + maxMatch;
+					}
+				}
+				list.push(datetime);
+			}
+		}
+		this.templates = list;
+		return;
+	},
+	/**. '{object match(string value)}: Retorna o template que casa com '{value}.**/
+	match: function(value) {
+		this.setTemplates();
+		for (let i = 0; i < this.templates.length; i++)
+			if (this.templates[i].re.test(value))
+				return this.templates[i];
+		return null;
+	},
+
+
+
+
+
+
+
+
+
+
+
+
+	/**. '{object base}: Registra as unidades de tempo para fins de montagem dos modelos.**/
+	basess: {
+		Y:   "([0-9]+)",                    YYYY: "([0-9][0-9][0-9][0-9]+)",
+		M:   "(0?[1-9]|1[0-2])",            MM:   "(0[1-9]|1[0-2])",
+		MMM: null,                          MMMM: null,
+		D:   "(0?[1-9]|[12][0-9]|3[01])",   DD:   "(0[1-9]|[12][0-9]|3[01])",
+		d:   "(0?[1-7])",                   dd:   "0[1-7]",
+		ddd: null,                          dddd: null,
+		w:   "(0?[1-9]|[1-4][0-9]|5[0-3])", ww:   "(0[1-9]|[1-4][0-9]|5[0-3])",
+		H:   "([01]?[0-9]|2[0-4])",         HH:   "([01][0-9]|2[0-4])",
+		h:   "(0?[1-9]|1[0-2])",            hh:   "(0[1-9]|1[0-2])",
+		m:   "([0-5]?[0-9])",               mm:   "([0-5][0-9])",
+		s:   "([0-5]?[0-9]|[0-5]?[0-9]\\.[0-9][0-9]?[0-9]?)",
+		ss:  "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
+		p:   "([AP]M)", P: "([\\+\\-]?)"
+	},
+
+
 	/**. '{void update()}: Atualiza os modelos em caso de mundança de linguagem.**/
 	update: function() {
 		/*-- verificando alteração de lang --*/
@@ -310,7 +416,7 @@ const __DATETIME = {
 		return null;
 	},
 	/**. '{object test(string input)}: Testa o valor de entrada como u{data e tempo} ou o retorna o resultado do método '{check}.**/
-	test: function(input) {
+	ttest: function(input) {
 		const find = /([0-9][0-9])(T|\,|\ |\,\ )(\d?\d\:[0-5][0-9])/;
 		/*-- testar tempo ou data --*/
 		if (!find.test(input)) return this.check(input);
