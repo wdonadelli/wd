@@ -955,7 +955,6 @@ const wd = (function() {
 	__Week.prototype = Object.create(__Day.prototype, {
 		constructor: {value: __Week},
 		/**. '{string YYYYWww}: Retorna a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira do primeiro dia útil.**/
-		//FIXME verificar se foi considerado que 1º de janeiro não é dia útil!
 		YYYYWww: {
 			get: function() {
 				function week(year, days) {
@@ -1093,7 +1092,7 @@ const wd = (function() {
 		},
 
 	});
-
+	//TODO colocar os métodos importantes em __DATETIME
 	Object.defineProperties(__Time, {
 		/**#5 Métodos e Propriedades Estáticos
 		. '{array daysToYear(integer value)}: Retorna o ano (item 0) a partir do número de dias ('{value}).**/
@@ -1250,7 +1249,7 @@ const wd = (function() {
 	- Valor numérico que corresponde aos segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
 	- Objeto contendo as propriedades year, month, day, hour, minute e second; e
 	- Se indefinido, assumirá o valor de data e tempo atuais.**/
-	//FIXME procurar pelo construtor e ver se a propriedade type, removeida, é usada.
+	//TODO reconstruir isso aqui e colocar coisas interessantes em __DATETIME
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
 		const error = `The date value is unknown (${input})`;

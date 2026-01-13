@@ -1,18 +1,32 @@
 /**
 #3 String de Data e Tempo
 O objeto `{__DATETIME} estabelece as regras para extrair data e tempo a partir de strings adotando a seguinte nomenclatura:
-|Dado|Código|Valores|Código|Valores|Código|Valores|Código|Valores|
-|Ano|Y|Número inteiro|YYYY|4 Dígitos ou mais|||||
-|Mês|M|1-12 ou 01-12|MM|2 Dígitos 01-12|MMM|Nome curto|MMMM|Nome longo|
-|Dia|D|1-31 ou 01-31|DD|2 Dígitos 01-31|||||
-|Dia da semana|d|1-7 ou 01-07|dd|2 Dígitos 01-07|ddd|Nome curto|dddd|Nome longo|
-|Semana do ano|w|1-53 ou 01-53|ww|2 Dígitos 01-53|||||
-|Horas|H|0-24 ou 00-24|HH|2 Dígitos 00-24|h|0-12 ou 00-12|hh|2 Dígitos 00-12|
-|Minuto|m|0-59 ou 00-59|mm|2 Dígitos 00-59|||||
-|Segundo|s|0-59.999 ou 00-59.999|ss|2 Dígitos 00-59.999|||||
-|Período do dia|p|AM ou PM|||||||
-|Antes do ano 0|P|"-" ou "+" (opcional)|||||||
-**/
+|Sigla|Descrição|Observação|
+|Y|Ano quantidade de dígitos livre||
+|YYYY|Ano com 4 Dígitos ou mais||
+|M|Mês de 1-12 ou 01-12||
+|MM|Mês com 2 Dígitos 01-12||
+|MMM|Nome curto do mês||
+|MMMM|Nome longo do mês||
+|D|Dia de 1-31 ou 01-31|O valor deve corresponder ao mês e ano|
+|DD|Dia com 2 Dígitos 01-31|Ver observação anterior|
+|d|Dia da semana de 1-7 ou 01-07 (domingo à sábado)|Quando se trata de semana ISO, a semana começa na segunda (1)|
+|dd|Dia da semana com 2 Dígitos 01-07|Ver observaçao anterior|
+|ddd|Nome curto do dia da semana||
+|dddd|Nome longo do dia da semana||
+|w|Semana do ano de 1-53 ou 01-53|O valor deve corresponder ao ano|
+|ww|Semana do ano com 2 Dígitos 01-53|Ver observação anterior|
+|H|Horas de 0-24 ou 00-24||
+|HH|Horas com 2 Dígitos 00-24||
+|h|Horas de 0-12 ou 00-12||
+|hh|Horas com 2 Dígitos 00-12||
+|m|Minutos de 0-59 ou 00-59||
+|mm|Minutos com 2 Dígitos 00-59||
+|s|Segundos de 0-59.999 ou 00-59.999||
+|ss|Segundos com 2 Dígitos 00-59.999||
+|p|Período do dia AM ou PM||
+|P|Direção do tempo, se antes (-) ou depois (+) do ano 0|Opcional para anos a partir de zero|
+Todos os caracteres alfabéticos não são sensíveis à altura da caixa.**/
 const __DATETIME = {
 	/**. '{string lang}: Identifica a linguagem utilizada para carregar meses e dias da semana.**/
 	lang: null,
@@ -62,7 +76,10 @@ const __DATETIME = {
 		{flag: {P: 1, M: 3, Y: 2}, type: "month", model: "(P)(YYYY) (MMM)"},
 		{flag: {P: 1, M: 3, Y: 2}, type: "month", model: "(P)(YYYY) (MMMM)"},
 		/*-- semanas --*/
-		{flag: {P: 1, w: 3, Y: 2}, type: "week", model: "(P)(YYYY)-W(ww)"},
+		{flag: {P: 1, w: 3, Y: 2},       type: "week", model: "(P)(YYYY)-W(ww)"},
+		{flag: {P: 1, w: 3, Y: 2},       type: "week", model: "(P)(YYYY)W(ww)"},
+		{flag: {P: 1, w: 3, Y: 2, d: 4}, type: "week", model: "(P)(YYYY)-W(ww)-(d)"},
+		{flag: {P: 1, w: 3, Y: 2, d: 4}, type: "week", model: "(P)(YYYY)W(ww)(d)"},
 		/*-- tempo --*/
 		{flag: {H: 1, m: 2, s: 3},       type: "time", model: "(H):(mm):(ss)"},
 		{flag: {H: 1, m: 2},             type: "time", model: "(H):(mm)"},
@@ -177,8 +194,7 @@ const __DATETIME = {
 	/**. '{boolean date(object flag)}: Analisa e manipula a i{flag} recebida e, se a data for correta, retorna verdadeiro.**/
 	date: function(flag) {
 		/*-- chencando ano --*/
-		flag.P = flag.P === "-" ? "-" : "";
-		if (flag.P === "-" && flag.Y >= 0) return false;
+		flag.P = flag.P === "-" ? (flag.Y === 0 ? "" : "-") : "";
 		/*-- transformando o mês --*/
 		flag.M = typeof flag.M !== "number" ? Number(this.monthName(flag.M)) : flag.M;
 		/*-- checando número máximo de dias --*/
@@ -205,8 +221,7 @@ const __DATETIME = {
 	/**. '{boolean month(object flag)}: Analisa e manipula a i{flag} recebida e, se o mês for correto, retorna verdadeiro.**/
 	month: function(flag) {
 		/*-- chencando ano --*/
-		flag.P = flag.P === "-" ? "-" : "";
-		if (flag.P === "-" && flag.Y >= 0) return false;
+		flag.P = flag.P === "-" ? (flag.Y === 0 ? "" : "-") : "";
 		/*-- transformando o mês --*/
 		flag.M = typeof flag.M !== "number" ? Number(this.monthName(flag.M)) : flag.M;
 		return true;
@@ -214,12 +229,19 @@ const __DATETIME = {
 	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings" target="_blank"] for correta, retorna verdadeiro.**/
 	week: function(flag) {
 		/*-- chencando ano --*/
-		flag.P = flag.P === "-" ? "-" : "";
-		if (flag.P === "-" && flag.Y >= 0) return false;
+		flag.P = flag.P === "-" ? (flag.Y === 0 ? "" : "-") : "";
 		/*-- checando limite --*/
 		const init = this.weekDay(flag.Y, 1, 1);
 		const max  = init === 5 || (init === 4 && this.leap(flag.Y)) ? 53 : 52;
 		if (flag.w > max) return false;
+		/*-- acertando o dia da semana (conflito domingo x segunda) --*/
+		if (!("d" in flag)) {
+			flag.d = 2;
+		} else if (typeof flag.d === "number") {
+			flag.d = flag.d === 7 ? 1 : flag.d + 1;
+		} else {
+			flag.d = Number(this.dayName(flag.d));
+		}
 		return true;
 	},
 	/**. '{object parser(string value, object match)}: Captura e retorna os dados casados ou nulo.**/
@@ -243,10 +265,6 @@ const __DATETIME = {
 		/*-- string e value --*/
 		this.string(data);
 		this.value(data);
-
-
-
-
 		return data;
 	},
 	/**. '{object match(string value)}: Retorna o template que casa com '{value}.**/
@@ -287,16 +305,13 @@ const __DATETIME = {
 	dateTimeElapsed: function(year, month, day, hour, minute, second) {
 		return 24*3600*this.daysElapsed(year, month, day) + this.timeElapsed(hour, minute, second);
 	},
-	/**. '{integer daysElapsedWeek(interger year, integer week)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"] (primeira segunda-feira útil do ano)**/
-	daysElapsedWeek: function(year, week) {
+	/**. '{integer daysElapsedWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
+	daysElapsedWeek: function(year, week, day) {
 		const days = this.daysElapsed(year, 1, 1);
-		const day  = this.weekDay(year, 1, 1);
-
-
-//TODO
-
-		const walk = [null,1,0,6,5,4,3,2][day];
-		return days + walk + (7*(week - 1));
+		const init = this.weekDay(year, 1, 1);
+		const mon  = [null,+1,+0,-1,-2,-3,+3,+2][init];
+		const walk = [null,+6,+0,+1,+2,+3,+4,+5][typeof day === "number" ? day : 2];
+		return days + mon + (7*(week - 1)) + walk;
 	},
 	/**. '{integer weekDay(integer year, integer month, integer day)}: Retorna o o dia da semana (1-7).**/
 	weekDay: function(year, month, day) {
@@ -328,20 +343,15 @@ const __DATETIME = {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
 			flag.string += flag.P + String("0").repeat(len) + String(flag.Y) + "-W";
 			flag.string += (flag.w < 10 ? "0" : "") + String(flag.w);
+			flag.string += flag.d === 2 ? "" : "-" + String(flag.d === 1 ? 7 : flag.d - 1);
 		}
 		else if (flag.type === "month") {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
 			flag.string += flag.P + String("0").repeat(len) + String(flag.Y) + "-";
 			flag.string += (flag.M < 10 ? "0" : "") + String(flag.M);
 		}
-
-
-
-
 		return flag.string;
 	},
-
-
 	/**. '{integer value(object flag)}: Analisa e manipula a i{flag} recebida para definir o valor.**/
 	value: function(flag) {
 		if (flag.type === "datetime")
@@ -352,154 +362,23 @@ const __DATETIME = {
 			flag.value = this.timeElapsed(flag.H, flag.m, flag.s);
 		else if (flag.type === "month")
 			flag.value = this.daysElapsedMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
+		else if (flag.type === "week")
+			flag.value = this.daysElapsedWeek(flag.P === "-" ? -flag.Y : flag.Y, flag.w, flag.d);
 		return flag.value;
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**. '{string form(object data)}: Retorna uma string para formulário a partir do resultado do método '{check}.**/
-	form: function(data) {
-		if (typeof data !== "object")    return "";
-		if ("P" in data && data.P < 0)   return "";
-		if ("Y" in data && (data.Y < 1)) return "";
-		if (data.type === "date") {
-			const YYYY = this.string(data.Y, "YYYY");
-			const MM   = this.string(data.M, "MM");
-			const DD   = this.string(data.D, "DD");
-			return `${YYYY}-${MM}-${DD}`;
-		}
-		if (data.type === "month") {
-			const YYYY = this.string(data.Y, "YYYY");
-			const MM   = this.string(data.M, "MM");
-			return `${YYYY}-${MM}`;
-		}
-		if (data.type === "week") {
-			const YYYY = this.string(data.Y, "YYYY");
-			const ww   = this.string(data.w, "ww");
-			return `${YYYY}-W${ww}`;
-		}
-		if (data.type === "time") {
-			const HH = this.string(data.H, "HH");
-			const mm = this.string(data.m, "mm");
-			return `${HH}:${mm}`;
-		}
-		if (data.type === "datetime") {
-			const copy = {};
-			for (let i in data) copy[i] = data[i];
-			copy.type  = "date";
-			const date = this.form(copy);
-			copy.type  = "time";
-			const time = this.form(copy);
-			return [date,time].join("T");
-		}
-		return null;
-	},
-	/**. '{object check(string input)}: Testa o valor de entrada ('{input}) como data, tempo, mês ou semana. Retonará nulo, se incorreto, ou um objeto contendo as unidades de data ou tempo**/
-	check: function(input) {
-		this.update();
-		input = String(input).trim();
-		const find  = /^(Y+|D+|M+|w+|d+|H+|h+|m+|s+|p|P)$/g;
-		/*-- checando as expressões regulares --*/
-		for (let i = 0; i < this.templates.length; i++) {
-			let item = this.templates[i];
-			if (item.re.test(input)) {
-				let data = {type: item.type, model: item.model, re: item.re};
-				for (let j in item) {
-					if (!(j in data)) {
-						let info = input.replace(item.re, item[j]);
-						data[j]  = this.value(info, j);
-					}
-				}
-
-				/*-- checando o dia do mês --*/
-				if (data.type === "date" && data.D > this.max(data.Y, data.M)) {
-					continue;
-				}
-				/*-- checando a semana <https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings> --*/
-				if (data.type === "week") {
-					const base = new __Week(data.Y, 1, 1);
-					const init = base.weekDay;
-					const leap = base.leap;
-					const max  = init === 5 || (init === 4 && leap) ? 53 : 52;
-					if (data.w > max) continue;
-				}
-				/*-- checando tempo --*/
-				if (data.type === "time") {
-					/*-- 12 horas --*/
-					if ("h" in data) {
-						data.H = data.h%12 + (data.p === "PM" ? 12 : 0);
-					}
-					/*-- 24 horas --*/
-					else if ("H" in data) {
-						data.H = data.H%24;
-						data.p = data.H >= 12 ? "PM" : "AM";
-						data.h = data.H === 0 ? 12 : data.H - (data.H < 13 ? 0 : 12);
-					}
-					/*-- sem o segundo --*/
-					if (!("s" in data)) data.s = 0;
-				}
-				/*-- retornar --*/
-				data.iso  = this.iso(data);
-				data.form = this.form(data);
-				return data;
-			}
-		}
-		return null;
-	},
-	/**. '{object test(string input)}: Testa o valor de entrada como u{data e tempo} ou o retorna o resultado do método '{check}.**/
-	ttest: function(input) {
-		const find = /([0-9][0-9])(T|\,|\ |\,\ )(\d?\d\:[0-5][0-9])/;
-		/*-- testar tempo ou data --*/
-		if (!find.test(input)) return this.check(input);
-		/*-- testar tempo e data --*/
-		//FIXME Date() não está contemplado?
-		const list = input.replace(find, "$1\n$2\n$3").split("\n");
-		const date = this.check(list[0]);
-		const time = this.check(list[2]);
-		const join = list[1];
-		/*-- não é datetime --*/
-		if (date === null || time === null || date.type !== "date" || time.type !== "time")
-			return null;
-		/*-- é datetime --*/
-		const dt = {};
-		for (let i in date) dt[i] = date[i];
-		for (let i in time) dt[i] = time[i];
-		dt.type  = "datetime";
-		dt.model = `${date.model}${join}${time.model}`;
-		dt.iso   = this.iso(dt);
-		dt.form  = this.form(dt);
-		dt.re    = null;
-		return dt;
-	},
-	/**. '{object toObject(string input)}: Testa o valor de entrada e retorna os atributos do tempo.**/
-	toObject: function(input) {
-		const data = {type: null};
-		const info = {M: "month", D: "day", d: "weekDay", w: "week", H: "hour", m: "minute", s: "second", iso: "iso", type: "type"};
-		const time = this.test(input);
-		if (time !== null) {
-			for (let i in info) {
-				if (i in time) data[info[i]] = time[i];
-			}
-			if ("Y" in time) data.year  = time.P * time.Y;
-		}
-		return data;
+	/**. '{string form(string data)}: Tem o mesmo propósito do método '{match} validado para formulário HTML e acrescido da propriedade '{form}, que é a string do formato.**/
+	form: function(value) {
+		const flag = this.match(value);
+		/*-- valores não permitidos --*/
+		if (flag === null) return null;
+		if (flag.P === "-" || flag.Y === 0) return null;
+		/*-- ajuste de string --*/
+		if (flag.type === "time" || flag.type === "datetime")
+			flag.form = flag.string.replace(/\:\d\d\.\d\d\d$/, "");
+		else if (flag.type === "week")
+			flag.form = flag.string.replace(/\-\d$/, "");
+		else
+			flag.form = flag.string;
+		return flag;
 	},
 };
