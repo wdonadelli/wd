@@ -80,6 +80,8 @@ const __DATETIME = {
 		{flag: {P: 1, w: 3, Y: 2},       type: "week", model: "(P)(YYYY)W(ww)"},
 		{flag: {P: 1, w: 3, Y: 2, d: 4}, type: "week", model: "(P)(YYYY)-W(ww)-(d)"},
 		{flag: {P: 1, w: 3, Y: 2, d: 4}, type: "week", model: "(P)(YYYY)W(ww)(d)"},
+		{flag: {P: 3, w: 2, Y: 4, d: 1}, type: "week", model: "(ddd), (w) (P)(YYYY)"},
+		{flag: {P: 3, w: 2, Y: 4, d: 1}, type: "week", model: "(dddd), (w) (P)(YYYY)"},
 		/*-- tempo --*/
 		{flag: {H: 1, m: 2, s: 3},       type: "time", model: "(H):(mm):(ss)"},
 		{flag: {H: 1, m: 2},             type: "time", model: "(H):(mm)"},
@@ -262,19 +264,43 @@ const __DATETIME = {
 			return null;
 		if (data.type === "month" && !this.month(data))
 			return null;
-		/*-- string e value --*/
+		/*-- string, value, form --*/
 		this.string(data);
 		this.value(data);
+		this.form(data);
 		return data;
 	},
-	/**. '{object match(string value)}: Retorna o template que casa com '{value}.**/
+	/**. '{object match(string value)}: Retorna os dados da informação se '{value} casar com algum i{template}.**/
 	match: function(value) {
 		this.setTemplates();
-		for (let i = 0; i < this.templates.length; i++) {
-			if (this.templates[i].re.test(value))
-				return this.parser(value, this.templates[i]);
+		const type = typeof value;
+		/*-- para o objeto padrão Date --*/
+		if (type === "object" && value instanceof Date)
+			return this.matchDate(value);
+		/*-- para tempo em forma de string --*/
+		if (type === "string" || (type === "object" && value instanceof String)) {
+			const string = String(value).trim();
+			for (let i = 0; i < this.templates.length; i++) {
+				if (this.templates[i].re.test(string))
+					return this.parser(string, this.templates[i]);
+			}
 		}
 		return null;
+	},
+	/**. '{object matchDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
+	matchDate: function(date) {
+		const data = {
+			P: date.getFullYear() < 0 ? "-" : "",
+			Y: Math.abs(date.getFullYear()), M: date.getMonth() + 1, D: date.getDate(),
+			H: date.getHours(),              m: date.getMinutes(),   s: date.getSeconds()+(date.getMilliseconds()/1000),
+			type: "datetime",
+		};
+		this.date(data);
+		this.time(data);
+		this.string(data);
+		this.value(data);
+		this.form(data);
+		return data;
 	},
 	/**. '{integer daysElapsedYear(integer year)}: Retorna número de dias decorridos desde 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
 	daysElapsedYear: function(year) {
@@ -366,14 +392,11 @@ const __DATETIME = {
 			flag.value = this.daysElapsedWeek(flag.P === "-" ? -flag.Y : flag.Y, flag.w, flag.d);
 		return flag.value;
 	},
-	/**. '{string form(string data)}: Tem o mesmo propósito do método '{match} validado para formulário HTML e acrescido da propriedade '{form}, que é a string do formato.**/
-	form: function(value) {
-		const flag = this.match(value);
-		/*-- valores não permitidos --*/
-		if (flag === null) return null;
-		if (flag.P === "-" || flag.Y === 0) return null;
-		/*-- ajuste de string --*/
-		if (flag.type === "time" || flag.type === "datetime")
+	/**. '{string form(object flag)}: Analisa e manipula a i{flag} recebida para definir o valor para formulário HTML.**/
+	form: function(flag) {
+		if (flag.P === "-" || flag.Y === 0)
+			flag.form = null;
+		else if (flag.type === "time" || flag.type === "datetime")
 			flag.form = flag.string.replace(/\:\d\d\.\d\d\d$/, "");
 		else if (flag.type === "week")
 			flag.form = flag.string.replace(/\-\d$/, "");
@@ -381,4 +404,9 @@ const __DATETIME = {
 			flag.form = flag.string;
 		return flag;
 	},
+
+
+
+
+
 };

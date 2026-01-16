@@ -4,39 +4,30 @@ O constructor '{__Type} tem o objetivo de definir o tipo do valor recebido como 
 **/
 function __Type(input) {
 	if (!(this instanceof __Type)) return new __Type(input);
-	let find = __CHECK.test(input);
-	let char = find.type === "string";
-	let data = {type: find.type, value: find.value};
-	/*-- checando valores em string --*/
-	if (find.type === "string") {
-		let types    = ["date", "time", "datetime"];
-		let datetime = __DATETIME.test(input);
-		let number   = __NUMBER.test(input);
-		if (datetime !== null && types.indexOf(datetime.type) >= 0)
-			data = {type: datetime.type, value: datetime.iso};
-		else if (number !== null)
-			data = {type: "number", value: number};
-	}
-	/*-- checando NaN --*/
-	if (data.type === "number" && isNaN(data.value)) {
-		data.type = "NaN";
-	}
+	const data = __CHECK.match(input);
 	Object.defineProperties(this, {
 		_input: {value: input},
-		_char:  {value: char},
-		_type:  {value: data.type},
-		_value: {value: data.value},
+		_chars: {value: typeof input === "string"},
+		_data:  {value: data},
 	});
 }
 
 Object.defineProperties(__Type.prototype, {
 	constructor: {value: __Type},
-	_re_email: {value: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/},
+	/*-- Genéricos -------------------------------------------------------------*/
+	/**. '{string type}: Retorna o tipo do argumento verificado.**/
+	type: {get: function() {return this._data.type;}},
+	/**. '{any  value}: Retorna o valor do argumento de acordo com o atributo '{type}.**/
+	value: {get: function() {return this._data.value;}},
+	/**. '{void  valueOf()}: Método padrão.**/
+	valueOf: {value: function() {return this._data.value;}},
+	/**. '{string toString()}: Método padrão.**/
+	toString: {value: function() {return this._data.string;}},
 	/*-- Strings -------------------------------------------------------------*/
 	/**. '{boolean string}: Checa se o valor é uma string u{diferente de número, data ou tempo}.**/
 	string: {get: function() {return this.type === "string";}},
 	/**. '{boolean chars}: Checa se o valor é uma string.**/
-	chars: {get: function() {return this._char;}},
+	chars: {get: function() {return this._chars;}},
 	/**. '{boolean empty}: Checa se o valor é uma string de caracteres não visualizáveis.**/
 	empty: {get: function() {return this.chars && this._input.trim().length === 0;}},
 	/**. '{boolean nonempty}: Checa se o valor é uma string de caracteres visualizáveis.**/
@@ -44,7 +35,7 @@ Object.defineProperties(__Type.prototype, {
 	/**. '{boolean lang}: Checa se o valor é uma string no formato de linguagem.**/
 	lang: {get: function() {return this.chars && __LANG.re(this._input.trim());}},
 	/**. '{boolean email}: Checa se o valor é uma string no formato de email.**/
-	email: {get: function() {return this.chars && this._re_email.test(this._input.trim());}},
+	email: {get: function() {return this.chars && __CHECK.reEmail.test(this._input.trim());}},
 	/*-- DateTime ------------------------------------------------------------*/
 	/**. '{boolean datetime}: Checa se o valor é um conjunto data e tempo.**/
 	datetime: {get: function() {return this.type === "datetime";}},
@@ -69,6 +60,8 @@ Object.defineProperties(__Type.prototype, {
 	negative: {get: function() {return this.number && this.value < 0;}},
 	/**. '{boolean zero}: Checa se o valor é zero.**/
 	zero: {get: function() {return this.value === 0;}},
+	/**. '{boolean NaN}: Checa se o valor é '{NaN}.**/
+	NaN: {get: function() {return this.type === "nan";}},
 	/*-- Diversos ------------------------------------------------------------*/
 	/**. '{boolean boolean}: Checa se o valor é um valor booleano.**/
 	boolean: {get: function() {return this.type === "boolean";}},
@@ -88,14 +81,6 @@ Object.defineProperties(__Type.prototype, {
 	/**. '{boolean undefined}: Checa se o valor é indefinido.**/
 	undefined: {get: function() {return this.type === "undefined";}},
 	/*-- Checagens -----------------------------------------------------------*/
-	/**. '{string type}: Retorna o tipo do argumento verificado.**/
-	type: {get: function() {return this._type;}},
-	/**. '{any  value}: Retorna o valor do argumento de acordo com o atributo '{type}.**/
-	value: {get: function() {return this._value;}},
-	/**. '{void  valueOf()}: Método padrão.**/
-	valueOf: {value: function() {return this._value.valueOf();}},
-	/**. '{string toString()}: Método padrão.**/
-	toString: {value: function() {return this._value.toString();}},
 	/**. '{boolean instanceOf(string name)}: Retorna se o valor informado é instância do objeto nomeado em '{name}.**/
 	instanceOf: {
 		value: function (name) {
