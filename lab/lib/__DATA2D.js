@@ -9,55 +9,58 @@ O objeto '{__DATA2D} apresenta ferramentas para análise de conjunto de dados fi
 	O argumento '{y} é a resposta em função de '{x}, podendo ser uma lista de valores do mesmo tipo que '{x}, uma constante ou uma função. No caso de função, '{y} receberá o valor de '{y(x)}.
 	Valores não finitos serão eliminados do conjunto '{(x, y)}.*/
 const __DATA2D = {
-	/**. '{number toFinite(any value)}: Retorna a conversão de '{value} para número finito ou nulo.**/
+	/**. '{number toFinite(any value)}: Retorna a conversão de '{value} para finito, dias ou segundos ou nulo:
+	|Tipo|Origem|
+	|Numérico|finite|
+	|Dias|date|
+	|Segundos|time e datetime|**/
 	toFinite: function(value) {
 		const data = new __Type(value);
-		if (data.finite)
-			return data.valueOf();
-		if (data.date || data.time || data.datetime)
-			return new __DateTime(data.value).valueOf();
-		return null;
-		//FIXME colocar year month e day dentro do objeto que trata da data para valueOf retornar os dias ou segundos
+		return data.finite || data.date || data.time || data.datetime ? data.valueOf() : null;
 	},
-	/**. '{array map(array data, function call}: Aplica a função '{call} aos itens de '{data}, ou nulo, e retorna a lista.**/
-	map: function(data, call) {
-		return data.map(function(v,i,a) {
-			try      {return call(v);}
+	/**. '{array map(array list, function call}: Aplica a função '{call} ou define nulo aos itens de '{list} e a retorna.**/
+	map: function(list, call) {
+		return list.map(function(v,i,a) {
+			try      {return this.toFinite(call(v));}
 			catch(e) {return null;}
 		}, this);
 	},
-	/**. '{array filter(array x, array y)}: Retorna o array '{[x, y]} apenas com o conjunto que possue números finitos.**/
-	filter: function(x, y) {
-		const min  = Math.min(x.length, y.length);
-		const data = [[], []];
-		for (let i = 0; i < min; i++) {
-			if (Number.isFinite(x[i]) && Number.isFinite(y[i])) {
-				data[0].push(x[i]);
-				data[1].push(y[i]);
-			}
-		}
-		return data;
-	},
-	/**. '{array sort(array x, array y)}: Retorna uma lista de objetos contendo os valores de '{x} e '{y} ajustados e ordenados.**/
-	sort: function(x, y) {
-		if (!Array.isArray(x) || !Array.isArray(y)) return null;
-		const data = this.filter(this.map(x, this.toFinite), this.map(y, this.toFinite));
-		const list = data[0].map(function(v,i,a) {
-			return {x: v, y: data[1][i]};
-		});
-		return list.sort(function(a,b) {
+	/**. '{array toData(array x, any y}: Retorna uma lista ordenada do conjunto de dados numéricos finitos estabelecidos pelos argumentos '{x} e '{y}. O argumento '{y} pode ser um array, uma função ou uma constante.**/
+	toData: function(x, y) {
+		/*-- análise de x --*/
+		x = Array.isArray(x) ? this.map(x, function(i) {return i;}) : [];
+		/*-- análise de y --*/
+		if (Array.isArray(y))
+			y = this.map(y, function(i) {return i;});
+		else if (typeof y === "function")
+			y = this.map(x, y);
+		else
+			y = this.map(x, function(i) {return y;});
+		//console.log(x,y)
+		/*-- retornando conjunto de dados --*/
+		return x.map(function(v,i,a) {
+			return {x: v, y: i < y.length ? y[i] : null};
+		})
+		.filter(function(v,i,a) {
+			return v.x !== null && v.y !== null;
+		})
+		.sort(function(a,b) {
 			return a.x === b.x ? 0 : (a.x < b.x ? -1 : 1);
 		});
 	},
-	/**. '{object ols(array x, array y)}: Retorna os coeficientes angular e linear pelo "método dos mínimos quadrados" ou nulo.**/
-	ols: function(x, y) {
-		const list = this.sort(x, y);
-		if (list === null || list.length < 2) return null;
-		const len  = list.length;
-		let sumX  = 0;
-		let sumY  = 0;
-		let sumX2 = 0;
-		let sumXY = 0;
+	/**. '{object toList(object list)}: Retorna a lista dos conjuntos '{x} e '{y} provenientes do método '{toData}.**/
+	toList: function(list) {
+		const data = {x: [], y: []};
+		list.forEach(function(v,i,a) {
+			data.x.push(v.x);
+			data.y.push(v.y);
+		});
+		return data;
+	},
+	/**. '{object ols(object list)}: Retorna os coeficientes angular e linear pelo "método dos mínimos quadrados" ou nulo. O argumento '{list} deve ser o retorno do método '{toData}, que deve conter pelo menos duas coordenadas.**/
+	ols: function(list) {
+		if (list.length < 2) return null;
+		let sumX = 0, sumY = 0, sumX2 = 0, sumXY = 0, len = list.length;
 		list.forEach(function(v,i,a) {
 			sumX  += v.x;
 			sumY  += v.y;
@@ -69,237 +72,174 @@ const __DATA2D = {
 		data.b = ((sumY) - (sumX * data.a)) / (len);
 		return data;
 	},
-	/**. '{number rmse(array x, array y)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo.**/
-	rmse: function(x, y) {
-		const list = this.sort(x, y);
-		if (list === null || list.length < 2) return null;
-		const data = list.map(function(v,i,a) {return v.x - v.y;});
-		return Math.hypot.apply(null, data) / Math.sqrt(data.length);
+	/**. '{number rmse(object list, function fit)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento '{list} é o retorno do método '{toData}, o conjunto de referência, e o argumento fit é a função que resultou da regressão.**/
+	rmse: function(list, fit) {
+		const data = list.map(function(v,i,a) {
+			const y = this.toFinite(fit(v.x));
+			return y === null ? 0 : v.y - y;
+		}, this);
+		return Math.hypot.apply(null, data) / Math.sqrt(list.length);
+		/*FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
+		__DATA2D.exponentialFit(__DATA2D.toData([2,3,4,5,6,100], (x)=> 3*Math.exp(4*x)))
+		if ((erro - 0) - Number.EPSILON) then 0	*/
 	},
-
-
-
-
-
-
-
-
-
-
-
+	/**. '{string valueFit(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
+	valueFit: function(x) {
+		const abs = Math.abs(x);
+		if (abs === 0)
+			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
+		if (abs >= Math.pow(10, 100))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 0});
+		if (abs >= Math.pow(10, 10))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 1});
+		if (abs >= Math.pow(10, 3))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 2});
+		if (abs >= Math.pow(10, 2))
+			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 1});
+		if (abs >= Math.pow(10, 1))
+			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
+		if (abs <= Math.pow(10, -100))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 0});
+		if (abs <= Math.pow(10, -10))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 1});
+		if (abs <= Math.pow(10, -1))
+			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 2});
+		return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
+	},
+	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
+	stringFit: function(fit, type) {
+		const math = {a: this.valueFit(fit.a), b: this.valueFit(fit.b), d: this.valueFit(fit.d)};
+		if (type === "linear") {
+			fit.m = `y = ax + b ± σ`;
+			fit.v = `y = ${math.a}x + (${math.b}) ± ${math.d}`;
+		}
+		else if (type === "geometric") {
+			fit.m = `y = ax^(b) ± σ`;
+			fit.v = `y = ${math.a}x^(${math.b}) ± ${math.d}`;
+		}
+		else if (type === "exponential") {
+			fit.m = `y = ae^(bx) ± σ`;
+			fit.v = `y = ${math.a}e^(${math.b}x) ± ${math.d}`;
+		}
+		else if (type === "logarithmic") {
+			fit.m = `y = aln(b x) ± σ`;
+			fit.v = `y = ${math.a}ln(${math.b}x) ± ${math.d}`;
+		}
+		return;
+	},
+	/**. '{object linearFit(object list)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
+	|Propriedade|Tipo|Descrição|
+	|a|finite|O coeficiente '{a} do modelo da regressão|
+	|b|finite|O coeficiente '{b} do modelo da regressão|
+	|p|object|O conjunto de dados de referência|
+	|f|function|A função obtida pela regressão|
+	|d|finite|O erro quadrático médio|
+	|m|string|O modelo da regressão|
+	|v|string|A visualização da regressão|**/
+	linearFit: function(list) {
+		const fit = this.ols(list);
+		if (fit !== null) {
+			fit.p = list;
+			fit.f = function(x) {return fit.a*x + fit.b;};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "linear");
+		}
+		return fit;
+	},
+	/**. '{object geometricFit(object list)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linearFit}**/
+	geometricFit: function(list) {
+		/*-- efetuar a transformada de dados --*/
+		const base = this.toList(list);
+		base.x = this.map(base.x, Math.log);
+		base.y = this.map(base.y, Math.log);
+		const data = this.toData(base.x, base.y);
+		const calc = this.ols(data);
+		const fit  = calc === null ? null : {};
+		if (fit !== null) {
+			fit.a = Math.exp(calc.b)
+			fit.b = calc.a;
+			fit.p = list;
+			fit.f = function(x) {return fit.a*Math.pow(x, fit.b);};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "geometric");
+		}
+		return fit;
+	},
+	/**. '{object exponentialFit(object list)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linearFit}**/
+	exponentialFit: function(list) {
+		/*-- efetuar a transformada de dados --*/
+		const base = this.toList(list);
+		base.y = this.map(base.y, Math.log);
+		const data = this.toData(base.x, base.y);
+		const calc = this.ols(data);
+		const fit  = calc === null ? null : {};
+		if (fit !== null) {
+			fit.a = Math.exp(calc.b)
+			fit.b = calc.a;
+			fit.p = list;
+			fit.f = function(x) {return fit.a*Math.exp(fit.b*x);};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "exponential");
+		}
+		return fit;
+	},
+	/**. '{object logarithmicFit(object list)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linearFit}**/
+	logarithmicFit: function(list) {
+		/*-- efetuar a transformada de dados --*/
+		const base = this.toList(list);
+		base.y = this.map(base.y, Math.exp);
+		const data = this.toData(base.x, base.y);
+		//const calc = this.ols(data);
+		const calc = this.geometricFit(data);
+		const fit  = calc === null ? null : {};
+		if (fit !== null) {
+			fit.a = calc.b;
+			fit.b = Math.pow(calc.a, 1/calc.b);
+			fit.p = list;
+			fit.f = function(x) {return fit.a*Math.log(fit.b*x);};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "logarithmic");
+		}
+		return fit;
+	},
+	/**. '{object minRMSE(object list)}: Retorna a regressão com menor erro quadrático médio ou nulo.**/
+	minRMSE: function(list) {
+		return [
+			this.linearFit(list),
+			this.geometricFit(list),
+			this.exponentialFit(list),
+			this.logarithmicFit(list)
+		].sort(function(a,b) {
+			return a === null ? 1 : (b === null ? -1 : (a.d === b.d ? 0 : (a.d < b.d ? -1 : 1)));
+		})[0];
+	},
+	/**. '{object sumFit(object list)}: Retorna um objeto contendo os dados da soma das áreas com os mesmos parâmetros do método '{linearFit}**/
+	sumFit: function(list) {
+		const fit = {a: 0, b: 0};
+		list.forEach(function(v,i,a) {
+			fit.a += i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2;
+		});
+		if (fit !== null) {
+			fit.p = list;
+			fit.f = function(x) {return fit.a;};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "sum");
+		}
+		return fit;
+	},
+	/**. '{object avgFit(object list)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linearFit}**/
+	avgFit: function(list) {
+		const base = this.toList(list);
+		const min  = Math.min.apply(null, base.x);
+		const max  = Math.max.apply(null, base.x);
+		const fit  = this.sumFit(list);
+		if (fit !== null) {
+			fit.a = fit.a/(max-min);
+			fit.p = list;
+			fit.f = function(x) {return fit.a;};
+			fit.d = this.rmse(fit.p, fit.f);
+			this.stringFit(fit, "avg");
+		}
+		return fit;
+	},
 };
-
-
-
-function __Data2D(x, y) {
-		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
-		const xtest = __Type(x);
-		const ytest = __Type(y);
-		function dataArray(n) {
-			const check = __Type(n);
-			if (check.finite)
-				return check.value;
-			if (check.date || check.time || check.datetime)
-				return new __DateTime(n).valueOf();
-			return null;
-		}
-
-		/*-- avaliando X --*/
-		x = __Array(xtest.array ? x : []).convert(dataArray, "finite");
-		/*-- avaliando Y --*/
-		if (ytest.array)
-			y = __Array(y).convert(dataArray, "finite");
-		else if (ytest.finite)
-			y = __Array(x).convert(function(n) {return ytest.value;}, "finite");
-		else if (ytest.date || ytest.time || ytest.datetime)
-			y = __Array(x).convert(function(n) {return new __DateTime(y).valueOf();}, "finite");
-		else if (ytest.function)
-			y = __Array(x).convert(y, "finite");
-		else
-			y = [];
-
-		/*-- igualando conjunto --*/
-		const less = y.length < x.length ? y : x;
-		const data = [];
-		for (let i = 0; i < less.length; i++) {
-			if (x[i] !== null && y[i] !== null)
-				data.push({x: x[i], y: y[i]});
-		}
-		/*-- ordenando em x --*/
-		data.sort(function(a,b) {
-			return a.x === b.x ? 0 : (a.x < b.x ? -1 : 1);
-		});
-
-		/*-- retornando valores --*/
-		const sortx = [];
-		const sorty = [];
-		for (let i = 0; i < data.length; i++) {
-			sortx.push(data[i].x);
-			sorty.push(data[i].y);
-		}
-		Object.defineProperties(this, {
-			/**. '{array x}: Registra os valores do argumento '{x} ajustado.**/
-			x: {value: sortx},
-			/**. '{array y}: Retorna os valores do argumento '{y} ajustado.**/
-			y: {value: sorty},
-			/**. '{boolean error}: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
-			error: {value: sortx.length < 2 || sorty.length < 2}
-		});
-	}
-
-	Object.defineProperties(__Data2D.prototype, {
-		constructor: {value: __Data2D},
-
-
-		/**. '{object linearFit}: Retorna um objeto contendo os dados da regressão linear ou '{null} em caso de erro.
-		. O objeto retornado possui as chaves '{t} (tipo/nome da regressão); '{a} e '{b} (coeficientes da regressão); '{f} (função da regressão); '{d}: (desvio padrão), '{m} (representação visual da regressão); e '{s} (igual a '{m} mas exibindo os coeficientes).**/
-		linearFit: {
-			get: function() {
-				if (this.error) return null;
-				if ("_linearFit" in this) return this._linearFit;
-				const X    = new __Array(this.x);
-				const Y    = new __Array(this.y);
-				const sqrs = this.leastSquares;
-				const fit  = {};
-				fit.a = sqrs.a;
-				fit.b = sqrs.b;
-				fit.f = function(x) {return fit.a*x + fit.b;}
-				fit.d = new __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
-				fit.m = "y = a x + (b) ± σ";
-				fit.s = fit.m.toString()
-				const cte = {a: "a", b: "b", d: "σ"};
-				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
-				this._linearFit = fit;
-				return fit;
-			}
-		},
-		/**. '{object geometricFit}: Retorna um objeto contendo os dados da regressão geométrica ou '{null} em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}. **/
-		geometricFit: {
-			get: function() {
-				if (this.error) return null;
-				if ("_geometricFit" in this) return this._geometricFit;
-				const X    = new __Array(this.x);
-				const Y    = new __Array(this.y);
-				const data = new __Data2D(
-					X.convert(Math.log, "finite"),
-					Y.convert(Math.log, "finite")
-				);
-				if (data.error) {
-					this._geometricFit = null;
-					return null;
-				}
-				const sqrs = data.leastSquares;
-				const fit  = {};
-				fit.a = Math.exp(sqrs.b);
-				fit.b = sqrs.a;
-				fit.f = function(x) {return fit.a*Math.pow(x, fit.b);}
-				fit.d = __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
-				fit.m = "y = a x^(b) ± σ";
-				fit.s = fit.m.toString();
-				const cte = {a: "a", b: "b", d: "σ"};
-				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
-				this._geometricFit = fit;
-				return fit;
-			}
-		},
-		/**. '{object exponentialFit}: Retorna um objeto contendo os dados da regressão exponencial ou '{null} em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}. **/
-		exponentialFit: {
-			get: function() {
-				if (this.error) return null;
-				if ("_exponentialFit" in this) return this._exponentialFit;
-				const X    = new __Array(this.x);
-				const Y    = new __Array(this.y);
-				const data = new __Data2D(this.x, Y.convert(Math.log, "finite"));
-				if (data.error) {
-					this._exponentialFit = null;
-					return null;
-				}
-				const sqrs = data.leastSquares;
-				const fit  = {};
-				fit.a = Math.exp(sqrs.b);
-				fit.b = sqrs.a;
-				fit.f = function(x) {return fit.a*Math.exp(fit.b*x);}
-				fit.d = __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
-				fit.m = "y = a exp(b x) ± σ";
-				fit.s = fit.m.toString();
-				const cte = {a: "a", b: "b", d: "σ"};
-				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
-				this._exponentialFit = fit;
-				return fit;
-			}
-		},
-		/**. '{object logarithmicFit}: Retorna um objeto contendo os dados da regressão logarítmica ou '{null} em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}.**/
-		logarithmicFit: {
-			get: function() {
-				if (this.error) return null;
-				if ("_logarithmicFit" in this) return this._logarithmicFit;
-				const X    = new __Array(this.x);
-				const Y    = new __Array(this.y);
-				const data = new __Data2D(this.x, Y.convert(Math.exp, "finite")
-				);
-				if (data.geometricFit === null) {
-					this._logarithmicFit = null;
-					return null;
-				}
-				const sqrs = data.geometricFit;
-				const fit  = {};
-				fit.a = sqrs.b;
-				fit.b = Math.pow(sqrs.a, 1/sqrs.b);
-				fit.f = function(x) {return fit.a*Math.log(fit.b*x);}
-				fit.d = __Data2D(this.y, X.convert(fit.f)).standardDeviation;
-				fit.m = "y = a ln(b x) ± σ";
-				fit.s = fit.m.toString();
-				const cte = {a: "a", b: "b", d: "σ"};
-				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
-				this._logarithmicFit = fit;
-				return fit;
-			}
-		},
-		/**. '{object minDeviation}: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
-		minDeviation: {
-			get: function() {
-				if (this.error) return null;
-				if ("_minDeviation" in this) return this._minDeviation;
-				const fit  = ["linear", "geometric", "exponential", "logarithmic"];
-				const best = {value: Infinity, name: null};
-				for (let i = 0; i < fit.length; i++) {
-					let id = fit[i]+"Fit";
-					if (this[id] !== null && this[id].d < best.value) {
-						 best.value = this[id].d;
-						 best.name  = id;
-						 if (best.value === 0) break;
-					}
-				}
-				this._minDeviation = best.name === null ? null : this[best.name];
-				return this._minDeviation;
-			}
-		},
-		/**. '{number area}: Retorna a soma da área entre a reta que liga as coordenadas e o eixo '{y} em zero ou '{null} em caso de falha.**/
-		area: {
-    	get: function() {
-	    	if (this.error) return null;
-				if ("_area" in this) return this._area;
-				const x  = this.x;
-				const y  = this.y;
-				let area = 0;
-				for (let i = 1; i < x.length; i++)
-					area += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
-				this._area = area;
-				return this._area;
-		  }
-    },
-    /**. '{number average}: Retorna a média do valor obtido com o atributo '{area} ou '{null} em caso de falha.**/
-    average: {
-    	get: function() {
-    		if (this.area === null) return null;
-    		if ("_average" in this) return this._average;
-    		const data = new __Array(this.x);
-    		const div  = data.max - data.min;
-    		this._average = div === 0 ? null : this.area / div;
-    		return this._average;
-    	}
-    },
-	});

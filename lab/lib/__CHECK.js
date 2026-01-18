@@ -1,6 +1,13 @@
 /**
 #3 Checagem de Tipos
 O objeto '{__CHECK} estabelece as regras para identificação dos tipos básicos e seus valores.
+Os métodos de checagem retornam um objeto em caso de sucesso ou nulo:
+|Propriedade|Tipo|Descrição|
+|type|string|Descreve o tipo de dado|
+|string|string|Visualização retornada do método '{toString}|
+|value|any|Visualização retornada do método '{valueOf}|
+|default|any|Valor padrão do dado que, se ausente, será definido como '{value}|
+O construtor '{__Type} utilizará tais informações para sua orientação.
 **/
 const __CHECK = {
 	reEmail: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,

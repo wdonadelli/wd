@@ -87,7 +87,6 @@ const __DATETIME = {
 		{flag: {H: 1, m: 2},             type: "time", model: "(H):(mm)"},
 		{flag: {h: 1, m: 2, s: 3, p: 4}, type: "time", model: "(h):(mm):(ss) (p)"},
 		{flag: {h: 1, m: 2, p: 3},       type: "time", model: "(h):(mm) (p)"},
-		//TODO week	WWYYYY	01, 2010 (semana de 01-54)
 	],
 	/**. '{object getNames(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
 	getNames: function(lang) {
@@ -268,6 +267,7 @@ const __DATETIME = {
 		this.string(data);
 		this.value(data);
 		this.form(data);
+		data.default = data.string;
 		return data;
 	},
 	/**. '{object match(string value)}: Retorna os dados da informação se '{value} casar com algum i{template}.**/
@@ -276,7 +276,7 @@ const __DATETIME = {
 		const type = typeof value;
 		/*-- para o objeto padrão Date --*/
 		if (type === "object" && value instanceof Date)
-			return this.matchDate(value);
+			return this.parserDate(value);
 		/*-- para tempo em forma de string --*/
 		if (type === "string" || (type === "object" && value instanceof String)) {
 			const string = String(value).trim();
@@ -287,8 +287,8 @@ const __DATETIME = {
 		}
 		return null;
 	},
-	/**. '{object matchDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
-	matchDate: function(date) {
+	/**. '{object parserDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
+	parserDate: function(date) {
 		const data = {
 			P: date.getFullYear() < 0 ? "-" : "",
 			Y: Math.abs(date.getFullYear()), M: date.getMonth() + 1, D: date.getDate(),
@@ -300,6 +300,7 @@ const __DATETIME = {
 		this.string(data);
 		this.value(data);
 		this.form(data);
+		data.default = data.string;
 		return data;
 	},
 	/**. '{integer daysElapsedYear(integer year)}: Retorna número de dias decorridos desde 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
@@ -349,7 +350,7 @@ const __DATETIME = {
 	},
 	/**. '{string string(object flag)}: Analisa e manipula a i{flag} recebida para definir o formato textual.**/
 	string: function(flag) {
-		flag.string = "";
+		flag.string  = "";
 		if (flag.type === "date" || flag.type === "datetime") {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
 			flag.string += flag.P + String("0").repeat(len) + String(flag.Y) + "-";
@@ -369,7 +370,7 @@ const __DATETIME = {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
 			flag.string += flag.P + String("0").repeat(len) + String(flag.Y) + "-W";
 			flag.string += (flag.w < 10 ? "0" : "") + String(flag.w);
-			flag.string += flag.d === 2 ? "" : "-" + String(flag.d === 1 ? 7 : flag.d - 1);
+			flag.string += "-" + String(flag.d === 1 ? 7 : flag.d - 1);
 		}
 		else if (flag.type === "month") {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
@@ -404,9 +405,4 @@ const __DATETIME = {
 			flag.form = flag.string;
 		return flag;
 	},
-
-
-
-
-
 };

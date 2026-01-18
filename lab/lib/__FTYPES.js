@@ -43,7 +43,7 @@ const __FTYPES = {
 	},
 	date:     function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null || data.type !== "date";
 		if (read)  return fail ? "" : data.form;
 		if (!fail) this.text(node, data.form);
@@ -51,7 +51,7 @@ const __FTYPES = {
 	},
 	time:     function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null || data.type !== "time";
 		if (read)  return fail ? "" : data.form;
 		if (!fail) this.text(node, data.form);
@@ -59,7 +59,7 @@ const __FTYPES = {
 	},
 	month:    function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null || data.type !== "month";
 		if (read)  return fail ? "" : data.form;
 		if (!fail) this.text(node, data.form);
@@ -67,7 +67,7 @@ const __FTYPES = {
 	},
 	week:     function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null || data.type !== "week";
 		if (read)  return fail ? "" : data.form;
 		if (!fail) this.text(node, data.form);
@@ -75,7 +75,7 @@ const __FTYPES = {
 	},
 	"datetime-local": function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null || data.type !== "datetime";
 		if (read)  return fail ? "" : data.form;
 		if (!fail) this.text(node, data.form);
@@ -83,10 +83,10 @@ const __FTYPES = {
 	},
 	datetime: function(node, value) {
 		const read = value === undefined;
-		const data = __DATETIME.test(read ? this.text(node) : value);
+		const data = __DATETIME.match(read ? this.text(node) : value);
 		const fail = data === null;
-		if (read)  return fail ? "" : data.iso;
-		if (!fail) this.text(node, data.iso);
+		if (read)  return fail ? "" : data.string;
+		if (!fail) this.text(node, data.string);
 		return this.datetime(node);
 	},
 	radio: function(node, value) {

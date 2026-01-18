@@ -1,13 +1,12 @@
 /**
 #3 Tipologia
-O constructor '{__Type} tem o objetivo de definir o tipo do valor recebido como argumento.
+O constructor '{__Type} tem o objetivo de definir o tipo do valor recebido como argumento (ver objeto '{__CHECK}).
 **/
 function __Type(input) {
 	if (!(this instanceof __Type)) return new __Type(input);
 	const data = __CHECK.match(input);
 	Object.defineProperties(this, {
 		_input: {value: input},
-		_chars: {value: typeof input === "string"},
 		_data:  {value: data},
 	});
 }
@@ -18,7 +17,7 @@ Object.defineProperties(__Type.prototype, {
 	/**. '{string type}: Retorna o tipo do argumento verificado.**/
 	type: {get: function() {return this._data.type;}},
 	/**. '{any  value}: Retorna o valor do argumento de acordo com o atributo '{type}.**/
-	value: {get: function() {return this._data.value;}},
+	value: {get: function() {return "default" in this._data ? this._data.default : this._data.value;}},
 	/**. '{void  valueOf()}: Método padrão.**/
 	valueOf: {value: function() {return this._data.value;}},
 	/**. '{string toString()}: Método padrão.**/
@@ -27,7 +26,7 @@ Object.defineProperties(__Type.prototype, {
 	/**. '{boolean string}: Checa se o valor é uma string u{diferente de número, data ou tempo}.**/
 	string: {get: function() {return this.type === "string";}},
 	/**. '{boolean chars}: Checa se o valor é uma string.**/
-	chars: {get: function() {return this._chars;}},
+	chars: {get: function() {return typeof this._input === "string";}},
 	/**. '{boolean empty}: Checa se o valor é uma string de caracteres não visualizáveis.**/
 	empty: {get: function() {return this.chars && this._input.trim().length === 0;}},
 	/**. '{boolean nonempty}: Checa se o valor é uma string de caracteres visualizáveis.**/
