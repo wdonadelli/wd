@@ -1102,7 +1102,7 @@ const wd = (function() {
 				if (!check.integer)
 					throw TypeError("[daysToYear] Value must be an integer.");
 				value = check.value;
-				/*-- Ano zero --*/
+				/*-- Ano zero (366 dias) --*/
 				if (value >= 0 && value <= 365) return [0];
 				/*-- Correção para contagem dos anos diferentes de zero --*/
 				let   year = 0;

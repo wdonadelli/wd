@@ -326,11 +326,13 @@ const __DATETIME = {
 	},
 	/**. '{number timeElapsed(integer hour, integer minute, integer second)}: Retorna a quantidade total de segundos.**/
 	timeElapsed: function(hour, minute, second) {
-		return 3600*hour + 60*minute + second;
+		return Number((3600*hour + 60*minute + second).toFixed(3));
 	},
 	/**. '{integer dateTimeElapsed(interger year, ...)}: Retorna os segundos decorridos de 0000-01-01T00:00:00 (valor 0) até a hora.**/
 	dateTimeElapsed: function(year, month, day, hour, minute, second) {
-		return 24*3600*this.daysElapsed(year, month, day) + this.timeElapsed(hour, minute, second);
+		const date = 24*3600*this.daysElapsed(year, month, day);
+		const time = this.timeElapsed(hour, minute, second);
+		return Number((date + time).toFixed(3));
 	},
 	/**. '{integer daysElapsedWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
 	daysElapsedWeek: function(year, week, day) {
@@ -340,7 +342,7 @@ const __DATETIME = {
 		const walk = [null,+6,+0,+1,+2,+3,+4,+5][typeof day === "number" ? day : 2];
 		return days + mon + (7*(week - 1)) + walk;
 	},
-	/**. '{integer weekDay(integer year, integer month, integer day)}: Retorna o o dia da semana (1-7).**/
+	/**. '{integer weekDay(integer year, integer month, integer day)}: Retorna o dia da semana (1-7), de domingo a sábado.**/
 	weekDay: function(year, month, day) {
 		/*-- Domingo, 01/01/2023 = 0 --*/
 		const sun = this.daysElapsedYear(2023);
@@ -348,6 +350,115 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? 7 : 0) + gap + 1;
 	},
+	/**. '{integer workDaysYear(integer year, integer month, integer day)}: Retorna os dias úteis decorridos desde o dia 2 de janeiro do ano.**/
+	workDaysYear: function(year, month, day) {
+		const week = this.weekDay(year, 1, 2);
+		const init = this.daysElapsed(year, 1, 2);
+		const last = this.daysElapsed(year, month, day === 1 && month === 1 ? 2 : day);
+		const sun1 = init + [null,0,6,5,4,3,2,1][week];
+		const sat1 = init + [null,6,5,4,3,2,1,0][week];
+		const nsun = Math.ceil((last - sun1)/7);
+		const nsat = Math.ceil((last - sat1)/7);
+		return (last - init) - (nsun + nsat)
+	},
+
+	/**. '{object numberDate(integer value)}: Retorna os dados de '{match} para data a partir dos dias decorridos '{value}.**/
+	numberDate: function(value) {
+		const date = {P: value < 0 ? "-" : "", type: "date", D: Math.abs(value)};
+		/*-- anos (zero e diferente de zero) -------------------------------------*/
+		if (value >= 0 && value < 366) {
+			date.Y = 0;
+			date.D = date.D+1;
+		}
+		/*-- anos maiores que zero, desconta-se os dias já completos e se tira 1 porque não conta o dia ativo, só os completos --*/
+		else {
+			const init = (value > 0 ? -365 : 0) - 1;
+			let   days = date.D + init;
+			/*-- constantes de captura --*/
+			const d001 = 365;
+			const d004 =  4*d001 + 1;
+			const d100 = 25*d004 - 1;
+			const d400 =  4*d100 + 1;
+			/*-- bloco de 400 anos --*/
+			const y400 = Math.trunc(days/d400);
+			days -= y400 * d400;
+			/*-- bloco de 100 anos --*/
+			const y100 = Math.trunc(days/d100);
+			days -= y100 * d100;
+			/*-- bloco de 4 anos --*/
+			const y004 = Math.trunc(days/d004);
+			days -= y004 * d004;
+			/*-- bloco de 1 ano --*/
+			const y001 = Math.trunc(days/d001);
+			days -= y001 * d001;
+			/*-- definindo o ano --*/
+			date.Y = ((400*y400) + (100*y100) + (4*y004) + (1*y001) + 1);
+			date.D = days+1;
+		}
+		/*-- meses ---------------------------------------------------------------*/
+		const leap = this.leap(date.Y);
+		const d012 = [31,leap ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+		const line = value < 0 ? d012.reverse() : d012;
+		/*-- percorrendo os meses até encerrar days --*/
+		date.M = value < 0 ? 12 : 1;
+		let m = -1;
+		while (date.D > line[++m]) {
+			date.M = value < 0 ? (12 - m - 1) : (m + 2);
+			date.D -= line[m];
+		}
+		/*-- dias ----------------------------------------------------------------*/
+		date.D = value < 0 ? (d012[date.M - 1] - date.D) + 1 : date.D;
+		/*-- aprimorando dados e retornando --------------------------------------*/
+		this.date(date);
+		this.value(date);
+		this.string(date);
+		return date;
+	},
+	/**. '{object numberTime(integer value)}: Retorna os dados de '{match} para tempo a partir dos segundos decorridos '{value}.**/
+	numberTime: function(value) {
+		const time = {type: "time"};
+		const h24  = 24*3600;
+		const data = (h24 + value%h24)%h24;
+		time.H     = Math.trunc(data/3600);
+		time.m     = Math.trunc((data - 3600*time.H)/60);
+		time.s     = Number((data - 60*time.m - 3600*time.H).toFixed(3));
+		this.time(time);
+		this.value(time);
+		this.string(time);
+		return time;
+	},
+	/**. '{object numberDateTime(integer value)}: Retorna os dados de '{match} para data/tempo a partir dos segundos decorridos '{value}.**/
+	numberDateTime: function(value) {
+		const time = this.numberTime(value);
+		const h24  = 24*3600;
+		const days = Math.trunc((value - value%h24)/h24) + (value < 0 && time.value !== 0 ? -1 : 0);
+		const date = this.numberDate(days);
+		const data = Object.assign({}, date, time);
+		data.type = "datetime";
+		this.date(data);
+		this.time(data);
+		this.value(data);
+		this.string(data);
+		return data;
+		//FIXME no value fixar para 3 casas decimais
+		//FIXME dá errado para negativo
+		/*const day  = 24*3600;
+		const sec  = value%day;
+		const days = Math.trunc((value - sec)/day);
+		const date = this.daysToDate(days + (value < 0 && sec !== 0 ? -1 : 0)	);
+		const time = this.secondsToTime(sec);
+		return [date[0],date[1],date[2],time[0],time[1],time[2]];*/
+	},
+
+
+
+
+
+
+
+
+
+
 	/**. '{string string(object flag)}: Analisa e manipula a i{flag} recebida para definir o formato textual.**/
 	string: function(flag) {
 		flag.string  = "";
