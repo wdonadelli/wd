@@ -251,18 +251,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
-		/**. '{array _primes}: Lista de números primos até 1000.**/
-		_primes: {value: [
-			2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,
-			103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,
-			199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,
-			313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,
-			433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,
-			563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,
-			673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,
-			811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,
-			941,947,953,967,971,977,983,991,997
-		]},
+
 		/**. '{boolean finite}: Checa se o número é finito.**/
 		finite: {get: function() {return this._check.finite;}},
 		/**. '{number valueOf()}: Retorna o valor numérico.**/
@@ -282,54 +271,8 @@ const wd = (function() {
 				return "unknow";
 			}
 		},
-		/**. '{string random(object options)}: Retorna conjuntos de números inteiros "aleatórios" conforme especificado no argumento '{options}:
-		|Nome|Descrição|
-		|min|Número inteiro que indica o menor valor do conjunto|
-		|max|Número inteiro que indica o maior valor do conjunto|
-		|len|Número inteiro que indica o tamanho do conjunto|
-		|set|Número inteiro que indica a quantidade de conjuntos|**/
-		random: {
-			value: function(options) {
-				/*-----------------------------------------------
-				let a = new Uint8Array(len);
-				window.crypto.getRandomValues(a)
-				-----------------------------------------------*/
-				if (!__Type(options).object) options = {};
-				const min  = "min" in options ? Number(options.min) : 1;
-				const max  = "max" in options ? Number(options.max) : 60;
-				const len  = "len" in options ? Number(options.len) : 6;
-				const set  = "set" in options ? Number(options.set) : 3;
-				const bets = [];
-				let bet, list, num;
-				while (bets.length < set) {
-					list = [];
-					while (list.length < len) {
-						num = Math.trunc(min) + Math.trunc(max*Math.random());
-						if (list.indexOf(num) < 0) list.push(num);
-					}
-					list.sort(function (a,b) {return a < b ? -1 : 1;});
-					bet = list.join("\t");
-					if (bets.indexOf(bet) < 0) bets.push(bet);
-				}
-				return bets.join("\n");
-			}
-		},
-		/**. '{array crypto(integer bit, integer len)}: Retorna uma lista de '{len} itens contendo números inteiros de comprimento '{bit} (8, 16 ou 32).**/
-		crypto: {
-			value: function(bit, len) {
-				bit = Number(bit);
-				len = Number(len);
-				len = isFinite(len) && len >= 1 ? Math.trunc(len) : 1;
-				let array;
-				switch(bit) {
-					case 32: array = new Uint32Array(len); break;
-					case 16: array = new Uint16Array(len); break;
-					default: array = new Uint8Array(len);  break;
-				}
-				window.crypto.getRandomValues(array);
-				return array;
-			}
-		},
+
+
 		/**. '{float dec}: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
 		dec: {
 			get: function() {
@@ -351,110 +294,8 @@ const wd = (function() {
 				return round ?  fixed : cut;
 			}
 		},
-		/**. '{array primes}: Retorna uma lista com os números primos até o número informado.**/
-		primes: {
-			get: function() {
-				if (this.abs < 2) return [];
-				const value = this.abs;
-				/*-- Checando se o número primo já consta na lista --*/
-				const last = this._primes[this._primes.length - 1];
-				if (value <= last) {
-					let i = 0;
-					while (value >= this._primes[i]) i++;
-					return this._primes.slice(0, i);
-				}
-				/*-- Adicionando novos números primos --*/
-				for (let num = last+2; num <= value; num += 2) {
-					for (let item = 0; item < this._primes.length; item++) {
-						if (num % this._primes[item] === 0)
-							break;
-						else if (item === this._primes.length - 1)
-							this._primes.push(num);
-					}
-				}
-				return this._primes;
-			}
-		},
-		/**. '{boolean prime}: Checa se número é primo.**/
-		prime: {
-			get: function() {
-				/*-- testar se é um inteiro maior que 1 --*/
-				if (this.type !== "integer" || this.value < 2)
-					return false;
-				/*-- testar se ele já existe na lista --*/
-				if (this.value <= this._primes[this._primes.length - 1])
-					return this._primes.indexOf(this.value) >= 0;
-				/*-- verificando se não é divisível por primo --*/
-				for (let i = 0; i < this._primes.length; i++)
-					if (this.value%this._primes[i] === 0) return false;
-				/*-- capturando novos primos até a raiz do número --*/
-				new __Number(this.value).primes;
-				return this.prime;
-			}
-		},
-		/**. '{array factorization}: Retorna a fatorização do inteiro em números primos.**/
-		factorization: {
-			get: function() {
-				if (this.type !== "integer") return [];
-				const list = [];
-				let value  = Math.abs(this.int);
-				let primes = this._primes;
-				let item   = 0;
-				/*-- Looping sobre os primos existentes --*/
-				while (value >= primes[item] && item < primes.length) {
-					if (value%primes[item] === 0) {
-						value = value / primes[item];
-						list.push(primes[item]);
-					} else {item++;}
-				}
-				/*-- Looping sobre os primos extraordinários --*/
-				if (value > 1) {
-					new __Number(value).primes;
-					while (value >= primes[item] && item < primes.length) {
-						if (value%primes[item] === 0) {
-							value = value / primes[item];
-							list.push(primes[item]);
-						} else {item++;}
-					}
-				}
-				return list;
-			}
-		},
-		/**. '{number gcd(...)}: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
-		gcd: {
-			value: function() {
-				const fact = this.factorization;
-				const gcd  = [1];
-				const args = [];
-				/*-- Capturando a fatorização dos argumentos --*/
-				for (let i = 0; i < arguments.length; i++) {
-					let check = __Type(arguments[i]);
-					if (check.integer) {
-						let number = new __Number(check.value);
-						args.push(number.factorization)
-					}
-				}
-				/*-- Checando fatores em comum --*/
-				for (let i = 0; i < fact.length; i++) {
-					let found = true;
-					let value = fact[i];
-					for (let j = 0; j < args.length; j++) {
-						let index = args[j].indexOf(value);
-						if (index < 0) {
-							found = false;
-							break;
-						} else {
-							args[j][index] = null;
-						}
-					}
-					if (found) gcd.push(value);
-				}
-				/*-- Calculando Máximo Divisor Comum --*/
-				let value = 1;
-				for (let i = 0; i < gcd.length; i++) value = value * gcd[i];
-				return value;
-			}
-		},
+
+
 		/**. '{string frac}: Retorna a notação numérica em forma de fração com máximo de 6 dígitos no numerador e aproximação de até 6 casas decimais.**/
 		frac: {
 			get: function() {

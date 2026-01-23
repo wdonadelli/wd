@@ -202,7 +202,7 @@ const __DATETIME = {
 		const max = [null,31,(this.leap(flag.Y) ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
 		if (flag.D > max[flag.M]) return false;
 		/*-- outros valores --*/
-		flag.d = this.weekDay(flag.Y, flag.M, flag.D);
+		flag.d = this.idWeekDay(flag.Y, flag.M, flag.D);
 		return true;
 	},
 	/**. '{boolean time(object flag)}: Analisa e manipula a i{flag} recebida e, se o tempo for correto, retorna verdadeiro.**/
@@ -232,7 +232,7 @@ const __DATETIME = {
 		/*-- chencando ano --*/
 		flag.P = flag.P === "-" ? (flag.Y === 0 ? "" : "-") : "";
 		/*-- checando limite --*/
-		const init = this.weekDay(flag.Y, 1, 1);
+		const init = this.idWeekDay(flag.Y, 1, 1);
 		const max  = init === 5 || (init === 4 && this.leap(flag.Y)) ? 53 : 52;
 		if (flag.w > max) return false;
 		/*-- acertando o dia da semana (conflito domingo x segunda) --*/
@@ -303,58 +303,68 @@ const __DATETIME = {
 		data.default = data.string;
 		return data;
 	},
-	/**. '{integer daysElapsedYear(integer year)}: Retorna número de dias decorridos desde 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
-	daysElapsedYear: function(year) {
-		let   days = year > 0 ? 365 : 0;
-		let   back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
+	/**. '{integer idYear(integer year)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0) em primeiro de janeiro do ano.**/
+	idYear: function(year) {
+		//let   days = year > 0 ? 365 : 0;
+		//let   back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
+
+		const zero = year > 0 ? 365 : 0;
+		const back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
 		const y365 = 365*year;
 		const y400 = Math.trunc(year/400);
 		const y004 = Math.trunc(year/4);
 		const y100 = Math.trunc(year/100);
-		days += y365 + y004 - y100 + y400;
-		return days - back;
+		return zero + y365 + y004 - y100 + y400 - back;
 	},
-	/**. '{integer daysElapsedMonth(integer year, integer month)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
-	daysElapsedMonth: function(year, month) {
-		const len = [null,0,31,59,90,120,151,181,212,243,273,304,334];
+	/**. '{integer idMonth(integer year, integer month)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0) no primeiro dia do mês.**/
+	idMonth: function(year, month) {
+		const len = [0,0,31,59,90,120,151,181,212,243,273,304,334];
 		const gap = month > 2 && this.leap(year) ? 1 : 0;
-		return this.daysElapsedYear(year) + len[month] + gap;
+		return this.idYear(year) + len[month] + gap;
 	},
-	/**. '{integer daysElapsed(integer year, integer month, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até o dia.**/
-	daysElapsed: function(year, month, day) {
-		return this.daysElapsedMonth(year, month) + day - 1;
+	/**. '{integer idDay(integer year, integer month, integer day)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0)**/
+	idDay: function(year, month, day) {
+		return this.idMonth(year, month) + day - 1;
 	},
-	/**. '{number timeElapsed(integer hour, integer minute, integer second)}: Retorna a quantidade total de segundos.**/
-	timeElapsed: function(hour, minute, second) {
-		return Number((3600*hour + 60*minute + second).toFixed(3));
+/**. '{number idTime(integer hour, integer minute, integer second)}: Retorna o ID do tempo (segundos) a partir de 00:00 (valor 0).**/
+	idTime: function(hour, minute, second) {
+		return Number((3600*Math.abs(hour) + 60*Math.abs(minute) + Math.abs(second)).toFixed(3));
 	},
-	/**. '{integer dateTimeElapsed(interger year, ...)}: Retorna os segundos decorridos de 0000-01-01T00:00:00 (valor 0) até a hora.**/
-	dateTimeElapsed: function(year, month, day, hour, minute, second) {
-		const date = 24*3600*this.daysElapsed(year, month, day);
-		const time = this.timeElapsed(hour, minute, second);
+	/**. '{integer idDateTime(interger year, ...)}: Retorna o ID de data/tempo a partir de 0000-01-01:00:00:00 (valor 0) até a hora.**/
+	idDateTime: function(year, month, day, hour, minute, second) {
+		const date = 24*3600*this.idDay(year, month, day);
+		const time = this.idTime(hour, minute, second);
 		return Number((date + time).toFixed(3));
 	},
-	/**. '{integer daysElapsedWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
-	daysElapsedWeek: function(year, week, day) {
-		const days = this.daysElapsed(year, 1, 1);
-		const init = this.weekDay(year, 1, 1);
+	/**. '{integer idWeekDay(integer year, integer month, integer day)}: Retorna o dia da semana (1-7), de domingo a sábado.**/
+	idWeekDay: function(year, month, day) {
+		/*-- Domingo, 01/01/2023 = 0 --*/
+		//FIXME para dias negativos é diferente
+		const sun = this.idDay(2023, 1, 1);
+		const now = this.idDay(year, month, day);
+		const gap = (now < 0 ? 7*(1 + Math.trunc()
+
+
+
+
+
+		const gap = (now - sun)%7;
+		return (gap < 0 ? 7 : 0) + gap + 1;
+	},
+	/**. '{integer idDayWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
+	idDayWeek: function(year, week, day) {
+		const days = this.idDay(year, 1, 1);
+		const init = this.idWeekDay(year, 1, 1);
 		const mon  = [null,+1,+0,-1,-2,-3,+3,+2][init];
 		const walk = [null,+6,+0,+1,+2,+3,+4,+5][typeof day === "number" ? day : 2];
 		return days + mon + (7*(week - 1)) + walk;
 	},
-	/**. '{integer weekDay(integer year, integer month, integer day)}: Retorna o dia da semana (1-7), de domingo a sábado.**/
-	weekDay: function(year, month, day) {
-		/*-- Domingo, 01/01/2023 = 0 --*/
-		const sun = this.daysElapsedYear(2023);
-		const now = this.daysElapsed(year, month, day);
-		const gap = (now - sun)%7;
-		return (gap < 0 ? 7 : 0) + gap + 1;
-	},
+
 	/**. '{integer workDaysYear(integer year, integer month, integer day)}: Retorna os dias úteis decorridos desde o dia 2 de janeiro do ano.**/
 	workDaysYear: function(year, month, day) {
-		const week = this.weekDay(year, 1, 2);
-		const init = this.daysElapsed(year, 1, 2);
-		const last = this.daysElapsed(year, month, day === 1 && month === 1 ? 2 : day);
+		const week = this.idWeekDay(year, 1, 2);
+		const init = this.idDay(year, 1, 2);
+		const last = this.idDay(year, month, day === 1 && month === 1 ? 2 : day);
 		const sun1 = init + [null,0,6,5,4,3,2,1][week];
 		const sat1 = init + [null,6,5,4,3,2,1,0][week];
 		const nsun = Math.ceil((last - sun1)/7);
@@ -406,6 +416,7 @@ const __DATETIME = {
 			date.M = value < 0 ? (12 - m - 1) : (m + 2);
 			date.D -= line[m];
 		}
+		//FIXME para negativo, o ano bissexto tem um dia de diferença a ser levado em consideração
 		/*-- dias ----------------------------------------------------------------*/
 		date.D = value < 0 ? (d012[date.M - 1] - date.D) + 1 : date.D;
 		/*-- aprimorando dados e retornando --------------------------------------*/
@@ -449,16 +460,6 @@ const __DATETIME = {
 		const time = this.secondsToTime(sec);
 		return [date[0],date[1],date[2],time[0],time[1],time[2]];*/
 	},
-
-
-
-
-
-
-
-
-
-
 	/**. '{string string(object flag)}: Analisa e manipula a i{flag} recebida para definir o formato textual.**/
 	string: function(flag) {
 		flag.string  = "";
@@ -493,15 +494,15 @@ const __DATETIME = {
 	/**. '{integer value(object flag)}: Analisa e manipula a i{flag} recebida para definir o valor.**/
 	value: function(flag) {
 		if (flag.type === "datetime")
-			flag.value = this.dateTimeElapsed(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s);
+			flag.value = this.idDateTime(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s);
 		else if (flag.type === "date")
-			flag.value = this.daysElapsed(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
+			flag.value = this.idDay(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
 		else if (flag.type === "time")
-			flag.value = this.timeElapsed(flag.H, flag.m, flag.s);
+			flag.value = this.idTime(flag.H, flag.m, flag.s);
 		else if (flag.type === "month")
-			flag.value = this.daysElapsedMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
+			flag.value = this.idMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
 		else if (flag.type === "week")
-			flag.value = this.daysElapsedWeek(flag.P === "-" ? -flag.Y : flag.Y, flag.w, flag.d);
+			flag.value = this.idDayWeek(flag.P === "-" ? -flag.Y : flag.Y, flag.w, flag.d);
 		return flag.value;
 	},
 	/**. '{string form(object flag)}: Analisa e manipula a i{flag} recebida para definir o valor para formulário HTML.**/
@@ -516,4 +517,52 @@ const __DATETIME = {
 			flag.form = flag.string;
 		return flag;
 	},
+
+	/**. '{void random(string type)}: Faz teste nos métodos que traduzem números em tempo '{type}.**/
+	random: function(type) {
+		const conf = {
+			time:     {bit: 16, name: "numberTime"},
+			date:     {bit: 16, name: "numberDate"},
+			datetime: {bit: 32, name: "numberDateTime"},
+		};
+		const attr = type in conf ? conf[type] : conf.datetime;
+		const list = __MATH.crypto(attr.bit, 10, false);
+		for (let i = 0; i < list.length; i++) {
+			let fromInt = this[attr.name](list[i]);
+			let fromStr = this.match(fromInt.string);
+			if (list[i] !== fromStr.value)
+				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > ${fromStr.value} (${fromStr.value - list[i]})`);
+		}
+		return;
+	},
+	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
+	linear: function(min, max) {
+		const days = [0,31,28,31,30,31,30,31,31,30,31,30,31]
+		let base   = this.numberDate(min);
+		let value  = base.value;
+		let string = base.string;
+		let day    = base.d;
+		for (let i = min; i < max; i++) {
+			days[2] = this.leap(base.Y) ? 29 : 28;
+			/*-- adiantando um dia --*/
+			base.D = base.D === days[base.M] ? 1 : base.D+1;
+			base.M = base.D === 1 ? (base.M === 12 ? 1 : base.M + 1) : base.M;
+			base.Y = base.D === 1 && base.M === 1 ? base.Y + (base.P === "-" ? -1 : 1) : base.Y;
+			this.date(base);
+			this.value(base);
+			this.string(base);
+			/*-- checando continuidade --*/
+			if (base.value - value !== 1)
+				throw new Error(`value Error: ${string} > ${value} / ${base.string} > ${base.value}`);
+			if (base.d === 1 ? day !== 7 : (base.d - day !== 1))
+				throw new Error(`day Error: ${string} > ${day} / ${base.string} > ${base.d}`);
+			/*-- redefinindo valores --*/
+			value  = base.value;
+			string = base.string;
+			day    = base.d;
+		}
+		return;
+	},
+
+
 };
