@@ -202,7 +202,7 @@ const __DATETIME = {
 		const max = [null,31,(this.leap(flag.Y) ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
 		if (flag.D > max[flag.M]) return false;
 		/*-- outros valores --*/
-		flag.d = this.idWeekDay(flag.Y, flag.M, flag.D);
+		flag.d = this.idWeekDay(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
 		return true;
 	},
 	/**. '{boolean time(object flag)}: Analisa e manipula a i{flag} recebida e, se o tempo for correto, retorna verdadeiro.**/
@@ -245,6 +245,24 @@ const __DATETIME = {
 		}
 		return true;
 	},
+	/**. '{object dateTimeAdjustment(object data)}: Recebe os dados básicos, checa, detalha e o retorna ou nulo.**/
+	dateTimeAdjustment: function(data) {
+		/*-- checagem --*/
+		if ((data.type === "date" || data.type === "datetime") && !this.date(data))
+			return null;
+		if ((data.type === "time" || data.type === "datetime") && !this.time(data))
+			return null;
+		if (data.type === "week" && !this.week(data))
+			return null;
+		if (data.type === "month" && !this.month(data))
+			return null;
+		/*-- complemento --*/
+		this.string(data);
+		this.value(data);
+		this.form(data);
+		data.default = data.string;
+		return data;
+	},
 	/**. '{object parser(string value, object match)}: Captura e retorna os dados casados ou nulo.**/
 	parser: function(value, match) {
 		const data = {type: match.type};
@@ -254,21 +272,7 @@ const __DATETIME = {
 			let str = find[match.flag[i]] === undefined ? "" : find[match.flag[i]];
 			data[i] = str !== "" && isFinite(str) ? Number(str) : str.toUpperCase();
 		}
-		/*-- analisar dados --*/
-		if ((data.type === "date" || data.type === "datetime") && !this.date(data))
-			return null;
-		if ((data.type === "time" || data.type === "datetime") && !this.time(data))
-			return null;
-		if (data.type === "week" && !this.week(data))
-			return null;
-		if (data.type === "month" && !this.month(data))
-			return null;
-		/*-- string, value, form --*/
-		this.string(data);
-		this.value(data);
-		this.form(data);
-		data.default = data.string;
-		return data;
+		return this.dateTimeAdjustment(data);
 	},
 	/**. '{object match(string value)}: Retorna os dados da informação se '{value} casar com algum i{template}.**/
 	match: function(value) {
@@ -295,19 +299,10 @@ const __DATETIME = {
 			H: date.getHours(),              m: date.getMinutes(),   s: date.getSeconds()+(date.getMilliseconds()/1000),
 			type: "datetime",
 		};
-		this.date(data);
-		this.time(data);
-		this.string(data);
-		this.value(data);
-		this.form(data);
-		data.default = data.string;
-		return data;
+		return this.dateTimeAdjustment(data);
 	},
 	/**. '{integer idYear(integer year)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0) em primeiro de janeiro do ano.**/
 	idYear: function(year) {
-		//let   days = year > 0 ? 365 : 0;
-		//let   back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
-
 		const zero = year > 0 ? 365 : 0;
 		const back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
 		const y365 = 365*year;
@@ -339,17 +334,10 @@ const __DATETIME = {
 	/**. '{integer idWeekDay(integer year, integer month, integer day)}: Retorna o dia da semana (1-7), de domingo a sábado.**/
 	idWeekDay: function(year, month, day) {
 		/*-- Domingo, 01/01/2023 = 0 --*/
-		//FIXME para dias negativos é diferente
 		const sun = this.idDay(2023, 1, 1);
 		const now = this.idDay(year, month, day);
-		const gap = (now < 0 ? 7*(1 + Math.trunc()
-
-
-
-
-
 		const gap = (now - sun)%7;
-		return (gap < 0 ? 7 : 0) + gap + 1;
+		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
 	/**. '{integer idDayWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
 	idDayWeek: function(year, week, day) {
@@ -359,7 +347,6 @@ const __DATETIME = {
 		const walk = [null,+6,+0,+1,+2,+3,+4,+5][typeof day === "number" ? day : 2];
 		return days + mon + (7*(week - 1)) + walk;
 	},
-
 	/**. '{integer workDaysYear(integer year, integer month, integer day)}: Retorna os dias úteis decorridos desde o dia 2 de janeiro do ano.**/
 	workDaysYear: function(year, month, day) {
 		const week = this.idWeekDay(year, 1, 2);
@@ -371,94 +358,65 @@ const __DATETIME = {
 		const nsat = Math.ceil((last - sat1)/7);
 		return (last - init) - (nsun + nsat)
 	},
-
-	/**. '{object numberDate(integer value)}: Retorna os dados de '{match} para data a partir dos dias decorridos '{value}.**/
-	numberDate: function(value) {
-		const date = {P: value < 0 ? "-" : "", type: "date", D: Math.abs(value)};
-		/*-- anos (zero e diferente de zero) -------------------------------------*/
-		if (value >= 0 && value < 366) {
-			date.Y = 0;
-			date.D = date.D+1;
-		}
-		/*-- anos maiores que zero, desconta-se os dias já completos e se tira 1 porque não conta o dia ativo, só os completos --*/
-		else {
-			const init = (value > 0 ? -365 : 0) - 1;
-			let   days = date.D + init;
-			/*-- constantes de captura --*/
-			const d001 = 365;
-			const d004 =  4*d001 + 1;
-			const d100 = 25*d004 - 1;
-			const d400 =  4*d100 + 1;
-			/*-- bloco de 400 anos --*/
-			const y400 = Math.trunc(days/d400);
-			days -= y400 * d400;
-			/*-- bloco de 100 anos --*/
-			const y100 = Math.trunc(days/d100);
-			days -= y100 * d100;
-			/*-- bloco de 4 anos --*/
-			const y004 = Math.trunc(days/d004);
-			days -= y004 * d004;
-			/*-- bloco de 1 ano --*/
-			const y001 = Math.trunc(days/d001);
-			days -= y001 * d001;
-			/*-- definindo o ano --*/
-			date.Y = ((400*y400) + (100*y100) + (4*y004) + (1*y001) + 1);
-			date.D = days+1;
-		}
-		/*-- meses ---------------------------------------------------------------*/
-		const leap = this.leap(date.Y);
-		const d012 = [31,leap ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
-		const line = value < 0 ? d012.reverse() : d012;
-		/*-- percorrendo os meses até encerrar days --*/
-		date.M = value < 0 ? 12 : 1;
-		let m = -1;
-		while (date.D > line[++m]) {
-			date.M = value < 0 ? (12 - m - 1) : (m + 2);
-			date.D -= line[m];
-		}
-		//FIXME para negativo, o ano bissexto tem um dia de diferença a ser levado em consideração
-		/*-- dias ----------------------------------------------------------------*/
-		date.D = value < 0 ? (d012[date.M - 1] - date.D) + 1 : date.D;
-		/*-- aprimorando dados e retornando --------------------------------------*/
-		this.date(date);
-		this.value(date);
-		this.string(date);
-		return date;
+	/**. '{number safe(integer id)}: Retorna o valor entre o menor e o maior inteiro permitido**/
+	safe: function(id) {
+		const safe = id < 0 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+		return Number((id < 0 ? (id < safe ? safe : id) : (id > safe ? safe : id)).toFixed(3));
 	},
-	/**. '{object numberTime(integer value)}: Retorna os dados de '{match} para tempo a partir dos segundos decorridos '{value}.**/
-	numberTime: function(value) {
+	/**. '{integer yearID(integer id)}: Retorna o ano a partir do '{id}.**/
+	yearID: function(id) {
+		id = this.safe(id);
+		const d400 = 4*(25*(4*365+1)-1)+1;
+		let   year = Math.trunc((id*400)/d400);
+		let   init = this.idYear(year);
+		let   last = init + (this.leap(year) ? 365 : 364);
+		while (id < init || id > last) {
+			year += id < init ? -1 : 1;
+			init  = this.idYear(year);
+			last  = init + (this.leap(year) ? 365 : 364);
+		}
+		return year;
+	},
+	/**. '{object dateID(integer id)}: Retorna os dados de '{match} para data a partir do '{id} em u{dias}.**/
+	dateID: function (id) {
+		id = this.safe(id);
+		const year = this.yearID(id);
+		const leap = this.leap(year);
+		const days = [31,leap ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+		const date = {P: id < 0 ? "-" : "", type: "date", Y: Math.abs(year), M: id < 0 ? 11 : 0};
+		const rest = id - this.idYear(year);
+		/*-- ajustando MÊS e DIA --*/
+		date.D = id < 0 ? ((leap ? 366 : 365) - rest) : (rest + 1);
+		date.M = id < 0 ? 11 : 0;
+		while (date.D > days[date.M]) {
+			date.D -= days[date.M];
+			date.M += id < 0 ? -1 : 1;
+		}
+		date.D = id < 0 ? (days[date.M] - date.D + 1) : date.D;
+		date.M++;
+		return this.dateTimeAdjustment(date);
+	},
+	/**. '{object timeId(integer id)}: Retorna os dados de '{match} para tempo a partir do '{id} em u{segundos}.**/
+	timeID: function(id) {
+		id = this.safe(id);
 		const time = {type: "time"};
 		const h24  = 24*3600;
-		const data = (h24 + value%h24)%h24;
+		const data = (h24 + id%h24)%h24;
 		time.H     = Math.trunc(data/3600);
 		time.m     = Math.trunc((data - 3600*time.H)/60);
 		time.s     = Number((data - 60*time.m - 3600*time.H).toFixed(3));
-		this.time(time);
-		this.value(time);
-		this.string(time);
-		return time;
+		return this.dateTimeAdjustment(time);
 	},
-	/**. '{object numberDateTime(integer value)}: Retorna os dados de '{match} para data/tempo a partir dos segundos decorridos '{value}.**/
-	numberDateTime: function(value) {
-		const time = this.numberTime(value);
+	/**. '{object dateTimeID(integer id)}: Retorna os dados de '{match} para data/tempo a partir do '{id} em u{segundos}.**/
+	dateTimeID: function(id) {
+		id = this.safe(id);
+		const time = this.timeID(id);
 		const h24  = 24*3600;
-		const days = Math.trunc((value - value%h24)/h24) + (value < 0 && time.value !== 0 ? -1 : 0);
-		const date = this.numberDate(days);
+		const days = Math.trunc((id - id%h24)/h24) + (id < 0 && time.value !== 0 ? -1 : 0);
+		const date = this.dateID(days);
 		const data = Object.assign({}, date, time);
-		data.type = "datetime";
-		this.date(data);
-		this.time(data);
-		this.value(data);
-		this.string(data);
-		return data;
-		//FIXME no value fixar para 3 casas decimais
-		//FIXME dá errado para negativo
-		/*const day  = 24*3600;
-		const sec  = value%day;
-		const days = Math.trunc((value - sec)/day);
-		const date = this.daysToDate(days + (value < 0 && sec !== 0 ? -1 : 0)	);
-		const time = this.secondsToTime(sec);
-		return [date[0],date[1],date[2],time[0],time[1],time[2]];*/
+		data.type  = "datetime";
+		return this.dateTimeAdjustment(data);
 	},
 	/**. '{string string(object flag)}: Analisa e manipula a i{flag} recebida para definir o formato textual.**/
 	string: function(flag) {
@@ -517,19 +475,25 @@ const __DATETIME = {
 			flag.form = flag.string;
 		return flag;
 	},
-
 	/**. '{void random(string type)}: Faz teste nos métodos que traduzem números em tempo '{type}.**/
 	random: function(type) {
 		const conf = {
-			time:     {bit: 16, name: "numberTime"},
-			date:     {bit: 16, name: "numberDate"},
-			datetime: {bit: 32, name: "numberDateTime"},
+			time:     {bit: 16, name: "timeID"},
+			date:     {bit: 16, name: "dateID"},
+			datetime: {bit: 32, name: "dateTimeID"},
 		};
 		const attr = type in conf ? conf[type] : conf.datetime;
-		const list = __MATH.crypto(attr.bit, 10, false);
+		const list = __MATH.crypto(attr.bit, 10000, false);
 		for (let i = 0; i < list.length; i++) {
+			/*-- obter e checar de id para string --*/
 			let fromInt = this[attr.name](list[i]);
+			if (fromInt === null)
+				throw new Error(`${attr.name} Error: ${list[i]} > null (${i})`);
+			/*-- retornar de string para id --*/
 			let fromStr = this.match(fromInt.string);
+			if (fromStr === null)
+				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > null (${i})`);
+			/*-- comparar a coerência --*/
 			if (list[i] !== fromStr.value)
 				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > ${fromStr.value} (${fromStr.value - list[i]})`);
 		}
@@ -537,8 +501,8 @@ const __DATETIME = {
 	},
 	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
 	linear: function(min, max) {
-		const days = [0,31,28,31,30,31,30,31,31,30,31,30,31]
-		let base   = this.numberDate(min);
+		const days = [0,31,28,31,30,31,30,31,31,30,31,30,31];
+		let base   = this.dateID(min);
 		let value  = base.value;
 		let string = base.string;
 		let day    = base.d;
@@ -563,6 +527,14 @@ const __DATETIME = {
 		}
 		return;
 	},
+
+	walkMonth: function(year, month, value) {
+		const data = Math.abs(12*year) + (month - 1) + (value - month);
+		const rest = data%12;
+		return {Y: (data-rest)/12, M: Math.abs(rest+1)};
+	},
+
+
 
 
 };
