@@ -527,14 +527,73 @@ const __DATETIME = {
 		}
 		return;
 	},
-
-	walkMonth: function(year, month, value) {
-		const data = Math.abs(12*year) + (month - 1) + (value - month);
-		const rest = data%12;
-		return {Y: (data-rest)/12, M: Math.abs(rest+1)};
+	/**. '{object setMonth(integer value)}: Retona o mês '{M} e a variação anual '{dY} a partir de '{value}.**/
+	setMonth: function(value) {
+		const rest = ((value - 1)%12 + 12)%12;
+		return {dY: ((value - 1) - rest)/12, M: rest + 1};
 	},
-
-
-
-
+	/**. '{object setSeconds(number value)}: Retona o segundo '{s}, o minuto '{m}, a hora '{H} e a variação diária '{dD} a partir de '{value}.**/
+	setSeconds: function(value) {
+		const data = {};
+		let rest = Number(value.toFixed(3));
+		data.s = Number(((rest%60 + 60)%60).toFixed(3));
+		rest = Math.trunc(value - data.s)/60;
+		data.m = (rest%60 + 60)%60;
+		rest = Math.trunc(value - data.s - 60*data.m)/3600;
+		data.H = (rest%24 + 24)%24;
+		rest = Math.trunc(value - data.s - 60*data.m - 3600*data.H)/(24*3600);
+		data.dD = rest;
+		return data;
+	},
+	/**. '{object setValues(object input, string name, number value)}: Manipula o elemento '{name} em '{input} conforme '{valua}:
+	|Argumento|Descrição|
+	|input|Registra os dados de data e tempo (Y, M, D, H, m, s) atuais|
+	|name|Nome da propriedade a ser manipulada em '{input}|
+	|value|Valor a ser aplicado à propriedade '{name}|**/
+	setValues(input, name, value) {
+		let data;
+		if (name === "s") {
+			data = this.setSeconds(value);
+			input.s = data.s;
+			input.m = data.m === 0 ? ("m" in input ? input.m : 0) : data.m;
+			input.H = data.H === 0 ? ("H" in input ? input.H : 0) : data.H;
+			if (data.dD !== 0)
+				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
+		}
+		else if (name === "m") {
+			data = this.setSeconds(60*value);
+			input.s = "s" in input ? input.s : 0;
+			input.m = data.m;
+			input.H = data.H === 0 ? ("H" in input ? input.H : 0) : data.H;
+			if (data.dD !== 0)
+				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
+		}
+		else if (name === "H") {
+			data = this.setSeconds(3600*value);
+			input.s = "s" in input ? input.s : 0;
+			input.m = "m" in input ? input.m : 0;
+			input.H = data.H;
+			if (data.dD !== 0)
+				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
+		}
+		else if (name === "D") {
+			let id = this.idMonth("Y" in input ? input.Y : 0, "M" in input ? input.M : 1) - 1 + value;
+			data   = this.dateID(id);
+			input.D = data.D;
+			input.M = data.M;
+			input.Y = (data.P === "-" ? -1 : 1) * data.Y;
+		}
+		else if (name === "M") {
+			data = this.setMonth(value);
+			input.D = "D" in input ? input.D : 1;
+			input.M = data.M;
+			input.Y = ("Y" in input ? input.Y : 0) + data.dY;
+		}
+		else if (name === "Y") {
+			input.D = "D" in input ? input.D : 1;
+			input.M = "M" in input ? input.M : 1;
+			input.Y = value;
+		}
+		return input;
+	},
 };
