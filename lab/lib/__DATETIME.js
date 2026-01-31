@@ -527,10 +527,10 @@ const __DATETIME = {
 		}
 		return;
 	},
-	/**. '{object setMonth(integer value)}: Retona o mês '{M} e a variação anual '{dY} a partir de '{value}.**/
-	setMonth: function(value) {
+	/**. '{object setMonth(integer year, integer value)}: Retona o mês '{M} e o ano '{Y} a partir de '{value}.**/
+	setMonth: function(year, value) {
 		const rest = ((value - 1)%12 + 12)%12;
-		return {dY: ((value - 1) - rest)/12, M: rest + 1};
+		return {Y: year + ((value - 1) - rest)/12, M: rest + 1};
 	},
 	/**. '{object setSeconds(number value)}: Retona o segundo '{s}, o minuto '{m}, a hora '{H} e a variação diária '{dD} a partir de '{value}.**/
 	setSeconds: function(value) {
@@ -596,4 +596,127 @@ const __DATETIME = {
 		}
 		return input;
 	},
+
+
+
+
+
+
+
+	setValue: function(info, name, value) {
+		name  = String(name).trim().toLowerCase();
+		const list   = [info.P === "-" ? -info.Y : info.Y, info.M, info.D, info.H, info.m, info.s];
+		const item   = {year: 0, month: 1, day: 2, hour: 3, minute: 4, second: 5};
+		const time   = {second: 1, minute: 60, hour: 3600};
+		const isTime = info.type === "time" || info.type === "datetime";
+		const isDate = info.type === "date" || info.type === "datetime";
+		/*-- TEMPO --*/
+		if (name in time && isTime) {
+			list[item[name]] = 0;
+			const input  = info.type === "time" ?      "idTime" : "idDateTime";
+			const array  = info.type === "time" ? list.slice(3) : list;
+			const output = info.type === "time" ?      "timeID" : "dateTimeID";
+			const walk   = Number((time[name] * value).toFixed(3));
+			const id     = this[input].apply(this, array);
+			return this[output](id + walk);
+		}
+		/*-- DIA --*/
+		if (name === "day" && isDate) {
+			list[item.day] = 1;
+			const input  = info.type === "date" ?  "idDay" : "idDateTime";
+			const adjust = info.type === "date" ?        1 : 24*3600;
+			const output = info.type === "date" ? "dateID" : "dateTimeID";
+			const walk   = info.type === "date" ? Math.trunc(adjust * value) : Number((adjust * value).toFixed(3));
+			const id     = this[input].apply(this, list) - adjust;
+			return this[output](id + walk);
+		}
+		/*-- MÊS --*/
+		if (name === "month" && isDate) {
+			const input  = info.type === "date" ?  "idDay" : "idDateTime";
+			const output = info.type === "date" ? "dateID" : "dateTimeID";
+			const data   = this.setMonth(list[item.year], Math.trunc(value));
+			const days   = [0,31,this.leap(data.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][data.M];
+			list[item.year]  = data.Y;
+			list[item.month] = data.M;
+			if (value%1 === 0)
+				list[item.day] = list[item.day] > days ? days : list[item.day];
+			else
+				list[item.day] = (days + days*(value%1));
+
+//FIXME é preciso organizar a mudnaça do mês e do ano seguindo a mesma lógica do dia
+
+			console.log(list);
+			list[item.day] = list[item.day] < 0 ? 1 : list[item.day];
+
+
+			const id = this[input].apply(this, list);
+			return this[output](id);
+		}
+
+		return info;
+		/*const mult = {H: 3600, m: 60, s: 1};
+		const info = this.timeID(id);
+		info[attr] = 0;
+		const data = this.idTime(info.H, info.m, info.s);
+		const walk = (attr in mult ? mult[attr] : 0) * value;
+		return this.timeID(data + walk);*/
+	},
+
+
+
+
+/*
+		const data = {Y: 0, M: 1, D: 1, H: 0, m: 0, s: 0};
+		if (typeof input === "object")
+			for (let i in data)
+				data[i] = Number.isFinite(input[i]) ? input[i] : data[i];
+
+		if (!Number.isFinite(value)) return data;
+
+		if (name === "s") {
+			let info = this.setSeconds(value);
+			data.s  = info.s;
+			data.m += info.m;
+			data.H += info.H;
+			return this.setValues(data, "D", data.D + info.dD);
+		}
+		else if (name === "m") {
+			let info = this.setSeconds(60*value);
+			data.m  = info.m;
+			data.H += info.H;
+			return this.setValues(data, "D", data.D + info.dD);
+		}
+		else if (name === "H") {
+			let info = this.setSeconds(3600*value);
+			data.H = info.H;
+			return this.setValues(data, "D", data.D + info.dD);
+		}
+		else if (name === "D") {
+			let id   = this.idMonth(input.Y, input.M) - 1 + value;
+			let info = this.dateID(id);
+			data.D = info.D;
+			data.M = info.M;
+			data.Y = (info.P === "-" ? -1 : 1) * info.Y;
+		}
+		else if (name === "M") {
+			let info = this.setMonth(value);
+			data.M  = info.M;
+			data.Y += info.dY;
+		}
+		else if (name === "Y") {
+			data.Y = value;
+		}
+		return data;* /
+	},*/
+
+
+
+
+
+
+
+
+
+
+
 };

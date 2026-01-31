@@ -353,125 +353,7 @@ const wd = (function() {
 				return n;
 			}
 		},
-		/**. '{string toLocaleString(object options)}: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento '{options}, que possui as seguintes propriedades:
-|Nome|Tipo|Descrição|Obrigatório|
-|type|string|Tipo de notação a ser exibida|Sim|
-|value|string|Informação complementar ao tipo de notação|Depende do tipo de notação|
-|display|string|Forma da exibição da notação|Não|
-|group|boolean|Separador de milhar|Não|
-|decimal|integer|Quantidade de casas decimais (0-20)|Não|
-|integer|integer|Quantidade de números inteiros (1-21)|Não|
-|digits|integer|Quantidade de números significativos (0-20)|Não|
-|sign|string|Exibição do sinal (auto, always, exceptZero, negative, never)|Não|
-. Os seguintes tipos são possíveis&colon;
-|type|value|display|
-|unit|[unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>|short, long, narrow|
-|currency|[código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>|symbol, narrowSymbol, name, code|
-|compact||short, long|
-|percent|||
-|scientific|||
-|engineering|||
-|decimal|||**/
-		toLocaleString: {
-			value: function(options) {
-				if (typeof options !== "object") options = {};
-				/*-- {attr: real, name: atalho, values: opções (0 é padrão)} --*/
-				const properties = {
-					currency: [
-						{attr: "style",           name: null,      values: ["currency"]},
-						{attr: "currencyDisplay", name: "display", values: ["symbol", "narrowSymbol", "name", "code"]},
-						{attr: "currency",        name: "value",   values: []}
-					],
-					unit: [
-						{attr: "style",       name: null,      values: ["unit"]},
-						{attr: "unit",        name: "value",   values: []},
-						{attr: "unitDisplay", name: "display", values: ["short", "long", "narrow"]},
-					],
-					percent: [
-						{attr: "style", name: null, values: ["percent"]},
-					],
-					scientific: [
-						{attr: "style",    name: null, values: ["decimal"]},
-						{attr: "notation", name: null, values: ["scientific"]},
-					],
-					engineering: [
-						{attr: "style",    name: null, values: ["decimal"]},
-						{attr: "notation", name: null, values: ["engineering"]},
-					],
-					compact: [
-						{attr: "style",          name: null,      values: ["decimal"]},
-						{attr: "notation",       name: null,      values: ["compact"]},
-						{attr: "compactDisplay", name: "display", values: ["short", "long"]},
-					],
-					decimal: [ /*-- padrão --*/
-						{attr: "style",    name: null, values: ["decimal"]},
-					],
-				};
-				const property = options.type in properties ? properties[options.type] : properties.decimal;
-				/*-- obtendo os dados de configuração --*/
-				const config = {};
-				for (let i = 0; i < property.length; i++) {
-					let item = property[i];
-					/*-- propriedade não configurável (name = null) --*/
-					if (item.name === null) {
-						config[item.attr] = item.values[0];
-					}
-					/*-- propriedade configurável sem valores definidos (values = []) --*/
-					else if (item.values.length === 0) {
-						if (item.name in options)
-							config[item.attr] = String(options[item.name]);
-					}
-					/*-- propriedade configurável com valores definidos (values = [...]) --*/
-					else {
-						let index = item.values.indexOf(options[item.name]);
-						config[item.attr] = item.values[index < 0 ? 0 : index];
-					}
-				}
-				/*-- propriedades opcionais --*/
-				const intList = new Array(22);
-				for (let i = 0; i < intList.length; i++) intList[i] = i;
 
-				if ("sign" in options) {
-					let value = ["auto", "always", "exceptZero", "negative", "never"];
-					let index = value.indexOf(options.sign);
-					if (index >= 0) config.signDisplay = value[index];
-				}
-				if ("group" in options) {
-					let value = ["auto", true, false];
-					let index = value.indexOf(options.group);
-					if (index >= 0) config.useGrouping = value[index];
-				}
-				if ("digits" in options) {
-					let value = intList.slice(1,22);
-					let index = value.indexOf(Number(options.digits));
-					if (index >= 0) {
-						config.minimumSignificantDigits = value[index];
-						config.maximumSignificantDigits = value[index];
-					}
-				}
-				if (!("minimumSignificantDigits" in config)) {
-					/* Significant é prevalente sobre Fraction e Integer */
-					if ("integer" in options) {
-						let value = intList.slice(1,22);
-						let index = value.indexOf(Number(options.integer));
-						if (index >= 0) config.minimumIntegerDigits = value[index];
-					}
-					if ("decimal" in options) {
-						let value = intList.slice(0,21);
-						let index = value.indexOf(Number(options.decimal));
-						if (index >= 0) {
-							config.minimumFractionDigits = value[index];
-							config.maximumFractionDigits = value[index];
-						}
-					} else if (config.style !== "currency") {
-						config.maximumFractionDigits = 20;
-					}
-				}
-				/*-- Retornando valor --*/
-				try      {return this.value.toLocaleString(__LANG.value, config);}
-				catch(e) {return this.value.toLocaleString(__LANG.value);}
-			}
-		},
 	});
 /*===========================================================================*/
 	/**#3 Caracteres
@@ -517,27 +399,7 @@ const wd = (function() {
 				return this._value.normalize("NFKD").replace(re, "").normalize("NFKC");
 			}
 		},
-		/**. '{string toggle}: Inverte a caixa.**/
-		toggle: {
-			get: function() {
-				const chars = this._value.split("");
-				chars.forEach(function(v,i,a) {
-					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
-				});
-				return chars.join("");
-			}
-			},
-		/**. '{string captalize}: Caixa alta na primeira letra de cada palavra apenas.**/
-		capitalize: {
-			get: function() {
-				const chars = this._value.split("");
-				chars.forEach(function(v,i,a) {
-					let space = i === 0 || (/\s/).test(a[i-1]);
-					a[i] = space ? v.toUpperCase() : v.toLowerCase();
-				});
-				return chars.join("");
-			}
-		},
+
 		/**. '{string clear(boolean white, boolean accent)}: Limpa espaços desnecessários ou acentos. O argumento '{white}, se diferente de falso, limpa os espaços extras e o argumento '{accent}, se diferente de falso, remove os acentos.**/
 		clear: {
 			value: function(white, accent) {
@@ -549,80 +411,7 @@ const wd = (function() {
 				return value.normalize();
 			}
 		},
-		/**. '{string mask(string model)}: Checa se a string casa com o formato de máscara definido no argumento '{model} e retorna uma string vazia em caso de insucesso ou os caracteres formatados:
-		|Manipulador|Descrição|
-		|#|Exige um dígito.|
-		|@|Exige um não dígito.|
-		|*|Exige um valor qualquer.|
-		|?|Separa modelos alternativos caso o anterior não case.|
-		|%|Cancela o efeito do manipulador que o precede.|
-		. Exemplos:
-		|Modelo|Valor|Retorno|
-		|##/##/####|01234567|01/23/4567|
-		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
-		|(##) # ####-####?(##) ####-####|0123456789|(01) 2345-6789|**/
-		mask: {
-			value: function(model) {
-				/*-------------------------------------------------
-					char: lista de caracteres de entrada
-					c:    índice do caracter do texto de entrada
-					mask: lista de caracteres da máscara
-					m:    índice do caracter do modelo da máscara
-					base: lista de caracteres de saída
-					code: caracteres manipuladores
-					ok:   condição do casamento da máscara
-			  -------------------------------------------------*/
-			  const char = this._value.split("");
-				const mask = String(model).split("");
-				const code = "#@*%";
-				let c = 0, m = -1, ok = true, base = [];
-				/*-- looping sobre cada caracteres do modelo --*/
-				while (++m < mask.length) {
-					/*-- Não fazer nada quando um caracter do modelo for definido como nulo --*/
-					if (mask[m] === null) {
-						continue;
-					}
-					/*-- Checar o casamento da máscara ao fim de cada modelo --*/
-					else if (mask[m] === "?") {
-						/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
-						if (ok && c === char.length) return base.join("");
-						ok = true; c = 0; base = [];
-					}
-					/*-- Checar caractere manipulador a ser fixado como caractere comum --*/
-					else if (ok && mask[m] === "%") {
-						let fixed = code.indexOf(mask[m+1]) >= 0;
-						let point = fixed ? mask[m+1] : mask[m];
-						base.push(point);
-						if (fixed) mask[m+1] = null;
-						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
-						c += char[c] === point ? 1 : 0;
-					}
-					/*-- Checar se o caractere de entrada casa com o manipulador --*/
-					else if (ok && code.indexOf(mask[m]) >= 0) {
-						switch(mask[m]) {
-							case "#": {ok = (/^\d$/).test(char[c]); break;}
-							case "@": {ok = (/^\D$/).test(char[c]); break;}
-							case "*": {ok = (/^\.$/).test(char[c]); break;}
-						}
-						if (ok) {
-							base.push(char[c]);
-							c++;
-						} else {
-							base = [];
-							c = 0;
-						}
-					}
-					/*-- Adicionar o caractere não manipulador do modelo à saída --*/
-					else if (ok) {
-						base.push(mask[m]);
-						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
-						c += char[c] === mask[m] ? 1 : 0;
-					}
-				}
-				/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
-				return (ok && c === char.length) ? base.join("") : "";
-			}
-		},
+
 		/**. '{string dash}: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
 		dash: {
 			get: function() {

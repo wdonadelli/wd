@@ -34,9 +34,16 @@ const __MATH = {
 		/*-- checar se são divisíveis --*/
 		if (num >= den ? num%den === 0 : den%num === 0)
 			return {num: num >= den ? num/den : 1, den: num >= den ? 1 : den/num, gcd: num >= den ? den : num};
+		/*-- checar se são divisíveis por 10 --*/
+		let gcd = 1;
+		while (num%10 === 0 && den%10 === 0) {
+			num /= 10;
+			den /= 10;
+			gcd *= 10;
+		}
 		/*-- fatorar --*/
 		const base = this.primes(Math.min(num, den));
-		const data = {num: Math.abs(num), den: Math.abs(den), gcd: 1};
+		const data = {num: Math.abs(num), den: Math.abs(den), gcd: gcd};
 		let i  = 0;
 		let p1 = base.indexOf(data.num);
 		let p2 = base.indexOf(data.den);
@@ -69,30 +76,40 @@ const __MATH = {
 
 
 
-
-	near: function(value1, value2) {return Math.abs(value2 - value1) < Number.EPSILON;},
-
-	//dízima /(d+)(\1)+/
-
-
-	decimal: function(value) {
-		const int = Math.trunc(value);
-		const dec = value - int;
+//TODO near é um pé no saco de difícil
+	near: function(value) {
 		for (let i = 1; i <= 100; i++) {
-			let num = Number(dec.toPrecision(i));
-			if (this.near(value, int+num)) return num;
+			let near = Number(value.toFixed(i));
+			//console.log(i, value, near, Math.abs(value - near), Number.EPSILON)
+			if (Math.abs(value - near) < Number.EPSILON) return near;
+
 		}
-		return dec;
+		return value;
 	},
 
 
-	frac: function(value) {
-		for (let i = 0; i < this._primes.length; i++) {
-			let d = this._primes[i]
-			for (let n = 1; n < d; n++) {
-				if (this.near(n/d, value)) return {n: n, d: d};
+	frac: function (value) {
+		let prev = Math.trunc(value);
+		let dec = [];
+		let next, num, den, data, a = 0, b = 1, i = 0;
+		/*-- enquanto a multiplicação não eliminar os decimais --*/
+		//TODO este while consegue extrair as casas decimais uma a uma
+
+		while((value * Math.pow(10, i++))%1 !== 0) {
+			den  = Number(`1e${i}`);
+			next = Math.trunc(value * den);
+			num  = next - prev*10;
+			prev = next;
+			if (num !== 0) {
+				data = this.reduce(num, den);
+				a = (a*data.den + b*data.num);
+				b = b*data.den;
+				data = this.reduce(a, b);
+				a = data.num;
+				b = data.den;
 			}
 		}
+		return `${a}/${b}`;
 	},
 
 
