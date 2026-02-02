@@ -371,34 +371,7 @@ const wd = (function() {
 
 	Object.defineProperties(__String.prototype, {
 		constructor: {value: __String},
-		/**. '{string valueOf()}: Retorna o valor de entrada.**/
-		valueOf: {value: function() {return this._value;}},
-		/**. '{string toString()}: Retorna o valor de entrada.**/
-		toString: {value: function() {return this._value;}},
-		/**. '{string length}: Retorna a quantidade de caracteres.**/
-		length: {get: function() {return this._value.length;}},
-		/**. '{string upper}: Retorna o valor de entrada em caixa alta.**/
-		upper: {get: function() {return this._value.toUpperCase();}},
-		/**. '{string lower}: Retorna o valor de entrada em caixa baixa.**/
-		lower: {get: function() {return this._value.toLowerCase();}},
-		/**. '{string lean}: Retorna o valor de entrada em linha sem espaços extras.**/
-		lean: {get: function() {return this._value.replace(/\s+/g, " ").trim();}},
-		/**. '{string like}: Retorna o conteúdo textual para fins de comparação por equivalência.**/
-		like: {get: function() {return this._value.normalize("NFKC");}},
-		/**. '{string clean}: Retorna o valor de entrada sem o intervalo unicode \u0300-\u036f.**/
-		clean: {
-			get: function() {
-				const re = /[\u0300-\u036f]/g;
-				return this._value.normalize("NFD").replace(re, "").normalize("NFC");
-			}
-		},
-		/**. '{string near}: Como o '{like}, mas sem acento.**/
-		near: {
-			get: function() {
-				const re = /[\u0300-\u036f]/g
-				return this._value.normalize("NFKD").replace(re, "").normalize("NFKC");
-			}
-		},
+
 
 		/**. '{string clear(boolean white, boolean accent)}: Limpa espaços desnecessários ou acentos. O argumento '{white}, se diferente de falso, limpa os espaços extras e o argumento '{accent}, se diferente de falso, remove os acentos.**/
 		clear: {
@@ -430,10 +403,6 @@ const wd = (function() {
 				return this.dash.replace(/\-./g, function(x) {return x[1].toUpperCase();})
 			}
 		},
-		/**. '{matrix csv}: Retorna uma matriz (array) a partir de uma string CSV.**/
-		csv: {get: function() {return this._parser.csvTable.tableValues.matrixCSV.get();}},
-		/**. '{object json}: Retorna objeto JSON a partir de uma string nesse formato.**/
-		json: {get: function() {return this._parser.stringJSON.get();}},
 
 
 		chain: {

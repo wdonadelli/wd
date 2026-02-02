@@ -170,19 +170,7 @@ Object.defineProperties(__Parser.prototype, {
 			return this.matrixList;
 		}
 	},
-	/**. '{object stringJSON}: Transforma string JSON em objeto.**/
-	stringJSON: {
-		get: function() {
-			if ("stringJSON" in this._saved)
-				return new __Parser(this._saved.stringJSON);
-			let data = null;
-			if (this._check.chars) {
-				try {data = JSON.parse(this._data);} catch(e) {}
-			}
-			this._saved["stringJSON"] = data;
-			return this.stringJSON;
-		}
-	},
+
 	/**. '{object jsonString}: Transforma objeto em string JSON.**/
 	jsonString: {
 		get: function() {
@@ -192,54 +180,6 @@ Object.defineProperties(__Parser.prototype, {
 			try {data = JSON.stringify(this._data);} catch(e) {}
 			this._saved["jsonString"] = data;
 			return this.jsonString;
-		}
-	},
-	/**. '{object stringHTML}: Transforma string em documento HTML.**/
-	stringHTML: {
-		get: function() {
-			if ("stringHTML" in this._saved)
-				return new __Parser(this._saved.stringHTML);
-			let data = null;
-			if (this._check.chars) {
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "text/html");
-				} catch(e) {}
-			}
-			this._saved["stringHTML"] = data;
-			return this.stringHTML;
-		}
-	},
-	/**. '{object stringXML}: Transforma string em documento XML.**/
-	stringXML: {
-		get: function() {
-			if ("stringXML" in this._saved)
-				return new __Parser(this._saved.stringXML);
-			let data = null;
-			if (this._check.chars) {
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "application/xml");
-				} catch(e) {}
-			}
-			this._saved["stringXML"] = data;
-			return this.stringXML;
-		}
-	},
-	/**. '{object stringSVG}: Transforma string em documento SVG.**/
-	stringSVG: {
-		get: function() {
-			if ("stringSVG" in this._saved)
-				return (this._saved.stringSVG);
-			let data = null;
-			if (this._check.chars) {
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "image/svg+xml");
-				} catch(e) {}
-			}
-			this._saved["stringSVG"] = data;
-			return this.stringSVG;
 		}
 	},
 	/**. '{object fileURL}: Transforma dados em string URL.**/
@@ -271,34 +211,7 @@ Object.defineProperties(__Parser.prototype, {
 		}
 	},
 
-	/**. '{object wdEncode}: Codifica uma string em uma sequência de unicode.**/
-	wdEncode: {
-		get: function() {
-			if ("wdEncode" in this._saved)
-				return new __Parser(this._saved.wdEncode);
-			let data = null;
-			try {
-				const list = String(this._data).normalize("NFC").split("");
-				data = list.map(function(v,i,a) {return "%"+v.charCodeAt(0).toString("16");}).join("");
-			} catch(e) {console.log(e)}
-			this._saved["wdEncode"] = data;
-			return this.wdEncode;
-		}
-	},
-	/**. '{object wdDecode}: Decodifica o resultado de '{wdEncode}.**/
-	wdDecode: {
-		get: function() {
-			if ("wdDecode" in this._saved)
-				return new __Parser(this._saved.wdDecode);
-			let data = null;
-			try {
-				const list = String(this._data).normalize("NFC").replace("%", "").split("%");
-				data = list.map(function(v,i,a) {return String.fromCharCode(parseInt(v, 16));}).join("");
-			} catch(e) {console.log(e)}
-			this._saved["wdDecode"] = data;
-			return this.wdDecode;
-		}
-	},
+
 	/**. '{any get()}: Obtem o valor da transformação ou de entrada.**/
 	get: {
 		value: function() {return this._data;}

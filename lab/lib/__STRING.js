@@ -3,67 +3,51 @@
 O objeto '{__STRING} apresenta algumas ferramentas de manipulação de texto.
 **/
 const __STRING = {
-	/**. '{object re}: Conjunto de expressões regulares para checagem de números em forma de strings.**/
-
+	/**. '{string mask(string str, string model)}: Retorna o resultado do casamento de '{str} com o modelo '{model} ou uma string vazia. O modelo de máscara utiliza a seguinte codificação:
+	|Manipulador|Descrição|
+	|#|Exige um dígito.|
+	|@|Exige um não dígito.|
+	|*|Exige um valor qualquer.|
+	|?|Separa modelos alternativos caso o anterior não case.|
+	|%|Anula o efeito do caractere que o precede.|**/
 	mask: function(str, model) {
 		const list = String(model).normalize().split("")
 		const data = {
 			i: 0,
 			data: String(str).normalize().split(""),
-			get char() {return this.data[this.i];},
-			get last() {this.i === this.data.length - 1;},
-			kill: function()  {this.i = 0; this.list = [];},
-			next: function()  {this.i++; return !this.last;},
-			add:  function(x) {this.list.push(x);},
-			mask: function()  {return this.list.join("");}
 			list: [],
+			get char() {return this.data[this.i];},
+			get last() {return this.i === this.data.length;},
+			get mask() {return this.list.join("");},
+			get none() {return this.i === 0 && this.list.length === 0;},
+			init: function()  {this.i = 0; this.list = [];},
+			push: function()  {this.add(this.char); this.i++;},
+			add:  function(x) {this.list.push(x);},
 		};
-
 		for (let i = 0; i < list.length; i++) {
-			let fail = false;
-			     if (list[i] === "?") fail = data.last;
-			else if (list[i] === "#") fail = (/\d/).test(data.char);
-			else if (list[i] === "@") fail = (/\D/).test(data.char);
-			else if (list[i] === "*") fail = (/\D/).test(data.char);
-			else if (list[i] === "%") i++;
-
-			/*-- analisando falha --*/
-			if (fail && list[i] !== "?") {
-				i = list.slice(i).indexOf("?") + 1;
-				data.kill();
+			/*-- caracter coringa, casa tudo --*/
+			     if (list[i] === "*") data.push();
+			/*-- dígito, casa ou reinicia --*/
+			else if (list[i] === "#") (/\d/).test(data.char)  ? data.push() : data.init();
+			/*-- não dígito, casa ou reinicia --*/
+			else if (list[i] === "@") (/\D/).test(data.char)  ? data.push() : data.init();
+			/*-- caracter anulador, registrar ou adicionar próximo caracter --*/
+			else if (list[i] === "%") list[++i] === data.char ? data.push() : data.add(list[i]);
+			/*-- modelo encerrado com sucesso, retornar --*/
+			else if (list[i] === "?" && data.last) return data.mask;
+			/*-- modelo encerrado sem sucesso, reanalisar --*/
+			else if (list[i] === "?") data.init();
+			/*-- caracter qualquer, registrar ou adicionar caracter --*/
+			else  list[i] === data.char ? data.push() : data.add(list[i]);
+			/*-- checar se houve erro ao capturar caracter da máscara --*/
+			//console.log("saída", i, list[i], data.mask);
+			if (data.none) {
+				let next = list.slice(i).indexOf("?");
+				i += next < 0 ? list.length : next;
 			}
-			else if (!fail) {
-				data.add(list[i]);
-
-			}
-
-
-
-
-/*
-		|#|Exige um dígito.|
-		|@|Exige um não dígito.|
-		|*|Exige um valor qualquer.|
-		|?|Separa modelos alternativos caso o anterior não case.|
-		|%|Cancela o efeito do manipulador que o precede.|*/
-
-
-
 		}
-		return data.last ? data.mask() : "";
-
-
-
-
-
-
-
-
-
-
-
+		return data.last ? data.mask : "";
 	},
-
 	/**. '{string case(string str, string type}: Retorna a string de acordo com o tipo ('{upper, lower, invert, capitalize}).**/
 	case: function(str, type) {
 		str  = str.normalize();
@@ -78,88 +62,40 @@ const __STRING = {
 		}).join("");
 		return str;
 	},
-	/**. '{string clean(}: Retorna o valor de entrada sem o intervalo unicode \u0300-\u036f.**/
+	/**. '{string clean(string str)}: Retorna o valor de entrada sem o intervalo unicode '{\u0300-\u036f} (acentos).**/
 	clean: function(str) {
 		return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize();
 	},
-
-
-
-	/**. '{string mask(string model)}: Checa se a string casa com o formato de máscara definido no argumento '{model} e retorna uma string vazia em caso de insucesso ou os caracteres formatados:
-		|Manipulador|Descrição|
-		|#|Exige um dígito.|
-		|@|Exige um não dígito.|
-		|*|Exige um valor qualquer.|
-		|?|Separa modelos alternativos caso o anterior não case.|
-		|%|Cancela o efeito do manipulador que o precede.|
-		. Exemplos:
-		|Modelo|Valor|Retorno|
-		|##/##/####|01234567|01/23/4567|
-		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
-		|(##) # ####-####?(##) ####-####|0123456789|(01) 2345-6789|**/
-		mask: {
-			value: function(model) {
-				/*-------------------------------------------------
-					char: lista de caracteres de entrada
-					c:    índice do caracter do texto de entrada
-					mask: lista de caracteres da máscara
-					m:    índice do caracter do modelo da máscara
-					base: lista de caracteres de saída
-					code: caracteres manipuladores
-					ok:   condição do casamento da máscara
-			  -------------------------------------------------*/
-			  const char = this._value.split("");
-				const mask = String(model).split("");
-				const code = "#@*%";
-				let c = 0, m = -1, ok = true, base = [];
-				/*-- looping sobre cada caracteres do modelo --*/
-				while (++m < mask.length) {
-					/*-- Não fazer nada quando um caracter do modelo for definido como nulo --*/
-					if (mask[m] === null) {
-						continue;
-					}
-					/*-- Checar o casamento da máscara ao fim de cada modelo --*/
-					else if (mask[m] === "?") {
-						/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
-						if (ok && c === char.length) return base.join("");
-						ok = true; c = 0; base = [];
-					}
-					/*-- Checar caractere manipulador a ser fixado como caractere comum --*/
-					else if (ok && mask[m] === "%") {
-						let fixed = code.indexOf(mask[m+1]) >= 0;
-						let point = fixed ? mask[m+1] : mask[m];
-						base.push(point);
-						if (fixed) mask[m+1] = null;
-						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
-						c += char[c] === point ? 1 : 0;
-					}
-					/*-- Checar se o caractere de entrada casa com o manipulador --*/
-					else if (ok && code.indexOf(mask[m]) >= 0) {
-						switch(mask[m]) {
-							case "#": {ok = (/^\d$/).test(char[c]); break;}
-							case "@": {ok = (/^\D$/).test(char[c]); break;}
-							case "*": {ok = (/^\.$/).test(char[c]); break;}
-						}
-						if (ok) {
-							base.push(char[c]);
-							c++;
-						} else {
-							base = [];
-							c = 0;
-						}
-					}
-					/*-- Adicionar o caractere não manipulador do modelo à saída --*/
-					else if (ok) {
-						base.push(mask[m]);
-						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
-						c += char[c] === mask[m] ? 1 : 0;
-					}
-				}
-				/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
-				return (ok && c === char.length) ? base.join("") : "";
-			}
-		},
-
-
-
+	/**. '{boolean compare(string str1, string str2)}: Compara as strings são semelhantes.**/
+	compare: function(str1, str2) {
+		return String(str1).normalize("NFKC") === String(str2).normalize("NFKC");
+	},
+	/**. '{integer length(string str)}: Retorna a quantidade de caracteres da string.**/
+	length: function(str) {
+		return String(str).normalize().length;
+	},
+	/**. '{string fit(string str)}: Retorna a string sem caracteres de espaço repetidos.**/
+	fit: function(str) {
+		return String(str).replace(/(\s)+/g, "$1");
+	},
+	/**. '{object parser(string str, string type)}: Retorna a string transformada em DOM (html, xml, svg ou um MIMETYPE) ou nulo.**/
+	parser: function(str, type) {
+		type = String(type).toLowerCase();
+		const data = {html: "text/html", xml: "application/xml", svg: "image/svg+xml"};
+		try {
+			if (type === "json") return JSON.parse(str);
+			const parser = new DOMParser();
+			return parser.parseFromString(str, type in data ? data[type] : type);
+		}
+		catch(e) {return null;}
+	},
+	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de unicode e a retorna.**/
+	unicode: function(str, decode) {
+		decode = decode === true;
+		str    = String(str).normalize();
+		const list = decode ? str.replace("%", "").split("%") : str.split("");
+		return list.map(function(v,i,a) {
+			return decode ? String.fromCharCode(parseInt(v, 16)) : "%"+v.charCodeAt(0).toString("16");
+		}).join("");
+	},
 };
