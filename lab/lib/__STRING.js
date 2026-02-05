@@ -48,7 +48,7 @@ const __STRING = {
 		}
 		return data.last ? data.mask : "";
 	},
-	/**. '{string case(string str, string type}: Retorna a string de acordo com o tipo ('{upper, lower, invert, capitalize}).**/
+	/**. '{string case(string str, string type}: Retorna a string de acordo com o tipo ('{upper, lower, invert, capitalize, kebab, snake, screaming, pascal, camel}).**/
 	case: function(str, type) {
 		str  = str.normalize();
 		type = String(type).toLowerCase();
@@ -59,6 +59,26 @@ const __STRING = {
 		}).join("");
 		if (type === "capitalize") return str.split("").map(function(v,i,a) {
 			return i === 0 || (/\s/).test(a[i-1]) ? v.toUpperCase() : v.toLowerCase();
+		}).join("");
+		if (type === "kebab") return this.fit(this.clean(str)).trim()
+			.replace(/[^a-zA-Z0-9\-]/g, "-")
+			.replace(/([A-Z])/g, "-$1")
+			.replace(/\-+/g, "-")
+			.replace(/^[\-0-9]+|\-+$/g, "").toLowerCase();
+		if (type === "snake") return this.fit(this.clean(str)).trim()
+			.replace(/[^a-zA-Z0-9\_]/g, "_")
+			.replace(/([A-Z])/g, "_$1")
+			.replace(/\_+/g, "_")
+			.replace(/^[\_0-9]+|\_+$/g, "").toLowerCase();
+		if (type === "screaming") return this.case(str, "snake").toUpperCase();
+		if (type === "pascal") return this.fit(this.case(
+			this.clean(str)
+			.replace(/[^a-zA-Z0-9\ ]/g, " ")
+			.replace(/([A-Z])/g, " $1")
+			.replace(/^[0-9\ ]+/, "")
+		, "capitalize")).replace(/\ +/g, "");
+		if (type === "camel") return this.case(str, "pascal").split("").map(function(v,i,a) {
+			return i == 0 ? v.toLowerCase() : v;
 		}).join("");
 		return str;
 	},
@@ -89,7 +109,7 @@ const __STRING = {
 		}
 		catch(e) {return null;}
 	},
-	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de unicode e a retorna.**/
+	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de a{unicode}[href="https://symbl.cc/pt/unicode-table/" target="_blank"] e a retorna.**/
 	unicode: function(str, decode) {
 		decode = decode === true;
 		str    = String(str).normalize();

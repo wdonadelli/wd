@@ -356,69 +356,8 @@ const wd = (function() {
 
 	});
 /*===========================================================================*/
-	/**#3 Caracteres
-	''constructor object __String(string input)''
-	Construtor para manipulação de textos. O argumento '{input} define o texto de entrada.**/
-	/*-- https://symbl.cc/pt/unicode-table/ --*/
-	function __String(input) {
-		if (!(this instanceof __String)) return new __String(input);
-		input = String(input).normalize("NFC");
-		Object.defineProperties(this, {
-			_value:  {value: input},
-			_parser: {value: new __Parser(input)}
-		});
-	}
-
-	Object.defineProperties(__String.prototype, {
-		constructor: {value: __String},
-
-
-		/**. '{string clear(boolean white, boolean accent)}: Limpa espaços desnecessários ou acentos. O argumento '{white}, se diferente de falso, limpa os espaços extras e o argumento '{accent}, se diferente de falso, remove os acentos.**/
-		clear: {
-			value: function(white, accent) {
-				let value = this.valueOf();
-				if (white !== false)
-					value = value.replace(/\s+/g, " ").trim();
-				if (accent !== false)
-					value = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-				return value.normalize();
-			}
-		},
-
-		/**. '{string dash}: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
-		dash: {
-			get: function() {
-				const only  = /(\s|\-)+/g;
-				const trash = /[^a-zA-Z0-9_.:\-]/g;
-				const trim  = /^\-+|\-+$/g;
-				const chars = this.clean.replace(only, "-").replace(trash, "").replace(trim, "");
-				if (chars.indexOf("-") >= 0)
-					return chars.toLowerCase()
-				return chars.replace(/[A-Z]/g, function(x) {return "-"+x.toLowerCase();});
-			}
-		},
-		/**. '{string camel}: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
-		camel: {
-			get: function() {
-				return this.dash.replace(/\-./g, function(x) {return x[1].toUpperCase();})
-			}
-		},
-
-
-		chain: {
-			value: function(name) {
-				//FIXME
-				const data = Object.getOwnPropertyDescriptor(__String.prototype, name);
-				const test = new __Type(typeof data === "object" ? data.get : null);
-				return test.function ? new __String(this[name]) : this;
-			}
-
-
-		},
-
-	});
-
-
+				//FIXME getOwnPropertyDescriptor extraí os dados das propriedades do objeto pelo nome
+				//Object.getOwnPropertyDescriptor(Array.prototype, "lenght");
 /*===========================================================================*/
 	/**#3 Data e Tempo
 	#4 Ano
@@ -1169,71 +1108,10 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. '{number min}: Retorna o menor número finito do conjunto de items da lista ou nulo em caso de vazio.**/
-		min: {
-			get: function() {
-				const list = this.only("finite");
-				return list.length === 0 ? null : Math.min.apply(null, list);
-			}
-		},
-		/**. '{number max}:  Retorna o maior número finito do conjunto de items da lista ou nulo em caso de vazio.**/
-		max: {
-			get: function() {
-				const list = this.only("finite");
-				return list.length === 0 ? null : Math.max.apply(null, list);
-			}
-		},
-		/**. '{number sum}: Retorna a soma dos números finitos da lista ou nulo em caso de vazio.**/
-		sum: {
-			get: function() {
-				const list = this.only("finite");
-				let sum = 0, i = -1;
-				while (++i < list.length) sum += list[i];
-				return list.length === 0 ? null : sum;
-			}
-		},
-		/**. '{number avg}: Retorna a média dos números finitos da lista ou nulo em caso de vazio.**/
-		avg: {
-			get: function() {
-				const list = this.only("finite");
-				let sum = 0, i = -1;
-				while (++i < list.length) sum += list[i];
-				return list.length === 0 ? null : sum/list.length;
-			}
-		},
-		/**. '{number med}: Retorna a mediana dos números finitos da lista ou nulo em caso de vazio.**/
-		med: {
-			get: function() {
-				const list = this.only("finite");
-				const y = list.sort(function(a,b) {return a < b ? -1 : 1;});
-				const l = list.length;
-				return l === 0 ? null : (l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
-			}
-		},
-		/**. '{number harm}: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou nulo em caso de vazio.**/
-		harm: {
-			get: function() {
-				const list = this.only("finite");
-				let sum = 0, len = 0, i = -1;
-				while (++i < list.length) {
-				  sum += list[i] === 0 ? 0 : 1/list[i];
-				  len += list[i] === 0 ? 0 : 1;
-				}
-				return len === 0 || sum === 0 ? null : len/sum;
-			}
-		},
-		/**. '{number geo}: Retorna a média geométrica dos números finitos __positivos__ da lista ou nulo em caso de vazio.**/
-		geo: {
-			get: function() {
-				const list = this.only("finite");
-				let val = 1, len = 0, i = -1;
-				while (++i < list.length) {
-				  val  = val * (list[i] <= 0 ? 1 : list[i]);
-				  len += list[i] <= 0 ? 0 : 1;
-				}
-				return len === 0 ? null : Math.pow(val, 1/len);
-			}
-		},
+
+
+
+
 		/**. '{number gcd}: Retorna o máximo divisor comum dos números inteiros da lista ou nulo em caso de vazio.**/
 		gcd: {
 			get: function() {

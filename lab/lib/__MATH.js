@@ -69,6 +69,22 @@ const __MATH = {
 		data.den *= Math.sign(den);
 		return data;
 	},
+	/**. '{number dec(number value, string output)}: Retorna a parte decimal do número ('{output} pode ser '{array} ou '{string}).**/
+	dec: function (value, output) {
+		const dec = [];
+		let prev = Math.trunc(value), next, num, den, i = 0;
+		while((value * Math.pow(10, i++))%1 !== 0) {
+			den  = Number(`1e${i}`);
+			next = Math.trunc(value * den);
+			num  = next - prev*10;
+			prev = next;
+			dec.push(num);
+		}
+		dec.forEach(function(v,i,a) {a[i] = Math.abs(v);});
+		if (output === "array") return dec;
+		const str = (value < 0 ? "-0." : "0.")+dec.join("");
+		return output === "string" ? str : Number(str);
+	},
 
 
 
@@ -86,7 +102,6 @@ const __MATH = {
 		}
 		return value;
 	},
-
 
 	frac: function (value) {
 		let prev = Math.trunc(value);
@@ -164,8 +179,4 @@ const __MATH = {
 		}
 		return list.join("\n");
 	},
-
-
-
-
 };
