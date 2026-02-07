@@ -30,6 +30,12 @@ Todos os caracteres alfabéticos não são sensíveis à altura da caixa.**/
 const __DATETIME = {
 	/**. '{string lang}: Identifica a linguagem utilizada para carregar meses e dias da semana.**/
 	lang: null,
+	/**. '{number MAX_TIME_ID}: Valor que corresponde ao maior identificador de tempo 2^43-0.001.**/
+	MAX_TIME_ID: 8796093022207.999,
+
+	//TODO mudar para bigint o id de datatempo? trabalhar só com inteiros no lugar de decimal?
+
+
 	/**. '{object names}: Registra os nomes dos meses e dias, curtos e longos, conforme linguagem '{lang}.**/
 	names: null,
 	/**. '{array template}: Registra a lista de modelos de data/tempo e suas configurações:

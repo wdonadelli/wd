@@ -75,7 +75,7 @@
 				return this.attribute({d: path});
 			}
 		},
-		/**. '{self title(string tip)}: Define um título (dica) ao último nó da cadeia.**/
+		/**. '{self title(string title)}: Define um título (dica) ao último nó da cadeia.**/
 		title: {
 			value: function(tip) {
 				const svg = this.create("title");

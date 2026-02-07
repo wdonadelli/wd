@@ -9,96 +9,85 @@ O objeto '{__DATA2D} apresenta ferramentas para análise de conjunto de dados fi
 	O argumento '{y} é a resposta em função de '{x}, podendo ser uma lista de valores do mesmo tipo que '{x}, uma constante ou uma função. No caso de função, '{y} receberá o valor de '{y(x)}.
 	Valores não finitos serão eliminados do conjunto '{(x, y)}.*/
 const __DATA2D = {
-	/**. '{array dataSet(array x, array y)}: Retorna uma lista de objetos contendo as coordenadas ('{x}, '{y})**/
-	dataSet: function(x, y) {
-		return (x.length < y.length ? x : y).map(function(v,i,a) {
-			return {x: x[i], y: y[i]}
-		});
-	},
-
-
-
-
-	/**. '{number toFinite(any value)}: Retorna a conversão de '{value} para finito, dias ou segundos ou nulo:
-	|Tipo|Origem|
-	|Numérico|finite|
-	|Dias|date|
-	|Segundos|time e datetime|**/
-	toFinite: function(value) {
+	/**. '{number toNumeric(any value)}: Converte '{value} de finito, dias ou segundos para numérico ou nulo.**/
+	toNumeric: function(value) {
 		const data = new __Type(value);
 		return data.finite || data.date || data.time || data.datetime ? data.valueOf() : null;
 	},
-	/**. '{array map(array list, function call}: Define o resultado da função '{call} aos itens da lista e a retorna. Apenas números finitos (ver método '{toFinite}) são permitidos como valores de entrada ou saída, outros valores serão definidos como nulo. O argumento '{call}, se ausente, apenas definirá o item como finito ou nulo.**/
-	map: function(list, call) {
-		if (typeof call !== "function")
-			call = function(x) {return x;}
-		return list.map(function(v,i,a) {
-			if (!Number.isFinite(v))
-				v = this.toFinite(v);
-			if (v === null) return null;
-			try      {return this.toFinite(call(v));}
-			catch(e) {return null;}
-		}, this);
+	/**. '{number round(finite value)}: Retorna o valor arredondado considerando a precisão EPSILON.**/
+	//FIXME essa porcaria não funciona ainda
+	round: function(value) {
+		for (let i = 0; i <= 100; i++)
+			if (Math.abs(value - Number(value.toFixed(i))) < Number.EPSILON)
+				return Number(value.toFixed(i));
+		return value;
 	},
-	/**. '{array dataXY(array x, any y}: Retorna uma lista ordenada do conjunto de dados numéricos finitos estabelecidos pelos argumentos '{x} e '{y}. O argumento '{y} pode ser um array, uma função ou uma constante finita. O resultado desse método é utilizado nos demais métodos que tratam de ajustes de curva.**/
+
+	//TODO a fazer
+	toDate: function(value)     {return null},
+	toTime: function(value)     {return null},
+	toDateTime: function(value) {return null},
+
+
+	/**. '{array convert(array list)}: Converte os itens de '{list} para ...TODO implementar outras possibilidades.**/
+	convert: function(list) {
+		return list.map(function(v,i,a) {return this.toNumeric(v)}, this);
+	},
+	/**. '{object dataXY(array x, array y}: Retorna uma lista de objetos contendo as coordenadas '{x, y} de forma alinhada, qualificada, não repetida e ordenada em relação a '{x} dos valores numéricos finitos de ambas as listas.**/
 	dataXY: function(x, y) {
-		/*-- acertando x,y --*/
-		x = Array.isArray(x) ? this.map(x) : [];
-		y = Array.isArray(y) ? this.map(y) : (typeof y === "function" ? this.map(x, y) : this.map(x.slice().fill(y)));
-		/*-- retornando conjunto de dados --*/
+		/*-- valores precisam ser numéricos e x não pode repetir --*/
 		return x.map(function(v,i,a) {
-			return {x: v, y: i < y.length ? y[i] : null};
+			return {x: Number.isFinite(v) && a.indexOf(v) === i ? v : null, y: Number.isFinite(y[i]) ? y[i] : null};
 		})
+		/*-- coordenadas não aprovadas no passo anterior são ignoradas --*/
 		.filter(function(v,i,a) {
 			return v.x !== null && v.y !== null;
 		})
+		/*-- ordenando as coordenadas em relação ao valor de x --*/
 		.sort(function(a,b) {
 			return a.x === b.x ? 0 : (a.x < b.x ? -1 : 1);
 		});
 	},
-	/**. '{object toList(object dataXY, string axis)}: Retorna a lista do eixo '{x} ou '{y} proveniente do método '{dataXY}.**/
+	/**. '{object toList(object dataXY, string axis)}: Recebe o resultado do método '{dataXY} e retorna a lista do eixo '{x} ou '{y}.**/
 	toList: function(dataXY, axis) {
 		return dataXY.map(function(v,i,a) {return v[axis];});
 	},
-	/**. '{object ols(object dataXY)}: Retorna os coeficientes angular e linear pelo "método dos mínimos quadrados" ou nulo. O argumento '{list} deve ser o retorno do método '{toData}, que deve conter pelo menos duas coordenadas.**/
+	/**. '{object ols(object dataXY)}: Recebe o resultado do método '{dataXY} e retorna os coeficientes angular '{a} e linear '{b} obtido pelo "método dos mínimos quadrados" ou nulo. O argumento deve conter pelo menos duas coordenadas.**/
 	ols: function(dataXY) {
 		if (dataXY.length < 2) return null;
-		let sumX = 0, sumY = 0, sumX2 = 0, sumXY = 0, len = dataXY.length;
-		dataXY.forEach(function(v,i,a) {
-			sumX  += v.x;
-			sumY  += v.y;
-			sumX2 += v.x * v.x;
-			sumXY += v.x * v.y;
-		});
-		const data = {};
-		data.a = ((len * sumXY) - (sumX * sumY)) / ((len * sumX2) - (sumX * sumX));
-		data.b = ((sumY) - (sumX * data.a)) / (len);
+		const sumX  = dataXY.reduce(function(sum,v,i,a) {return sum + v.x;}, 0);
+		const sumY  = dataXY.reduce(function(sum,v,i,a) {return sum + v.y;}, 0);
+		const sumX2 = dataXY.reduce(function(sum,v,i,a) {return sum + (v.x * v.x);}, 0);
+		const sumXY = dataXY.reduce(function(sum,v,i,a) {return sum + (v.x * v.y);}, 0);
+		const len   = dataXY.length;
+		const data  = {};
+		data.a = this.round(((len * sumXY) - (sumX * sumY)) / ((len * sumX2) - (sumX * sumX)));
+		data.b = this.round(((sumY) - (sumX * data.a)) / (len));
 		return data;
+	},
+	/**. '{array map(array list, function call}: Aplica a função '{call} aos itens da lista e a retorna. Valores não finitos são definidos como nulo.**/
+	map: function(list, call) {
+		call = typeof call === "function" ? call : function(x) {return x;}
+		return list.map(function(v,i,a) {
+			try {
+				const x = call(v);
+				return Number.isFinite(x) ? x : null;
+			} catch(e) {return null;}
+		}, this);
 	},
 	/**. '{number rmse(object dataXY, function fit)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento fit é a função que resultou da regressão.**/
 	rmse: function(dataXY, fit) {
 		const  y1 = this.toList(dataXY, "y");
 		const  y2 = this.map(this.toList(dataXY, "x"), fit);
 		let   len = 0;
-		console.log(y1, y2);
 		const sum = y2.reduce(function(sum,v,i,a) {
 			const ok = Number.isFinite(v) && Number.isFinite(y1[i]);
 			len += ok ? 1 : 0;
-			console.log(v, y1[i], v - y1[i], Math.pow(v - y1[i], 2))
 			return ok ? sum + Math.pow(v - y1[i], 2) : sum;
 		}, 0);
 		return Math.sqrt(sum/len);
-
-
-		/*const data = dataXY.map(function(v,i,a) {
-			const y = this.toFinite(fit(v.x));
-			return y === null ? 0 : v.y - y;
-		}, this);
-		return Math.hypot.apply(null, data) / Math.sqrt(dataXY.length);*/
-
-		/*FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
-		__DATA2D.exponentialFit(__DATA2D.toData([2,3,4,5,6,100], (x)=> 3*Math.exp(4*x)))
-		if ((erro - 0) - Number.EPSILON) then 0	*/
+		//FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
+		//x = [2,3,4,5,6,100]; y = __DATA2D.map(x, (x)=> 3*Math.exp(4*x)); z = __DATA2D.exponentialFit(__DATA2D.dataXY(x,y))
 	},
 	/**. '{string valueFit(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
 	valueFit: function(x) {
@@ -142,6 +131,14 @@ const __DATA2D = {
 			fit.m = `y = aln(b x) ± σ`;
 			fit.v = `y = ${math.a}ln(${math.b}x) ± ${math.d}`;
 		}
+		else if (type === "sum") {
+			fit.m = `∑yi∆xi ≅ a`;
+			fit.v = `∑yi∆xi ≅ ${math.a}`;
+		}
+		else if (type === "avg") {
+			fit.m = `∑yi∆xi/∆x ≅ a`;
+			fit.v = `∑yi∆xi/∆x ≅ ${math.a}`;
+		}
 		return;
 	},
 	/**. '{object linearFit(object dataXY)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
@@ -172,7 +169,7 @@ const __DATA2D = {
 		const calc = this.ols(data);
 		const fit  = calc === null ? null : {};
 		if (fit !== null) {
-			fit.a = Math.exp(calc.b)
+			fit.a = this.round(Math.exp(calc.b));
 			fit.b = calc.a;
 			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.pow(x, fit.b);};
@@ -181,15 +178,6 @@ const __DATA2D = {
 		}
 		return fit;
 	},
-
-	teste: function(x) {
-		for (let i = 0; i <= 100; i++)
-			if (Math.abs(x - Number(x.toFixed(i))) < Number.EPSILON)
-				return Number(x.toFixed(i));
-		return x;
-	},
-
-
 	/**. '{object exponentialFit(object dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linearFit}**/
 	exponentialFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
@@ -201,11 +189,6 @@ const __DATA2D = {
 		if (fit !== null) {
 			fit.a = Math.exp(calc.b)
 			fit.b = calc.a;
-
-			fit.a = this.teste(Math.exp(calc.b));
-			fit.b = this.teste(calc.a);
-
-
 			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.exp(fit.b*x);};
 			fit.d = this.rmse(fit.p, fit.f);
@@ -242,33 +225,28 @@ const __DATA2D = {
 			return a === null ? 1 : (b === null ? -1 : (a.d === b.d ? 0 : (a.d < b.d ? -1 : 1)));
 		})[0];
 	},
-	/**. '{object sumFit(object dataXY)}: Retorna um objeto contendo os dados da soma das áreas com os mesmos parâmetros do método '{linearFit}**/
+	/**. '{object sumFit(object dataXY)}: Retorna um objeto contendo os dados da soma das áreas semelhantecom os mesmos parâmetros do método '{linearFit}**/
 	sumFit: function(dataXY) {
-		const fit = {a: 0, b: 0};
-		dataXY.forEach(function(v,i,a) {
-			fit.a += i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2;
-		});
-		if (fit !== null) {
-			fit.p = dataXY;
-			fit.f = function(x) {return fit.a;};
-			fit.d = this.rmse(fit.p, fit.f);
-			this.stringFit(fit, "sum");
-		}
+		const sum = dataXY.reduce(function(sum,v,i,a) {return sum + (i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2);}, 0)
+		const fit = {};
+		fit.a = this.round(sum);
+		fit.b = 0,
+		fit.p = dataXY;// tem que colocar {x: x1, y: 0} e {x: xn, y: 0}
+		fit.f = function(x) {return fit.a;};
+		fit.d = 0;
+		this.stringFit(fit, "sum");
 		return fit;
 	},
 	/**. '{object avgFit(object dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linearFit}**/
 	avgFit: function(dataXY) {
-		const base = this.toList(dataXY);
-		const min  = Math.min.apply(null, base.x);
-		const max  = Math.max.apply(null, base.x);
-		const fit  = this.sumFit(dataXY);
-		if (fit !== null) {
-			fit.a = fit.a/(max-min);
-			fit.p = dataXY;
-			fit.f = function(x) {return fit.a;};
-			fit.d = this.rmse(fit.p, fit.f);
-			this.stringFit(fit, "avg");
-		}
+		const xlist = this.toList(dataXY, "x");
+		const delta = this.round(this.MAX(xlist) - this.MIN(xlist));
+		const fit   = this.sumFit(dataXY);
+		fit.a = delta === 0 ? 0 : this.round(fit.a/delta);
+		fit.p = dataXY;
+		fit.f = function(x) {return fit.a;};
+		fit.d = this.rmse(fit.p, fit.f);
+		this.stringFit(fit, "avg");
 		return fit;
 	},
 	/**. '{array ASC(array list)}: Retorna a lista de finitos em ordem ascendente.**/
@@ -287,42 +265,46 @@ const __DATA2D = {
 	},
 	/**. '{number MAX(array list)}: Retorna o maior número da lista de finitos.**/
 	MAX: function (list) {
-		return list.reduce(function (max,v,i,a) {return Number.isFinite(v) && v > max ? v : min;}, -Infinity);
+		return list.reduce(function (max,v,i,a) {return Number.isFinite(v) && v > max ? v : max;}, -Infinity);
 	},
 	/**. '{number SUM(array list)}: Retorna a soma da lista de finitos.**/
 	SUM: function(list) {
-		return list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) ? v : 0);}, 0);
+		return this.round(list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) ? v : 0);}, 0));
 	},
-	/**. '{number AVG(array list)}: Retorna a média da lista de finitos ou nulo.**/
+	/**. '{number AVG(array list)}: Retorna a média da lista de finitos ou zero.**/
 	AVG: function(list) {
 		const len = list.reduce(function (len,v,i,a) {return len + (Number.isFinite(v) ? 1 : 0);}, 0);
-		return len === 0 ? null : this.SUM(list)/len;
+		return len === 0 ? 0 : this.round(this.SUM(list)/len);
 	},
-	/**. '{number MED(array list)}: Retorna a mediana da lista de finitos ou nulo.**/
+	/**. '{number MED(array list)}: Retorna a mediana da lista de finitos ou zero.**/
 	MED: function(list) {
 		const y = this.ASC(list);
 		const l = y.length;
-		return l === 0 ? null : (l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
+		return l === 0 ? 0 : this.round(l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
 	},
-	/**. '{number HARM(array list)}: Retorna a média harmônica da lista de finitos ou nulo.**/
+	/**. '{number HARM(array list)}: Retorna a média harmônica da lista de finitos ou zero.**/
 	HARM: function(list) {
 		const len = list.reduce(function (len,v,i,a) {return len + (Number.isFinite(v) && v !== 0 ? 1 : 0);}, 0);
 		const sum = list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) && v !== 0 ? 1/v : 0);}, 0);
-		return sum === 0 ? null : len/sum;
+		return sum === 0 ? 0 : this.round(len/sum);
 	},
-	/**. '{number HARM(array list)}: Retorna a média geométrica da lista de finitos ou nulo.**/
+	/**. '{number HARM(array list)}: Retorna a média geométrica da lista de finitos ou zero.**/
 	GEO: function(list) {
 		const len = list.reduce(function (len,v,i,a) {return len + (Number.isFinite(v) && v > 0 ? 1 : 0);}, 0);
 		const sum = list.reduce(function (sum,v,i,a) {return sum * (Number.isFinite(v) && v > 0 ? v : 1);}, 1);
-		return len === 0 ? null : Math.pow(sum, 1/len);
+		return len === 0 ? 0 : this.round(Math.pow(sum, 1/len));
 	},
-	/**. '{number SD(array list)}: Retorna o desvio padrão da lista de finitos ou nulo.**/
+	/**. '{number SD(array list)}: Retorna o desvio padrão da lista de finitos ou zero.**/
 	SD: function(list) {
 		const len = list.reduce(function (len,v,i,a) {return len + (Number.isFinite(v) ? 1 : 0);}, 0);
 		const avg = this.AVG(list);
-		const sum = list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) ? (v-avg)*(v-avg) : 0);}, 0);
-		return len === 0 ? null : Math.sqrt(sum/len);
+		const sum = list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) ? Math.pow(v - avg, 2) : 0);}, 0);
+		return len === 0 ? 0 : this.round(Math.sqrt(sum/len));
 	},
+
+
+
+
 
 	DISTINCT: function(list, data) {
 		const dist = list.filter(function(v,i,a) {
@@ -342,6 +324,58 @@ const __DATA2D = {
 			for (let i in data) data[i] = data[i]/item.length;
 		return data;
 	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	path: function(dataXY, type, color) {
+		const x = this.toList(dataXY, "x");
+		const y = this.toList(dataXY, "y");
+		const d = dataXY.map(function(v,i,a) {
+			if (type === "dots")
+
+
+			if (type === "link")
+
+			if (type === "stair")
+
+
+			if (type === "dash")
+
+
+			if (type === "area")
+
+			if (type === "line")
+
+
+
+
+
+		});
+
+
+
+
+
+
+
+
+
+
+
+
+	}
 
 
 
