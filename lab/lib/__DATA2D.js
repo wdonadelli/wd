@@ -2,22 +2,16 @@
 #3 Análise Quantitativa
 O objeto '{__DATA2D} apresenta ferramentas para análise de conjunto de dados finitos em duas dimensões.
 **/
-/*
-	''constructor object __Data2D(array x, any y)''
-	Análise de dados em duas dimensões.
-	O argumento '{x} corresponde a uma lista de valores (array) de referência que aceita valores finitos e de data/tempo, conforme regras da biblioteca.
-	O argumento '{y} é a resposta em função de '{x}, podendo ser uma lista de valores do mesmo tipo que '{x}, uma constante ou uma função. No caso de função, '{y} receberá o valor de '{y(x)}.
-	Valores não finitos serão eliminados do conjunto '{(x, y)}.*/
 const __DATA2D = {
 	/**. '{number toNumeric(any value)}: Converte '{value} de finito, dias ou segundos para numérico ou nulo.**/
 	toNumeric: function(value) {
 		const data = new __Type(value);
 		return data.finite || data.date || data.time || data.datetime ? data.valueOf() : null;
 	},
-	/**. '{number round(finite value)}: Retorna o valor arredondado considerando a precisão EPSILON.**/
-	//FIXME essa porcaria não funciona ainda
-	round: function(value) {
-		for (let i = 0; i <= 100; i++)
+	/**. '{number round(finite value)}: Retorna o valor arredondado considerando a precisão a{EPSILON][href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding" target="blank"].**/
+	round: function(value) {//FIXME essa porcaria não funciona ainda
+		if (!Number.isFinite(value)) return null;
+		for (let i = 0; i <= 17; i++)
 			if (Math.abs(value - Number(value.toFixed(i))) < Number.EPSILON)
 				return Number(value.toFixed(i));
 		return value;
@@ -31,7 +25,7 @@ const __DATA2D = {
 
 	/**. '{array convert(array list)}: Converte os itens de '{list} para ...TODO implementar outras possibilidades.**/
 	convert: function(list) {
-		return list.map(function(v,i,a) {return this.toNumeric(v)}, this);
+		return list.map(function(v,i,a) {return this.round(this.toNumeric(v));}, this);
 	},
 	/**. '{object dataXY(array x, array y}: Retorna uma lista de objetos contendo as coordenadas '{x, y} de forma alinhada, qualificada, não repetida e ordenada em relação a '{x} dos valores numéricos finitos de ambas as listas.**/
 	dataXY: function(x, y) {
@@ -71,7 +65,7 @@ const __DATA2D = {
 		return list.map(function(v,i,a) {
 			try {
 				const x = call(v);
-				return Number.isFinite(x) ? x : null;
+				return Number.isFinite(x) ? this.round(x) : null;
 			} catch(e) {return null;}
 		}, this);
 	},
@@ -87,7 +81,7 @@ const __DATA2D = {
 		}, 0);
 		return Math.sqrt(sum/len);
 		//FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
-		//x = [2,3,4,5,6,100]; y = __DATA2D.map(x, (x)=> 3*Math.exp(4*x)); z = __DATA2D.exponentialFit(__DATA2D.dataXY(x,y))
+		//x = [2,3,4,5,6,100]; y = __DATA2D.map(x, (x)=> 3*Math.exp(4*x)); z = __DATA2D.expFit(__DATA2D.dataXY(x,y))
 	},
 	/**. '{string valueFit(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
 	valueFit: function(x) {
@@ -136,12 +130,12 @@ const __DATA2D = {
 			fit.v = `∑yi∆xi ≅ ${math.a}`;
 		}
 		else if (type === "avg") {
-			fit.m = `∑yi∆xi/∆x ≅ a`;
-			fit.v = `∑yi∆xi/∆x ≅ ${math.a}`;
+			fit.m = `∑yi∆xi/∆x ≅ a ± σ`;
+			fit.v = `∑yi∆xi/∆x ≅ ${math.a} ± ${math.d}`;
 		}
 		return;
 	},
-	/**. '{object linearFit(object dataXY)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
+	/**. '{object linFit(object dataXY)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
 	|Propriedade|Tipo|Descrição|
 	|a|finite|O coeficiente '{a} do modelo da regressão|
 	|b|finite|O coeficiente '{b} do modelo da regressão|
@@ -150,7 +144,7 @@ const __DATA2D = {
 	|d|finite|O erro quadrático médio|
 	|m|string|O modelo da regressão|
 	|v|string|A visualização da regressão|**/
-	linearFit: function(dataXY) {
+	linFit: function(dataXY) {
 		const fit = this.ols(dataXY);
 		if (fit !== null) {
 			fit.p = dataXY;
@@ -160,8 +154,8 @@ const __DATA2D = {
 		}
 		return fit;
 	},
-	/**. '{object geometricFit(object dataXY)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linearFit}**/
-	geometricFit: function(dataXY) {
+	/**. '{object geoFit(object dataXY)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linFit}**/
+	geoFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.map(this.toList(dataXY, "x"), Math.log);
 		const y    = this.map(this.toList(dataXY, "y"), Math.log);
@@ -178,8 +172,8 @@ const __DATA2D = {
 		}
 		return fit;
 	},
-	/**. '{object exponentialFit(object dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linearFit}**/
-	exponentialFit: function(dataXY) {
+	/**. '{object expFit(object dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linFit}**/
+	expFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.toList(dataXY, "x");
 		const y    = this.map(this.toList(dataXY, "y"), Math.log);
@@ -187,7 +181,7 @@ const __DATA2D = {
 		const calc = this.ols(data);
 		const fit  = calc === null ? null : {};
 		if (fit !== null) {
-			fit.a = Math.exp(calc.b)
+			fit.a = this.round(Math.exp(calc.b));
 			fit.b = calc.a;
 			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.exp(fit.b*x);};
@@ -196,17 +190,17 @@ const __DATA2D = {
 		}
 		return fit;
 	},
-	/**. '{object logarithmicFit(object dataXY)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linearFit}**/
-	logarithmicFit: function(dataXY) {
+	/**. '{object logFit(object dataXY)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linFit}**/
+	logFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.toList(dataXY, "x");
 		const y    = this.map(this.toList(dataXY, "y"), Math.exp);
 		const data = this.dataXY(x, y);
-		const calc = this.geometricFit(data);
+		const calc = this.geoFit(data);
 		const fit  = calc === null ? null : {};
 		if (fit !== null) {
 			fit.a = calc.b;
-			fit.b = Math.pow(calc.a, 1/calc.b);
+			fit.b = this.round(Math.pow(calc.a, 1/calc.b));
 			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.log(fit.b*x);};
 			fit.d = this.rmse(fit.p, fit.f);
@@ -217,35 +211,35 @@ const __DATA2D = {
 	/**. '{object minRMSE(object dataXY)}: Retorna a regressão com menor erro quadrático médio ou nulo.**/
 	minRMSE: function(dataXY) {
 		return [
-			this.linearFit(dataXY),
-			this.geometricFit(dataXY),
-			this.exponentialFit(dataXY),
-			this.logarithmicFit(dataXY)
+			this.linFit(dataXY),
+			this.geoFit(dataXY),
+			this.expFit(dataXY),
+			this.logFit(dataXY)
 		].sort(function(a,b) {
 			return a === null ? 1 : (b === null ? -1 : (a.d === b.d ? 0 : (a.d < b.d ? -1 : 1)));
 		})[0];
 	},
-	/**. '{object sumFit(object dataXY)}: Retorna um objeto contendo os dados da soma das áreas semelhantecom os mesmos parâmetros do método '{linearFit}**/
+	/**. '{object sumFit(object dataXY)}: Retorna um objeto contendo os dados da soma das áreas semelhantecom os mesmos parâmetros do método '{linFit}**/
 	sumFit: function(dataXY) {
 		const sum = dataXY.reduce(function(sum,v,i,a) {return sum + (i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2);}, 0)
 		const fit = {};
 		fit.a = this.round(sum);
 		fit.b = 0,
-		fit.p = dataXY;// tem que colocar {x: x1, y: 0} e {x: xn, y: 0}
+		fit.p = dataXY;//FIXME tem que colocar {x: x1, y: 0} e {x: xn, y: 0}
 		fit.f = function(x) {return fit.a;};
 		fit.d = 0;
 		this.stringFit(fit, "sum");
 		return fit;
 	},
-	/**. '{object avgFit(object dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linearFit}**/
+	/**. '{object avgFit(object dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linFit}**/
 	avgFit: function(dataXY) {
 		const xlist = this.toList(dataXY, "x");
 		const delta = this.round(this.MAX(xlist) - this.MIN(xlist));
 		const fit   = this.sumFit(dataXY);
 		fit.a = delta === 0 ? 0 : this.round(fit.a/delta);
-		fit.p = dataXY;
+		fit.p = dataXY; //FIXME mudar para exibir apenas {x: x1, y: m} e {x: xn, y: m}
 		fit.f = function(x) {return fit.a;};
-		fit.d = this.rmse(fit.p, fit.f);
+		fit.d = this.rmse(dataXY, fit.f);
 		this.stringFit(fit, "avg");
 		return fit;
 	},
@@ -338,7 +332,7 @@ const __DATA2D = {
 
 
 
-
+/*
 	path: function(dataXY, type, color) {
 		const x = this.toList(dataXY, "x");
 		const y = this.toList(dataXY, "y");
@@ -357,25 +351,8 @@ const __DATA2D = {
 			if (type === "area")
 
 			if (type === "line")
-
-
-
-
-
 		});
-
-
-
-
-
-
-
-
-
-
-
-
-	}
+	},*/
 
 
 
