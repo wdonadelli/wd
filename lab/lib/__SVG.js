@@ -136,19 +136,29 @@
 		/**. '{self text(number x, number y, string|array text, string point)}: Define um SVG textual posicionado em '{x} e '{y}. O argumento '{text}, se lista, criará um elemento i{tspan} para cada item empilhados e, se texto, criará um elemento i{text}. O argumento '{point} define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, i{v} para vertical e i{h} para horizontal e os demais definem a âncora conforme pontos cardeais: i{n, ne, e, se, s, sw, w, nw} e i{c} para o meio.**/
 		text: {
 			value: function(x, y, text, point) {
-				/*-- definindo atributos do texto --*/
-				const vanchor = ["start", "middle", "end"];
-				const vbase   = ["auto", "middle", "hanging"];
-				const anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				const base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				const attr    = {
-					x: point[0] === "v" ? -y : x,
-					y: point[0] === "v" ?  x : y,
-					"text-anchor":       vanchor[anchor[point.substring(1)]],
-					"dominant-baseline": vbase[base[point.substring(1)]],
-					"transform":         point[0] === "v" ? "rotate(270)" : "",
+				point = String(point).toLowerCase();
+				const config = {
+					hn:  {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "hanging"},
+					hne: {x:  x, y: y, "text-anchor": "end",    "dominant-baseline": "hanging"},
+					he:  {x:  x, y: y, "text-anchor": "end",    "dominant-baseline": "middle"},
+					hse: {x:  x, y: y, "text-anchor": "end",    "dominant-baseline": "auto"},
+					hs:  {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "auto"},
+					hsw: {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "auto"},
+					hw:  {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "middle"},
+					hnw: {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "hanging"},
+					hc:  {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "middle"},
+					vn:  {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "hanging", transform: "rotate(270)"},
+					vne: {x: -y, y: x, "text-anchor": "end",    "dominant-baseline": "hanging", transform: "rotate(270)"},
+					ve:  {x: -y, y: x, "text-anchor": "end",    "dominant-baseline": "middle",  transform: "rotate(270)"},
+					vse: {x: -y, y: x, "text-anchor": "end",    "dominant-baseline": "auto",    transform: "rotate(270)"},
+					vs:  {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "auto",    transform: "rotate(270)"},
+					vsw: {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "auto",    transform: "rotate(270)"},
+					vw:  {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "middle",  transform: "rotate(270)"},
+					vnw: {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "hanging", transform: "rotate(270)"},
+					vc:  {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "middle",  transform: "rotate(270)"},
 				};
-				this.last = this.create("text");
+				const attr = point in config ? config[point] : config.hc;
+				this.last  = this.create("text");
 				this.last.style.whiteSpace = "break-spaces";
 				this.attribute(attr);
 				/*-- definindo texto em linha ou empilhado --*/

@@ -3,24 +3,71 @@
 O objeto '{__PLOT2D} apresenta ferramentas para construção de gráficos duas dimensões.
 **/
 const __PLOT2D = {
-	/**. '{object screen}: Registra a dimensão de referência da tela ('{width} é maior ou igual a '{height}).**/
-	screen: {
-		height: Math.min(window.screen.width, window.screen.height),
-		width:  Math.max(window.screen.width, window.screen.height),
+	/**. '{object frame}: Registra os pontos de referência do gráfico.**/
+	frame: {
+		w: Math.max(window.screen.width, window.screen.height),
+		h: Math.min(window.screen.width, window.screen.height),
+		get xi() {return Math.trunc(0.10 * this.w);},
+		get xf() {return this.w - Math.trunc(0.20 * this.w);},
+		get x()  {return this.xf - this.xi;},
+		get xm() {return Math.trunc((this.xi + this.xf)/2);},
+		get yi() {return Math.trunc(0.10 * this.h);},
+		get yf() {return this.h - Math.trunc(0.20 * this.h);},
+		get y()  {return this.yf - this.yi;},
+		get ym() {return Math.trunc((this.yi + this.yf)/2);},
 	},
+
+	struct: function(plot) {
+		const color = "white";
+		const attr  = {
+			svg:    {style: `background: #202020; font-size: 16px; font-weight: normal; font-style: normal; font-family: monospace; width: 500px;`},
+			main:   {stroke: color, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
+			title:  {fill: color, "font-size": "1.5em"},
+			xlabel: {fill: color},
+			ylabel: {fill: color},
+		};
+		/*-- SVG --*/
+		plot.svg.attribute(attr.svg);
+		plot.frame = {};
+		/*-- quadro principal --*/
+		plot.svg.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y).attribute(attr.main);
+		plot.frame.main = plot.svg.last;
+		/*-- título --*/
+		plot.svg.text(this.frame.xm, this.frame.yi/2, plot.title, "hc").attribute(attr.title);
+		plot.frame.title = plot.svg.last;
+		/*-- Rótulo X --*/
+		plot.svg.text(this.frame.xm, this.frame.h, plot.xLabel, "hs").attribute(attr.xlabel);
+		plot.frame.xLabel = plot.svg.last;
+		/*-- Rótulo Y --*/
+		plot.svg.text(0, this.frame.ym, plot.yLabel, "vn").attribute(attr.ylabel);
+		plot.frame.yLabel = plot.svg.last;
+
+
+
+
+
+	},
+
+
+
+
+
+
+
+
 	/**. '{array curves}: Tipos de curvas possíveis.**/
 	curves: ["lines", "dots", "link", "step", "curve", "dash", "soft", "area", "linFit", "expFit", "logFit", "geoFit", "avgFit", "sumFit"],
-
-
+	/**. '{string svgPath(array dataXY, string type}: Retorna o valor do atributo '{d} para uso no elemento '{path}.**/
 	svgPath: function(dataXY, type) {
+		const r = 0.5;
 		if (type === "lines") return dataXY.reduce(function(path,v,i,a) {
 			return path + `${i === 0 ? "M" : (i === 1 ? "L" : "")} ${v.x},${v.y} `;
 		}, "");
 		if (type === "step") return dataXY.reduce(function(path,v,i,a) {
-			return path + `H ${v.x} V ${v.y} `;
+			return path + (i === 0 ? `M ${v.x},${v.y} ` : `H ${v.x} V ${v.y} `);
 		}, "");
 		if (type === "dots") return dataXY.reduce(function(path,v,i,a) {
-			return path + `H ${v.x} V ${v.y} `;//TODO fazer
+			return path + `M ${v.x-r},${v.y} a ${r},${r} 0 1,0 ${2*r},0 a ${r},${r} 0 1,0 ${-2*r},0`
 		}, "");
 		if (type === "curve" || type === "dash") return dataXY.reduce(function(path,v,i,a) {
 			if (i === 0)
@@ -32,7 +79,8 @@ const __PLOT2D = {
 			if (i > 2 && i%2 === 0)
 				return path + `S ${a[i-1].x},${a[i-1].y} ${v.x},${v.y} `;
 			if (i === a.length - 1)
-				return path + `S ${v.x},${v.y} ${v.x},${v.y}`;
+				return path + `S ${v.x},${v.y} ${v.x},${v.y} `;
+			return path;
 		}, "");
 		if (type === "area")
 			return this.svgPath(dataXY, "lines") + "Z";
@@ -42,6 +90,10 @@ const __PLOT2D = {
 			return this.svgPath(dataXY, "curve") + this.svgPath(dataXY, "dots");
 		return "";
 	},
+
+
+
+
 
 
 
@@ -108,7 +160,7 @@ const __PLOT2D = {
 		//TODO quando dx for menor EPSILON tem que redefinir pt e definir dx como EPSILON
 
 		const dw = __DATA2D.round(max - min);
-		const pt = this.screen.width; //FIXME mudar this.screen.width para a tela do gŕafico
+		const pt = this.frame.x;
 		const dx = __DATA2D.round(dw/pt);
 		return Array(pt).fill(0).map(function(v,i,a) {
 			return i === a.length - 1 ? max : __DATA2D.round(min + __DATA2D.round(i * dx));
@@ -136,9 +188,10 @@ const __PLOT2D = {
 			typeof data !== "object" || typeof data.xAxis !== "object" || typeof data.yAxis !== "object" ||
 			!Array.isArray(data.xAxis.data) || !Array.isArray(data.yAxis.dataset)
 		) return null;
-		const type = ["numeric", "datetime", "date", "time"];
-		const plot = {};
-		plot.title  = "title" in data ? data.title : "Title";
+		const type  = ["numeric", "datetime", "date", "time"];
+		const plot  = {};
+		plot.svg    = new __SVG(this.frame.w, this.frame.h, 0, 0);
+		plot.title   = "title" in data ? data.title : "Title";
 		plot.xLabel = "label" in data.xAxis ? data.xAxis.label : "Label x";
 		plot.yLabel = "label" in data.yAxis ? data.yAxis.label : "Label y";
 		plot.xType  = type.indexOf(data.xAxis.type) >= 0 ? data.xAxis.type : type[0];
@@ -152,6 +205,10 @@ const __PLOT2D = {
 		plot.yMax   = -Infinity;
 		plot.yData  = [];
 		data.yAxis.dataset.filter(function(v,i,a) {return this.filterPlot(plot, v, i);}, this);
+		this.struct(plot);
+		plot.svg.svg(document.body);
+
+
 		return plot;
 
 	},
