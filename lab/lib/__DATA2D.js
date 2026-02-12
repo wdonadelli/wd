@@ -27,7 +27,7 @@ const __DATA2D = {
 	convert: function(list) {
 		return list.map(function(v,i,a) {return this.round(this.toNumeric(v));}, this);
 	},
-	/**. '{object dataXY(array x, array y}: Retorna uma lista de objetos contendo as coordenadas '{x, y} de forma alinhada, qualificada, não repetida e ordenada em relação a '{x} dos valores numéricos finitos de ambas as listas.**/
+	/**. '{array dataXY(array x, array y}: Retorna uma lista de objetos contendo as coordenadas '{x, y} de forma alinhada, qualificada, não repetida e ordenada em relação a '{x} dos valores numéricos finitos de ambas as listas.**/
 	dataXY: function(x, y) {
 		/*-- valores precisam ser numéricos e x não pode repetir --*/
 		return x.map(function(v,i,a) {
@@ -42,11 +42,11 @@ const __DATA2D = {
 			return a.x === b.x ? 0 : (a.x < b.x ? -1 : 1);
 		});
 	},
-	/**. '{object toList(object dataXY, string axis)}: Recebe o resultado do método '{dataXY} e retorna a lista do eixo '{x} ou '{y}.**/
+	/**. '{array toList(array dataXY, string axis)}: Recebe o resultado do método '{dataXY} e retorna a lista do eixo '{x} ou '{y}.**/
 	toList: function(dataXY, axis) {
 		return dataXY.map(function(v,i,a) {return v[axis];});
 	},
-	/**. '{object ols(object dataXY)}: Recebe o resultado do método '{dataXY} e retorna os coeficientes angular '{a} e linear '{b} obtido pelo "método dos mínimos quadrados" ou nulo. O argumento deve conter pelo menos duas coordenadas.**/
+	/**. '{object ols(array dataXY)}: Recebe o resultado do método '{dataXY} e retorna os coeficientes angular '{a} e linear '{b} obtido pelo "método dos mínimos quadrados" ou nulo. O argumento deve conter pelo menos duas coordenadas.**/
 	ols: function(dataXY) {
 		if (dataXY.length < 2) return null;
 		const sumX  = dataXY.reduce(function(sum,v,i,a) {return sum + v.x;}, 0);
@@ -69,7 +69,7 @@ const __DATA2D = {
 			} catch(e) {return null;}
 		}, this);
 	},
-	/**. '{number rmse(object dataXY, function fit)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento fit é a função que resultou da regressão.**/
+	/**. '{number rmse(array dataXY, function fit)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento fit é a função que resultou da regressão.**/
 	rmse: function(dataXY, fit) {
 		const  y1 = this.toList(dataXY, "y");
 		const  y2 = this.map(this.toList(dataXY, "x"), fit);
@@ -83,8 +83,8 @@ const __DATA2D = {
 		//FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
 		//x = [2,3,4,5,6,100]; y = __DATA2D.map(x, (x)=> 3*Math.exp(4*x)); z = __DATA2D.expFit(__DATA2D.dataXY(x,y))
 	},
-	/**. '{string valueFit(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
-	valueFit: function(x) {
+	/**. '{string value(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
+	value: function(x) {
 		const abs = Math.abs(x);
 		if (abs === 0)
 			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
@@ -108,7 +108,7 @@ const __DATA2D = {
 	},
 	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
 	stringFit: function(fit, type) {
-		const math = {a: this.valueFit(fit.a), b: this.valueFit(fit.b), d: this.valueFit(fit.d)};
+		const math = {a: this.value(fit.a), b: this.value(fit.b), d: this.value(fit.d)};
 		if (type === "linear") {
 			fit.m = `y = ax + b ± σ`;
 			fit.v = `y = ${math.a}x + (${math.b}) ± ${math.d}`;
@@ -135,26 +135,24 @@ const __DATA2D = {
 		}
 		return;
 	},
-	/**. '{object linFit(object dataXY)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
+	/**. '{object linFit(array dataXY)}: Retorna um objeto contendo os dados da regressão linear ou nulo. O argumento '{list} é o retorno do método '{toData}:
 	|Propriedade|Tipo|Descrição|
 	|a|finite|O coeficiente '{a} do modelo da regressão|
 	|b|finite|O coeficiente '{b} do modelo da regressão|
-	|p|object|O conjunto de dados de referência|
-	|f|function|A função obtida pela regressão|
+	|f|function|A função obtida pela regressão ou uma constante|
 	|d|finite|O erro quadrático médio|
 	|m|string|O modelo da regressão|
 	|v|string|A visualização da regressão|**/
 	linFit: function(dataXY) {
 		const fit = this.ols(dataXY);
 		if (fit !== null) {
-			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*x + fit.b;};
-			fit.d = this.rmse(fit.p, fit.f);
+			fit.d = this.rmse(dataXY, fit.f);
 			this.stringFit(fit, "linear");
 		}
 		return fit;
 	},
-	/**. '{object geoFit(object dataXY)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linFit}**/
+	/**. '{object geoFit(array dataXY)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linFit}**/
 	geoFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.map(this.toList(dataXY, "x"), Math.log);
@@ -165,14 +163,13 @@ const __DATA2D = {
 		if (fit !== null) {
 			fit.a = this.round(Math.exp(calc.b));
 			fit.b = calc.a;
-			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.pow(x, fit.b);};
-			fit.d = this.rmse(fit.p, fit.f);
+			fit.d = this.rmse(dataXY, fit.f);
 			this.stringFit(fit, "geometric");
 		}
 		return fit;
 	},
-	/**. '{object expFit(object dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linFit}**/
+	/**. '{object expFit(array dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linFit}**/
 	expFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.toList(dataXY, "x");
@@ -183,14 +180,13 @@ const __DATA2D = {
 		if (fit !== null) {
 			fit.a = this.round(Math.exp(calc.b));
 			fit.b = calc.a;
-			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.exp(fit.b*x);};
-			fit.d = this.rmse(fit.p, fit.f);
+			fit.d = this.rmse(dataXY, fit.f);
 			this.stringFit(fit, "exponential");
 		}
 		return fit;
 	},
-	/**. '{object logFit(object dataXY)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linFit}**/
+	/**. '{object logFit(array dataXY)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linFit}**/
 	logFit: function(dataXY) {
 		/*-- efetuar a transformada de dados --*/
 		const x    = this.toList(dataXY, "x");
@@ -201,14 +197,13 @@ const __DATA2D = {
 		if (fit !== null) {
 			fit.a = calc.b;
 			fit.b = this.round(Math.pow(calc.a, 1/calc.b));
-			fit.p = dataXY;
 			fit.f = function(x) {return fit.a*Math.log(fit.b*x);};
-			fit.d = this.rmse(fit.p, fit.f);
+			fit.d = this.rmse(dataXY, fit.f);
 			this.stringFit(fit, "logarithmic");
 		}
 		return fit;
 	},
-	/**. '{object minRMSE(object dataXY)}: Retorna a regressão com menor erro quadrático médio ou nulo.**/
+	/**. '{object minRMSE(array dataXY)}: Retorna a regressão com menor erro quadrático médio ou nulo.**/
 	minRMSE: function(dataXY) {
 		return [
 			this.linFit(dataXY),
@@ -219,27 +214,25 @@ const __DATA2D = {
 			return a === null ? 1 : (b === null ? -1 : (a.d === b.d ? 0 : (a.d < b.d ? -1 : 1)));
 		})[0];
 	},
-	/**. '{object sumFit(object dataXY)}: Retorna um objeto contendo os dados da soma das áreas semelhantecom os mesmos parâmetros do método '{linFit}**/
+	/**. '{object sumFit(array dataXY)}: Retorna um objeto contendo os dados da soma das áreas conectadas por linhas com os mesmos parâmetros do método '{linFit}**/
 	sumFit: function(dataXY) {
 		const sum = dataXY.reduce(function(sum,v,i,a) {return sum + (i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2);}, 0)
 		const fit = {};
 		fit.a = this.round(sum);
 		fit.b = 0,
-		fit.p = dataXY;//FIXME tem que colocar {x: x1, y: 0} e {x: xn, y: 0}
-		fit.f = function(x) {return fit.a;};
+		fit.f = fit.a;
 		fit.d = 0;
 		this.stringFit(fit, "sum");
 		return fit;
 	},
-	/**. '{object avgFit(object dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linFit}**/
+	/**. '{object avgFit(array dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linFit}**/
 	avgFit: function(dataXY) {
 		const xlist = this.toList(dataXY, "x");
 		const delta = this.round(this.MAX(xlist) - this.MIN(xlist));
 		const fit   = this.sumFit(dataXY);
 		fit.a = delta === 0 ? 0 : this.round(fit.a/delta);
-		fit.p = dataXY; //FIXME mudar para exibir apenas {x: x1, y: m} e {x: xn, y: m}
-		fit.f = function(x) {return fit.a;};
-		fit.d = this.rmse(dataXY, fit.f);
+		fit.f = fit.a;
+		fit.d = this.rmse(dataXY, function(x) {return fit.a;});
 		this.stringFit(fit, "avg");
 		return fit;
 	},
