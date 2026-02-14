@@ -8,9 +8,10 @@ const __PLOT2D = {
 	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
 	|Curva|Descrição|Tipo de dado|
 	|'{dot}|Pontos representados por círculos|Lista|
-	|'{line}|Pontos ligados por linha|Lista e constante|
+	|'{line}|Pontos ligados por linha|Lista, constante e função|
 	|'{step}|Pontos ligados em níveis|Lista|
-	|'{curve}|Pontos ligados por linhas curvas|Lista e função|
+	|'{curve}|Pontos ligados por curvas|Lista|
+	|'{dash}|Pontos ligados por linhas pontilhadas|Lista e função|
 	|'{linFit}|Ajuste linear dos pontos|Lista, função e constante|
 	|'{expFit}|Ajuste exponencial dos pontos|Lista, função e constante|
 	|'{logFit}|Ajuste logaritmo dos pontos|Lista, função e constante|
@@ -20,7 +21,7 @@ const __PLOT2D = {
 	curve: function(y, fit) {
 		const data  = {type: null, curve: null, fit: null};
 		const isFit = (/^(lin|exp|log|geo|avg|sum)Fit$/).test(fit);
-		const array = ["dot", "line", "step", "curve"]
+		const array = ["dot", "line", "step", "curve", "dash"]
 		/*-- tipo de dado --*/
 		if (Array.isArray(y) && y.length > 1)    data.type  = "array";
 		else if (typeof y === "function")        data.type  = "function";
@@ -28,11 +29,11 @@ const __PLOT2D = {
 		else return null;
 		/*-- tipo de curva --*/
 		if      (data.type === "constant") data.curve = "line";
-		else if (data.type === "function") data.curve = "curve";
+		else if (data.type === "function") data.curve = "line";
 		else                               data.curve = array.indexOf(fit) >= 0 ? fit : "dot";
 		/*-- tipo de ajuste --*/
 		if (isFit) {
-			if (fit === "avgFit") {
+			if (fit === "avgFit" || fit === "linFit") {
 				data.fit   = "line";
 				data.curve = data.type === "array" ? "dot" : data.curve;
 			}
@@ -41,7 +42,7 @@ const __PLOT2D = {
 				data.curve = data.type === "array" ? "line" : data.curve;
 			}
 			else {
-				data.fit   = "curve";
+				data.fit   = "line";
 				data.curve = data.type === "array" ? "dot" : data.curve;
 			}
 		}
@@ -49,7 +50,7 @@ const __PLOT2D = {
 	},
 	/**. '{string svgPath(array dataXY, string type}: Retorna o valor do atributo '{d} para uso no elemento '{path}.**/
 	svgPath: function(dataXY, type) {
-		const r = 0.5;
+		const r = 5;
 		if (type === "dot") return dataXY.reduce(function(path,v,i,a) {
 			return path + `M ${v.x-r},${v.y} a ${r},${r} 0 1,0 ${2*r},0 a ${r},${r} 0 1,0 ${-2*r},0`
 		}, "");
@@ -74,6 +75,8 @@ const __PLOT2D = {
 		}, "");
 		if (type === "area")
 			return this.svgPath(dataXY, "line") + "Z";
+		if (type === "dash")
+			return this.svgPath(dataXY, "line") + this.svgPath(dataXY, "dot");
 		return "";
 	},
 	/**. '{object frame}: Registra os pontos de referência do gráfico em '{px}.
@@ -108,7 +111,7 @@ const __PLOT2D = {
 	},
 	/**. '{void struct(object plot)}: Define a estrutura básica do gráfico.**/
 	struct: function(plot) {
-		const color = "white";
+		const color = "grey";
 		const attr  = {
 			svg:   {style: `background: #202020; font-weight: normal; font-style: normal; font-family: monospace; width: 600px;`},
 			main:  {stroke: color, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
@@ -147,7 +150,7 @@ const __PLOT2D = {
 			let py = this.frame.yi + i*(this.frame.y/(this.frame.s - 1));
 			let vx = i === this.frame.s - 1 ? plot.xMax : plot.xMin + i*((plot.xMax - plot.xMin)/(this.frame.s - 1));
 			let tx = i === 0 ? "hnw" : (i === this.frame.s - 1 ? "hne" : "hn");
-			let vy = i === this.frame.s - 1 ? plot.xMin : plot.yMax - i*((plot.yMax - plot.yMin)/(this.frame.s - 1));
+			let vy = i === this.frame.s - 1 ? plot.yMin : plot.yMax - i*((plot.yMax - plot.yMin)/(this.frame.s - 1));
 			let ty = i === 0 ? "hne" : (i === this.frame.s - 1 ? "hse" : "he");
 			/*-- grades de subdivisão --*/
 			if (i > 0 && i < this.frame.s - 1) {
@@ -169,6 +172,7 @@ const __PLOT2D = {
 			plot.frame[`yScale${i}`] = plot.svg
 				.text(this.frame.xi - this.frame.p, py, vy, ty)
 				.attribute(attr.label)
+				.title(vy)
 				.last;
 		}
 		/*-- marcadores de posição --*/
@@ -200,14 +204,15 @@ const __PLOT2D = {
 		const curve = this.curve(y);
 		const data  = {};
 		if (curve.type === "constant") {
-			const Y  = __DATA2D.toNumeric(y)
-			data.xy  = __DATA2D.dataXY([x[0], x[x.length - 1]], Array(2).fill(Y));//FIXME tem erro
+			const Y  = __DATA2D.toNumeric(y);
+			const XY = __DATA2D.dataXY(x, Array(x.length).fill(Y));
+			data.xy  = [XY[0], XY[XY.length - 1]];
 			data.min = Y;
 			data.max = Y;
 			return data;
 		}
 		if (curve.type === "function") {
-			const Y  = __DATA2D.convert(xList, y);
+			const Y  = __DATA2D.map(xList, y);
 			data.xy  = __DATA2D.dataXY(xList, Y);
 			data.min = __DATA2D.MIN(Y);
 			data.max = __DATA2D.MAX(Y);
@@ -234,31 +239,81 @@ const __PLOT2D = {
 		dataset.color = this.RGB[i%this.RGB.length];
 		dataset.curve = curve.curve;
 		dataset.id    = __ID.value;
-		dataset.fit   = curve.fit    === null ? null : __DATA2D[yData.fit](dataset.data);
-		dataset.fitXY = dataset.fit === null ? null : this.dataXY(plot.xData, dataset.fit.f, plot.xList);
+		dataset.fit   = curve.fit === null ? null : __DATA2D[yData.fit](dataset.data);
 		dataset.plus  = null;
-		plot.yMin     = Math.min(plot.yMin, dataXY.min);
-		plot.yMax     = Math.max(plot.yMax, dataXY.max);
+		const yList   = __DATA2D.toList(dataset.data, "y");
+		plot.yMin     = Math.min(plot.yMin, __DATA2D.MIN(yList));
+		plot.yMax     = Math.max(plot.yMax, __DATA2D.MAX(yList));
 		/*-- curva de ajuste --*/
-		if (dataset.fitXY !== null) {
-			//FIXME tem muito erro aqui
-
-
-			dataset.plus = {curve: curve.fit, data: dataset.fitXY.xy};
-			plot.yMin = Math.min(plot.yMin, dataset.fitXY.min);
-			plot.yMax = Math.max(plot.yMax, dataset.fitXY.max);
-			if (curve.plus === "area") {
-				const init = {y: 0, x: dataset.plus.data[0].x};
-				const last = {y: 0, x: dataset.plus.data[dataset.plus.data.length - 1].x};
-				plot.yMin  = Math.min(plot.yMin, 0);
-				plot.yMax  = Math.max(plot.yMax, 0);
-				dataset.plus.data.unshift(init);
-				dataset.plus.data.push(last);
+		if (dataset.fit !== null) {
+			const fitXY = this.dataXY(plot.xData, dataset.fit.f, plot.xList);
+			dataset.fit.curve = curve.fit;
+			dataset.fit.data  = fitXY.xy;
+			if (yData.fit === "linFit" || yData.fit === "avgFit")
+				dataset.fit.data = [fitXY.xy[0], fitXY.xy[fitXY.xy.length - 1]];
+			else if (yData.fit === "sumFit") {
+				dataset.fit.data = dataset.data.slice();
+				dataset.fit.data.unshift({x: dataset.data[0].x, y: 0});
+				dataset.fit.data.push({x: dataset.data[dataset.data.length - 1].x, y: 0});
 			}
+			const yFitList = __DATA2D.toList(dataset.fit.data, "y");
+			plot.yMin   = Math.min(plot.yMin, __DATA2D.MIN(yFitList));
+			plot.yMax   = Math.max(plot.yMax, __DATA2D.MAX(yFitList));
 		}
 		plot.yData.push(dataset);
 		return true;
 	},
+	/**. '{void convert(object plot, object data)}: Função auxiliar do método '{print} que converte dados numéricos em pontos no gráfico.**/
+	convert: function(plot, data) {
+		const dx = __DATA2D.round(plot.xMax - plot.xMin);
+		const dy = __DATA2D.round(plot.yMin - plot.yMax);
+		const rx = __DATA2D.round(this.frame.x/dx);
+		const ry = __DATA2D.round(this.frame.y/dy);
+		const xi = this.frame.xi;
+		const xf = this.frame.xf;
+		const yi = this.frame.yi;
+		const yf = this.frame.yf;
+		return data.map(function(v,i,a) {
+			return {
+				x: v.x === plot.xMin ? xi : (v.x === plot.xMax ? xf : xi + __DATA2D.round(rx * (v.x - plot.xMin))),
+				y: v.y === plot.yMin ? yf : (v.y === plot.yMax ? yi : yi + __DATA2D.round(ry * (v.y - plot.yMax)))
+			};
+		});
+	},
+
+
+	print: function(plot) {
+		const attr = {
+			line:  function(color) {return {stroke: color,  "stroke-width": 1, "stroke-linecap": "round", fill: "none"};},
+			area:  function(color) {return {fill: color, "fill-opacity": 0.4};},
+			dash:  function(color) {return Object.assign({"stroke-dasharray": "5,5"}, this.line(color));},
+			step:  function(color) {return this.line(color);},
+			curve: function(color) {return this.line(color);},
+			dot:   function(color) {return this.area(color);},
+		};
+		plot.yData.filter(function(v,i,a) {
+			/*-- curva principal --*/
+			const main = this.convert(plot, v.data);
+			plot.svg
+				.path(this.svgPath(main, v.curve))
+				.attribute(attr[v.curve](v.color))
+				.title("sei lá");
+				console.log(v)
+			/*-- curva de ajuste --*/
+			const fit = v.fit !== null ? this.convert(plot, v.fit.data) : null;
+			if (fit !== null) plot.svg
+				.path(this.svgPath(fit, v.fit.curve))
+				.attribute(attr[v.fit.curve](v.color))
+				.title("sei lá 2");
+		}, this);
+		return;
+	},
+
+
+
+
+
+
 
 	/**. '{array xList(number min, number max)}: Retorna o array contendo os intervalos de '{x} para definir pontos da função.**/
 	xList: function(min, max) {
@@ -312,7 +367,17 @@ const __PLOT2D = {
 		data.yAxis.dataset.filter(function(v,i,a) {
 			return typeof v === "object" ? this.filter(plot, v, i) : false;
 		}, this);
+		console.log(plot.yMin, plot.yMax)
+		/*-- checar dados --*/
+		if (plot.xMin === plot.xMax) return null;
+		if (plot.yMin === plot.yMax) {
+			plot.yMin -= plot.yMin === 0 ? 1 : plot.yMin/2;
+			plot.yMax += plot.yMax === 0 ? 1 : plot.yMax/2;
+		}
+		console.log(plot.yMin, plot.yMax)
 		this.struct(plot);
+		this.print(plot);
+
 		plot.svg.svg(document.body);
 
 

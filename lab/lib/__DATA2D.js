@@ -139,7 +139,7 @@ const __DATA2D = {
 	|Propriedade|Tipo|Descrição|
 	|a|finite|O coeficiente '{a} do modelo da regressão|
 	|b|finite|O coeficiente '{b} do modelo da regressão|
-	|f|function|A função obtida pela regressão ou uma constante|
+	|f|function|A função obtida pela regressão|
 	|d|finite|O erro quadrático médio|
 	|m|string|O modelo da regressão|
 	|v|string|A visualização da regressão|**/
@@ -220,7 +220,7 @@ const __DATA2D = {
 		const fit = {};
 		fit.a = this.round(sum);
 		fit.b = 0,
-		fit.f = fit.a;
+		fit.f = function(x) {return fit.a;};
 		fit.d = 0;
 		this.stringFit(fit, "sum");
 		return fit;
@@ -231,8 +231,8 @@ const __DATA2D = {
 		const delta = this.round(this.MAX(xlist) - this.MIN(xlist));
 		const fit   = this.sumFit(dataXY);
 		fit.a = delta === 0 ? 0 : this.round(fit.a/delta);
-		fit.f = fit.a;
-		fit.d = this.rmse(dataXY, function(x) {return fit.a;});
+		fit.f = function(x) {return fit.a;};
+		fit.d = this.rmse(dataXY, fit.f);
 		this.stringFit(fit, "avg");
 		return fit;
 	},
@@ -248,7 +248,7 @@ const __DATA2D = {
 	},
 	/**. '{number MIN(array list)}: Retorna o menor número da lista de finitos.**/
 	MIN: function (list) {
-		return list.reduce(function (min,v,i,a) {return Number.isFinite(v) && v < min ? v : min;}, Infinity);
+		return list.reduce(function (min,v,i,a) {return Number.isFinite(v) && v < min ? v : min;}, +Infinity);
 	},
 	/**. '{number MAX(array list)}: Retorna o maior número da lista de finitos.**/
 	MAX: function (list) {
