@@ -108,7 +108,11 @@ const __DATA2D = {
 	},
 	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
 	stringFit: function(fit, type) {
-		const math = {a: this.value(fit.a), b: this.value(fit.b), d: this.value(fit.d)};
+		const math = {
+			a: fit.a === null ? "" : this.value(fit.a),
+			b: fit.b === null ? "" : this.value(fit.b),
+			d: fit.d === null ? "" : this.value(fit.d)
+		};
 		if (type === "linear") {
 			fit.m = `y = ax + b ± σ`;
 			fit.v = `y = ${math.a}x + (${math.b}) ± ${math.d}`;
@@ -148,6 +152,7 @@ const __DATA2D = {
 		if (fit !== null) {
 			fit.f = function(x) {return fit.a*x + fit.b;};
 			fit.d = this.rmse(dataXY, fit.f);
+			fit.t = "Linear curve fitting";
 			this.stringFit(fit, "linear");
 		}
 		return fit;
@@ -165,6 +170,7 @@ const __DATA2D = {
 			fit.b = calc.a;
 			fit.f = function(x) {return fit.a*Math.pow(x, fit.b);};
 			fit.d = this.rmse(dataXY, fit.f);
+			fit.t = "Geometric curve fitting";
 			this.stringFit(fit, "geometric");
 		}
 		return fit;
@@ -182,6 +188,7 @@ const __DATA2D = {
 			fit.b = calc.a;
 			fit.f = function(x) {return fit.a*Math.exp(fit.b*x);};
 			fit.d = this.rmse(dataXY, fit.f);
+			fit.t = "Exponential curve fitting";
 			this.stringFit(fit, "exponential");
 		}
 		return fit;
@@ -199,6 +206,7 @@ const __DATA2D = {
 			fit.b = this.round(Math.pow(calc.a, 1/calc.b));
 			fit.f = function(x) {return fit.a*Math.log(fit.b*x);};
 			fit.d = this.rmse(dataXY, fit.f);
+			fit.t = "Logarithmic curve fitting";
 			this.stringFit(fit, "logarithmic");
 		}
 		return fit;
@@ -219,9 +227,10 @@ const __DATA2D = {
 		const sum = dataXY.reduce(function(sum,v,i,a) {return sum + (i === 0 ? 0 : ((v.y + a[i-1].y) * (v.x - a[i-1].x)) / 2);}, 0)
 		const fit = {};
 		fit.a = this.round(sum);
-		fit.b = 0,
+		fit.b = null,
 		fit.f = function(x) {return fit.a;};
-		fit.d = 0;
+		fit.d = null;
+		fit.t = "Area under the curve";
 		this.stringFit(fit, "sum");
 		return fit;
 	},
@@ -231,8 +240,10 @@ const __DATA2D = {
 		const delta = this.round(this.MAX(xlist) - this.MIN(xlist));
 		const fit   = this.sumFit(dataXY);
 		fit.a = delta === 0 ? 0 : this.round(fit.a/delta);
+		fit.b = null;
 		fit.f = function(x) {return fit.a;};
 		fit.d = this.rmse(dataXY, fit.f);
+		fit.t = "Average of the curve";
 		this.stringFit(fit, "avg");
 		return fit;
 	},

@@ -4,7 +4,7 @@ O objeto '{__PLOT2D} apresenta ferramentas para construção de gráficos duas d
 **/
 const __PLOT2D = {
 	/**. '{array RGB}: Registra as cores na sequência azul verde vermelho amarelo branco.**/
-	RGB: ("deepskyblue lime hotpink gold khaki cornflowerblue mediumspringgreen orchid darkorange beige aqua greenyellow salmon coral silver aquamarine mediumseagreen tomato peru lightblue").split(" "),
+	RGB: ("deepSkyBlue lime hotPink gold khaki cornflowerBlue mediumSpringGreen orchid darkOrange beige aqua greenYellow salmon coral silver aquamarine mediumSeaGreen tomato peru lightBlue").split(" "),
 	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
 	|Curva|Descrição|Tipo de dado|
 	|'{dot}|Pontos representados por círculos|Lista|
@@ -109,28 +109,59 @@ const __PLOT2D = {
 		get ym() {return Math.trunc((this.yi + this.yf)/2);},
 
 	},
+	/**. '{void gridInfo(object plot)}: Retorna os dados do gráfico para fins de acessibilidade.**/
+	gridInfo: function (plot) {
+		return [
+			"-- Chart -----------------------------------------",
+			"Type: Cartesian Plane",
+			`Title: ${plot.title}`,
+			"Background: black",
+			"Foreground: white",
+			"-- X-Axis (Abscissa/Horizontal) ------------------",
+			`Label: ${plot.xLabel}`,
+			`Type: ${plot.xType}`,
+			`Divisions: ${this.frame.s}`,
+			`Minimum: ${plot.xMin}`,
+			`Maximum: ${plot.xMax}`,
+			"-- Y-Axis (Ordinate/Vertical) --------------------",
+			`Label: ${plot.yLabel}`,
+			`Type: ${plot.yType}`,
+			`Divisions: ${this.frame.s}`,
+			`Minimum: ${plot.yMin}`,
+			`Maximum: ${plot.yMax}`
+		].join("\n");
+	},
 	/**. '{void struct(object plot)}: Define a estrutura básica do gráfico.**/
 	struct: function(plot) {
 		const color = "grey";
 		const attr  = {
-			svg:   {style: `background: #202020; font-weight: normal; font-style: normal; font-family: monospace; width: 600px;`},
-			main:  {stroke: color, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
+			svg:   {style: `background: #202020; font-family: monospace; border: 1px solid;`, "aria-labelledby": __ID.value},
+			main:  {stroke: color, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
 			title: {fill: color, "font-size": "1.5em"},
 			label: {fill: color},
+			grid:  {stroke: color, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
+			guide: {stroke: color, fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
 		};
 		/*-- SVG --*/
-		plot.svg.attribute(attr.svg);
+		plot.svg
+			.attribute(attr.svg)
+			.attribute({
+				"data-xMin":  plot.xMin, "data-xMax":  plot.xMax, "data-xType": plot.xType,
+				"data-yMin":  plot.yMin, "data-yMax":  plot.yMax, "data-yType": plot.yType,
+			});
+		plot.svg.last.addEventListener("mousemove", this);
 		plot.frame = {};
 		/*-- quadro principal --*/
 		plot.frame.main = plot.svg
 			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
 			.attribute(attr.main)
+			.desc(this.gridInfo(plot))
 			.last;
 		/*-- título --*/
 		plot.frame.title = plot.svg
 			.text(this.frame.xm, this.frame.yi/2, plot.title, "hc")
 			.attribute(attr.title)
-			.title(`Title: ${plot.title}`)
+			.attribute({id: attr.svg["aria-labelledby"]})
 			.last;
 		/*-- Rótulo x --*/
 		plot.frame.xLabel = plot.svg
@@ -156,11 +187,11 @@ const __PLOT2D = {
 			if (i > 0 && i < this.frame.s - 1) {
 				plot.frame[`xGrid${i}`] = plot.svg
 					.path(`M ${px},${this.frame.yi} V ${this.frame.yf}`)
-					.attribute(attr.main)
+					.attribute(attr.grid)
 					.last;
 				plot.frame[`yGrid${i}`] =  plot.svg
 					.path(`M ${this.frame.xi},${py} H ${this.frame.xf}`)
-					.attribute(attr.main)
+					.attribute(attr.grid)
 					.last;
 			}
 			/*-- escala --*/
@@ -178,27 +209,16 @@ const __PLOT2D = {
 		/*-- marcadores de posição --*/
 		plot.frame.xGuide = plot.svg
 			.path(`M ${this.frame.xm}, ${this.frame.yi} V ${this.frame.yf}`)
-			.attribute(attr.main)
+			.attribute(attr.guide)
+			.attribute({display: "none", "data-guide-x": ""})
 			.last;
 		plot.frame.yGuide = plot.svg
 			.path(`M ${this.frame.xi}, ${this.frame.ym} H ${this.frame.xf}`)
-			.attribute(attr.main)
+			.attribute(attr.guide)
+			.attribute({display: "none", "data-guide-y": ""})
 			.last;
-
-
-
-
-
+		return;
 	},
-
-
-
-
-
-
-
-
-
 	/**. '{object dataXY(array x, any y, array xList)}: Função auxiliadora do método '{filter} retornando o valor de '{xy}, e os valores mínimo ('{min}) e máximo ('{max}) de '{y} ou nulo.**/
 	dataXY: function(x, y, xList) {
 		const curve = this.curve(y);
@@ -280,11 +300,34 @@ const __PLOT2D = {
 			};
 		});
 	},
-
-
+	/**. '{void infoCurve(object data)}: Desfine a descrição da curva para acessibilidade.**/
+	infoCurve: function(data) {
+		console.log(data)
+		const info = [
+			"-- Curve Date ------------------------------------",
+			`Name: ${data.name}`,
+			`Color: ${data.color.replace(/([A-Z])/g, " $1").toLowerCase()}`,
+			`Shape: ${data.curve}`,
+		];
+		if (data.fit !== null) {
+			info.push("-- Curve Fitting Data ----------------------------");
+			info.push(`Fitting: ${data.fit.t}`);
+			info.push(`Shape: ${data.fit.m}`);
+			if (data.fit.a !== null) info.push(`a: ${data.fit.a}`);
+			if (data.fit.b !== null) info.push(`b: ${data.fit.b}`);
+			if (data.fit.d !== null) info.push(`σ: ${data.fit.d}`);
+		}
+		info.push("-- Curve Dataset ---------------------------------");
+		info.push(data.data.reduce(function(txt,v,i,a) {
+			return txt + `${i}\t${v.x}\t${v.y}` + (i === a.length - 1 ? "" : "\n");
+		}, "#\tx\ty\n"));
+		info.push("--------------------------------------------------\n");
+		return info.join("\n");
+	},
+	/**. '{void print(object plot)}: Plota as curvas no gŕafico.**/
 	print: function(plot) {
 		const attr = {
-			line:  function(color) {return {stroke: color,  "stroke-width": 1, "stroke-linecap": "round", fill: "none"};},
+			line:  function(color) {return {stroke: color,  "stroke-width": 2, "stroke-linecap": "round", fill: "none"};},
 			area:  function(color) {return {fill: color, "fill-opacity": 0.4};},
 			dash:  function(color) {return Object.assign({"stroke-dasharray": "5,5"}, this.line(color));},
 			step:  function(color) {return this.line(color);},
@@ -294,17 +337,23 @@ const __PLOT2D = {
 		plot.yData.filter(function(v,i,a) {
 			/*-- curva principal --*/
 			const main = this.convert(plot, v.data);
-			plot.svg
+			const info = this.infoCurve(v);
+			plot.frame[`curve${i}`] = plot.svg
 				.path(this.svgPath(main, v.curve))
 				.attribute(attr[v.curve](v.color))
-				.title("sei lá");
-				console.log(v)
+				.attribute({id: v.id})
+				.desc(info)
+				.title(v.name)
+				.last;
 			/*-- curva de ajuste --*/
 			const fit = v.fit !== null ? this.convert(plot, v.fit.data) : null;
-			if (fit !== null) plot.svg
+			if (fit !== null)
+			plot.frame[`fit${i}`] = plot.svg
 				.path(this.svgPath(fit, v.fit.curve))
 				.attribute(attr[v.fit.curve](v.color))
-				.title("sei lá 2");
+				.desc(info)
+				.title(v.fit.v)
+				.last;
 		}, this);
 		return;
 	},
@@ -367,7 +416,6 @@ const __PLOT2D = {
 		data.yAxis.dataset.filter(function(v,i,a) {
 			return typeof v === "object" ? this.filter(plot, v, i) : false;
 		}, this);
-		console.log(plot.yMin, plot.yMax)
 		/*-- checar dados --*/
 		if (plot.xMin === plot.xMax) return null;
 		if (plot.yMin === plot.yMax) {
@@ -377,11 +425,28 @@ const __PLOT2D = {
 		console.log(plot.yMin, plot.yMax)
 		this.struct(plot);
 		this.print(plot);
-
 		plot.svg.svg(document.body);
-
-
 		return plot;
+	},
+
+	handleEvent: function(ev) {
+		const gx   = ev.target.querySelector("[data-guide-x]");
+		const gy   = ev.target.querySelector("[data-guide-y]");
+		const data = ev.target.getBoundingClientRect();
+		const px   = (ev.x/data.width)  * this.frame.w;
+		const py   = (ev.y/data.height) * this.frame.h;
+		const read = {cx: ev.clientX, px: px, cy: ev.clientY, py: py}
+
+		if (px >= this.frame.xi && px <= this.frame.xf && py >= this.frame.yi && py <= this.frame.yf)
+			console.log("dentro", read)
+		else
+			console.log("fora", read)
+		console.log(ev);
+		console.log(data);
+
+
+
+
 
 	},
 
@@ -390,6 +455,19 @@ const __PLOT2D = {
 
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

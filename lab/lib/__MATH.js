@@ -69,8 +69,18 @@ const __MATH = {
 		data.den *= Math.sign(den);
 		return data;
 	},
-	/**. '{number dec(number value, string output)}: Retorna a parte decimal do número ('{output} pode ser '{array} ou '{string}).**/
-	dec: function (value, output) {
+	/**. '{integer bitInt(number value)}: Retorna a quantidade de bits da parte inteira do número.**/
+	bitInt: function(value) {
+		return Math.trunc(Math.abs(value)).toString(2).split(".")[0].length;
+	},
+
+	/**. '{any dec10(number value, string output)}: Retorna u{valor absoluto} da parte decimal do número em potência de 10:
+	|'{output}|retorno|Destição|
+	|array|array|Retorna os decimais como itens do array|
+	|string|string|Retorna o decimal como string|
+	|Ausente|number|Retorna o decimal como número|.**/
+	dec10: function (value, output) {
+		if (!Number.isFinite(value) || Number.isInteger(value)) return 0;
 		const dec = [];
 		let prev = Math.trunc(value), next, num, den, i = 0;
 		while((value * Math.pow(10, i++))%1 !== 0) {
@@ -81,10 +91,29 @@ const __MATH = {
 			dec.push(num);
 		}
 		dec.forEach(function(v,i,a) {a[i] = Math.abs(v);});
-		if (output === "array") return dec;
-		const str = (value < 0 ? "-0." : "0.")+dec.join("");
-		return output === "string" ? str : Number(str);
+		if (output === "array")  return dec;
+		if (output === "string") return `0.${dec.join("")}`;
+		return Number(`0.${dec.join("")}`);
 	},
+	/**. '{number dec10(number value)}: Retorna o u{valor absoluto} da parte decimal do número mediante conversão de binário.**/
+	dec2: function(value) {
+		if (!Number.isFinite(value) || Number.isInteger(value)) return 0;
+		return value.toString(2).split(".")[1].split("").reduce(function(sum,v,i,a) {
+			return sum + (v === "1" ? Math.pow(2, -(i + 1)) : 0);
+		}, 0);
+	},
+	/**. '{number decN(number value, integer n)}: Retorna o u{valor absoluto} da parte decimal do número com a precisão '{n} casas decimais (0 a 17). Se a precisão estiver ausente, um valor padrão será definido conforme bits da parte inteira.**/
+	decN: function(value, n) {
+		if (!Number.isFinite(value) || Number.isInteger(value)) return 0;
+		const bit = this.bitInt(value);
+		n = Number.isInteger(n) && n >= 0 && n <= 100 ? n : (bit > 16 ? 0 : 17 - bit);
+		return Number("0."+value.toPrecision(n).split(".")[1].replace(/0+$/, ""));
+	},
+
+	round: function(value) {
+		return Math.trunc(value)+this.decN(value);
+	},
+
 
 
 

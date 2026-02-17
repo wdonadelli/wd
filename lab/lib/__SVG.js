@@ -84,6 +84,15 @@
 				return this;
 			}
 		},
+		/**. '{self desc(string desc)}: Define um texto longo não renderizável ao elemento.**/
+		desc: {
+			value: function(tip) {
+				const svg = this.create("desc");
+				svg.textContent = tip;
+				this.last.appendChild(svg);
+				return this;
+			}
+		},
 		/**. '{self line(array p1, array p2)}: Define uma linha ligando dois pontos das coordenadas '{p1} e '{p2} (x,y).**/
 		line: {
 			value: function(p1, p2) {
