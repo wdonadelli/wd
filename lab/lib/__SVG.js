@@ -171,12 +171,13 @@
 				this.last.style.whiteSpace = "break-spaces";
 				this.attribute(attr);
 				/*-- definindo texto em linha ou empilhado --*/
-				if (!__Type(text).array) {
+				if (!Array.isArray(text)) {
 					const value = String(text);
 					const tspan = this.create("tspan");
 					tspan.textContent = value == "" ? " " : value;
 					this.last.appendChild(tspan);
-				} else {
+				}
+				else {
 					for (let i = 0; i < text.length; i++) {
 						let style = {x: attr.x, dy: (i === 0 ? 0 : "1.5em")};
 						let value = String(text[i]);

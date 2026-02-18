@@ -16,13 +16,6 @@ const __DATA2D = {
 				return Number(value.toFixed(i));
 		return value;
 	},
-
-	//TODO a fazer
-	toDate: function(value)     {return null},
-	toTime: function(value)     {return null},
-	toDateTime: function(value) {return null},
-
-
 	/**. '{array convert(array list)}: Converte os itens de '{list} para ...TODO implementar outras possibilidades.**/
 	convert: function(list) {
 		return list.map(function(v,i,a) {return this.round(this.toNumeric(v));}, this);
@@ -83,8 +76,8 @@ const __DATA2D = {
 		//FIXME tente a linha abaixo, a dízima periódica prejudica muito no cálculo do erro
 		//x = [2,3,4,5,6,100]; y = __DATA2D.map(x, (x)=> 3*Math.exp(4*x)); z = __DATA2D.expFit(__DATA2D.dataXY(x,y))
 	},
-	/**. '{string value(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
-	value: function(x) {
+	/**. '{string numeric(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
+	numeric: function(x) {
 		const abs = Math.abs(x);
 		if (abs === 0)
 			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
@@ -106,12 +99,22 @@ const __DATA2D = {
 			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 2});
 		return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
 	},
+
+	//FIXME
+	date: function(value) {return value;},
+	time: function(value) {return value;},
+	datetime: function(value) {return value;},
+
+
+
+
+
 	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
 	stringFit: function(fit, type) {
 		const math = {
-			a: fit.a === null ? "" : this.value(fit.a),
-			b: fit.b === null ? "" : this.value(fit.b),
-			d: fit.d === null ? "" : this.value(fit.d)
+			a: fit.a === null ? "" : this.numeric(fit.a),
+			b: fit.b === null ? "" : this.numeric(fit.b),
+			d: fit.d === null ? "" : this.numeric(fit.d)
 		};
 		if (type === "linear") {
 			fit.m = `y = ax + b ± σ`;
