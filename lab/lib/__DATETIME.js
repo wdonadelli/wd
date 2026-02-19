@@ -6,14 +6,14 @@ O objeto `{__DATETIME} estabelece as regras para extrair data e tempo a partir d
 |YYYY|Ano com 4 Dígitos ou mais||
 |M|Mês de 1-12 ou 01-12||
 |MM|Mês com 2 Dígitos 01-12||
-|MMM|Nome curto do mês||
-|MMMM|Nome longo do mês||
+|MMM|Nome curto do mês|Insensível à altura da caixa|
+|MMMM|Nome longo do mês|Insensível à altura da caixa|
 |D|Dia de 1-31 ou 01-31|O valor deve corresponder ao mês e ano|
 |DD|Dia com 2 Dígitos 01-31|Ver observação anterior|
 |d|Dia da semana de 1-7 ou 01-07 (domingo à sábado)|Quando se trata de semana ISO, a semana começa na segunda (1)|
 |dd|Dia da semana com 2 Dígitos 01-07|Ver observaçao anterior|
-|ddd|Nome curto do dia da semana||
-|dddd|Nome longo do dia da semana||
+|ddd|Nome curto do dia da semana|Insensível à altura da caixa|
+|dddd|Nome longo do dia da semana|Insensível à altura da caixa|
 |w|Semana do ano de 1-53 ou 01-53|O valor deve corresponder ao ano|
 |ww|Semana do ano com 2 Dígitos 01-53|Ver observação anterior|
 |H|Horas de 0-24 ou 00-24||
@@ -24,9 +24,17 @@ O objeto `{__DATETIME} estabelece as regras para extrair data e tempo a partir d
 |mm|Minutos com 2 Dígitos 00-59||
 |s|Segundos de 0-59.999 ou 00-59.999||
 |ss|Segundos com 2 Dígitos 00-59.999||
+|l|Milissegundos de 0 a 999||
+|ll|Milissegundos com 3 dígitos de 000 a 999||
 |p|Período do dia AM ou PM||
 |P|Direção do tempo, se antes (-) ou depois (+) do ano 0|Opcional para anos a partir de zero|
-Todos os caracteres alfabéticos não são sensíveis à altura da caixa.**/
+Observações:
+- O identificador de data está em dias;
+- O identificador de tempo está em milissegundos;
+- A origem do tempo (ID zero) é 0000-01-01T00:00:00.000;
+- Valor de data, mês e semana são datas, tratados como dias;
+- Valor de tempo e data/tempo são tempo, tratados como milissegundos;
+- Valores máximos e mínimos de identificadores confiáveis são dados por MAX_SAFE_INTEGER e MIN_SAFE_INTEGER.**/
 const __DATETIME = {
 	/**. '{string lang}: Identifica a linguagem utilizada para carregar meses e dias da semana.**/
 	lang: null,
@@ -46,18 +54,19 @@ const __DATETIME = {
 	templates: null,
 	/**. '{object unit}: Registra as unidades básicas de data e tempo.**/
 	unit: {
-		Y:   /(\d+)/,                        YYYY: /(\d{4,})/,
-		M:   /(0?[1-9]|1[0-2])/,             MM:   /(0[1-9]|1[0-2])/,
-		MMM: null,                           MMMM: null,
-		D:   /(0?[1-9]|[12]\d|3[01])/,       DD:   /(0[1-9]|[12]\d|3[01])/,
-		d:   /(0?[1-7])/,                    dd:   /(0[1-7])/,
-		ddd: null,                           dddd: null,
-		w:   /(0?[1-9]|[1-4]\d|5[0-3])/,     ww:   /(0[1-9]|[1-4]\d|5[0-3])/,
-		H:   /([01]?\d|2[0-4])/,             HH:   /([01]\d|2[0-4])/,
-		h:   /(0?[1-9]|1[0-2])/,             hh:   /(0[1-9]|1[0-2])/,
-		m:   /([0-5]?\d)/,                   mm:   /([0-5]\d)/,
-		s:   /([0-5]?\d|[0-5]?\d\.\d{1,3})/, ss:   /([0-5]\d|[0-5]\d\.\d{1,3})/,
-		p:   /([AP]M)/,                       P:   /([+\-]?)/
+		Y:   /(\d+)/,                    YYYY: /(\d{4,})/,
+		M:   /(0?[1-9]|1[0-2])/,         MM:   /(0[1-9]|1[0-2])/,
+		MMM: null,                       MMMM: null,
+		D:   /(0?[1-9]|[12]\d|3[01])/,   DD:   /(0[1-9]|[12]\d|3[01])/,
+		d:   /(0?[1-7])/,                dd:   /(0[1-7])/,
+		ddd: null,                       dddd: null,
+		w:   /(0?[1-9]|[1-4]\d|5[0-3])/, ww:   /(0[1-9]|[1-4]\d|5[0-3])/,
+		H:   /([01]?\d|2[0-4])/,         HH:   /([01]\d|2[0-4])/,
+		h:   /(0?[1-9]|1[0-2])/,         hh:   /(0[1-9]|1[0-2])/,
+		m:   /([0-5]?\d)/,               mm:   /([0-5]\d)/,
+		s:   /([0-5]?\d)/,               ss:   /([0-5]\d)/,
+		l:   /(\d{1,3})/,                ll:   /(\d\d\d)/,
+		p:   /([AP]M)/,                  P:   /([+\-]?)/
 	},
 	/**. '{array template}: Registra os modelos de tempo e suas configurações.**/
 	base: [
@@ -89,10 +98,12 @@ const __DATETIME = {
 		{flag: {P: 3, w: 2, Y: 4, d: 1}, type: "week", model: "(ddd), (w) (P)(YYYY)"},
 		{flag: {P: 3, w: 2, Y: 4, d: 1}, type: "week", model: "(dddd), (w) (P)(YYYY)"},
 		/*-- tempo --*/
-		{flag: {H: 1, m: 2, s: 3},       type: "time", model: "(H):(mm):(ss)"},
-		{flag: {H: 1, m: 2},             type: "time", model: "(H):(mm)"},
-		{flag: {h: 1, m: 2, s: 3, p: 4}, type: "time", model: "(h):(mm):(ss) (p)"},
-		{flag: {h: 1, m: 2, p: 3},       type: "time", model: "(h):(mm) (p)"},
+		{flag: {H: 1, m: 2, s: 3, l: 4},       type: "time", model: "(H):(mm):(ss).(ll)"},
+		{flag: {H: 1, m: 2, s: 3},             type: "time", model: "(H):(mm):(ss)"},
+		{flag: {H: 1, m: 2},                   type: "time", model: "(H):(mm)"},
+		{flag: {h: 1, m: 2, s: 3, l: 4, p: 5}, type: "time", model: "(h):(mm):(ss).(ll) (p)"},
+		{flag: {h: 1, m: 2, s: 3, p: 4},       type: "time", model: "(h):(mm):(ss) (p)"},
+		{flag: {h: 1, m: 2, p: 3},             type: "time", model: "(h):(mm) (p)"},
 	],
 	/**. '{object getNames(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
 	getNames: function(lang) {
@@ -215,6 +226,7 @@ const __DATETIME = {
 	time: function(flag) {
 		/*-- manipulando valores --*/
 		flag.s = !("s" in flag) || flag.s === "" ? 0 : flag.s;
+		flag.l = !("l" in flag) || flag.l === "" ? 0 : flag.l;
 		if ("H" in flag) {
 			flag.H = flag.H%24;
 			flag.p = flag.H >= 12 ? "PM": "AM";
@@ -300,14 +312,13 @@ const __DATETIME = {
 	/**. '{object parserDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
 	parserDate: function(date) {
 		const data = {
-			P: date.getFullYear() < 0 ? "-" : "",
 			Y: Math.abs(date.getFullYear()), M: date.getMonth() + 1, D: date.getDate(),
-			H: date.getHours(),              m: date.getMinutes(),   s: date.getSeconds()+(date.getMilliseconds()/1000),
-			type: "datetime",
+			H: date.getHours(),              m: date.getMinutes(),   s: date.getSeconds(),
+			l: date.getMilliseconds(),    type: "datetime",          P: date.getFullYear() < 0 ? "-" : ""
 		};
 		return this.dateTimeAdjustment(data);
 	},
-	/**. '{integer idYear(integer year)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0) em primeiro de janeiro do ano.**/
+	/**. '{integer idYear(integer year)}: Retorna o ID de data no primeiro dia do ano.**/
 	idYear: function(year) {
 		const zero = year > 0 ? 365 : 0;
 		const back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
@@ -317,25 +328,25 @@ const __DATETIME = {
 		const y100 = Math.trunc(year/100);
 		return zero + y365 + y004 - y100 + y400 - back;
 	},
-	/**. '{integer idMonth(integer year, integer month)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0) no primeiro dia do mês.**/
+	/**. '{integer idMonth(integer year, integer month)}: Retorna o ID de data no primeiro dia do mês.**/
 	idMonth: function(year, month) {
 		const len = [0,0,31,59,90,120,151,181,212,243,273,304,334];
 		const gap = month > 2 && this.leap(year) ? 1 : 0;
 		return this.idYear(year) + len[month] + gap;
 	},
-	/**. '{integer idDay(integer year, integer month, integer day)}: Retorna o ID do dia a partir de 0000-01-01 (valor 0)**/
+	/**. '{integer idDay(integer year, integer month, integer day)}: Retorna o ID de data no dia.**/
 	idDay: function(year, month, day) {
 		return this.idMonth(year, month) + day - 1;
 	},
-/**. '{number idTime(integer hour, integer minute, integer second)}: Retorna o ID do tempo (segundos) a partir de 00:00 (valor 0).**/
-	idTime: function(hour, minute, second) {
-		return Number((3600*Math.abs(hour) + 60*Math.abs(minute) + Math.abs(second)).toFixed(3));
+	/**. '{number idTime(integer hour, integer minute, integer second, integer millisecond)}: Retorna o ID de tempo (24H).**/
+	idTime: function(hour, minute, second, millisecond) {
+		return 1000*(3600*Math.abs(hour) + 60*Math.abs(minute) + Math.abs(second)) + Math.abs(millisecond);
 	},
 	/**. '{integer idDateTime(interger year, ...)}: Retorna o ID de data/tempo a partir de 0000-01-01:00:00:00 (valor 0) até a hora.**/
-	idDateTime: function(year, month, day, hour, minute, second) {
-		const date = 24*3600*this.idDay(year, month, day);
-		const time = this.idTime(hour, minute, second);
-		return Number((date + time).toFixed(3));
+	idDateTime: function(year, month, day, hour, minute, second, millisecond) {
+		const date = 24*3600000*this.idDay(year, month, day);
+		const time = this.idTime(hour, minute, second, millisecond);
+		return date + time;
 	},
 	/**. '{integer idWeekDay(integer year, integer month, integer day)}: Retorna o dia da semana (1-7), de domingo a sábado.**/
 	idWeekDay: function(year, month, day) {
@@ -406,18 +417,19 @@ const __DATETIME = {
 	timeID: function(id) {
 		id = this.safe(id);
 		const time = {type: "time"};
-		const h24  = 24*3600;
+		const h24  = 24*3600000;
 		const data = (h24 + id%h24)%h24;
-		time.H     = Math.trunc(data/3600);
-		time.m     = Math.trunc((data - 3600*time.H)/60);
-		time.s     = Number((data - 60*time.m - 3600*time.H).toFixed(3));
+		time.H     = Math.trunc(data/3600000);
+		time.m     = Math.trunc((data - 3600000*time.H)/60000);
+		time.s     = Math.trunc((data - 3600000*time.H - 60000*time.m)/1000);
+		time.l     = data - 3600000*time.H - 60000*time.m - 1000*time.s;
 		return this.dateTimeAdjustment(time);
 	},
 	/**. '{object dateTimeID(integer id)}: Retorna os dados de '{match} para data/tempo a partir do '{id} em u{segundos}.**/
 	dateTimeID: function(id) {
 		id = this.safe(id);
 		const time = this.timeID(id);
-		const h24  = 24*3600;
+		const h24  = 24*3600000;
 		const days = Math.trunc((id - id%h24)/h24) + (id < 0 && time.value !== 0 ? -1 : 0);
 		const date = this.dateID(days);
 		const data = Object.assign({}, date, time);
@@ -435,12 +447,11 @@ const __DATETIME = {
 			flag.string += flag.type === "datetime" ? "T" : "";
 		}
 		if (flag.type === "time" || flag.type === "datetime") {
-			const ss  = String(flag.s).split(".");
-			const int = Number(ss[0]);
-			const dec = ss.length === 1 ? "000" : ss[1] + String("0").repeat(3 - ss[1].length);
-			flag.string += (flag.H < 10 ? "0" : "") + String(flag.H) + ":";
-			flag.string += (flag.m < 10 ? "0" : "") + String(flag.m) + ":";
-			flag.string += (int < 10 ? "0"    : "") + String(int)    + "." + dec;
+			const len = flag.l < 10 ? 2 : (flag.l < 100 ? 1 : 0);
+			flag.string += (flag.H < 10 ?  "0" : "") + String(flag.H) + ":";
+			flag.string += (flag.m < 10 ?  "0" : "") + String(flag.m) + ":";
+			flag.string += (flag.s < 10 ?  "0" : "") + String(flag.s) + ".";
+			flag.string += String("0").repeat(len) + String(flag.l);
 		}
 		if (flag.type === "week") {
 			const len = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
@@ -458,11 +469,11 @@ const __DATETIME = {
 	/**. '{integer value(object flag)}: Analisa e manipula a i{flag} recebida para definir o valor.**/
 	value: function(flag) {
 		if (flag.type === "datetime")
-			flag.value = this.idDateTime(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s);
+			flag.value = this.idDateTime(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
 		else if (flag.type === "date")
 			flag.value = this.idDay(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
 		else if (flag.type === "time")
-			flag.value = this.idTime(flag.H, flag.m, flag.s);
+			flag.value = this.idTime(flag.H, flag.m, flag.s, flag.l);
 		else if (flag.type === "month")
 			flag.value = this.idMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
 		else if (flag.type === "week")
