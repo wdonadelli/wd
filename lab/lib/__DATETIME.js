@@ -29,21 +29,17 @@ O objeto `{__DATETIME} estabelece as regras para extrair data e tempo a partir d
 |p|Período do dia AM ou PM||
 |P|Direção do tempo, se antes (-) ou depois (+) do ano 0|Opcional para anos a partir de zero|
 Observações:
-- O identificador de data está em dias;
-- O identificador de tempo está em milissegundos;
-- A origem do tempo (ID zero) é 0000-01-01T00:00:00.000;
-- Valor de data, mês e semana são datas, tratados como dias;
-- Valor de tempo e data/tempo são tempo, tratados como milissegundos;
-- Valores máximos e mínimos de identificadores confiáveis são dados por MAX_SAFE_INTEGER e MIN_SAFE_INTEGER.**/
+- Formatos de data, mês e semana são tratados como data e identificados em dias desde '{0000-01-01};
+- Farmatos de tempo e data/tempo são tratados como tempo e identificados em milissegundos;
+- Formatos de tempo correspondem ao ciclo de 24 horas iniciado em ´{00:00:00.000}, u{não há valor negativo};
+- Formatos de data/tempo correspondem ao período iniciado em ´{0000-01-01T00:00:00.000};
+- Dias da semana são relatados de domingo (1) a sábado (7);
+- Formatos de semana obedecem à a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, começa na segunda-feira (1) e termina no domingo (7).
+- Valores máximos e mínimos de identificadores confiáveis são dados por MAX_SAFE_INTEGER e MIN_SAFE_INTEGER;
+**/
 const __DATETIME = {
 	/**. '{string lang}: Identifica a linguagem utilizada para carregar meses e dias da semana.**/
 	lang: null,
-	/**. '{number MAX_TIME_ID}: Valor que corresponde ao maior identificador de tempo 2^43-0.001.**/
-	MAX_TIME_ID: 8796093022207.999,
-
-	//TODO mudar para bigint o id de datatempo? trabalhar só com inteiros no lugar de decimal?
-
-
 	/**. '{object names}: Registra os nomes dos meses e dias, curtos e longos, conforme linguagem '{lang}.**/
 	names: null,
 	/**. '{array template}: Registra a lista de modelos de data/tempo e suas configurações:
@@ -318,31 +314,48 @@ const __DATETIME = {
 		};
 		return this.dateTimeAdjustment(data);
 	},
-	/**. '{integer idYear(integer year)}: Retorna o ID de data no primeiro dia do ano.**/
+	/**. '{array monthsYear(integer year)}: Retorna uma lista de objetos contendo os dados dos meses do ano ´{year}:
+	|Propriedade|Tipo|Descrição|
+	|month|integer|Mês do ano, de 1 a 12|
+	|init|integer|Dia do ano no início do mês (a partir de 1)|
+	|last|integer|Dia do ano no término do mês (até 365 ou 366)|
+	|length|integer|Número de dias do mês|**/
+	monthsYear: function(year) {
+		return [31,this.leap(year) ? 29 : 28,31,30,31,30,31,31,30,31,30,31].map(function(v,i,a) {
+			return {
+				month:  i+1,
+				init:   a.slice(0,i+0).reduce(function(sum,v,i,a) {return sum+v;}, 0) + 1,
+				last:   a.slice(0,i+1).reduce(function(sum,v,i,a) {return sum+v;}, 0),
+				length: v,
+			};
+		});
+	},
+	/**. '{integer idYear(integer year)}: Retorna o ID da data no u{primeiro dia do ano} ('{01/01/YYYY}).**/
 	idYear: function(year) {
+		/*-- ajuste do ano zero --*/
 		const zero = year > 0 ? 365 : 0;
+		/*-- ajuste de retorno ao primeiro dia do ano --*/
 		const back = year > 0 ? (this.leap(year) ? 365 : 364) : 0;
-		const y365 = 365*year;
+		/*-- cálculo dos anos --*/
+		const d365 = 365*year;
 		const y400 = Math.trunc(year/400);
 		const y004 = Math.trunc(year/4);
 		const y100 = Math.trunc(year/100);
-		return zero + y365 + y004 - y100 + y400 - back;
+		return zero + d365 + y004 - y100 + y400 - back;
 	},
 	/**. '{integer idMonth(integer year, integer month)}: Retorna o ID de data no primeiro dia do mês.**/
 	idMonth: function(year, month) {
-		const len = [0,0,31,59,90,120,151,181,212,243,273,304,334];
-		const gap = month > 2 && this.leap(year) ? 1 : 0;
-		return this.idYear(year) + len[month] + gap;
+		return this.idYear(year) + this.monthsYear(year)[month - 1].init - 1;
 	},
 	/**. '{integer idDay(integer year, integer month, integer day)}: Retorna o ID de data no dia.**/
 	idDay: function(year, month, day) {
 		return this.idMonth(year, month) + day - 1;
 	},
-	/**. '{number idTime(integer hour, integer minute, integer second, integer millisecond)}: Retorna o ID de tempo (24H).**/
+	/**. '{number idTime(integer hour, integer minute, integer second, integer millisecond)}: Retorna o ID de tempo para um dia.**/
 	idTime: function(hour, minute, second, millisecond) {
 		return 1000*(3600*Math.abs(hour) + 60*Math.abs(minute) + Math.abs(second)) + Math.abs(millisecond);
 	},
-	/**. '{integer idDateTime(interger year, ...)}: Retorna o ID de data/tempo a partir de 0000-01-01:00:00:00 (valor 0) até a hora.**/
+	/**. '{integer idDateTime(interger year, ...)}: Retorna o ID de tempo.**/
 	idDateTime: function(year, month, day, hour, minute, second, millisecond) {
 		const date = 24*3600000*this.idDay(year, month, day);
 		const time = this.idTime(hour, minute, second, millisecond);
@@ -356,7 +369,7 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
-	/**. '{integer idDayWeek(interger year, integer week, integer day)}: Retorna os dias decorridos desde 0000-01-01T00:00:00 (valor 0) até a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira (1) e termina no domingo (7). strong{ATENÇÃO}: O argumento opcional '{day} é o dia da semana que começa no domingo (1) e termina no sábado (7) e seu valor padrão é 2, não obedecendo a regra ISO para fins do método.**/
+	/**. '{integer idDayWeek(interger year, integer week, integer day)}: Retorna os dias decorridos até a semana. u{IMPORTANTE}: O argumento opcional '{day} é o dia da semana com início no domingo (1), término no sábado (7) com valor padrão 2, não obedecendo a regra ISO para fins do método.**/
 	idDayWeek: function(year, week, day) {
 		const days = this.idDay(year, 1, 1);
 		const init = this.idWeekDay(year, 1, 1);
@@ -375,47 +388,43 @@ const __DATETIME = {
 		const nsat = Math.ceil((last - sat1)/7);
 		return (last - init) - (nsun + nsat)
 	},
-	/**. '{number safe(integer id)}: Retorna o valor entre o menor e o maior inteiro permitido**/
-	safe: function(id) {
-		const safe = id < 0 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
-		return Number((id < 0 ? (id < safe ? safe : id) : (id > safe ? safe : id)).toFixed(3));
-	},
-	/**. '{integer yearID(integer id)}: Retorna o ano a partir do '{id}.**/
+	/**. '{integer yearID(integer id)}: Retorna o ano a partir do '{id} em u{dias}.**/
 	yearID: function(id) {
-		id = this.safe(id);
-		const d400 = 4*(25*(4*365+1)-1)+1;
-		let   year = Math.trunc((id*400)/d400);
-		let   init = this.idYear(year);
-		let   last = init + (this.leap(year) ? 365 : 364);
-		while (id < init || id > last) {
-			year += id < init ? -1 : 1;
-			init  = this.idYear(year);
-			last  = init + (this.leap(year) ? 365 : 364);
-		}
-		return year;
+		/*-- ano zero --*/
+		if (id >=0 && id <= 365) return 0;
+		/*-- períodos --*/
+		const y001 = 365;
+		const y004 =   4*y001 + 1;
+		const y100 =  25*y004 - 1;
+		const y400 =   4*y100 + 1;
+		const last = Math.abs(Math.trunc(id));
+		let   init = id < 0 ? 0 : 365;
+		/*-- quantidade de períodos --*/
+		const n400 = Math.trunc((last-init)/y400); init += y400*n400;
+		const n100 = Math.trunc((last-init)/y100); init += y100*n100;
+		const n004 = Math.trunc((last-init)/y004); init += y004*n004;
+		const n001 = Math.trunc((last-init)/y001); init += y001*n001;
+		const rest = init === last ? 0 : 1;
+		/*-- retornando a soma dos períodos --*/
+		return Math.sign(id) * (400*n400 + 100*n100 + 4*n004 + 1*n001 + rest);
 	},
 	/**. '{object dateID(integer id)}: Retorna os dados de '{match} para data a partir do '{id} em u{dias}.**/
 	dateID: function (id) {
-		id = this.safe(id);
+		id = Math.trunc(id);
 		const year = this.yearID(id);
-		const leap = this.leap(year);
-		const days = [31,leap ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
-		const date = {P: id < 0 ? "-" : "", type: "date", Y: Math.abs(year), M: id < 0 ? 11 : 0};
-		const rest = id - this.idYear(year);
-		/*-- ajustando MÊS e DIA --*/
-		date.D = id < 0 ? ((leap ? 366 : 365) - rest) : (rest + 1);
-		date.M = id < 0 ? 11 : 0;
-		while (date.D > days[date.M]) {
-			date.D -= days[date.M];
-			date.M += id < 0 ? -1 : 1;
-		}
-		date.D = id < 0 ? (days[date.M] - date.D + 1) : date.D;
-		date.M++;
-		return this.dateTimeAdjustment(date);
+		const days = id - this.idYear(year) + 1;
+		const info = this.monthsYear(year).filter(function(v,i,a) {return days >= v.init && days <= v.last;})[0];
+		return this.dateTimeAdjustment({
+			type: "date",
+			P: id < 0 ? "-" : "",
+			Y: Math.abs(year),
+			M: info.month,
+			D: days - info.init + 1
+		});
 	},
 	/**. '{object timeId(integer id)}: Retorna os dados de '{match} para tempo a partir do '{id} em u{segundos}.**/
 	timeID: function(id) {
-		id = this.safe(id);
+		id = Math.trunc(id);
 		const time = {type: "time"};
 		const h24  = 24*3600000;
 		const data = (h24 + id%h24)%h24;
@@ -427,7 +436,7 @@ const __DATETIME = {
 	},
 	/**. '{object dateTimeID(integer id)}: Retorna os dados de '{match} para data/tempo a partir do '{id} em u{segundos}.**/
 	dateTimeID: function(id) {
-		id = this.safe(id);
+		id = Math.trunc(id);
 		const time = this.timeID(id);
 		const h24  = 24*3600000;
 		const days = Math.trunc((id - id%h24)/h24) + (id < 0 && time.value !== 0 ? -1 : 0);
