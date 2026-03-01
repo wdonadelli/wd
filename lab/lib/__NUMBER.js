@@ -49,7 +49,7 @@ const __NUMBER = {
 	},
 	/**. '{object data(number value)}: Retorna os dados do valor informado ou nulo.**/
 	data: function(value) {
-		const data = {value: value, type: "number", string: value.toString()};
+		const data = {value: value, type: "number", string: value.toString(), locale: this.locale(value)};
 		if (Math.abs(value) === Infinity)
 			data.string = (value < 0 ? "-" : "+") + "∞";
 		else if (isNaN(value))

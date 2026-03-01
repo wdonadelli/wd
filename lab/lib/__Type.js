@@ -22,6 +22,8 @@ Object.defineProperties(__Type.prototype, {
 	valueOf: {value: function() {return this._data.value;}},
 	/**. '{string toString()}: Método padrão.**/
 	toString: {value: function() {return this._data.string;}},
+	/**. '{string toLocaleString()}: Método padrão.**/
+	toLocaleString: {value: function() {return "locale" in this._data ? this._data.locale : this.toString();}},
 	/*-- Strings -------------------------------------------------------------*/
 	/**. '{boolean string}: Checa se o valor é uma string u{diferente de número, data ou tempo}.**/
 	string: {get: function() {return this.type === "string";}},
