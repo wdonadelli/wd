@@ -105,16 +105,20 @@ const __DATETIME = {
 	getNames: function(lang) {
 		const data = {ddd: Array(7), dddd: Array(7), MMM: Array(12), MMMM: Array(12)};
 		const date = new Date(1970, 0, 15, 12, 0, 0, 0);
+		const MMMM = new Intl.DateTimeFormat(lang, {month:   "long"});
+		const MMM  = new Intl.DateTimeFormat(lang, {month:   "short"});
+		const dddd = new Intl.DateTimeFormat(lang, {weekday: "long"});
+		const ddd  = new Intl.DateTimeFormat(lang, {weekday: "short"});
 		/*-- obter o nome dos meses (janeiro = 0) --*/
 		for (let i = 0; i < 12; i++) {
-			data.MMMM[date.getMonth()] = date.toLocaleDateString(lang, {month: "long"}).trim();
-			data.MMM[date.getMonth()]  = date.toLocaleDateString(lang, {month: "short"}).trim();
+			data.MMMM[date.getMonth()] = MMMM.format(date).trim();
+			data.MMM[date.getMonth()]  = MMM.format(date).trim();
 			date.setMonth(date.getMonth() + 1);
 		}
 		/*-- obter o nome dos dias da semana (domingo = 0) --*/
 		for (let i = 0; i < 7; i++) {
-			data.dddd[date.getDay()] = date.toLocaleDateString(lang, {weekday: "long"}).trim();
-			data.ddd[date.getDay()]  = date.toLocaleDateString(lang, {weekday: "short"}).trim();
+			data.dddd[date.getDay()] = dddd.format(date).trim();
+			data.ddd[date.getDay()]  = ddd.format(date).trim();
 			date.setDate(date.getDate() + 1);
 		}
 		return data;
@@ -260,7 +264,7 @@ const __DATETIME = {
 	week: function(flag) {
 		/*-- checando limite --*/
 		const day = this.idDay(flag.Y, 1, 1);
-		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
+		const max = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
 		if (flag.w > max) return false;
 		/*-- localizando data --*/
 		const initY = [flag.Y, flag.Y, flag.Y - 1, flag.Y - 1, flag.Y - 1, flag.Y, flag.Y][day-1];
@@ -393,24 +397,70 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
+
+
+
+	weekDate: function(year, month, day) {
+		const init = this.idDay(flag.Y,   1, 1);
+		const last = this.idDay(flag.Y+1, 1, 1);
+
+
+
+		const days = this.leap(flag.Y) ? 366 : 365;
+
+
+
+
+
+
+
+
+
+
+
+
+		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
+
+
+
+
+
+
+
+
+
+	},
+
+
+	/**. '{object nativeDate(integer Y, integer M...)}: Recebe os dados de data ou tempo e devolve a instância nativa de '{Date}.**/
+	nativeDate: function(Y, M, D, H, m, s, l) {
+		const date = new Date(Date.UTC(
+			1970,
+			Number.isInteger(M) ? M - 1 : 0,
+			Number.isInteger(D) ? D : 1,
+			Number.isInteger(H) ? H : 0,
+			Number.isInteger(m) ? m : 0,
+			Number.isInteger(s) ? s : 0,
+			Number.isInteger(l) ? l : 0
+		));
+		if (Number.isInteger(Y)) date.setUTCFullYear(Y);
+		return isNaN(date.getDate()) ? null : date;
+	},
 	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos métodos do objeto nativo '{Date}.**/
 	locale: function(flag) {
-		if (flag === null || typeof flag !== "object") return "";
-		const zone = {timeZone: "UTC"};
-		const date = new Date(Date.UTC(
-			"Y" in flag ? flag.Y : 1970,
-			"M" in flag ? flag.M - 1 : 0,
-			"D" in flag ? flag.D : 1,
-			"H" in flag ? flag.H : 0,
-			"m" in flag ? flag.m : 0,
-			"s" in flag ? flag.s : 0,
-			"l" in flag ? flag.l : 0
-		));
+		const date = this.nativeDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
+		const data = {timeZone: "UTC", era: date.getUTCFullYear() < 1 ? "short" : undefined};
+		if (date === null)
+			return flag.string;
+		if (flag.type === "month")
+			return date.toLocaleDateString(__LANG.value, Object.assign({month: "numeric", year: "numeric"}, data));
+		if (flag.type === "date")
+			return date.toLocaleDateString(__LANG.value, data);
 		if (flag.type === "time")
-			return date.toLocaleTimeString(__LANG.value, zone);
-		if (flag.type === "date" || flag.type === "week" || flag.type === "month")
-			return date.toLocaleDateString(__LANG.value, zone);
-		return date.toLocaleString(__LANG.value, zone)
+			return date.toLocaleTimeString(__LANG.value, data);
+		if (flag.type === "datetime")
+			return date.toLocaleString(__LANG.value, data);
+		return flag.string;
 	},
 	/**. '{integer workDaysYear(integer year, integer month, integer day)}: Retorna os dias úteis desde o dia 2 de janeiro.**/
 	workDaysYear: function(year, month, day) {
@@ -516,31 +566,37 @@ const __DATETIME = {
 	},
 	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
 	linear: function(min, max) {
-		const days = [0,31,28,31,30,31,30,31,31,30,31,30,31];
-		let base   = this.dateID(min);
-		let value  = base.value;
-		let string = base.string;
-		let day    = base.d;
-		for (let i = min; i < max; i++) {
-			days[2] = this.leap(base.Y) ? 29 : 28;
-			/*-- adiantando um dia --*/
-			base.D = base.D === days[base.M] ? 1 : base.D+1;
-			base.M = base.D === 1 ? (base.M === 12 ? 1 : base.M + 1) : base.M;
-			base.Y = base.D === 1 && base.M === 1 ? base.Y + (base.P === "-" ? -1 : 1) : base.Y;
-			this.date(base);
-			this.value(base);
-			this.string(base);
-			/*-- checando continuidade --*/
-			if (base.value - value !== 1)
-				throw new Error(`value Error: ${string} > ${value} / ${base.string} > ${base.value}`);
-			if (base.d === 1 ? day !== 7 : (base.d - day !== 1))
-				throw new Error(`day Error: ${string} > ${day} / ${base.string} > ${base.d}`);
-			/*-- redefinindo valores --*/
-			value  = base.value;
-			string = base.string;
-			day    = base.d;
-		}
-		return;
+		const walker = {
+			Y: 0, M: 0, D: 0, d: 0, value: 0, end: 0,
+			get last() {return [31,__DATETIME.leap(this.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][this.M - 1];},
+			check: function() {
+				const flag = __DATETIME.dateID(this.value);
+				if (
+					flag.D !== this.D || flag.M !== this.M || flag.Y !== Math.abs(this.Y) || flag.d !== this.d || flag.value !== this.value
+				) throw new Error(`\nflag:\n\t${JSON.stringify(flag)}\nwalker:\n\t${JSON.stringify(this)}`);
+			},
+			next: function() {
+				const last = this.last;
+				this.Y = this.D === last && this.M === 12 ? this.Y + 1 : this.Y;
+				this.M = this.D === last ? (this.M === 12 ? 1 : this.M + 1) : this.M;
+				this.D = this.D === last ? 1 : this.D + 1;
+				this.d = this.d === 7 ? 1 : this.d + 1;
+				this.value++;
+				return this.value <= this.end;
+			},
+			start: function(min, max) {
+				const flag = __DATETIME.dateID(max >= min ? min : max);
+				this.end   = max >= min ? max : min;
+				this.value = flag.value;
+				this.Y = flag.P === "-" ? -flag.Y : flag.Y;
+				this.M = flag.M;
+				this.D = flag.D;
+				this.d = flag.d;
+				while(this.next()) this.check();
+				return null;
+			}
+		};
+		return walker.start(min, max);
 	},
 
 

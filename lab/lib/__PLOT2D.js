@@ -131,7 +131,6 @@ const __PLOT2D = {
 			`Maximum: ${plot.yMax}`
 		].join("\n");
 	},
-
 	/**. '{string scale(number value, string type)}: Retorna o valor visual a ser exibido no gráfico conforme tipo da escala.**/
 	scale: function(value, type) {
 		if (type === "date") return __DATA2D.date(value);
@@ -149,9 +148,10 @@ const __PLOT2D = {
 			main:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
 			title: {fill: fore, "font-size": "1.5em"},
 			label: {fill: fore, "font-size": 20},
+			scale: {fill: fore, "font-size": 18},
 			grid:  {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
 			guide: {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
-			point: {fill: fore, id: __ID.value, "aria-label": "XY Point", "font-size": 16},
+			point: {fill: fore, "font-size": 20},
 			back:  {fill: back, "fill-opacity": 0.75, "font-size": 20}
 		};
 		/*-- SVG --*/
@@ -163,17 +163,17 @@ const __PLOT2D = {
 			});
 		plot.svg.last.addEventListener("mousemove", this);
 		plot.frame = {};
-		/*-- quadro principal --*/
-		plot.frame.main = plot.svg
-			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
-			.attribute(attr.main)
-			.desc(this.gridInfo(plot))
-			.last;
 		/*-- título --*/
 		plot.frame.title = plot.svg
 			.text(this.frame.xm, this.frame.yi/2, plot.title, "hc")
 			.attribute(attr.title)
 			.attribute({id: attr.svg["aria-labelledby"], "font-size": 30})
+			.last;
+		/*-- quadro principal --*/
+		plot.frame.main = plot.svg
+			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
+			.attribute(attr.main)
+			.desc(this.gridInfo(plot))
 			.last;
 		/*-- Rótulo x --*/
 		plot.frame.xLabel = plot.svg
@@ -198,45 +198,62 @@ const __PLOT2D = {
 				plot.frame[`xGrid${i}`] = plot.svg
 					.path(`M ${px},${this.frame.yi} V ${this.frame.yf}`)
 					.attribute(attr.grid)
+					.attribute({"data-grid": "x"})
 					.last;
 				plot.frame[`yGrid${i}`] =  plot.svg
 					.path(`M ${this.frame.xi},${py} H ${this.frame.xf}`)
 					.attribute(attr.grid)
+					.attribute({"data-grid": "y"})
 					.last;
 			}
 			/*-- escala --*/
+			//TODO acertar isso aqui para não sobrepor informação na escala. diminuir a fonte?
+			let dx = 0, dy = 0;
+			if (["date", "time", "datetime"].indexOf(plot.yType) >= 0) {
+				ty = i === 0 ? "vse" : (i === this.frame.s - 1 ? "vsw" : "vs");
+				dx = -i%2 * attr.label["font-size"];
+			}
+			if (plot.xType === "datetime") {
+				dy = i%2 * attr.label["font-size"];
+			}
+
+
+
+
 			plot.frame[`xScale${i}`] = plot.svg
-				.text(px, this.frame.yf + this.frame.p, this.scale(vx, plot.xType), tx)
-				.attribute(attr.label)
-				.title(vx)
+				.text(px, this.frame.yf + this.frame.p + dy, this.scale(vx, plot.xType), tx)
+				.attribute(attr.scale)
+				.attribute({"data-scale": "x"})
 				.last;
 			plot.frame[`yScale${i}`] = plot.svg
-				.text(this.frame.xi - this.frame.p, py, this.scale(vy, plot.yType), ty)
-				.attribute(attr.label)
-				.title(vy)
+				.text(this.frame.xi - this.frame.p + dx, py, this.scale(vy, plot.yType), ty)
+				.attribute(attr.scale)
+				.attribute({"data-scale": "y"})
 				.last;
 		}
+		/*-- visualizadores de posição --*/
+		plot.frame.xPoint = plot.svg
+			.text(this.frame.xf, this.frame.yf + this.frame.p, "xPoint", "hn")
+			.attribute(attr.point)
+			.attribute({id: __ID.value, display: "none"})
+			.last;
+		plot.frame.yPoint = plot.svg
+			.text(this.frame.xi - this.frame.p, this.frame.yi, "yPoint", "vs")
+			.attribute(attr.point)
+			.attribute({id: __ID.value, display: "none"})
+			.last;
 		/*-- marcadores de posição --*/
 		plot.frame.xGuide = plot.svg
 			.path(`M ${this.frame.xm}, ${this.frame.yi} V ${this.frame.yf}`)
 			.attribute(attr.guide)
-			.attribute({display: "none", "data-guide-x": "", "aria-label": "X-axis guide", "aria-describedby": attr.point.id})
+			.attribute({display: "none", "data-guide": "x", "aria-labelledby": plot.frame.xPoint.id})
 			.last;
 		plot.frame.yGuide = plot.svg
 			.path(`M ${this.frame.xi}, ${this.frame.ym} H ${this.frame.xf}`)
 			.attribute(attr.guide)
-			.attribute({display: "none", "data-guide-y": "", "aria-label": "Y-axis guide", "aria-describedby": attr.point.id})
-			.last;
-		plot.frame.xyPoint = plot.svg
-			.text(this.frame.w - this.frame.p, this.frame.h - this.frame.p, "0 0", "hse")
-			.attribute(attr.point)
+			.attribute({display: "none", "data-guide": "y", "aria-labelledby": plot.frame.yPoint.id})
 			.last;
 		/*-- visualizador de dados --*/
-		plot.frame.view = plot.svg
-			.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, " ", "hnw")
-			.attribute(attr.label)
-			.attribute({display: "none", "data-view": ""})
-			.last;
 		plot.frame.back = plot.svg
 			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
 			.attribute(attr.back)
@@ -327,9 +344,8 @@ const __PLOT2D = {
 	},
 	/**. '{void infoCurve(object data)}: Desfine a descrição da curva para acessibilidade.**/
 	infoCurve: function(data) {
-		console.log(data)
 		const info = [
-			"-- Curve Date ------------------------------------",
+			"-- Curve Data ------------------------------------",
 			`Name: ${data.name}`,
 			`Color: ${data.color.replace(/([A-Z])/g, " $1").toLowerCase()}`,
 			`Shape: ${data.curve}`,
@@ -349,7 +365,6 @@ const __PLOT2D = {
 		info.push("--------------------------------------------------\n");
 		return info.join("\n");
 	},
-
 	/**. '{void print(object plot)}: Plota as curvas no gráfico.**/
 	print: function(plot) {
 		const attr = {
@@ -361,34 +376,40 @@ const __PLOT2D = {
 			dot:   function(color) {return {fill: color};},
 		};
 		plot.yData.filter(function(v,i,a) {
-			/*-- curva principal --*/
 			const main = this.convert(plot, v.data);
 			const info = this.infoCurve(v);
 			const size = 24;
-			plot.frame[`curve${i}`] = plot.svg
-				.path(this.svgPath(main, v.curve))
-				.attribute(attr[v.curve](v.color))
-				.attribute({id: v.id})
-				.desc(info)
-				.title(v.name)
-				.last;
+			const head = __ID.value;
+			const body = __ID.value;
 			/*-- legenda --*/
 			plot.frame[`legend${i}`] = plot.svg
 				.text(this.frame.xf + 2*this.frame.p, this.frame.yi + 3/2*i*size, v.name, "hnw")
-				.attribute({fill: v.color, "aria-describedby": v.id, "font-size": size, cursor: "pointer", tabindex: 0, id: __ID.value})
-				.title(v.name)
+				.attribute({id: head, fill: v.color, "font-size": size, cursor: "pointer", tabindex: 0})
+				.attribute({"aria-controls": body, "aria-expanded": "false"})
 				.last;
 			plot.svg.last.addEventListener("click", this);
 			plot.svg.last.addEventListener("keydown", this);
+			/*-- curva principal --*/
+			plot.frame[`curve${i}`] = plot.svg
+				.path(this.svgPath(main, v.curve))
+				.attribute(attr[v.curve](v.color))
+				.attribute({id: v.id, "aria-labelledby": head})
+				.desc(info)
+				.last;
+			/*-- detalhes --*/
+			plot.frame[`detail${i}`] = plot.svg
+				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, info.split("-- Curve Dataset")[0], "hnw")
+				.attribute({id: body, "aria-labelledby": head, fill: v.color, "font-size": size, display: "none"})
+				.last;
 			/*-- curva de ajuste --*/
 			const fit = v.fit !== null ? this.convert(plot, v.fit.data) : null;
 			if (fit !== null)
-			plot.frame[`fit${i}`] = plot.svg
-				.path(this.svgPath(fit, v.fit.curve))
-				.attribute(attr[v.fit.curve](v.color))
-				.desc(info)
-				.title(v.fit.v)
-				.last;
+				plot.frame[`fit${i}`] = plot.svg
+					.path(this.svgPath(fit, v.fit.curve))
+					.attribute(attr[v.fit.curve](v.color))
+					.title(v.fit.v)
+					.desc(info)
+					.last;
 		}, this);
 		return;
 	},
@@ -420,27 +441,27 @@ const __PLOT2D = {
 	|yAxis|object|Não|Registra dados do eixo y|
 	|yAxis.label|string|Sim|Rótulo do eixo y||
 	|yAxis.type|string|Sim|Tipo de dados do eixo y|'{numeric} (padrão), '{date, time, datetime}|
-	|yAxis.type.dataset|array|Não|Conjunto de curvas||
-	|yAxis.type.dataset.name|string|Sim|Nome da curva||
-	|yAxis.type.dataset.data|finite|Não|A constante da curva||
-	|yAxis.type.dataset.data|function|Não|A função da curva||
-	|yAxis.type.dataset.data|array|Não|A lista de valores de '{y} para a curva||
-	|yAxis.type.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|**/
+	|yAxis.dataset|array|Não|Conjunto de curvas||
+	|yAxis.dataset.name|string|Sim|Nome da curva||
+	|yAxis.dataset.data|finite|Não|A constante da curva||
+	|yAxis.dataset.data|function|Não|A função da curva||
+	|yAxis.dataset.data|array|Não|A lista de valores de '{y} para a curva||
+	|yAxis.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|**/
 	plot: function(data) {
 		/*-- checando validade dos dados --*/
 		if (
-			typeof data !== "object" || typeof data.xAxis !== "object" || typeof data.yAxis !== "object" ||
-			!Array.isArray(data.xAxis.data) || !Array.isArray(data.yAxis.dataset)
+			typeof data !== "object" || typeof data.x !== "object" || typeof data.y !== "object" ||
+			!Array.isArray(data.x.data) || !Array.isArray(data.y.dataset)
 		) return null;
 		const type  = ["numeric", "datetime", "date", "time"];
 		const plot  = {};
 		plot.svg    = new __SVG(this.frame.w, this.frame.h, 0, 0);
-		plot.title   = "title" in data ? data.title : "Title";
-		plot.xLabel = "label" in data.xAxis ? data.xAxis.label : "Label x";
-		plot.yLabel = "label" in data.yAxis ? data.yAxis.label : "Label y";
-		plot.xType  = type.indexOf(data.xAxis.type) >= 0 ? data.xAxis.type : type[0];
-		plot.yType  = type.indexOf(data.yAxis.type) >= 0 ? data.yAxis.type : type[0];
-		plot.xData  = __DATA2D.convert(data.xAxis.data);
+		plot.title  = "title" in data ? data.title : "Title";
+		plot.xLabel = "label" in data.x ? data.x.label : "Label x";
+		plot.yLabel = "label" in data.y ? data.y.label : "Label y";
+		plot.xType  = type.indexOf(data.x.type) >= 0 ? data.x.type : type[0];
+		plot.yType  = type.indexOf(data.x.type) >= 0 ? data.y.type : type[0];
+		plot.xData  = __DATA2D.convert(data.x.data);
 		plot.xMin   = __DATA2D.MIN(plot.xData);
 		plot.xMax   = __DATA2D.MAX(plot.xData);
 		plot.xLen   = __DATA2D.round(plot.xMax - plot.xMin);
@@ -448,7 +469,7 @@ const __PLOT2D = {
 		plot.yMin   = +Infinity;
 		plot.yMax   = -Infinity;
 		plot.yData  = [];
-		data.yAxis.dataset.filter(function(v,i,a) {
+		data.y.dataset.filter(function(v,i,a) {
 			return typeof v === "object" ? this.filter(plot, v, i) : false;
 		}, this);
 		/*-- checar dados --*/
@@ -464,12 +485,14 @@ const __PLOT2D = {
 	},
 	/**. '{void mousemove(object ev)}: Manipulador ao movimentar o mouse sobre a caixa de plotagem.**/
 	mousemove: function(ev) {
-		const gx   = ev.currentTarget.querySelector("[data-guide-x]");
-		const gy   = ev.currentTarget.querySelector("[data-guide-y]");
+		const gx   = ev.currentTarget.querySelector("[data-guide=x]");
+		const gy   = ev.currentTarget.querySelector("[data-guide=y]");
+		const sx   = document.getElementById(gx.getAttribute("aria-labelledby"));
+		const sy   = document.getElementById(gy.getAttribute("aria-labelledby"));
+		const grid = Array.from(ev.currentTarget.querySelectorAll("[data-grid], [data-scale]"));
 		const data = ev.currentTarget.getBoundingClientRect();
 		const px   = (ev.offsetX/data.width)  * this.frame.w;
 		const py   = (ev.offsetY/data.height) * this.frame.h;
-		const xy   = document.getElementById(gx.getAttribute("aria-describedby"));
 		/*-- dentro da grade principal --*/
 		if (px >= this.frame.xi && px <= this.frame.xf && py >= this.frame.yi && py <= this.frame.yf) {
 			const frame = this.frame;
@@ -481,42 +504,47 @@ const __PLOT2D = {
 			const yMax  = Number(ev.currentTarget.dataset.ymax);
 			const yType = ev.currentTarget.dataset.ytype;
 			const vy    = py === frame.yi ? yMax : (py === frame.yf ? yMin : (((py - frame.yi)/frame.y) * (yMin - yMax)) + yMax);
-			gx.removeAttribute("display");
-			gy.removeAttribute("display");
-			xy.removeAttribute("display");
+			grid.forEach(function(v,i,a) {v.setAttribute("display", "none");});
+			[gx, gy, sx, sy].forEach(function(v,i,a) {v.removeAttribute("display");});
 			gx.setAttribute("d", `M ${px},${frame.yi} V ${frame.yf}`);
 			gy.setAttribute("d", `M ${frame.xi},${py} H ${frame.xf}`);
-			xy.textContent = `${this.scale(vx, xType)} : ${this.scale(vy, xType)}`;
+			sx.textContent = this.scale(vx, xType);
+			sy.textContent = this.scale(vy, yType);
+			sx.setAttribute("x", px);
+			sy.setAttribute("x", -py);
 		}
 		/*-- fora da grade principal --*/
 		else {
-			gx.setAttribute("display", "none");
-			gy.setAttribute("display", "none");
-			xy.setAttribute("display", "none");
+			[gx, gy, sx, sy].forEach(function(v,i,a) {v.setAttribute("display", "none");});
+			grid.forEach(function(v,i,a) {v.removeAttribute("display");});
 		}
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/
 	click: function(ev) {
-		const view = ev.currentTarget.parentElement.querySelector("[data-view]");
 		const back = ev.currentTarget.parentElement.querySelector("[data-back]");
-		if (view.getAttribute("aria-labelledby") !== ev.currentTarget.id) {
-			const id   = ev.currentTarget.getAttribute("aria-describedby");
-			const desc = ev.currentTarget.parentElement.querySelector(`#${id} desc`);
-			const text = desc.textContent.split("-- Curve Dataset --")[0];
-			view.setAttribute("aria-labelledby", ev.currentTarget.id);
-			view.setAttribute("fill", ev.currentTarget.getAttribute("fill"));
-			view.removeAttribute("display");
+		const open = ev.currentTarget.parentElement.querySelector("[aria-expanded=true]");
+		const ctrl = (open === null ? ev.currentTarget : open).getAttribute("aria-controls");
+		const body = document.getElementById(ctrl);
+		/*-- abrir detalhes --*/
+		if (open === null) {
+			ev.currentTarget.setAttribute("aria-expanded", "true");
 			back.removeAttribute("display");
-			view.textContent = text;
-			/*-- deixar o elemento com o nível mais elevado --*/
+			body.removeAttribute("display");
 			ev.currentTarget.parentElement.appendChild(back);
-			ev.currentTarget.parentElement.appendChild(view);
+			ev.currentTarget.parentElement.appendChild(body);
 		}
-		else {
-			view.setAttribute("display", "none");
-			view.removeAttribute("aria-labelledby");
+		/*-- fechar detalhes --*/
+		else if (open === ev.currentTarget) {
+			ev.currentTarget.setAttribute("aria-expanded", "false");
 			back.setAttribute("display", "none");
+			body.setAttribute("display", "none");
+		}
+		/*-- alternar detalhes --*/
+		else {
+			open.setAttribute("aria-expanded", "false");
+			body.setAttribute("display", "none");
+			this.click(ev);
 		}
 		return;
 	},

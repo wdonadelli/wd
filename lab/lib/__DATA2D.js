@@ -79,36 +79,23 @@ const __DATA2D = {
 	/**. '{string numeric(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
 	numeric: function(x) {
 		const abs = Math.abs(x);
-		if (abs === 0)
-			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
-		if (abs >= Math.pow(10, 100))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 0});
-		if (abs >= Math.pow(10, 10))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 1});
-		if (abs >= Math.pow(10, 3))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 2});
-		if (abs >= Math.pow(10, 2))
-			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 1});
-		if (abs >= Math.pow(10, 1))
-			return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
-		if (abs <= Math.pow(10, -100))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 0});
-		if (abs <= Math.pow(10, -10))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 1});
-		if (abs <= Math.pow(10, -1))
-			return x.toLocaleString(__LANG.value, {notation: "scientific", maximumFractionDigits: 2});
-		return x.toLocaleString(__LANG.value, {style: "decimal", maximumFractionDigits: 2});
+		if (abs === 0)     return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
+		if (abs >= 1e100)  return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 0});
+		if (abs >= 1e10)   return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 1});
+		if (abs >= 1e3)    return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 2});
+		if (abs >= 1e2)    return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 1});
+		if (abs >= 1e1)    return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
+		if (abs <= 1e-100) return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 0});
+		if (abs <= 1e-10)  return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 1});
+		if (abs <= 1e-1)   return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 2});
+		                   return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
 	},
-
-	//FIXME
-	date: function(value) {return value;},
-	time: function(value) {return value;},
-	datetime: function(value) {return value;},
-
-
-
-
-
+	/**. '{void date(integer value)}: Retorna a data a partir de seu identificador (ver '{__DATETIME}).**/
+	date: function(value) {return __DATETIME.dateID(Math.trunc(value)).locale;},
+	/**. '{void time(integer value)}: Retorna o tempo a partir de seu identificador (ver '{__DATETIME}).**/
+	time: function(value) {return __DATETIME.timeID(Math.trunc(value)).locale;},
+	/**. '{void datetime(integer value)}: Retorna o tempo a partir de seu identificador (ver '{__DATETIME}).**/
+	datetime: function(value) {return __DATETIME.dateTimeID(Math.trunc(value)).locale;},
 	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
 	stringFit: function(fit, type) {
 		const math = {

@@ -145,7 +145,7 @@
 		/**. '{self text(number x, number y, string|array text, string point)}: Define um SVG textual posicionado em '{x} e '{y}. O argumento '{text}, se lista, criará um elemento i{tspan} para cada item empilhados e, se texto, criará um elemento i{text}. O argumento '{point} define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, i{v} para vertical e i{h} para horizontal e os demais definem a âncora conforme pontos cardeais: i{n, ne, e, se, s, sw, w, nw} e i{c} para o meio.**/
 		text: {
 			value: function(x, y, text, point) {
-				point = String(point).toLowerCase();
+				point = String(point).toLowerCase().trim();
 				const config = {
 					hn:  {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "hanging"},
 					hne: {x:  x, y: y, "text-anchor": "end",    "dominant-baseline": "hanging"},
@@ -168,25 +168,16 @@
 				};
 				const attr = point in config ? config[point] : config.hc;
 				this.last  = this.create("text");
-				this.last.style.whiteSpace = "break-spaces";
 				this.attribute(attr);
-				/*-- definindo texto em linha ou empilhado --*/
-				if (!Array.isArray(text)) {
-					const value = String(text);
+				String(text).split("\n").forEach(function(v,i,a) {
 					const tspan = this.create("tspan");
-					tspan.textContent = value == "" ? " " : value;
+					tspan.textContent = v === "" ? " " : v;
 					this.last.appendChild(tspan);
-				}
-				else {
-					for (let i = 0; i < text.length; i++) {
-						let style = {x: attr.x, dy: (i === 0 ? 0 : "1.5em")};
-						let value = String(text[i]);
-						let tspan = this.create("tspan");
-						tspan.textContent = value === "" ? " " : value;
-						for (let j in style) tspan.setAttribute(j, style[j]);
-						this.last.appendChild(tspan);
+					if (i > 0) {
+						tspan.setAttribute("x",  attr.x);
+						tspan.setAttribute("dy", "1.2em");
 					}
-				}
+				}, this);
 				return this;
 			}
 		},
