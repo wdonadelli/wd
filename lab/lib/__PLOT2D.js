@@ -3,6 +3,8 @@
 O objeto '{__PLOT2D} apresenta ferramentas para construção de gráficos duas dimensões.
 **/
 const __PLOT2D = {
+	/**. '{object heap}: Registra os gŕaficos construídos.**/
+	heap: {},
 	/**. '{array RGB}: Registra as cores na sequência azul verde vermelho amarelo branco.**/
 	RGB: ("deepSkyBlue lime hotPink gold khaki cornflowerBlue mediumSpringGreen orchid darkOrange beige aqua greenYellow salmon coral silver aquamarine mediumSeaGreen tomato peru lightBlue").split(" "),
 	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
@@ -115,26 +117,23 @@ const __PLOT2D = {
 			"Type: Cartesian Plane",
 			`Title: ${plot.title}`,
 			`Dataset: ${plot.yData.length}`,
+			`Scale Divisions: ${this.frame.s} (horizontal e vertical)`,
 			"Background: black",
 			"Foreground: white",
 			"-- X-Axis (Abscissa/Horizontal) ------------------",
 			`Label: ${plot.xLabel}`,
-			`Type: ${plot.xType}`,
-			`Scale Divisions: ${this.frame.s}`,
-			`Minimum: ${plot.xMin}`,
-			`Maximum: ${plot.xMax}`,
+			`Minimum: ${this.scale(plot.xMin, plot.xType)}`,
+			`Maximum: ${this.scale(plot.xMax, plot.xType)}`,
 			"-- Y-Axis (Ordinate/Vertical) --------------------",
 			`Label: ${plot.yLabel}`,
-			`Type: ${plot.yType}`,
-			`Scale Divisions: ${this.frame.s}`,
-			`Minimum: ${plot.yMin}`,
-			`Maximum: ${plot.yMax}`
+			`Minimum: ${this.scale(plot.yMin, plot.yType)}`,
+			`Maximum: ${this.scale(plot.yMax, plot.yType)}`
 		].join("\n");
 	},
 	/**. '{string scale(number value, string type)}: Retorna o valor visual a ser exibido no gráfico conforme tipo da escala.**/
 	scale: function(value, type) {
-		if (type === "date") return __DATA2D.date(value);
-		if (type === "time") return __DATA2D.time(value);
+		if (type === "date")     return __DATA2D.date(value);
+		if (type === "time")     return __DATA2D.time(value);
 		if (type === "datetime") return __DATA2D.datetime(value);
 		return __DATA2D.numeric(value);
 	},
@@ -144,7 +143,7 @@ const __PLOT2D = {
 		const fore = "white";
 		const font = "Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace";
 		const attr = {
-			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value},
+			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value},
 			main:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
 			title: {fill: fore, "font-size": "1.5em"},
 			label: {fill: fore, "font-size": 20},
@@ -157,7 +156,7 @@ const __PLOT2D = {
 		/*-- SVG --*/
 		plot.svg
 			.attribute(attr.svg)
-			.attribute({
+			.attribute({//TODO remover isso aqui depois de ajustar eventos
 				"data-xmin":  plot.xMin, "data-xmax":  plot.xMax, "data-xtype": plot.xType,
 				"data-ymin":  plot.yMin, "data-ymax":  plot.yMax, "data-ytype": plot.yType,
 			});
@@ -206,20 +205,20 @@ const __PLOT2D = {
 					.attribute({"data-grid": "y"})
 					.last;
 			}
-			/*-- escala --*/
-			//TODO acertar isso aqui para não sobrepor informação na escala. diminuir a fonte?
+			/*-- ajuste espacial para a escala --*/
 			let dx = 0, dy = 0;
-			if (["date", "time", "datetime"].indexOf(plot.yType) >= 0) {
+			if (plot.yType === "date" || plot.yType === "time") {
 				ty = i === 0 ? "vse" : (i === this.frame.s - 1 ? "vsw" : "vs");
-				dx = -i%2 * attr.label["font-size"];
+				dx = -(i)%2 * (1.5 * attr.label["font-size"]);
+			} else if (plot.yType === "datetime") {
+				ty = i === 0 ? "hnw" : "hsw";
+				dx = 2*this.frame.p;
+				py += (i === 0 ? 1 : -1) * this.frame.p;
 			}
 			if (plot.xType === "datetime") {
-				dy = i%2 * attr.label["font-size"];
+				dy = i%2 * (1.5 * attr.label["font-size"]);
 			}
-
-
-
-
+			/*-- escala --*/
 			plot.frame[`xScale${i}`] = plot.svg
 				.text(px, this.frame.yf + this.frame.p + dy, this.scale(vx, plot.xType), tx)
 				.attribute(attr.scale)
@@ -306,6 +305,7 @@ const __PLOT2D = {
 		const yList   = __DATA2D.toList(dataset.data, "y");
 		plot.yMin     = Math.min(plot.yMin, __DATA2D.MIN(yList));
 		plot.yMax     = Math.max(plot.yMax, __DATA2D.MAX(yList));
+		plot.yType.push(__DATA2D.numType(yData.data));
 		/*-- curva de ajuste --*/
 		if (dataset.fit !== null) {
 			const fitXY = this.dataXY(plot.xData, dataset.fit.f, plot.xList);
@@ -413,17 +413,8 @@ const __PLOT2D = {
 		}, this);
 		return;
 	},
-
-
-
-
-
-
-
 	/**. '{array xList(number min, number max)}: Retorna o array contendo os intervalos de '{x} para definir pontos da função.**/
 	xList: function(min, max) {
-		//TODO quando dx for menor EPSILON tem que redefinir pt e definir dx como EPSILON
-
 		const dw = __DATA2D.round(max - min);
 		const pt = this.frame.x;
 		const dx = __DATA2D.round(dw/pt);
@@ -434,94 +425,110 @@ const __PLOT2D = {
 	/**. '{node plot(object data)}: Retorna um gráfico de plano cartesiano em SVG conforme especificado em '{data} ou nulo:
 	|Propriedade|Tipo|Opcional|Descrição|Observação|
 	|title|string|Sim|Título do gráfico||
-	|xAxis|object|Não|Registra dados do eixo x||
-	|xAxis.label|string|Sim|Rótulo do eixo x||
-	|xAxis.type|string|Sim|Tipo de dados do eixo x|'{numeric} (padrão), '{date, time, datetime}|
-	|xAxis.data|array|Não|Lista de valores de '{x} da curva|Cumprimento maior ou igual a dois|
-	|yAxis|object|Não|Registra dados do eixo y|
-	|yAxis.label|string|Sim|Rótulo do eixo y||
-	|yAxis.type|string|Sim|Tipo de dados do eixo y|'{numeric} (padrão), '{date, time, datetime}|
-	|yAxis.dataset|array|Não|Conjunto de curvas||
-	|yAxis.dataset.name|string|Sim|Nome da curva||
-	|yAxis.dataset.data|finite|Não|A constante da curva||
-	|yAxis.dataset.data|function|Não|A função da curva||
-	|yAxis.dataset.data|array|Não|A lista de valores de '{y} para a curva||
-	|yAxis.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|**/
+	|x|object|Não|Registra dados do eixo x||
+	|x.label|string|Sim|Rótulo do eixo x||
+	|x.data|array|Não|Lista de valores de '{x} da curva|Cumprimento maior ou igual a dois|
+	|y|object|Não|Registra dados do eixo y|
+	|y.label|string|Sim|Rótulo do eixo y||
+	|y.dataset|array|Não|Conjunto de curvas||
+	|y.dataset.name|string|Sim|Nome da curva||
+	|y.dataset.data|finite|Não|A constante da curva||
+	|y.dataset.data|function|Não|A função da curva||
+	|y.dataset.data|array|Não|A lista de valores de '{y} para a curva||
+	|y.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|
+	Os valores de plotagem devem ser do tipo finito, data, tempo ou datatempo.
+	**/
 	plot: function(data) {
 		/*-- checando validade dos dados --*/
 		if (
 			typeof data !== "object" || typeof data.x !== "object" || typeof data.y !== "object" ||
 			!Array.isArray(data.x.data) || !Array.isArray(data.y.dataset)
 		) return null;
-		const type  = ["numeric", "datetime", "date", "time"];
 		const plot  = {};
+		/*-- geral --*/
 		plot.svg    = new __SVG(this.frame.w, this.frame.h, 0, 0);
-		plot.title  = "title" in data ? data.title : "Title";
+		plot.title  = "title" in data   ? data.title   : "Title";
+		/*-- eixo x --*/
 		plot.xLabel = "label" in data.x ? data.x.label : "Label x";
-		plot.yLabel = "label" in data.y ? data.y.label : "Label y";
-		plot.xType  = type.indexOf(data.x.type) >= 0 ? data.x.type : type[0];
-		plot.yType  = type.indexOf(data.x.type) >= 0 ? data.y.type : type[0];
 		plot.xData  = __DATA2D.convert(data.x.data);
+		plot.xType  = __DATA2D.numType(data.x.data);
 		plot.xMin   = __DATA2D.MIN(plot.xData);
 		plot.xMax   = __DATA2D.MAX(plot.xData);
 		plot.xLen   = __DATA2D.round(plot.xMax - plot.xMin);
 		plot.xList  = this.xList(plot.xMin, plot.xMax);
+		if (plot.xMin === plot.xMax || plot.xData.length === 0) return null;
+		/*-- eixo y --*/
+		plot.yLabel = "label" in data.y ? data.y.label : "Label y";
 		plot.yMin   = +Infinity;
 		plot.yMax   = -Infinity;
+		plot.yType  = [];
 		plot.yData  = [];
 		data.y.dataset.filter(function(v,i,a) {
 			return typeof v === "object" ? this.filter(plot, v, i) : false;
 		}, this);
-		/*-- checar dados --*/
-		if (plot.xMin === plot.xMax) return null;
 		if (plot.yMin === plot.yMax) {
 			plot.yMin -= plot.yMin === 0 ? 1 : plot.yMin/2;
 			plot.yMax += plot.yMax === 0 ? 1 : plot.yMax/2;
 		}
+		plot.yType = plot.yType.filter(function(v,i,a) {return a.indexOf(v) === i;});
+		plot.yType = plot.yType.length > 1 ? "finite" : plot.yType[0];
+		/*-- construindo gráfico --*/
 		this.struct(plot);
 		this.print(plot);
-		plot.svg.svg(document.body);
-		return plot;
+		/*-- registrando o gráfico --*/
+		const svg = plot.svg.svg(document.body);//TODO remover document.body
+		this.heap[svg.id] = plot;
+		return svg;
 	},
 	/**. '{void mousemove(object ev)}: Manipulador ao movimentar o mouse sobre a caixa de plotagem.**/
 	mousemove: function(ev) {
-		const gx   = ev.currentTarget.querySelector("[data-guide=x]");
-		const gy   = ev.currentTarget.querySelector("[data-guide=y]");
-		const sx   = document.getElementById(gx.getAttribute("aria-labelledby"));
-		const sy   = document.getElementById(gy.getAttribute("aria-labelledby"));
-		const grid = Array.from(ev.currentTarget.querySelectorAll("[data-grid], [data-scale]"));
+		const heap = this.heap[ev.currentTarget.id];
+		const re   = /^[xy](Grid|Scale)\d+$/;
+		const gx   = heap.frame.xGuide;
+		const gy   = heap.frame.yGuide;
+		const sx   = heap.frame.xPoint;
+		const sy   = heap.frame.yPoint;
 		const data = ev.currentTarget.getBoundingClientRect();
 		const px   = (ev.offsetX/data.width)  * this.frame.w;
 		const py   = (ev.offsetY/data.height) * this.frame.h;
 		/*-- dentro da grade principal --*/
 		if (px >= this.frame.xi && px <= this.frame.xf && py >= this.frame.yi && py <= this.frame.yf) {
 			const frame = this.frame;
-			const xMin  = Number(ev.currentTarget.dataset.xmin);
-			const xMax  = Number(ev.currentTarget.dataset.xmax);
-			const xType = ev.currentTarget.dataset.xtype;
+			const xMin  = heap.xMin;
+			const xMax  = heap.xMax;
 			const vx    = px === frame.xi ? xMin : (px === frame.xf ? xMax : (((px - frame.xi)/frame.x) * (xMax - xMin)) + xMin);
-			const yMin  = Number(ev.currentTarget.dataset.ymin);
-			const yMax  = Number(ev.currentTarget.dataset.ymax);
-			const yType = ev.currentTarget.dataset.ytype;
+			const yMin  = heap.yMin;
+			const yMax  = heap.yMax;
 			const vy    = py === frame.yi ? yMax : (py === frame.yf ? yMin : (((py - frame.yi)/frame.y) * (yMin - yMax)) + yMax);
-			grid.forEach(function(v,i,a) {v.setAttribute("display", "none");});
-			[gx, gy, sx, sy].forEach(function(v,i,a) {v.removeAttribute("display");});
 			gx.setAttribute("d", `M ${px},${frame.yi} V ${frame.yf}`);
 			gy.setAttribute("d", `M ${frame.xi},${py} H ${frame.xf}`);
-			sx.textContent = this.scale(vx, xType);
-			sy.textContent = this.scale(vy, yType);
+			sx.textContent = this.scale(vx, heap.xType);
+			sy.textContent = this.scale(vy, heap.yType);
 			sx.setAttribute("x", px);
 			sy.setAttribute("x", -py);
+			/*-- mostrar guia dinâmica --*/
+			[gx, gy, sx, sy].forEach(function(v,i,a) {v.removeAttribute("display");});
+			/*-- esconder grade e escala --*/
+			for (let i in heap.frame)
+				if (re.test(i)) heap.frame[i].setAttribute("display", "none");
 		}
 		/*-- fora da grade principal --*/
 		else {
+			/*-- esconder guia dinâmica --*/
 			[gx, gy, sx, sy].forEach(function(v,i,a) {v.setAttribute("display", "none");});
-			grid.forEach(function(v,i,a) {v.removeAttribute("display");});
+			/*-- mostrar grade e escala --*/
+			for (let i in heap.frame)
+				if (re.test(i)) heap.frame[i].removeAttribute("display");
 		}
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/
 	click: function(ev) {
+		//FIXME pegar dados do heap
+		const heap = this.heap[ev.currentTarget.parentElement.id];
+
+
+
 		const back = ev.currentTarget.parentElement.querySelector("[data-back]");
 		const open = ev.currentTarget.parentElement.querySelector("[aria-expanded=true]");
 		const ctrl = (open === null ? ev.currentTarget : open).getAttribute("aria-controls");

@@ -20,6 +20,16 @@ const __DATA2D = {
 	convert: function(list) {
 		return list.map(function(v,i,a) {return this.round(this.toNumeric(v));}, this);
 	},
+	/**. '{string numType(array list)}: Retorna o tipo numérico prevalente da lista ('{finite, date, time, datetime}) ou nulo se nenhum valor da lista corresponder aos tipos citados. Se houver múltiplos tipos, '{finite} será retornado.**/
+	numType: function(list) {
+		const base = ["finite", "date", "time", "datetime"];
+		return list.reduce(function(type,v,i,a) {
+			if (type === "finite") return type;
+			const data = new __Type(v);
+			const info = base.reduce(function(x,v,i,a) {return data[v] ? v : x;}, null);
+			return type === null ? info : (info !== type ? "finite" : type);
+		}, null);
+	},
 	/**. '{array dataXY(array x, array y}: Retorna uma lista de objetos contendo as coordenadas '{x, y} de forma alinhada, qualificada, não repetida e ordenada em relação a '{x} dos valores numéricos finitos de ambas as listas.**/
 	dataXY: function(x, y) {
 		/*-- valores precisam ser numéricos e x não pode repetir --*/
