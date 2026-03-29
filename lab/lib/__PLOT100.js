@@ -2,36 +2,262 @@
 #3 Análise Gráfica Relativa
 O objeto '{__PLOT100} apresenta ferramentas para construção de gráficos comparativos (pizza/barras).
 **/
+
+
+
+/*
+= 1 lista => contagem => gráfico de setor
+> 1 lista =>
+*/
+
+
+
+
 const __PLOT100 = {
-	/**. '{object frame}: Registra os pontos de referência do gráfico em '{px}.
-	|Atributo|Descrição|
-	|w|Tamanho horizontal da tela|
-	|h|Tamanho vertical da tela|
-	|s|Número de pontos da escala|
-	|p|Espaço de preenchimento|
-	|xi|Ponto de início do eixo x|
-	|xf|Ponto de término do eixo x|
-	|x|Tamanho do eixo x|
-	|xm|Centro do eixo x|
-	|gm|Funcção que retorna a posição das grades secundárias Centro do eixo x|
-	|yi|Ponto de início do eixo y|
-	|yf|Ponto de término do eixo y|
-	|y|Tamanho do eixo y|
-	|ym|Centro do eixo y|**/
-	frame: {
-		w: Math.max(window.screen.width, window.screen.height),
-		h: Math.min(window.screen.width, window.screen.height),
-		s: 5,
-		get p()  {return Math.trunc(0.01 * this.w);},
-		get xi() {return Math.trunc(0.10 * this.w);},
-		get xf() {return this.w - Math.trunc(0.15 * this.w);},
-		get x()  {return this.xf - this.xi;},
-		get xm() {return Math.trunc((this.xi + this.xf)/2);},
-		get yi() {return Math.trunc(0.10 * this.h);},
-		get yf() {return this.h - Math.trunc(0.15 * this.h);},
-		get y()  {return this.yf - this.yi;},
-		get ym() {return Math.trunc((this.yi + this.yf)/2);},
+	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
+	CSS: __CSS.data.push(`/*-- PLOT100 --*/`),
+
+
+
+
+	/**. '{object pie(array data...)}: Elebora um grafico de setores e retorna o elemento SVG:
+	- O argumento '{data} define as listas de dados ou valores;
+	- O primeiro item de cada lista ('{data}) será ignorado na definição dos valores;
+	- Informe uma única lista caso esteja interessado na contagem de suas ocorrências (nomes) (i{case sensitive});
+	- Informe múltiplas listas caso esteja interessado na soma de seus valores (quantidades);
+	- Lista única: a soma das ocorrências de cada item (nome) definirá a respectiva quantidade;
+	- Múltiplas listas: o primeiro item definirá o nome e a soma dos valores a quantidade;
+	- Se houver valores negativos, o gráfico será o de barras;
+	- Nomes repetidos serão sobrepostos.** /
+	pie: function(data) {
+		const plot = {list: [], dataset: {}, bar: false, type: "finite"};
+		for (let i = 1; i < arguments.length; i++)
+			if (Array.isArray(arguments[i])) plot.list.push(arguments[i]);
+		/*-- caracterizando os dados --* /
+		plot.list.forEach(function(v,i,a) {
+			const prop = v[0];
+			if (a.length === 1) {
+				plot.dataset = __DATA2D.COUNT(v.slice(1));
+			}
+			else {
+				plot.dataset[prop] = __DATA2D.SUM(v.slice(1));
+				plot.bar = plot.bar || plot.dataset[prop] < 0;
+			}
+		});
+		return plot.list.length === 0 ? null : plot;
 	},
+	/**. '{object value(string title, array name, array data...)}: Elebora um grafico de barras e retorna o elemento SVG:
+	- O argumento '{name} define a lista de nomes, ignorando o primeiro item;
+	- O argumento '{data} define as listas de valores;
+	- O primeiro item de cada lista de valores ('{data}) define o nome da propriedade;
+	- A quantidade vinculada ao nome depende do item respectivo da lista de valores;
+	- Nomes repetidos serão sobrepostos.** /
+	bar: function(data) {
+
+
+	},*/
+
+
+
+
+
+
+
+
+	/**. '{object key(array list)}: Retona um objeto com as informações de plotagem no método chave/valor.**/
+	key: function(list) {
+		return list.reduce(function(data,v,i,a) {
+			/*-- definição dos dados básicos --*/
+			if (i === 0) return {
+				label: v.name, values: [], names: v.data, labels: [], sum: [], min: [], max: [],
+			};
+			/*-- definição do conjunto de dados --*/
+			data.labels.push(v.name);
+			data.values.push(a[0].data.map(function(V,I,A) {
+				const value = __DATA2D.toNumeric(v.data[I]);
+				return value === null ? 0 : value;
+			}));
+			data.sum.push(__DATA2D.SUM(data.values[data.values.length - 1]));
+			data.min.push(__DATA2D.MIN(data.values[data.values.length - 1]));
+			data.max.push(__DATA2D.MAX(data.values[data.values.length - 1]));
+			return data;
+		}, null);
+	},
+	/**. '{object sum(array list)}: Retona um objeto com as informações de plotagem no método somatório de valores.**/
+	sum: function(list) {
+		return this.key(list.reduce(function(data,v,i,a) {
+			data[0].data.push(v.name);
+			data[1].data.push(__DATA2D.SUM(v.data));
+			return data;
+		}, [{name: null, data: []}, {name: "sum", data: []}]));
+	},
+	/**. '{object count(array list)}: Retona um objeto com as informações de plotagem no método contagem de ocorrências.**/
+	count: function(list) {
+		return this.key(list.reduce(function(data,v,i,a) {
+			/*-- obter identificadores --*/
+			const count = __DATA2D.COUNT(v.data);
+			for (let x in count) {
+				if (data[0].data.indexOf(x) < 0)
+					data[0].data.push(x);
+			}
+			/*-- definir valores --*/
+			const item = {name: v.name, data: Array(data[0].data.length).fill(0)};
+			for (let x in count) {
+				item.data[data[0].data.indexOf(x)] = count[x];
+			}
+			data.push(item);
+			return data;
+		}, [{name: null, data: []}]));
+	},
+
+
+
+
+
+	bar: function(plot) {
+		/*-- espaço --*/
+		const padd = Math.trunc(0.01 * window.screen.width);
+		const hbar = 40;
+		/*-- área --*/
+		const yi   = padd + (plot.title === null ? 0 : hbar + padd);
+		const yf   = yi + hbar * (plot.data.names.length * (plot.data.labels.length + 1));
+		const xi   = Math.trunc(0.15 * window.screen.width);
+		const xf   = Math.trunc(0.7 * window.screen.width);
+		/*-- escala --*/
+		const min  = plot.min > 0 ? 0 : plot.min;
+		const max  = plot.max < 0 ? 0 : plot.max;
+		const dxdv = (xf - xi) / (max - min);
+		const zero = xi - min*dxdv;
+		/*-- SVG --*/
+		const back = __PLOT2D.ground.back;
+		const fore = __PLOT2D.ground.fore;
+		const font = __PLOT2D.ground.font;
+		const attr = {
+			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value,},
+			line:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
+			dash:  {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
+			title: {fill: fore, "font-size": 30, "font-weight": "bold"},
+			label: {fill: fore, "font-size": 20},
+			bar:   {"stroke-width": 1, "stroke-linecap": "round", "fill-opacity": 0.4},
+		};
+		plot.svg   = new __SVG(window.screen.width, yf + hbar + 2*padd, 0, 0);
+		plot.svg.attribute(attr.svg).attribute({class: "css-wd-plot"});
+		plot.frame = {}
+		/*-- título --*/
+		plot.frame.title = plot.title === null ? null : plot.svg
+			.text((xf + xi)/2, yi/2, plot.title, "h")
+			.attribute(attr.title)
+			.last;
+		/*-- eixo x --*/
+		plot.frame.xaxis = plot.svg
+			.line([xi,yf], [xf,yf])
+			.attribute(attr.line)
+			.last;
+		plot.frame.xmin = plot.svg
+			.text(xi, yf + padd, min, "hnw")
+			.attribute(attr.label)
+			.last;
+		plot.frame.xmax = plot.svg
+			.text(xf, yf + padd, max, "hne")
+			.attribute(attr.label)
+			.last;
+		/*-- eixo y --*/
+		plot.frame.yaxis = plot.svg
+			.line([zero,yi], [zero,yf])
+			.attribute(attr.dash)
+			.last;
+		plot.frame.ylabel = plot.data.label === null ? null : plot.svg
+			.text(padd, (yi + yf)/2, plot.data.label, "vn")
+			.attribute(attr.label)
+			.last;
+		/*-- dados --*/
+		plot.data.names.forEach(function(name,n,lname) {
+			const yname = yi + (n * hbar * (plot.data.labels.length + 1));
+
+			plot.data.labels.forEach(function(label,l,llabel) {
+				const ylabel = yname + (l * hbar);
+				const value  = plot.data.values[l][n];
+				const total  = plot.data.sum[l];
+				const ratio  = total === 0 ? value : value/total;//FIXME o que fazer se total for zero
+				const width  = Math.abs(dxdv * value);
+				const color  = __PLOT2D.RGB[l%__PLOT2D.RGB.length];
+				const desc   = [
+					`-- Data Properties --`,
+					`Color: ${color}`,
+					`${plot.data.label}: ${name}`,
+					`${label}: ${value} (${ratio})`,
+					`Total: ${total}`
+				].join("\n");
+				/*-- nome --*/
+				plot.frame[`name_${n}`] = l > 0 ? plot.frame[`name_${n}`] : plot.svg
+					.text(zero + (value < 0 ? padd : -padd), yname + hbar/2, name, value < 0 ? "hw" : "he")
+					.attribute(attr.label)
+					.last;
+			/*-- barras --*/
+				plot.frame[`bar_${n}_${l}`] = plot.svg
+				.rect(zero + (value < 0 ? -width : 0), ylabel, width, hbar)
+				.attribute(attr.bar)
+				.attribute({fill: color, stroke: color})
+				.desc(desc)
+				.last;
+				/*-- valor --*/
+				const xvalue = zero + ((value < 0 ? -1 : 1) * (width + padd));
+				plot.frame[`value_${n}_${l}`] = plot.svg
+					.text(xvalue, ylabel + hbar/2, value, value < 0 ? "he" : "hw")
+					.attribute(attr.label)
+					.last;
+			}, this);
+		}, this);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		plot.svg.svg(document.body).style.width = "50%";
+
+
+
+	},
+
+	plot: function(data) {
+		/*-- checando dados --*/
+		if (data === null || typeof data !== "object" || !Array.isArray(data.dataset)) return null;
+		const plot = {
+			title: "title" in data ? data.title : null,
+			type:  (/^sum|count|key$/i).test(data.type) ? data.type.toLowerCase() : "count",
+			list:  data.dataset.reduce(function(data,v,i,a) {
+				if (typeof v === "object" && v !== null && Array.isArray(v.data)) {
+					const name = v.name === undefined || v.name === null || (/^\s*$/).test(v.name) ? `#${i}` : String(v.name).trim();
+					data.push({name: name, data: v.data})
+				}
+				return data;
+			}, []),
+		};
+		if (plot.list.length < (plot.data === "key" ? 2 : 1)) return null;
+		/*-- obtendo dados para plotagem conforme o método definido --*/
+		plot.data   = this[plot.type](plot.list);
+		plot.min    = __DATA2D.MIN(plot.data.min);
+		plot.max    = __DATA2D.MAX(plot.data.max);
+		if (plot.min === 0 && plot.max === 0) plot.max = 1;
+		this.bar(plot);
+		return plot;
+	},
+
+
+
+
+
+
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{mousemove} e '{click}.**/
 	handleEvent: function(ev) {
 		if (ev.type in this) this[ev.type](ev);
@@ -297,7 +523,7 @@ const __PLOT100 = {
 
 				/*-- Título do gráfico --*/
 				if (chart.title) {
-					svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute({
+					svg.text(cfg.xMiddle, cfg.top, this.title, "h").attribute({
 						fill: color, "font-size": "1.5em", "font-weight": "bold", cursor: "default"
 					});
 				}
@@ -706,7 +932,7 @@ const __PLOT100 = {
 							let ind = fit.y.indexOf(big);
 							let ym  = this._yScale(big/2);
 							let xm  = this._xScale(fit.x[ind]);
-							let pm  = "hc";
+							let pm  = "h";
 							if (xm <= this._cfg.xStart) xm += this._cfg.padding;
 							if (xm >= this._cfg.xClose) xm -= this._cfg.padding;
 							if (xm <= (this._cfg.xStart + this._cfg.xSize/4)) pm = "hw";
@@ -796,7 +1022,7 @@ const __PLOT100 = {
 						/*-- rótulo inferior --*/
 						svg.text(
 							this._cfg.xMiddle, this._cfg.bottom,
-							this.yLabel + " × " + this.xLabel, "hc"
+							this.yLabel + " × " + this.xLabel, "h"
 						).attribute({cursor: "default"});
 
 						/*-- dados para construção dos semi-círculos --*/

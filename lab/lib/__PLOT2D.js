@@ -13,8 +13,12 @@ const __PLOT2D = {
 }`),
 	/**. '{object heap}: Registra os gŕaficos construídos.**/
 	heap: {},
-	/**. '{object ground}: Define a cor padrão de fundo ('{back}) e da fonte ('{fore}).**/
-	ground: {fore: "white", back: "#202020"},
+	/**. '{object ground}: Define a fonte e a cor de fundo ('{back}) e da fonte ('{fore}).**/
+	ground: {
+		fore: "white",
+		back: "#202020",
+		font: "Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace",
+	},
 	/**. '{array RGB}: Registra as cores na sequência azul verde vermelho amarelo branco.**/
 	RGB: ("deepSkyBlue lime hotPink gold khaki cornflowerBlue mediumSpringGreen orchid darkOrange beige aqua greenYellow salmon coral silver aquamarine mediumSeaGreen tomato peru lightBlue").split(" "),
 	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
@@ -145,7 +149,7 @@ const __PLOT2D = {
 	struct: function(plot) {
 		const back = this.ground.back;
 		const fore = this.ground.fore;
-		const font = "Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace";
+		const font = this.ground.font;
 		const attr = {
 			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value,},
 			main:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
@@ -164,7 +168,7 @@ const __PLOT2D = {
 		plot.frame = {};
 		/*-- título --*/
 		plot.frame.title = plot.svg
-			.text(this.frame.xm, this.frame.yi/2, plot.title, "hc")
+			.text(this.frame.xm, this.frame.yi/2, plot.title, "h")
 			.attribute(attr.title)
 			.attribute({id: attr.svg["aria-labelledby"], "font-size": 30})
 			.last;
@@ -432,7 +436,7 @@ const __PLOT2D = {
 	|y.dataset.data|function|Não|A função da curva||
 	|y.dataset.data|array|Não|A lista de valores de '{y} para a curva||
 	|y.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|
-	Os valores de plotagem devem ser do tipo finito, data, tempo ou datatempo.
+	Os valores de plotagem devem ser do tipo finito, data (em dias), tempo ou datatempo (em milissegundos).
 	**/
 	plot: function(data) {
 		/*-- checando validade dos dados --*/

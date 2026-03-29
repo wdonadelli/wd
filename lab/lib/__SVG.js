@@ -142,7 +142,7 @@
 				return this.attribute({x: x, y: y, width: width, height: height});
 			}
 		},
-		/**. '{self text(number x, number y, string|array text, string point)}: Define um SVG textual posicionado em '{x} e '{y}. O argumento '{text}, se lista, criará um elemento i{tspan} para cada item empilhados e, se texto, criará um elemento i{text}. O argumento '{point} define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, i{v} para vertical e i{h} para horizontal e os demais definem a âncora conforme pontos cardeais: i{n, ne, e, se, s, sw, w, nw} e i{c} para o meio.**/
+		/**. '{self text(number x, number y, string|array text, string point)}: Define um SVG textual posicionado em '{x} e '{y}. O argumento '{text}, se lista, criará um elemento i{tspan} para cada item empilhados e, se texto, criará um elemento i{text}. O argumento '{point} define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, i{v} para vertical e i{h} para horizontal, e os demais definem a âncora conforme pontos cardeais: i{n, ne, e, se, s, sw, w, nw} que, se ausente, irá centralizar o texto.**/
 		text: {
 			value: function(x, y, text, point) {
 				point = String(point).toLowerCase().trim();
@@ -155,7 +155,7 @@
 					hsw: {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "auto"},
 					hw:  {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "middle"},
 					hnw: {x:  x, y: y, "text-anchor": "start",  "dominant-baseline": "hanging"},
-					hc:  {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "middle"},
+					h:   {x:  x, y: y, "text-anchor": "middle", "dominant-baseline": "middle"},
 					vn:  {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "hanging", transform: "rotate(270)"},
 					vne: {x: -y, y: x, "text-anchor": "end",    "dominant-baseline": "hanging", transform: "rotate(270)"},
 					ve:  {x: -y, y: x, "text-anchor": "end",    "dominant-baseline": "middle",  transform: "rotate(270)"},
@@ -164,9 +164,9 @@
 					vsw: {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "auto",    transform: "rotate(270)"},
 					vw:  {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "middle",  transform: "rotate(270)"},
 					vnw: {x: -y, y: x, "text-anchor": "start",  "dominant-baseline": "hanging", transform: "rotate(270)"},
-					vc:  {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "middle",  transform: "rotate(270)"},
+					v:   {x: -y, y: x, "text-anchor": "middle", "dominant-baseline": "middle",  transform: "rotate(270)"},
 				};
-				const attr = point in config ? config[point] : config.hc;
+				const attr = point in config ? config[point] : config.h;
 				this.last  = this.create("text");
 				this.attribute(attr);
 				String(text).split("\n").forEach(function(v,i,a) {
