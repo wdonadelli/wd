@@ -299,6 +299,10 @@ const __DATA2D = {
 		const sum = list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) ? Math.pow(v - avg, 2) : 0);}, 0);
 		return len === 0 ? 0 : this.round(Math.sqrt(sum/len));
 	},
+	/**. '{array MOD(array list)}: Retorna a lista dos módulos dos valores finitos.**/
+	MOD: function(list) {
+		return list.map(function(v,i,a) {return Number.isFinite(v) ? Math.abs(v) : 0;});
+	},
 
 
 

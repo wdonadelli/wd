@@ -4,15 +4,6 @@ O objeto '{__PLOT100} apresenta ferramentas para construção de gráficos compa
 **/
 
 
-
-/*
-= 1 lista => contagem => gráfico de setor
-> 1 lista =>
-*/
-
-
-
-
 const __PLOT100 = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- PLOT100 --*/`),
@@ -110,6 +101,15 @@ const __PLOT100 = {
 		}, [{name: null, data: []}]));
 	},
 
+	number: function(value, ratio) {
+		const abs = Math.abs(value);
+		if (ratio) return __NUMBER.locale(value, "decimal", "percent", {maxDecimal: 0});
+		if (abs >= 1e15) return __NUMBER.locale(value, "decimal", "scientific", {maxDecimal: 2});
+		if (abs >= 1e5)  return __NUMBER.locale(value, "decimal", abs >= 1e13 ? "short" : "compact");
+		if (abs <= 1e-5) return __NUMBER.locale(value, "decimal", "scientific", {maxDecimal: 2});
+		return __NUMBER.locale(value, "decimal", "decimal", {maxDecimal: abs > 1 ? 2 : 4});
+	},
+
 
 
 
@@ -117,95 +117,107 @@ const __PLOT100 = {
 	bar: function(plot) {
 		/*-- espaço --*/
 		const padd = Math.trunc(0.01 * window.screen.width);
-		const hbar = 40;
+		const hbar = 50;
 		/*-- área --*/
 		const yi   = padd + (plot.title === null ? 0 : hbar + padd);
 		const yf   = yi + hbar * (plot.data.names.length * (plot.data.labels.length + 1));
 		const xi   = Math.trunc(0.15 * window.screen.width);
-		const xf   = Math.trunc(0.7 * window.screen.width);
+		const xf   = Math.trunc(0.65 * window.screen.width);
+		const li   = Math.trunc(0.80 * window.screen.width);
 		/*-- escala --*/
 		const min  = plot.min > 0 ? 0 : plot.min;
 		const max  = plot.max < 0 ? 0 : plot.max;
 		const dxdv = (xf - xi) / (max - min);
 		const zero = xi - min*dxdv;
-		/*-- SVG --*/
+		const left = (zero - xi) > (xf - zero);
+		/*-- identificadores --*/
+		const ilabel = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
+		const iname  = Array(plot.data.names.length).fill(0).map(function() {return __ID.value;});
+		/*-- SVG CSS --*/
 		const back = __PLOT2D.ground.back;
 		const fore = __PLOT2D.ground.fore;
 		const font = __PLOT2D.ground.font;
 		const attr = {
 			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value,},
-			line:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-			dash:  {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
-			title: {fill: fore, "font-size": 30, "font-weight": "bold"},
-			label: {fill: fore, "font-size": 20},
+			line:  {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
+			title: {fill: fore, "font-size": 0.75*hbar, "font-weight": "bold"},
+			label: {fill: fore, "font-size": 0.50*hbar},
 			bar:   {"stroke-width": 1, "stroke-linecap": "round", "fill-opacity": 0.4},
 		};
+		/*-- SVG --*/
 		plot.svg   = new __SVG(window.screen.width, yf + hbar + 2*padd, 0, 0);
 		plot.svg.attribute(attr.svg).attribute({class: "css-wd-plot"});
 		plot.frame = {}
 		/*-- título --*/
 		plot.frame.title = plot.title === null ? null : plot.svg
-			.text((xf + xi)/2, yi/2, plot.title, "h")
+			.text(Math.trunc(0.5 * window.screen.width), yi/2, plot.title, "h")
 			.attribute(attr.title)
-			.last;
-		/*-- eixo x --*/
-		plot.frame.xaxis = plot.svg
-			.line([xi,yf], [xf,yf])
-			.attribute(attr.line)
-			.last;
-		plot.frame.xmin = plot.svg
-			.text(xi, yf + padd, min, "hnw")
-			.attribute(attr.label)
-			.last;
-		plot.frame.xmax = plot.svg
-			.text(xf, yf + padd, max, "hne")
-			.attribute(attr.label)
+			.attribute({id: attr.svg["aria-labelledby"]})
 			.last;
 		/*-- eixo y --*/
 		plot.frame.yaxis = plot.svg
-			.line([zero,yi], [zero,yf])
-			.attribute(attr.dash)
+			.line([zero,yi+hbar], [zero,yf])
+			.attribute(attr.line)
 			.last;
 		plot.frame.ylabel = plot.data.label === null ? null : plot.svg
 			.text(padd, (yi + yf)/2, plot.data.label, "vn")
 			.attribute(attr.label)
 			.last;
-		/*-- dados --*/
+		/*-- nome --*/
 		plot.data.names.forEach(function(name,n,lname) {
-			const yname = yi + (n * hbar * (plot.data.labels.length + 1));
-
+			const yname  = yi + (n * hbar * (plot.data.labels.length + 1));
+			plot.frame[`name_${n}`] = plot.svg
+				.text(left ? zero-padd : zero+padd, yname + hbar/2, name, left ? "he" : "hw")
+				.attribute(attr.label)
+				.attribute({id: iname[n]})
+				.last;
+			/*-- barras, valores, porcentagem e legenda --*/
 			plot.data.labels.forEach(function(label,l,llabel) {
-				const ylabel = yname + (l * hbar);
-				const value  = plot.data.values[l][n];
-				const total  = plot.data.sum[l];
-				const ratio  = total === 0 ? value : value/total;//FIXME o que fazer se total for zero
-				const width  = Math.abs(dxdv * value);
+				const ylabel = yname + hbar + (l * hbar);
 				const color  = __PLOT2D.RGB[l%__PLOT2D.RGB.length];
+				const min    = plot.data.min[l];
+				const max    = plot.data.max[l];
+				const total  = plot.data.sum[l];
+				const value  = plot.data.values[l][n];
+				const ratio  = total !== 0 ? value/total : (1);//FIXME o que fazer se total for zero
+				const width  = Math.abs(dxdv * value);
+				const top    = zero + ((value < 0 ? -1 : +1) * (width + padd));
+				const base   = zero + ((value < 0 ? +1 : -1) * (padd));
 				const desc   = [
 					`-- Data Properties --`,
 					`Color: ${color}`,
 					`${plot.data.label}: ${name}`,
-					`${label}: ${value} (${ratio})`,
+					`${label}: ${value} (${this.number(ratio, true)})`,
 					`Total: ${total}`
 				].join("\n");
-				/*-- nome --*/
-				plot.frame[`name_${n}`] = l > 0 ? plot.frame[`name_${n}`] : plot.svg
-					.text(zero + (value < 0 ? padd : -padd), yname + hbar/2, name, value < 0 ? "hw" : "he")
+				/*-- legenda --*/
+				if (n === 0) plot.frame[`label_${l}`] = plot.svg
+					.text(li, ylabel + hbar/2, label, "hw")
 					.attribute(attr.label)
+					.attribute({fill: color, id: ilabel[l]})
 					.last;
-			/*-- barras --*/
+				/*-- barras --*/
 				plot.frame[`bar_${n}_${l}`] = plot.svg
-				.rect(zero + (value < 0 ? -width : 0), ylabel, width, hbar)
-				.attribute(attr.bar)
-				.attribute({fill: color, stroke: color})
-				.desc(desc)
-				.last;
-				/*-- valor --*/
-				const xvalue = zero + ((value < 0 ? -1 : 1) * (width + padd));
-				plot.frame[`value_${n}_${l}`] = plot.svg
-					.text(xvalue, ylabel + hbar/2, value, value < 0 ? "he" : "hw")
-					.attribute(attr.label)
+					.rect(zero + (value < 0 ? -width : 0), ylabel, width, hbar)
+					.attribute(attr.bar)
+					.attribute({fill: color, stroke: color, "aria-labelledby": `${iname[n]} ${ilabel[l]}`})
+					.desc(desc)
 					.last;
+				/*-- valor --*/
+				plot.frame[`value_${n}_${l}`] = plot.svg
+					.text(top, ylabel + hbar/2, this.number(value, false), value < 0 ? "he" : "hw")
+					.attribute(attr.label)
+					.attribute({fill: color})
+					.title(value)
+					.last;
+				/*-- porcentagem --*/
+				plot.frame[`ratio_${n}_${l}`] = plot.svg
+					.text(base, ylabel + hbar/2, this.number(ratio, true), value < 0 ? "hw" : "he")
+					.attribute(attr.label)
+					.attribute({fill: color})
+					.title(ratio)
+					.last;
+
 			}, this);
 		}, this);
 
