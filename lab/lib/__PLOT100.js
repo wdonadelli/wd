@@ -68,7 +68,7 @@ const __PLOT100 = {
 				const value = __DATA2D.toNumeric(v.data[I]);
 				return value === null ? 0 : value;
 			}));
-			data.sum.push(__DATA2D.SUM(data.values[data.values.length - 1]));
+			data.sum.push(__DATA2D.SUM(__DATA2D.MOD(data.values[data.values.length - 1])));
 			data.min.push(__DATA2D.MIN(data.values[data.values.length - 1]));
 			data.max.push(__DATA2D.MAX(data.values[data.values.length - 1]));
 			return data;
@@ -100,26 +100,22 @@ const __PLOT100 = {
 			return data;
 		}, [{name: null, data: []}]));
 	},
-
+	/**. '{object number(finite value, boolean ratio)}: Retona a configuração numérica a ser exibida.**/
 	number: function(value, ratio) {
 		const abs = Math.abs(value);
 		if (ratio) return __NUMBER.locale(value, "decimal", "percent", {maxDecimal: 0});
 		if (abs >= 1e15) return __NUMBER.locale(value, "decimal", "scientific", {maxDecimal: 2});
 		if (abs >= 1e5)  return __NUMBER.locale(value, "decimal", abs >= 1e13 ? "short" : "compact");
-		if (abs <= 1e-5) return __NUMBER.locale(value, "decimal", "scientific", {maxDecimal: 2});
+		if (abs <= 1e-5) return __NUMBER.locale(value, "decimal", abs === 0 ? "decimal" : "scientific", {maxDecimal: 2});
 		return __NUMBER.locale(value, "decimal", "decimal", {maxDecimal: abs > 1 ? 2 : 4});
 	},
-
-
-
-
-
+	/**. '{void bar(object plot)}: Define a estrutura visual do gráfico de barras.**/
 	bar: function(plot) {
 		/*-- espaço --*/
 		const padd = Math.trunc(0.01 * window.screen.width);
 		const hbar = 50;
 		/*-- área --*/
-		const yi   = padd + (plot.title === null ? 0 : hbar + padd);
+		const yi   = plot.title === null ? hbar : hbar + 2*padd;
 		const yf   = yi + hbar * (plot.data.names.length * (plot.data.labels.length + 1));
 		const xi   = Math.trunc(0.15 * window.screen.width);
 		const xf   = Math.trunc(0.65 * window.screen.width);
@@ -145,7 +141,7 @@ const __PLOT100 = {
 			bar:   {"stroke-width": 1, "stroke-linecap": "round", "fill-opacity": 0.4},
 		};
 		/*-- SVG --*/
-		plot.svg   = new __SVG(window.screen.width, yf + hbar + 2*padd, 0, 0);
+		plot.svg   = new __SVG(window.screen.width, yf + hbar, 0, 0);
 		plot.svg.attribute(attr.svg).attribute({class: "css-wd-plot"});
 		plot.frame = {}
 		/*-- título --*/
@@ -159,8 +155,9 @@ const __PLOT100 = {
 			.line([zero,yi+hbar], [zero,yf])
 			.attribute(attr.line)
 			.last;
+		/*-- descrição --*/
 		plot.frame.ylabel = plot.data.label === null ? null : plot.svg
-			.text(padd, (yi + yf)/2, plot.data.label, "vn")
+			.text(li, yi + hbar/2, plot.data.label, "hw")
 			.attribute(attr.label)
 			.last;
 		/*-- nome --*/
@@ -175,33 +172,24 @@ const __PLOT100 = {
 			plot.data.labels.forEach(function(label,l,llabel) {
 				const ylabel = yname + hbar + (l * hbar);
 				const color  = __PLOT2D.RGB[l%__PLOT2D.RGB.length];
-				const min    = plot.data.min[l];
-				const max    = plot.data.max[l];
-				const total  = plot.data.sum[l];
 				const value  = plot.data.values[l][n];
-				const ratio  = total !== 0 ? value/total : (1);//FIXME o que fazer se total for zero
+				const ratio  = value/plot.data.sum[l];
 				const width  = Math.abs(dxdv * value);
 				const top    = zero + ((value < 0 ? -1 : +1) * (width + padd));
 				const base   = zero + ((value < 0 ? +1 : -1) * (padd));
-				const desc   = [
-					`-- Data Properties --`,
-					`Color: ${color}`,
-					`${plot.data.label}: ${name}`,
-					`${label}: ${value} (${this.number(ratio, true)})`,
-					`Total: ${total}`
-				].join("\n");
 				/*-- legenda --*/
 				if (n === 0) plot.frame[`label_${l}`] = plot.svg
 					.text(li, ylabel + hbar/2, label, "hw")
 					.attribute(attr.label)
 					.attribute({fill: color, id: ilabel[l]})
+					.desc(color)
 					.last;
 				/*-- barras --*/
 				plot.frame[`bar_${n}_${l}`] = plot.svg
 					.rect(zero + (value < 0 ? -width : 0), ylabel, width, hbar)
 					.attribute(attr.bar)
 					.attribute({fill: color, stroke: color, "aria-labelledby": `${iname[n]} ${ilabel[l]}`})
-					.desc(desc)
+					.desc(`${value} (${(100*ratio).toFixed(2)}%)`)
 					.last;
 				/*-- valor --*/
 				plot.frame[`value_${n}_${l}`] = plot.svg
@@ -217,36 +205,113 @@ const __PLOT100 = {
 					.attribute({fill: color})
 					.title(ratio)
 					.last;
-
 			}, this);
 		}, this);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		plot.svg.svg(document.body).style.width = "50%";
-
-
-
 	},
+
+
+	/**. '{void pie(object plot)}: Define a estrutura visual do gráfico de setores.**/
+	pie: function(plot) {
+		/*-- espaço --*/
+		const padd = Math.trunc(0.01 * window.screen.width);
+		const side = 50;
+		/*-- área --*/
+		const xi   = Math.trunc(0.15 * window.screen.width);
+		const xf   = Math.trunc(0.85 * window.screen.width);
+		const xc   = (xi + xf)/2;
+		const yi   = side + 2*padd;
+		const yf   = yi + (xf - xi);
+		const yc   = (yi + yf)/2;
+		const r    = (xf - xi)/2 - Math.trunc(0.10 * window.screen.width);
+		/*-- identificadores --*/
+		const ilabel = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
+		const iname  = Array(plot.data.names.length).fill(0).map(function() {return __ID.value;});
+		/*-- SVG CSS --*/
+		const back = __PLOT2D.ground.back;
+		const fore = __PLOT2D.ground.fore;
+		const font = __PLOT2D.ground.font;
+		const attr = {
+			svg:    {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value,},
+			title:  {fill: fore, "font-size": 0.75*side, "font-weight": "bold"},
+			label:  {fill: fore, "font-size": 0.50*side},
+			sector: {"stroke-width": 1, "stroke-linecap": "round", "fill-opacity": 0.4},
+		};
+		/*-- SVG --*/
+		plot.svg   = new __SVG(window.screen.width, yf + side, 0, 0);
+		plot.svg.attribute(attr.svg).attribute({class: "css-wd-plot"});
+		plot.frame = {}
+		/*-- título --*/
+		plot.frame.title = plot.svg
+			.text(Math.trunc(0.5 * window.screen.width), yi/2, plot.title, "h")
+			.attribute(attr.title)
+			.attribute({id: attr.svg["aria-labelledby"]})
+			.last;
+		/*-- rótulos dos gráficos (lado esquerdo) --*/
+		plot.data.labels.forEach(function(label,l,llabel) {
+			let start = 0;
+			plot.frame[`label_${l}`] = plot.svg
+				.text(padd, yi + l*side + side/2, label, "hw")
+				.attribute(attr.label)
+				.attribute({id: ilabel[l], tabindex: 0, "text-decoration": l === 0 ? "underline" : "normal", cursor: "pointer"})
+				.last;
+			plot.frame[`label_${l}`].addEventListener("click", this);
+			/*-- setores e legenda (lado direito) --*/
+			plot.data.names.forEach(function(name,n,lname) {
+				const color = __PLOT2D.RGB[n%__PLOT2D.RGB.length];
+				const value = plot.data.values[l][n];
+				const sum   = plot.data.sum[l];
+				const ratio = value/sum;
+				const width = Math.abs(360*ratio);
+				const half  = (start + width/2);
+				const angle = Math.PI*(half/180);
+				const tx    = xc + (r+padd)*Math.cos(angle);
+				const ty    = yc - (r+padd)*Math.sin(angle);
+				const tp    = (
+					half < 90 ? (half === 0 ? "hw" : "hsw") : (
+						half < 180 ? (half === 90 ? "hs" : "hse") : (
+							half < 270 ? (half === 180 ? "he" : "hne") : (
+								half < 360 ? (half === 270 ? "hn" : "hnw") : "hw"
+				))));
+				/*-- legenda --*/
+				if (l === 0) plot.frame[`name_${n}`] = plot.svg
+					.text(xf + padd, yi + n*side + side/2, name, "hw")
+					.attribute(attr.label)
+					.attribute({fill: color, id: iname[n]})
+					.desc(color)
+					.last;
+				/*-- setor --*/
+				plot.frame[`sector_${l}_${n}`] = plot.svg.semicircle(xc, yc, r, start, width)
+					.attribute(attr.sector)
+					.attribute({fill: color, stroke: color, "aria-labelledby": `${ilabel[l]} ${iname[n]}`})
+					.desc(`${value} (${(100*ratio).toFixed(2)}%)`)
+					.last;
+				/*-- porcentagem --*/
+				plot.frame[`ratio_${l}_${n}`] = plot.svg
+					.text(tx, ty, this.number(ratio, true), tp)
+					.attribute(attr.label)
+					.attribute({fill: color})
+					.title(ratio)
+					.last;
+				/*-- incremento --*/
+				start += width;
+			}, this);
+		}, this);
+	},
+
+
+
+
+
+
+
 
 	plot: function(data) {
 		/*-- checando dados --*/
 		if (data === null || typeof data !== "object" || !Array.isArray(data.dataset)) return null;
 		const plot = {
-			title: "title" in data ? data.title : null,
+			title: "title" in data ? data.title : "",
 			type:  (/^sum|count|key$/i).test(data.type) ? data.type.toLowerCase() : "count",
+			view:  (/^bar|pie$/i).test(data.view) ? data.view.toLowerCase() : "bar",
 			list:  data.dataset.reduce(function(data,v,i,a) {
 				if (typeof v === "object" && v !== null && Array.isArray(v.data)) {
 					const name = v.name === undefined || v.name === null || (/^\s*$/).test(v.name) ? `#${i}` : String(v.name).trim();
@@ -261,7 +326,8 @@ const __PLOT100 = {
 		plot.min    = __DATA2D.MIN(plot.data.min);
 		plot.max    = __DATA2D.MAX(plot.data.max);
 		if (plot.min === 0 && plot.max === 0) plot.max = 1;
-		this.bar(plot);
+		this[plot.view](plot);
+		plot.svg.svg(document.body).style.width = "50%";
 		return plot;
 	},
 
