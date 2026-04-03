@@ -20,6 +20,21 @@
 			_last: {value: svg, writable: true}
 		});
 	}
+	Object.defineProperties(__SVG, {
+		constructor: {value: __SVG},
+		/**. '{finite fontSize(finite size, finite pattern, finite width)}: Calcula e retorna o tamanho da fonte em i{px} a ser definida:
+		|Argumento|Descrição|
+		|'{size}|Tamanho da fonte esperada em i{px}|
+		|'{pattern}|Comprimento de referência em i{px} para exibição da fonte esperada|
+		|'{width}|Comprimento máximo disponível em i{px}|**/
+		fontSize: {value: function(size, pattern, width) {return width/pattern*size;}},
+		/**. '{labelSize labelSize}: Retorna um valor para rótulos em SVG a partir do tamanho da tela e um padrão.**/
+		labelSize: {get: function() {return this.fontSize(12, 400, window.screen.width);}},
+		/**. '{finite titleSize}: Retorna um valor para títulos em SVG a partir do tamanho da tela e um padrão.**/
+		titleSize: {get: function() {return this.fontSize(14, 400, window.screen.width);}},
+		/**. '{finite paddSize}: Retorna um valor para espaçamento em SVG a partir do tamanho da tela e um padrão.**/
+		paddSize: {get: function() {return this.fontSize(4, 400, window.screen.width);}},
+	});
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},
 		/**. '{node last}: Define ou retorna o último nó da cadeia adicionado ao SVG.**/

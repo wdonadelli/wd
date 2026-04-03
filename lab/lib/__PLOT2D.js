@@ -5,11 +5,27 @@ O objeto '{__PLOT2D} apresenta ferramentas para construção de gráficos duas d
 const __PLOT2D = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- PLOT2D --*/
-@media print {
-  .css-wd-plot [fill=white]     {fill:   black !important;}
-  .css-wd-plot [stroke=white]   {stroke: black !important;}
-  .css-wd-plot [fill="#202020"] {fill:    none !important;}
-  .css-wd-plot [background="#202020"] {background: transparent !important;}
+.css-wd-plot {
+	background: white;
+	color: #333333;
+	font-family: sans-serif;
+	font-size: ${__SVG.labelSize}px;
+	border: thin solid black;
+}
+.css-wd-plot .css-wd-plot-title {
+	font-size: ${__SVG.titleSize}px;
+	font-weight: bold;
+}
+.css-wd-plot .css-wd-plot-area {
+	stroke-width: 1;
+	stroke-linecap: round;
+	fill-opacity: 0.75;
+}
+.css-wd-plot .css-wd-plot-line {
+	stroke: #333333;
+	fill: none;
+	stroke-width: 1;
+	stroke-linecap: round;
 }`),
 	/**. '{object heap}: Registra os gŕaficos construídos.**/
 	heap: {},
@@ -436,8 +452,7 @@ const __PLOT2D = {
 	|y.dataset.data|function|Não|A função da curva||
 	|y.dataset.data|array|Não|A lista de valores de '{y} para a curva||
 	|y.dataset.fit|string|Sim|Ajuste ou tipo de curva|ver '{curves}|
-	Os valores de plotagem devem ser do tipo finito, data (em dias), tempo ou datatempo (em milissegundos).
-	**/
+	Os valores de plotagem devem ser do tipo finito, data (em dias), tempo ou datatempo (em milissegundos).**/
 	plot: function(data) {
 		/*-- checando validade dos dados --*/
 		if (
