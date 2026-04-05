@@ -21,16 +21,19 @@ const __PLOT2D = {
 	stroke-linecap: round;
 	fill-opacity: 0.75;
 }
-.css-wd-plot .css-wd-plot-line {
+.css-wd-plot .css-wd-plot-line,
+.css-wd-plot .css-wd-plot-dash {
 	stroke: #333333;
 	fill: none;
-	stroke-width: 1;
 	stroke-linecap: round;
+}
+.css-wd-plot .css-wd-plot-dash {
+	stroke-dasharray: 5,5
 }`),
 	/**. '{object heap}: Registra os gŕaficos construídos.**/
-	heap: {},
+	heap: {},//TODO apagar isso
 	/**. '{object ground}: Define a fonte e a cor de fundo ('{back}) e da fonte ('{fore}).**/
-	ground: {
+	ground: {//TODO apagar isso
 		fore: "white",
 		back: "#202020",
 		font: "Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace",
@@ -124,35 +127,17 @@ const __PLOT2D = {
 		w: Math.max(window.screen.width, window.screen.height),
 		h: Math.min(window.screen.width, window.screen.height),
 		s: 5,
-		get p()  {return Math.trunc(0.01 * this.w);},
-		get xi() {return Math.trunc(0.10 * this.w);},
-		get xf() {return this.w - Math.trunc(0.15 * this.w);},
+		get p()  {return __SVG.paddSize;},
+		get lb() {return __SVG.labelSize;},
+		get tl() {return __SVG.titleSize;},
+		get xi() {return Math.trunc(2*this.p + this.lb + 0.10 * this.w);},
+		get xf() {return Math.trunc(this.w - (this.p + 0.20 * this.w));},
 		get x()  {return this.xf - this.xi;},
-		get xm() {return Math.trunc((this.xi + this.xf)/2);},
-		get yi() {return Math.trunc(0.10 * this.h);},
-		get yf() {return this.h - Math.trunc(0.15 * this.h);},
+		get xm() {return (this.xi + this.xf)/2;},
+		get yi() {return Math.trunc(2*this.p + this.tl);},
+		get yf() {return Math.trunc(this.h - (4*this.p + 3*this.lb));},
 		get y()  {return this.yf - this.yi;},
-		get ym() {return Math.trunc((this.yi + this.yf)/2);},
-	},
-	/**. '{void gridInfo(object plot)}: Retorna os dados do gráfico para fins de acessibilidade.**/
-	gridInfo: function (plot) {
-		return [
-			"-- Chart -----------------------------------------",
-			"Type: Cartesian Plane",
-			`Title: ${plot.title}`,
-			`Dataset: ${plot.yData.length}`,
-			`Scale Divisions: ${this.frame.s} (horizontal e vertical)`,
-			"Background: black",
-			"Foreground: white",
-			"-- X-Axis (Abscissa/Horizontal) ------------------",
-			`Label: ${plot.xLabel}`,
-			`Minimum: ${this.scale(plot.xMin, plot.xType)}`,
-			`Maximum: ${this.scale(plot.xMax, plot.xType)}`,
-			"-- Y-Axis (Ordinate/Vertical) --------------------",
-			`Label: ${plot.yLabel}`,
-			`Minimum: ${this.scale(plot.yMin, plot.yType)}`,
-			`Maximum: ${this.scale(plot.yMax, plot.yType)}`
-		].join("\n");
+		get ym() {return (this.yi + this.yf)/2;},
 	},
 	/**. '{string scale(number value, string type)}: Retorna o valor visual a ser exibido no gráfico conforme tipo da escala.**/
 	scale: function(value, type) {
@@ -163,47 +148,44 @@ const __PLOT2D = {
 	},
 	/**. '{void struct(object plot)}: Define a estrutura básica do gráfico.**/
 	struct: function(plot) {
-		const back = this.ground.back;
-		const fore = this.ground.fore;
-		const font = this.ground.font;
-		const attr = {
-			svg:   {style: `background: ${back}; font-family: ${font};`, "aria-labelledby": __ID.value, id: __ID.value,},
-			main:  {stroke: fore, fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-			title: {fill: fore, "font-size": "1.5em"},
-			label: {fill: fore, "font-size": 20},
-			scale: {fill: fore, "font-size": 20},
-			grid:  {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round"},
-			guide: {stroke: fore, fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5", display: "none"},
-			point: {fill: fore, "font-size": 20},
-			back:  {fill: back, "fill-opacity": 0.75, display: "none"}
-		};
+		const idTitle  = __ID.value;
+		const idDesc   = __ID.value;
+		const idxLabel = __ID.value;
+		const idyLabel = __ID.value;
+		const idxPoint = __ID.value;
+		const idyPoint = __ID.value;
+		/*-- Registros --*/
+
+		plot.desc.push(`This is a graph plotted on a Cartesian plane titled "${plot.title}".
+The chart has a white background and the font is predominantly black.
+The x-axis (Abscissa/Horizontal) is labeled "${plot.xLabel}" and its scale (${plot.xType}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.xMin, plot.xType)} to ${this.scale(plot.xMax, plot.xType)}.
+The y-axis (Ordinate/Vertical) is labeled "${plot.yLabel}" and its scale (${plot.yType}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.yMin, plot.yType)} to ${this.scale(plot.yMax, plot.yType)}.
+The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`);
+		plot.svg = new __SVG(this.frame.w, this.frame.h, 0, 0);
+		const desc = plot.svg.create("desc");
+
+
+
+
 		/*-- SVG --*/
-		plot.svg.attribute(attr.svg);
 		plot.svg.last.addEventListener("mousemove", this);
-		plot.svg.last.setAttribute("class", "css-wd-plot");
-		plot.frame = {};
-		/*-- título --*/
-		plot.frame.title = plot.svg
+
+
+
+		plot.svg
+			.attribute({"aria-labelledby": idTitle, "aria-describedby": idDesc, id: __ID.value, class: "css-wd-plot", role: "img"})
+			/*-- título --*/
 			.text(this.frame.xm, this.frame.yi/2, plot.title, "h")
-			.attribute(attr.title)
-			.attribute({id: attr.svg["aria-labelledby"], "font-size": 30})
-			.last;
-		/*-- quadro principal --*/
-		plot.frame.main = plot.svg
+			.attribute({id: idTitle, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
+			/*-- área --*/
 			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
-			.attribute(attr.main)
-			.desc(this.gridInfo(plot))
-			.last;
-		/*-- Rótulo x --*/
-		plot.frame.xLabel = plot.svg
+			.attribute({"stroke-width": 1, class: "css-wd-plot-line", fill: "none", "aria-labelledby": `${idxLabel} ${idyLabel}`})
+			/*-- rótulo x --*/
 			.text(this.frame.xm, this.frame.h - this.frame.p, plot.xLabel, "hs")
-			.attribute(attr.label)
-			.last;
-		/*-- Rótulo y --*/
-		plot.frame.yLabel = plot.svg
+			.attribute({id: idxLabel})
+			/*-- rótulo y --*/
 			.text(0 + this.frame.p, this.frame.ym, plot.yLabel, "vn")
-			.attribute(attr.label)
-			.last;
+			.attribute({id: idyLabel});
 		/*-- grades e escalas --*/
 		for (let i = 0; i < this.frame.s; i++) {
 			let px = this.frame.xi + i*(this.frame.x/(this.frame.s - 1));
@@ -212,67 +194,43 @@ const __PLOT2D = {
 			let tx = i === 0 ? "hnw" : (i === this.frame.s - 1 ? "hne" : "hn");
 			let vy = i === this.frame.s - 1 ? plot.yMin : plot.yMax - i*((plot.yMax - plot.yMin)/(this.frame.s - 1));
 			let ty = i === 0 ? "hne" : (i === this.frame.s - 1 ? "hse" : "he");
-			/*-- grades de subdivisão --*/
-			if (i > 0 && i < this.frame.s - 1) {
-				plot.frame[`xGrid${i}`] = plot.svg
-					.path(`M ${px},${this.frame.yi} V ${this.frame.yf}`)
-					.attribute(attr.grid)
-					.last;
-				plot.frame[`yGrid${i}`] =  plot.svg
-					.path(`M ${this.frame.xi},${py} H ${this.frame.xf}`)
-					.attribute(attr.grid)
-					.last;
-			}
+			/*-- grades de subdivisão (x e y) --*/
+			if (i > 0 && i < this.frame.s - 1) plot.svg
+				.line([px, this.frame.yi], [px, this.frame.yf])
+				.attribute({class: "css-wd-plot-line"})
+				.line([this.frame.xi, py], [this.frame.xf, py])
+				.attribute({class: "css-wd-plot-line"});
 			/*-- ajuste espacial para a escala --*/
 			let dx = 0, dy = 0;
-			if (plot.yType === "date" || plot.yType === "time") {
-				ty = i === 0 ? "vse" : (i === this.frame.s - 1 ? "vsw" : "vs");
-				dx = -(i)%2 * (1.5 * attr.label["font-size"]);
-			} else if (plot.yType === "datetime") {
-				ty = i === 0 ? "hnw" : "hsw";
-				dx = 2*this.frame.p;
-				py += (i === 0 ? 1 : -1) * this.frame.p;
+			if (plot.xType !== "finite") {
+				tx = "hnw";
+				dx = i%2 * (this.frame.p + this.frame.lb);
 			}
-			if (plot.xType === "datetime") {
-				dy = i%2 * (1.5 * attr.label["font-size"]);
+			if (plot.yType !== "finite") {
+				ty = "vs";
+				dy = -i%2 * (this.frame.p + this.frame.lb);
 			}
-			/*-- escala --*/
-			plot.frame[`xScale${i}`] = plot.svg
-				.text(px, this.frame.yf + this.frame.p + dy, this.scale(vx, plot.xType), tx)
-				.attribute(attr.scale)
-				.last;
-			plot.frame[`yScale${i}`] = plot.svg
-				.text(this.frame.xi - this.frame.p + dx, py, this.scale(vy, plot.yType), ty)
-				.attribute(attr.scale)
-				.last;
+			/*-- escala (x e y) --*/
+			plot.svg
+				.text(px, this.frame.yf + this.frame.p + dx, this.scale(vx, plot.xType), tx)
+				.attribute(plot.xType !== "finite" ? {} : {"font-size":  "0.8em"})
+				.title(plot.xType !== "finite" ? this.scale(vx, plot.xType) : vx)
+				.text(this.frame.xi - this.frame.p + dy, py, this.scale(vy, plot.yType), ty)
+				.attribute(plot.yType !== "finite" ? {} : {"font-size": "0.8em"})
+				.title(plot.yType !== "finite" ? this.scale(vy, plot.yType) : vy);
 		}
 		/*-- visualizadores de posição --*/
-		plot.frame.xPoint = plot.svg
-			.text(this.frame.xf, this.frame.yf + this.frame.p, "xPoint", "hn")
-			.attribute(attr.point)
-			.attribute({id: __ID.value, display: "none"})
-			.last;
-		plot.frame.yPoint = plot.svg
-			.text(this.frame.xi - this.frame.p, this.frame.yi, "yPoint", "vs")
-			.attribute(attr.point)
-			.attribute({id: __ID.value, display: "none"})
-			.last;
-		/*-- marcadores de posição --*/
-		plot.frame.xGuide = plot.svg
-			.path(`M ${this.frame.xm}, ${this.frame.yi} V ${this.frame.yf}`)
-			.attribute(attr.guide)
-			.attribute({"aria-labelledby": plot.frame.xPoint.id})
-			.last;
-		plot.frame.yGuide = plot.svg
-			.path(`M ${this.frame.xi}, ${this.frame.ym} H ${this.frame.xf}`)
-			.attribute(attr.guide)
-			.attribute({"aria-labelledby": plot.frame.yPoint.id})
-			.last;
-		/*-- visualizador de dados --*/
-		plot.frame.back = plot.svg
-			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
-			.attribute(attr.back)
-			.last;
+		plot.svg
+			/*-- eixo vertical (x) --*/
+			.text(this.frame.xm + this.frame.p, this.frame.yi + this.frame.p, "xPoint", "hnw")
+			.attribute({id: idxPoint, display: "none"})
+			.line([this.frame.xm, this.frame.yi], [this.frame.xm, this.frame.yf])
+			.attribute({"aria-labelledby": idxPoint, class: "css-wd-plot-dash", display: "none"})
+			/*-- eixo horizontal (y) --*/
+			.text(this.frame.xf - this.frame.p, this.frame.ym - this.frame.p, "yPoint", "hse")
+			.attribute({id: idyPoint, display: "none"})
+			.line([this.frame.xi, this.frame.ym], [this.frame.xf, this.frame.ym])
+			.attribute({"aria-labelledby": idyPoint, class: "css-wd-plot-dash", display: "none"})
 		return;
 	},
 	/**. '{object dataXY(array x, any y, array xList)}: Função auxiliadora do método '{filter} retornando o valor de '{xy}, e os valores mínimo ('{min}) e máximo ('{max}) de '{y} ou nulo.**/
@@ -357,75 +315,85 @@ const __PLOT2D = {
 			};
 		});
 	},
-	/**. '{void infoCurve(object data)}: Desfine a descrição da curva para acessibilidade.**/
+	/**. '{object infoCurve(object data)}: Retorna os dados em string da curva:
+	|Nome|Descrição|
+	|view|Visão esquemática para ser exibida na tela|
+	|aria|Visão textual para fins de acessibilidade|
+	|data|Conjunto de dados da curva para fons de acessibilidade|**/
 	infoCurve: function(data) {
-		const info = [
-			"-- Curve Data ------------------------------------",
-			`Name: ${data.name}`,
-			`Color: ${data.color.replace(/([A-Z])/g, " $1").toLowerCase()}`,
-			`Shape: ${data.curve}`,
-		];
-		if (data.fit !== null) {
-			info.push("-- Curve Fitting Data ----------------------------");
-			info.push(`Fitting: ${data.fit.t}`);
-			info.push(`Shape: ${data.fit.m}`);
-			if (data.fit.a !== null) info.push(`a: ${data.fit.a}`);
-			if (data.fit.b !== null) info.push(`b: ${data.fit.b}`);
-			if (data.fit.d !== null) info.push(`σ: ${data.fit.d}`);
-		}
-		info.push("-- Curve Dataset ---------------------------------");
-		info.push(data.data.reduce(function(txt,v,i,a) {
-			return txt + `${i}\t${v.x}\t${v.y}` + (i === a.length - 1 ? "" : "\n");
-		}, "#\tx\ty\n"));
-		info.push("--------------------------------------------------\n");
-		return info.join("\n");
+		const color = data.color.replace(/([A-Z])/g, " $1").toLowerCase()
+		const aria1 = `The curve, named "${data.name}", is represented by the color "${color}" and its shape is defined as "${data.curve}".`;
+		const aria2 = data.fit === null ? "" : " "+data.fit.desc;
+		const view1 = `-- CURVE DATA --\nName: ${data.name};\nColor: ${color};\nShape: ${data.curve}.`;
+		const view2 = data.fit === null ? "" : [
+			`\n-- CURVE FITTING DATA --`,
+			`\nFitting: ${data.fit.t};`,
+			`\nShape: ${data.fit.m};`,
+			data.fit.a !== null ? `\na: ${data.fit.a};` : "",
+			data.fit.b !== null ? `\nb: ${data.fit.b};` : "",
+			data.fit.d !== null ? `\nσ: ${data.fit.d};` : "",
+		].join("");
+		const aria3 = data.data.map(function(v,i,a) {
+			if (i === 0) return `The curve contains the following data set:\n#\tx\ty\n${i}\t${v.x}\t${v.y}`;
+			return `${i}\t${v.x}\t${v.y}`;
+		}).join("\n");
+		return {view: view1 + view2, aria: aria1 + aria2, data: aria3};
 	},
 	/**. '{void print(object plot)}: Plota as curvas no gráfico.**/
 	print: function(plot) {
+		const idBack = __ID.value;
 		const attr = {
 			line:  function(color) {return {stroke: color,  "stroke-width": 3, "stroke-linecap": "round", fill: "none"};},
-			area:  function(color) {return {fill: color, "fill-opacity": 0.4};},
+			area:  function(color) {return {fill: color, "fill-opacity": 0.5};},
 			dash:  function(color) {return Object.assign(this.line(color), {"stroke-dasharray": "5 6", "stroke-width": 2});},
 			step:  function(color) {return Object.assign(this.line(color), {"stroke-width": 12, "stroke-linecap": "butt"});},
 			link:  function(color) {return this.line(color);},
 			curve: function(color) {return this.line(color);},
 			dot:   function(color) {return {fill: color};},
 		};
+		/*-- visualizador de dados --*/
+		plot.svg
+			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
+			.attribute({"fill-opacity": 0.8, display: "none", fill: "#333333", id: idBack});
+		/*-- curvas --*/
 		plot.yData.filter(function(v,i,a) {
-			const main = this.convert(plot, v.data);
-			const info = this.infoCurve(v);
-			const size = 24;
-			const head = __ID.value;
-			const body = __ID.value;
+			const main    = this.convert(plot, v.data);
+			const info    = this.infoCurve(v);
+			const idHead  = __ID.value;
+			const idBody  = __ID.value;
+			const idCurve = __ID.value;
+			plot.desc.push(`#${i} - ${v.name}\n${info.aria}`);
 			/*-- legenda --*/
-			plot.frame[`legend${i}`] = plot.svg
-				.text(this.frame.xf + 2*this.frame.p, this.frame.yi + 3/2*i*size, v.name, "hnw")
-				.attribute({id: head, fill: v.color, "font-size": size, cursor: "pointer", tabindex: 0})
-				.attribute({"aria-controls": body, "aria-expanded": "false"})
-				.last;
+			plot.svg
+				.text(this.frame.xf + 2*this.frame.p, this.frame.yi + i*(2*this.frame.p + __SVG.labelSize), v.name, "hnw")
+				.attribute({
+					id: idHead,
+					role: "button",
+					tabindex: 0,
+					"aria-controls": `${idBack} ${idBody}`,
+					"aria-expanded": "false",
+					fill: v.color,
+					cursor: "pointer",
+				});
 			plot.svg.last.addEventListener("click", this);
 			plot.svg.last.addEventListener("keydown", this);
-			/*-- curva principal --*/
-			plot.frame[`curve${i}`] = plot.svg
+			/*-- curva principal e detalhes --*/
+			plot.svg
 				.path(this.svgPath(main, v.curve))
 				.attribute(attr[v.curve](v.color))
-				.attribute({id: v.id, "aria-labelledby": head})
-				.desc(info)
-				.last;
+				.attribute({id: idCurve, "aria-labelledby": idHead, lang: "en-US", role: "img"})
+				.desc(`${info.aria}\n${info.data}`)
 			/*-- detalhes --*/
-			plot.frame[`detail${i}`] = plot.svg
-				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, info.split("-- Curve Dataset")[0], "hnw")
-				.attribute({id: body, "aria-labelledby": head, fill: v.color, "font-size": size, display: "none"})
-				.last;
+				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, info.view, "hnw")
+				.attribute({id: idBody, "aria-labelledby": idHead, fill: v.color, display: "none", lang: "en-US"});
 			/*-- curva de ajuste --*/
 			const fit = v.fit !== null ? this.convert(plot, v.fit.data) : null;
-			if (fit !== null)
-				plot.frame[`fit${i}`] = plot.svg
-					.path(this.svgPath(fit, v.fit.curve))
-					.attribute(attr[v.fit.curve](v.color))
-					.title(v.fit.v)
-					.desc(info)
-					.last;
+			if (fit !== null) plot.svg
+				.path(this.svgPath(fit, v.fit.curve))
+				.attribute(attr[v.fit.curve](v.color))
+				.attribute({role: "img"})
+				.title(v.fit.v)
+				.desc(info.aria);
 		}, this);
 		return;
 	},
@@ -460,9 +428,9 @@ const __PLOT2D = {
 			!Array.isArray(data.x.data) || !Array.isArray(data.y.dataset)
 		) return null;
 		const plot  = {};
-		/*-- geral --*/
-		plot.svg    = new __SVG(this.frame.w, this.frame.h, 0, 0);
 		plot.title  = "title" in data   ? data.title   : "Title";
+		plot.desc   = [];
+		plot.frame  = {};//TODO remover isso
 		/*-- eixo x --*/
 		plot.xLabel = "label" in data.x ? data.x.label : "Label x";
 		plot.xData  = __DATA2D.convert(data.x.data);
@@ -492,7 +460,10 @@ const __PLOT2D = {
 		this.print(plot);
 		/*-- registrando o gráfico --*/
 		const svg = plot.svg.svg(document.body);//TODO remover document.body
-		this.heap[svg.id] = plot;
+		this.heap[svg.id] = plot; //TODO remover isso aqui também
+		console.log(plot.desc)
+
+
 		return svg;
 	},
 	/**. '{void mousemove(object ev)}: Manipulador ao movimentar o mouse sobre a caixa de plotagem.**/
@@ -539,25 +510,23 @@ const __PLOT2D = {
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/
 	click: function(ev) {
-		const heap = this.heap[ev.currentTarget.parentElement.id].frame;
-		const open = ev.currentTarget.getAttribute("aria-expanded") === "false";
-		const ctrl = ev.currentTarget.getAttribute("aria-controls");
-		/*-- procedimento para exibir ou esconder detalhes --*/
-		heap.back.setAttribute("display", "none");
-		for (let i in heap) {
-			if ((/^legend\d+$/).test(i)) {
-				heap[i].setAttribute("aria-expanded", heap[i] === ev.currentTarget && open ? "true" : "false");
-			}
-			else if ((/^detail\d+$/).test(i)) {
-				if (heap[i].id === ctrl && open) {
-					heap.back.removeAttribute("display");
-					heap[i].removeAttribute("display");
-					ev.currentTarget.parentElement.appendChild(heap.back);
-					ev.currentTarget.parentElement.appendChild(heap[i]);
-				}
-				else {
-					heap[i].setAttribute("display", "none");
-				}
+		const svg  = ev.currentTarget.parentElement;
+		const ctrl   = svg.querySelectorAll("[aria-controls]");
+		const idBack = ctrl[0].getAttribute("aria-controls").trim().split(/\s+/)[0];
+		const back   = svg.querySelector(`#${idBack}`);
+		back.setAttribute("display", "none");
+		for (let i = 0; i < ctrl.length; i++) {
+			let idInfo = ctrl[i].getAttribute("aria-controls").trim().split(/\s+/)[1];
+			let info   = svg.querySelector(`#${idInfo}`);
+			let ok     = ctrl[i] === ev.currentTarget && ctrl[i].getAttribute("aria-expanded") === "false";
+			ctrl[i].setAttribute("aria-expanded",   ok ? "true"      : "false");
+			ctrl[i].setAttribute("text-decoration", ok ? "underline" : "none");
+			ctrl[i].setAttribute("font-weight",     ok ? "bold"      : "normal");
+			info.setAttribute("display", ok ? "" : "none")
+			if (ok) {
+				back.removeAttribute("display");
+				svg.appendChild(back);
+				svg.appendChild(info);
 			}
 		}
 		return;

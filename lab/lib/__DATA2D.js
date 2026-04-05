@@ -72,7 +72,7 @@ const __DATA2D = {
 			} catch(e) {return null;}
 		}, this);
 	},
-	/**. '{number rmse(array dataXY, function fit)}: Retorna raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento fit é a função que resultou da regressão.**/
+	/**. '{number rmse(array dataXY, function fit)}: Retorna a raiz do erro quadrático médio entre o conjunto de dados ou nulo. O argumento fit é a função que resultou da regressão.**/
 	rmse: function(dataXY, fit) {
 		const  y1 = this.toList(dataXY, "y");
 		const  y2 = this.map(this.toList(dataXY, "x"), fit);
@@ -146,7 +146,8 @@ const __DATA2D = {
 	|f|function|A função obtida pela regressão|
 	|d|finite|O erro quadrático médio|
 	|m|string|O modelo da regressão|
-	|v|string|A visualização da regressão|**/
+	|v|string|A visualização da regressão|
+	|desc|string|Descrição da regressão em inglês|**/
 	linFit: function(dataXY) {
 		const fit = this.ols(dataXY);
 		if (fit !== null) {
@@ -155,6 +156,7 @@ const __DATA2D = {
 			fit.t = "Linear curve fitting";
 			this.stringFit(fit, "linear");
 		}
+		fit.desc = `After linear regression processed using the least squares method, the slope coefficient was set at ${fit.a}, the y-intercept coefficient at ${fit.b}, and the root mean square error at ${fit.d}.`;
 		return fit;
 	},
 	/**. '{object geoFit(array dataXY)}: Retorna um objeto contendo os dados da regressão geométrica com os mesmos parâmetros do método '{linFit}**/
@@ -173,6 +175,7 @@ const __DATA2D = {
 			fit.t = "Geometric curve fitting";
 			this.stringFit(fit, "geometric");
 		}
+		fit.desc = `After the geometric regression processed by the least squares method, the function's multiplying constant was set to ${fit.a}, the exponent was set to ${fit.b}, and the root mean square error was set to ${fit.d}.`;
 		return fit;
 	},
 	/**. '{object expFit(array dataXY)}: Retorna um objeto contendo os dados da regressão exponencial com os mesmos parâmetros do método '{linFit}**/
@@ -191,6 +194,7 @@ const __DATA2D = {
 			fit.t = "Exponential curve fitting";
 			this.stringFit(fit, "exponential");
 		}
+		fit.desc = `After the exponential regression processed using the least squares method, the function's multiplying constant was set to ${fit.a}, the exponent's multiplying constant was set to ${fit.b}, and the root mean square error was set to ${fit.d}.`;
 		return fit;
 	},
 	/**. '{object logFit(array dataXY)}: Retorna um objeto contendo os dados da regressão logarítmica com os mesmos parâmetros do método '{linFit}**/
@@ -209,6 +213,7 @@ const __DATA2D = {
 			fit.t = "Logarithmic curve fitting";
 			this.stringFit(fit, "logarithmic");
 		}
+		fit.desc = `After the logarithmic regression processed by the least squares method, the function's multiplying constant was set to ${fit.a}, the logarithm's multiplying constant was set to ${fit.b}, and the root mean square error was set to ${fit.d}.`;
 		return fit;
 	},
 	/**. '{object minRMSE(array dataXY)}: Retorna a regressão com menor erro quadrático médio ou nulo.**/
@@ -232,6 +237,7 @@ const __DATA2D = {
 		fit.d = null;
 		fit.t = "Area under the curve";
 		this.stringFit(fit, "sum");
+		fit.desc = `After processing the sum of the areas of the dataset, whose points were connected by a straight line, the value ${fit.a} was obtained.`;
 		return fit;
 	},
 	/**. '{object avgFit(array dataXY)}: Retorna um objeto contendo os dados da média com os mesmos parâmetros do método '{linFit}**/
@@ -245,6 +251,7 @@ const __DATA2D = {
 		fit.d = this.rmse(dataXY, fit.f);
 		fit.t = "Average of the curve";
 		this.stringFit(fit, "avg");
+		fit.desc = `After processing the average of the sum of the areas of the dataset, whose points were connected by a straight line, the value ${fit.a} was obtained with a mean squared error of ${fit.d}.`;
 		return fit;
 	},
 	/**. '{array ASC(array list)}: Retorna a lista de finitos em ordem ascendente.**/

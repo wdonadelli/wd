@@ -207,11 +207,6 @@ const __PLOT2DRATIO = {
 			plot.svg.last.addEventListener("keydown", this);
 		}, this);
 	},
-
-
-
-
-
 	/**. '{node plot(object data)}: Retorna um gráfico de barras ou de setores em SVG conforme especificado em '{data} ou nulo:
 	|Propriedade|Tipo|Opcional|Descrição|Observação|
 	|title|string|Sim|Título do gráfico||
