@@ -92,21 +92,25 @@
 				return this.attribute({d: path});
 			}
 		},
-		/**. '{self title(string title)}: Define um título (dica) ao último nó da cadeia.**/
+		/**. '{self title(string title, object attr)}: Define um título (dica) ao último nó da cadeia.**/
 		title: {
-			value: function(tip) {
+			value: function(tip, attr) {
 				const svg = this.create("title");
 				svg.textContent = tip;
 				this.last.appendChild(svg);
+				if (typeof attr === "object" && attr !== null)
+					for (let i in attr) svg.setAttribute(i, attr[i]);
 				return this;
 			}
 		},
-		/**. '{self desc(string desc)}: Define um texto longo não renderizável ao elemento.**/
+		/**. '{self desc(string desc, object attr)}: Define um texto longo não renderizável ao último nó da cadeia.**/
 		desc: {
-			value: function(tip) {
+			value: function(tip, attr) {
 				const svg = this.create("desc");
 				svg.textContent = tip;
 				this.last.appendChild(svg);
+				if (typeof attr === "object" && attr !== null)
+					for (let i in attr) svg.setAttribute(i, attr[i]);
 				return this;
 			}
 		},
