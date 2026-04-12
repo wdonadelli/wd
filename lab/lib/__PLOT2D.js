@@ -30,14 +30,6 @@ const __PLOT2D = {
 .css-wd-plot .css-wd-plot-dash {
 	stroke-dasharray: 5,5
 }`),
-	/**. '{object heap}: Registra os gŕaficos construídos.**/
-	heap: {},//TODO apagar isso
-	/**. '{object ground}: Define a fonte e a cor de fundo ('{back}) e da fonte ('{fore}).**/
-	ground: {//TODO apagar isso
-		fore: "white",
-		back: "#202020",
-		font: "Fira Mono, DejaVu Sans Mono, Menlo, Consolas, Liberation Mono, Monaco, Lucida Console, monospace",
-	},
 	/**. '{array RGB}: Registra as cores na sequência azul verde vermelho amarelo branco.**/
 	RGB: ("deepSkyBlue lime hotPink gold khaki cornflowerBlue mediumSpringGreen orchid darkOrange beige aqua greenYellow salmon coral silver aquamarine mediumSeaGreen tomato peru lightBlue").split(" "),
 	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
@@ -114,11 +106,12 @@ const __PLOT2D = {
 	|h|Tamanho vertical da tela|
 	|s|Número de pontos da escala|
 	|p|Espaço de preenchimento|
+	|lb|Altura do rótulo|
+	|tl|Altura do título|
 	|xi|Ponto de início do eixo x|
 	|xf|Ponto de término do eixo x|
 	|x|Tamanho do eixo x|
 	|xm|Centro do eixo x|
-	|gm|Funcção que retorna a posição das grades secundárias Centro do eixo x|
 	|yi|Ponto de início do eixo y|
 	|yf|Ponto de término do eixo y|
 	|y|Tamanho do eixo y|
@@ -146,45 +139,92 @@ const __PLOT2D = {
 		if (type === "datetime") return __DATA2D.datetime(value);
 		return __DATA2D.numeric(value);
 	},
+	/**. '{void desc(object plot)}: Define as descrições do gráfico.**/
+	desc: function(plot) {
+		const types = {
+			finite: "numerical value",
+			date: "date, unit in days",
+			time: "time, unit in seconds",
+			datetime: "date and time, unit in seconds"
+		};
+		plot.desc = {svg: [], curves: [], dataset: []};
+		plot.desc.svg.push(
+			`This is a graph plotted on a Cartesian plane titled "${plot.title}"`,
+			`The chart has a white background and the font is predominantly black.`,
+			`At the top of the graph is the graph title, and below it is the plotting area containing the curves.`,
+			`On the left side of the plotting area is the y-axis scale and its respective label.`,
+			`At the bottom of the plotting area is the x-axis scale and its respective label.`,
+			`The scale values ​​increase from the bottom left corner.`,
+			`On the right side of the plot is the graph legend containing the names of the curves differentiated by color.`,
+			`The x-axis (Abscissa/Horizontal) is labeled "${plot.xLabel}" and its scale (${types[plot.xType]}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.xMin, plot.xType)} to ${this.scale(plot.xMax, plot.xType)}.`,
+			`The y-axis (Ordinate/Vertical) is labeled "${plot.yLabel}" and its scale (${types[plot.yType]}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.yMin, plot.yType)} to ${this.scale(plot.yMax, plot.yType)}.`,
+			`The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}.`
+		);
+		/*-- informações sobre as curvas --*/
+		plot.yData.forEach(function(v,i,a) {
+			const color = v.color.replace(/([A-Z])/g, " $1").toLowerCase();
+			const yList = __DATA2D.toList(v.data, "y");
+			const yMax  = __DATA2D.MAX(yList);
+			const yMin  = __DATA2D.MIN(yList);
+			plot.desc.svg.push([
+				`The curve named "${v.name}" is represented by the color "${color}" and its shape is defined as "${v.curve}".`,
+				v.fit === null ? "" : v.fit.desc
+			].join(" ").trim());
+			plot.desc.curves.push([
+				`-- CURVE DATA --\n`,
+				`Name:  ${v.name};\n`,
+				`Color: ${color};\n`,
+				`Shape: ${v.curve};\n`,
+				v.fit === null ? "" : `\n-- CURVE FITTING DATA --\n`,
+				v.fit === null ? "" : `Fitting: ${v.fit.t};\n`,
+				v.fit === null ? "" : `Shape:   ${v.fit.m};\n`,
+				v.fit === null ? "" : (v.fit.a === null ? "" : `a: ${v.fit.a};\n`),
+				v.fit === null ? "" : (v.fit.b === null ? "" : `b: ${v.fit.b};\n`),
+				v.fit === null ? "" : (v.fit.d === null ? "" : `σ: ${v.fit.d};\n`),
+			].join("").trim());
+			plot.desc.dataset.push([
+				`Coordinates of the dataset:`,
+				v.data.map(function(c,j,b) {
+					const info = yMin === yMax ? "" : (c.y === yMin ? " (minimum)" : (c.y === yMax ? " (maximum)" : ""));
+					return `${i}: x=${c.x}, y=${c.y}${info};`;
+				}).join("\n")
+			].join("\n").trim());
+		});
+		plot.desc.svg = plot.desc.svg.join("\n");
+		return;
+	},
 	/**. '{void struct(object plot)}: Define a estrutura básica do gráfico.**/
 	struct: function(plot) {
 		const idTitle  = __ID.value;
 		const idDesc   = __ID.value;
-		const idxPoint = __ID.value;
-		const idyPoint = __ID.value;
-		/*-- Registros --*/
-		plot.desc.push(`This is a graph plotted on a Cartesian plane titled "${plot.title}".
-The chart has a white background and the font is predominantly black.
-The x-axis (Abscissa/Horizontal) is labeled "${plot.xLabel}" and its scale (${plot.xType}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.xMin, plot.xType)} to ${this.scale(plot.xMax, plot.xType)}.
-The y-axis (Ordinate/Vertical) is labeled "${plot.yLabel}" and its scale (${plot.yType}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.yMin, plot.yType)} to ${this.scale(plot.yMax, plot.yType)}.
-The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`);
+		const idPoint  = __ID.value;
 		/*-- SVG --*/
 		plot.svg = new __SVG(this.frame.w, this.frame.h, 0, 0);
-		plot.svg.last.addEventListener("mousemove", this);
 		plot.svg
-			.attribute({
-				id: __ID.value,
-				class: "css-wd-plot",
-				role: "img",
-				"aria-labelledby": idTitle,
-				"aria-describedby": idDesc,
-				"data-x-min": plot.xMin,
-				"data-x-max": plot.xMax,
-				"data-x-type": plot.xType,
-				"data-y-min": plot.yMin,
-				"data-y-max": plot.yMax,
-				"data-y-type": plot.yType,
-			})
-			.desc("", {lang: "en-US", id: idDesc})
-			/*-- título --*/
+			.attribute({id: plot.id, class: "css-wd-plot", role: "img", "aria-labelledby": idTitle, "aria-describedby": idDesc})
+			.desc(plot.desc.svg, {lang: "en-US", id: idDesc})
+			.last.addEventListener("mousemove", this);
+		/*-- título --*/
+		plot.svg
 			.text(this.frame.xm, this.frame.yi/2, plot.title, "h")
 			.attribute({id: idTitle, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
-			/*-- área --*/
+			.title(plot.title);
+		/*-- área de plotagem --*/
+		plot.svg
 			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
-			.attribute({"stroke-width": 1, class: "css-wd-plot-line", fill: "none"})
-			/*-- rótulos --*/
+			.attribute({role: "region", "aria-label": "Area", tabindex: "0", class: "css-wd-plot-line"})
+			.desc(`When you move the mouse pointer within the plot area, two tabs, one vertical and one horizontal, will intersect at the pointer's position to dynamically display the x and y coordinates. The same behavior can be manipulated via the keyboard by focusing on the plot area.`, {lang: "en-US"});
+			plot.svg.last.addEventListener("focusin", this);
+			plot.svg.last.addEventListener("focusout", this);
+			plot.svg.last.addEventListener("keydown", this);
+		/*-- rótulos --*/
+		plot.svg
 			.text(this.frame.xm, this.frame.h - this.frame.p, plot.xLabel, "hs")
-			.text(0 + this.frame.p, this.frame.ym, plot.yLabel, "vn");
+			.title(plot.xLabel)
+			.desc("x-axis label", {lang: "en-US"})
+			.text(0 + this.frame.p, this.frame.ym, plot.yLabel, "vn")
+			.title(plot.yLabel)
+			.desc("y-axis label", {lang: "en-US"});
 		/*-- grades e escalas --*/
 		for (let i = 0; i < this.frame.s; i++) {
 			let lx = i === 0 ? "xMin" : (i === this.frame.s - 1 ? "xMax" : null);
@@ -195,12 +235,13 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 			let tx = i === 0 ? "hnw" : (i === this.frame.s - 1 ? "hne" : "hn");
 			let vy = ly === null ? (plot.yMax - i*((plot.yMax - plot.yMin)/(this.frame.s - 1))) : plot[ly];
 			let ty = i === 0 ? "hne" : (i === this.frame.s - 1 ? "hse" : "he");
+			let lm = i === 0 || i === this.frame.s - 1;
 			/*-- grades de subdivisão (x e y) --*/
-			if (i > 0 && i < this.frame.s - 1) plot.svg
-				.line([px, this.frame.yi], [px, this.frame.yf])
-				.attribute({class: "css-wd-plot-line"})
-				.line([this.frame.xi, py], [this.frame.xf, py])
-				.attribute({class: "css-wd-plot-line"});
+			plot.svg
+				.line([px, this.frame[lm ? "yf" : "yi"]], [px, this.frame.yf + this.frame.p/2])
+				.attribute({class: "css-wd-plot-line", "stroke-opacity": "0.5"})
+				.line([this.frame.xi - this.frame.p/2, py], [this.frame[lm ? "xi" : "xf"], py])
+				.attribute({class: "css-wd-plot-line", "stroke-opacity": "0.5"});
 			/*-- ajuste espacial para a escala --*/
 			let dx = 0, dy = 0;
 			if (plot.xType !== "finite") {
@@ -214,24 +255,87 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 			/*-- escalas --*/
 			plot.svg
 				.text(px, this.frame.yf + this.frame.p + dx, this.scale(vx, plot.xType), tx)
-				.attribute(plot.xType !== "finite" ? {} : {"font-size":  "0.8em"})
-				.title(plot.xType !== "finite" ? this.scale(vx, plot.xType) : vx)
+				.attribute(plot.xType !== "finite" ? {lengthAdjust: "spacingAndGlyphs", textLength: this.frame.x/(this.frame.s-1)} : {})
+				.title(this.scale(vx, plot.xType))
+				.desc(`x-axis scale value (${i+1}/${this.frame.s}`, {lang: "en-US"})
 				.text(this.frame.xi - this.frame.p + dy, py, this.scale(vy, plot.yType), ty)
-				.attribute(plot.yType !== "finite" ? {} : {"font-size": "0.8em"})
-				.title(plot.yType !== "finite" ? this.scale(vy, plot.yType) : vy);
+				.attribute(plot.yType !== "finite" ? {lengthAdjust: "spacingAndGlyphs", textLength: this.frame.y/(this.frame.s-1)} : {})
+				.title(this.scale(vy, plot.yType))
+				.desc(`y-axis scale value (${this.frame.s-i}/${this.frame.s})`, {lang: "en-US"});
 		}
-		/*-- TODO visualizadores de posição --*/
+		/*-- visualizadores de posição --*/
 		plot.svg
-			/*-- eixo vertical (x) --*/
-			.text(this.frame.xm + this.frame.p, this.frame.yi + this.frame.p, "xPoint", "hnw")
-			.attribute({id: idxPoint, display: "none"})
-			.line([this.frame.xm, this.frame.yi], [this.frame.xm, this.frame.yf])
-			.attribute({"aria-labelledby": idxPoint, class: "css-wd-plot-dash", display: "none"})
-			/*-- eixo horizontal (y) --*/
-			.text(this.frame.xf - this.frame.p, this.frame.ym - this.frame.p, "yPoint", "hse")
-			.attribute({id: idyPoint, display: "none"})
-			.line([this.frame.xi, this.frame.ym], [this.frame.xf, this.frame.ym])
-			.attribute({"aria-labelledby": idyPoint, class: "css-wd-plot-dash", display: "none"})
+			.path(`M ${this.frame.xm},${this.frame.yi} V ${this.frame.yf} M ${this.frame.xi},${this.frame.ym} H ${this.frame.xf}`)
+			.attribute({
+				class: "css-wd-plot-dash", display: "none", role: "img", "aria-label": "Guide", "aria-describedby": idPoint, "stroke-width": 3,
+				"data-xmin": plot.xMin, "data-xmax": plot.xMax, "data-xtype": plot.xType,
+				"data-ymin": plot.yMin, "data-ymax": plot.yMax, "data-ytype": plot.yType
+			})
+			.text(this.frame.xm + this.frame.p, this.frame.ym - this.frame.p, "x, y", "hsw")
+			.attribute({id: idPoint, display: "none", "aria-label": "Coordinates", "font-size": "smaller"});
+		return;
+	},
+	/**. '{void print(object plot)}: Plota as curvas no gráfico.**/
+	print: function(plot) {
+		const attr = {
+			line:  function(color) {return {stroke: color,  "stroke-width": 3, "stroke-linecap": "round", fill: "none"};},
+			area:  function(color) {return {fill: color, "fill-opacity": 0.5};},
+			dash:  function(color) {return Object.assign(this.line(color), {"stroke-dasharray": "5 6", "stroke-width": 2});},
+			step:  function(color) {return Object.assign(this.line(color), {"stroke-width": 12, "stroke-linecap": "butt"});},
+			link:  function(color) {return this.line(color);},
+			curve: function(color) {return this.line(color);},
+			dot:   function(color) {return {fill: color};},
+		};
+		/*-- curvas --*/
+		plot.yData.filter(function(v,i,a) {
+			const main    = this.convert(plot, v.data);
+			const idHead  = __ID.value;
+			const idBody  = __ID.value;
+			const idCurve = __ID.value;
+			const idFit   = v.fit !== null ? __ID.value : "";
+			/*-- legenda --*/
+			plot.svg
+				.text(this.frame.xf + 2*this.frame.p, this.frame.yi + i*(2*this.frame.p + __SVG.labelSize), v.name, "hnw")
+				.attribute({
+					id: idHead,
+					role: "button",
+					tabindex: 0,
+					"aria-controls": idBody,
+					"aria-expanded": "false",
+					fill: v.color,
+					cursor: "pointer",
+				})
+				.title(v.name)
+				.desc("Displays and hides curve detail.", {lang: "en-US"});
+			plot.svg.last.addEventListener("click", this);
+			plot.svg.last.addEventListener("keydown", this);
+			/*-- curva --*/
+			plot.svg
+				.path(this.svgPath(main, v.curve))
+				.attribute(attr[v.curve](v.color))
+				.attribute({id: idCurve, "aria-labelledby": idHead, role: "img"})
+				.title(v.name)
+				.desc(plot.desc.dataset[i], {lang: "en-US"});
+			/*-- ajuste --*/
+			if (v.fit !== null) plot.svg
+				.path(this.svgPath(this.convert(plot, v.fit.data), v.fit.curve))
+				.attribute(attr[v.fit.curve](v.color))
+				.attribute({id: idFit, role: "img", "aria-labelledby": idHead})
+				.title(v.fit.v)
+				.desc(v.fit.desc, {lang: "en-US"});
+			/*-- detalhes --*/
+			plot.svg
+				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, plot.desc.curves[i], "hnw")
+				.attribute({
+					id: idBody,
+					role: "note",
+					"aria-labelledby": idHead,
+					display: "none",
+					lang: "en-US",
+					"font-family": "math monospace",
+				})
+				.desc("Information about the curve.");
+		}, this);
 		return;
 	},
 	/**. '{object dataXY(array x, any y, array xList)}: Função auxiliadora do método '{filter} retornando o valor de '{xy}, e os valores mínimo ('{min}) e máximo ('{max}) de '{y} ou nulo.**/
@@ -316,98 +420,12 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 			};
 		});
 	},
-	/**. '{object infoCurve(object data)}: Retorna os dados em string da curva:
-	|Nome|Descrição|
-	|view|Visão esquemática para ser exibida na tela|
-	|aria|Visão textual para fins de acessibilidade|
-	|data|Conjunto de dados da curva para fons de acessibilidade|**/
-	infoCurve: function(data) {
-		const color = data.color.replace(/([A-Z])/g, " $1").toLowerCase();
-		const yList = __DATA2D.toList(data.data, "y");
-		const yMax  = __DATA2D.MAX(yList);
-		const yMin  = __DATA2D.MIN(yList);
-		const aria1 = `The curve named "${data.name}" is represented by the color "${color}" and its shape is defined as "${data.curve}".`;
-		const aria2 = data.fit === null ? "" : " "+data.fit.desc;
-		const view1 = `-- CURVE DATA --\nName: ${data.name};\nColor: ${color};\nShape: ${data.curve}.`;
-		const view2 = data.fit === null ? "" : [
-			`\n-- CURVE FITTING DATA --`,
-			`\nFitting: ${data.fit.t};`,
-			`\nShape: ${data.fit.m};`,
-			data.fit.a !== null ? `\na: ${data.fit.a};` : "",
-			data.fit.b !== null ? `\nb: ${data.fit.b};` : "",
-			data.fit.d !== null ? `\nσ: ${data.fit.d};` : "",
-		].join("");
-		const aria3 = "Coordinates of the dataset:\n" + data.data.map(function(v,i,a) {
-			const info = yMin === yMax ? "" : (v.y === yMin ? " (minimum)" : (v.y === yMax ? " (maximum)" : ""));
-			return `${i}: x=${v.x}, y=${v.y}${info};`;
-		}).join("\n");
-		return {view: view1 + view2, aria: aria1 + aria2, data: aria3};
-	},
-	/**. '{void print(object plot)}: Plota as curvas no gráfico.**/
-	print: function(plot) {
-		const idBack = __ID.value;
-		const attr = {
-			line:  function(color) {return {stroke: color,  "stroke-width": 3, "stroke-linecap": "round", fill: "none"};},
-			area:  function(color) {return {fill: color, "fill-opacity": 0.5};},
-			dash:  function(color) {return Object.assign(this.line(color), {"stroke-dasharray": "5 6", "stroke-width": 2});},
-			step:  function(color) {return Object.assign(this.line(color), {"stroke-width": 12, "stroke-linecap": "butt"});},
-			link:  function(color) {return this.line(color);},
-			curve: function(color) {return this.line(color);},
-			dot:   function(color) {return {fill: color};},
-		};
-		/*-- visualizador de dados --*/
-		plot.svg
-			.rect(this.frame.xi, this.frame.yi, this.frame.x, this.frame.y)
-			.attribute({"fill-opacity": 0.8, display: "none", fill: "#333333", id: idBack});
-		/*-- curvas --*/
-		plot.yData.filter(function(v,i,a) {
-			const main    = this.convert(plot, v.data);
-			const info    = this.infoCurve(v);
-			const idHead  = __ID.value;
-			const idBody  = __ID.value;
-			const idCurve = __ID.value;
-			plot.desc.push(`\tData set ${i+1} - ${info.aria}`);
-			/*-- legenda --*/
-			plot.svg
-				.text(this.frame.xf + 2*this.frame.p, this.frame.yi + i*(2*this.frame.p + __SVG.labelSize), v.name, "hnw")
-				.attribute({
-					id: idHead,
-					role: "button",
-					tabindex: 0,
-					"aria-controls": `${idBack} ${idBody}`,
-					"aria-expanded": "false",
-					fill: v.color,
-					cursor: "pointer",
-				});
-			plot.svg.last.addEventListener("click", this);
-			plot.svg.last.addEventListener("keydown", this);
-			/*-- curvas e detalhes --*/
-			plot.svg
-				/*-- curva --*/
-				.path(this.svgPath(main, v.curve))
-				.attribute(attr[v.curve](v.color))
-				.attribute({id: idCurve, "aria-labelledby": idHead, role: "img"})
-				.desc(info.data, {lang: "en-US"})
-			/*-- detalhes --*/
-				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, info.view, "hnw")
-				.attribute({id: idBody, "aria-labelledby": idHead, fill: v.color, display: "none", lang: "en-US"});
-			/*-- curva de ajuste --*/
-			const fit = v.fit !== null ? this.convert(plot, v.fit.data) : null;
-			if (fit !== null) plot.svg
-				.path(this.svgPath(fit, v.fit.curve))
-				.attribute(attr[v.fit.curve](v.color))
-				.attribute({role: "img"})
-				.title(v.fit.v);
-		}, this);
-		return;
-	},
-	/**. '{array xList(number min, number max)}: Retorna o array contendo os intervalos de '{x} para definir pontos da função.**/
-	xList: function(min, max) {
-		const dw = __DATA2D.round(max - min);
-		const pt = this.frame.x;
-		const dx = __DATA2D.round(dw/pt);
-		return Array(pt).fill(0).map(function(v,i,a) {
-			return i === a.length - 1 ? max : __DATA2D.round(min + __DATA2D.round(i * dx));
+	/**. '{array xList(number min, number max, integer len)}: Retorna um array contendo as coordenadas da abscissa.**/
+	xList: function(min, max, len) {
+		const pt = Math.floor(len);
+		const dx = (max - min)/pt;
+		return dx < Number.EPSILON ? this.xList(min, max, (max - min)/Number.EPSILON) : Array(pt).fill(0).map(function(v,i,a) {
+			return i === a.length - 1 ? max : (min + i * dx);
 		});
 	},
 	/**. '{node plot(object data)}: Retorna um gráfico de plano cartesiano em SVG conforme especificado em '{data} ou nulo:
@@ -432,7 +450,8 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 			!Array.isArray(data.x.data) || !Array.isArray(data.y.dataset)
 		) return null;
 		const plot  = {};
-		plot.title  = "title" in data   ? data.title   : "Title";
+		plot.id     = __ID.value
+		plot.title  = "title" in data ? data.title : "Title";
 		plot.desc   = [];
 		/*-- eixo x --*/
 		plot.xLabel = "label" in data.x ? data.x.label : "Label x";
@@ -441,7 +460,7 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 		plot.xMin   = __DATA2D.MIN(plot.xData);
 		plot.xMax   = __DATA2D.MAX(plot.xData);
 		plot.xLen   = __DATA2D.round(plot.xMax - plot.xMin);
-		plot.xList  = this.xList(plot.xMin, plot.xMax);
+		plot.xList  = this.xList(plot.xMin, plot.xMax, this.frame.x);
 		if (plot.xMin === plot.xMax || plot.xData.length === 0) return null;
 		/*-- eixo y --*/
 		plot.yLabel = "label" in data.y ? data.y.label : "Label y";
@@ -459,91 +478,122 @@ The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`)
 		plot.yType = plot.yType.filter(function(v,i,a) {return a.indexOf(v) === i;});
 		plot.yType = plot.yType.length > 1 ? "finite" : plot.yType[0];
 		/*-- construindo gráfico --*/
+		this.desc(plot);
 		this.struct(plot);
 		this.print(plot);
-		/*-- registrando o gráfico --*/
-		const svg = plot.svg.svg(document.body);//TODO remover document.body
-		svg.querySelector("#"+svg.getAttribute("aria-describedby")).textContent = plot.desc.join("\n");
-		console.log(plot.desc)
-
-
-		return svg;
+		return plot.svg.svg(document.body);//TODO remover document.body
+	},
+	/**. '{object guidePosition(string d)}: Retorna as coordenadas da guia a partir do i{path}.**/
+	guidePosition: function(d) {
+		return {
+			x: Number(d.match(/^M\ ([0-9\.]+)/)[1]),
+			y: Number(d.match(/\ M\ [0-9\.]+\,([0-9\.]+)/)[1])
+		};
+	},
+	/**. '{void guide(node, svg, finite px, finite, py)}: Define a posição e exibição da guia.**/
+	guide: function(svg, px, py) {
+		const guide = svg.querySelector(`[aria-label="Guide"]`);
+		const coord = svg.querySelector("#"+guide.getAttribute("aria-describedby"));
+		const show  = Number.isFinite(px) && Number.isFinite(py)
+		guide.setAttribute("display", show ? "" : "none");
+		coord.setAttribute("display", show ? "" : "none");
+		if (show) {
+			px = px > this.frame.xf ? this.frame.xf : (px < this.frame.xi ? this.frame.xi : px);
+			py = py > this.frame.yf ? this.frame.yf : (py < this.frame.yi ? this.frame.yi : py);
+			const frame = this.frame;
+			const xMin  = Number(guide.getAttribute("data-xmin"));
+			const xMax  = Number(guide.getAttribute("data-xmax"));
+			const yMin  = Number(guide.getAttribute("data-ymin"));
+			const yMax  = Number(guide.getAttribute("data-ymax"));
+			const vx    = px === frame.xi ? xMin : (px === frame.xf ? xMax : (((px - frame.xi)/frame.x) * (xMax - xMin)) + xMin);
+			const vy    = py === frame.yi ? yMax : (py === frame.yf ? yMin : (((py - frame.yi)/frame.y) * (yMin - yMax)) + yMax);
+			const tx    = this.scale(vx, guide.getAttribute("data-xtype"));
+			const ty    = this.scale(vy, guide.getAttribute("data-ytype"));
+			const d     = `M ${px},${this.frame.yi} V ${this.frame.yf} M ${this.frame.xi},${py} H ${this.frame.xf}`;
+			coord.textContent = `${tx} x ${ty}`;
+			guide.setAttribute("d", d);
+			coord.setAttribute("x", (px > this.frame.xm ? px - this.frame.p : px + this.frame.p));
+			coord.setAttribute("y", (py > this.frame.ym ? py - this.frame.p : py + this.frame.p));
+			coord.setAttribute("text-anchor",       (px > this.frame.xm ? "end"         : "start"));
+			coord.setAttribute("dominant-baseline", (py > this.frame.ym ? "ideographic" : "hanging"));
+			svg.appendChild(coord);
+			svg.appendChild(guide);
+		}
+		return;
 	},
 	/**. '{void mousemove(object ev)}: Manipulador ao movimentar o mouse sobre a caixa de plotagem.**/
 	mousemove: function(ev) {
-		/*const heap = this.heap[ev.currentTarget.id];
-		const re   = /^[xy](Grid|Scale)\d+$/;
-		const gx   = heap.frame.xGuide;
-		const gy   = heap.frame.yGuide;
-		const sx   = heap.frame.xPoint;
-		const sy   = heap.frame.yPoint;*/
-		const svg  = ev.currentTarget;
-		const data = svg.getBoundingClientRect();
-		const px   = (ev.offsetX/data.width)  * this.frame.w;
-		const py   = (ev.offsetY/data.height) * this.frame.h;
-		/*-- dentro da grade principal --*/
-		if (px >= this.frame.xi && px <= this.frame.xf && py >= this.frame.yi && py <= this.frame.yf) {
-			svg.setAttribute("cursor", "crosshair");
-
-			/*const frame = this.frame;
-			const xMin  = heap.xMin;
-			const xMax  = heap.xMax;
-			const vx    = px === frame.xi ? xMin : (px === frame.xf ? xMax : (((px - frame.xi)/frame.x) * (xMax - xMin)) + xMin);
-			const yMin  = heap.yMin;
-			const yMax  = heap.yMax;
-			const vy    = py === frame.yi ? yMax : (py === frame.yf ? yMin : (((py - frame.yi)/frame.y) * (yMin - yMax)) + yMax);
-			gx.setAttribute("d", `M ${px},${frame.yi} V ${frame.yf}`);
-			gy.setAttribute("d", `M ${frame.xi},${py} H ${frame.xf}`);
-			sx.textContent = this.scale(vx, heap.xType);
-			sy.textContent = this.scale(vy, heap.yType);
-			sx.setAttribute("x", px);
-			sy.setAttribute("x", -py);
-			/*-- mostrar guia dinâmica --* /
-			[gx, gy, sx, sy].forEach(function(v,i,a) {v.removeAttribute("display");});
-			/*-- esconder grade e escala --* /
-			for (let i in heap.frame)
-				if (re.test(i)) heap.frame[i].setAttribute("display", "none");*/
+		const svg   = ev.currentTarget;
+		const area  = svg.querySelector(`[aria-label=Area]`);
+		const focus = document.activeElement;
+		if (focus === area) return;
+		const data  = svg.getBoundingClientRect();
+		const px    = (ev.offsetX/data.width)  * this.frame.w;
+		const py    = (ev.offsetY/data.height) * this.frame.h;
+		const ok    = px >= this.frame.xi && px <= this.frame.xf && py >= this.frame.yi && py <= this.frame.yf;
+		svg.setAttribute("cursor", ok ? "crosshair" : "default" )
+		return this.guide(svg, ok ? px : null, ok ? py : null);
+	},
+	/**. '{void focusin(object ev)}: Manipulador ao focar na área de plotagem.**/
+	focusin: function(ev) {
+		const guide = ev.currentTarget.parentElement.querySelector(`[aria-label="Guide"]`);
+		const coord = this.guidePosition(guide.getAttribute("d"));
+		return this.guide(ev.currentTarget.parentElement, coord.x, coord.y);
+	},
+	/**. '{void focusout(object ev)}: Manipulador ao sair na área de plotagem.**/
+	focusout: function(ev) {
+		return this.guide(ev.currentTarget.parentElement, null, null);
+	},
+	/**. '{void keydown(object ev)}: Manipulador ao teclar ENTER sobre o nome da curva na legenda.**/
+	keydown: function(ev) {
+		const role  = String(ev.currentTarget.getAttribute("role")).toLowerCase();
+		const arrow = /^Arrow(Up|Down|Right|Left)$/i;
+		if (role === "button" && (ev.key === "Enter" || ev.key === " ")) {
+			ev.preventDefault();
+			this.click(ev);
 		}
-		/*-- fora da grade principal --*/
-		else {
-			svg.setAttribute("cursor", "default");
-			/*-- esconder guia dinâmica --* /
-			[gx, gy, sx, sy].forEach(function(v,i,a) {v.setAttribute("display", "none");});
-			/*-- mostrar grade e escala --* /
-			for (let i in heap.frame)
-				if (re.test(i)) heap.frame[i].removeAttribute("display");*/
+		else if (role === "region" && arrow.test(ev.key)) {
+			ev.preventDefault();
+			const svg   = ev.currentTarget.parentElement;
+			const guide = svg.querySelector(`[aria-label="Guide"]`);
+			const key   = ev.key.toLowerCase();
+			const xy    = this.guidePosition(guide.getAttribute("d"));
+			const dx    = ev.shiftKey ? this.frame.x/(4*(this.frame.s - 1)) : 1;
+			const dy    = ev.shiftKey ? this.frame.y/(4*(this.frame.s - 1)) : 1;
+			const walk  = {
+				arrowup:    {x: xy.x,      y: xy.y - dy},
+				arrowdown:  {x: xy.x,      y: xy.y + dy},
+				arrowright: {x: xy.x + dx, y: xy.y},
+				arrowleft:  {x: xy.x - dx, y: xy.y},
+			};
+			this.guide(svg, walk[key].x, walk[key].y);
 		}
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/
 	click: function(ev) {
 		const svg  = ev.currentTarget.parentElement;
-		const ctrl   = svg.querySelectorAll("[aria-controls]");
-		const idBack = ctrl[0].getAttribute("aria-controls").trim().split(/\s+/)[0];
-		const back   = svg.querySelector(`#${idBack}`);
-		back.setAttribute("display", "none");
+		const ctrl = svg.querySelectorAll("[role=button]");
+		const show = ev.currentTarget.getAttribute("aria-expanded") === "false";
 		for (let i = 0; i < ctrl.length; i++) {
-			let idInfo = ctrl[i].getAttribute("aria-controls").trim().split(/\s+/)[1];
-			let info   = svg.querySelector(`#${idInfo}`);
-			let ok     = ctrl[i] === ev.currentTarget && ctrl[i].getAttribute("aria-expanded") === "false";
+			let note = svg.querySelector("#"+ctrl[i].getAttribute("aria-controls"));
+			let link = svg.querySelectorAll(`[aria-labelledby=${ctrl[i].id}]`);
+			let ok   = show && ctrl[i] === ev.currentTarget;
+			/*-- destaque legenda clicada --*/
 			ctrl[i].setAttribute("aria-expanded",   ok ? "true"      : "false");
 			ctrl[i].setAttribute("text-decoration", ok ? "underline" : "none");
 			ctrl[i].setAttribute("font-weight",     ok ? "bold"      : "normal");
-			info.setAttribute("display", ok ? "" : "none")
-			if (ok) {
-				back.removeAttribute("display");
-				svg.appendChild(back);
-				svg.appendChild(info);
+			/*-- exibir/ocultar nota --*/
+			note.setAttribute("display", ok ? "" : "none");
+			/*-- exibir/ocultar curvas --*/
+			for (let j = 0; j < link.length; j++) {
+				if (link[j] !== note)
+					link[j].setAttribute("display", show && !ok ? "none" : "");
 			}
 		}
 		return;
 	},
-	/**. '{void keydown(object ev)}: Manipulador ao teclar ENTER sobre o nome da curva na legenda.**/
-	keydown: function(ev) {
-		if (ev.key === "Enter") this.click(ev);
-		return;
-	},
-	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{mousemove} e '{click}.**/
+	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{mousemove}, '{focusin}, '{focusout} e '{click}.**/
 	handleEvent: function(ev) {
 		if (ev.type in this) this[ev.type](ev);
 		return;
