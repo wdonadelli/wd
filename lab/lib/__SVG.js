@@ -36,6 +36,32 @@
 		titleSize: {get: function() {return this.fontSize(this.main.title, this.main.pattern, window.screen.width);}},
 		/**. '{finite paddSize}: Retorna um valor para espaçamento em SVG a partir do tamanho da tela e um padrão.**/
 		paddSize: {get: function() {return this.fontSize(this.main.padd, this.main.pattern, window.screen.width);}},
+		/**. '{object charWidth(finite size, string family)}: Calcula a média do comprimento do caractere em unidades de pixel no SVG, retonrmando o valor '{normal}, '{smaller} e '{larger}.*/
+		charWidth: {
+			value: function(size, family) {
+				const txt = "0123456789AEIOUaeiou,.;/<>:?";
+				const w   = window.screen.width;
+				const h   = window.screen.height;
+				const svg = new this.constructor(w, h);
+				const img = svg
+					.attribute(Number.isFinite(size) ? {"font-size": size} : {})
+					.attribute(typeof family === "string" ? {"font-family": family} : {})
+					.svg(document.body);
+				const rec = svg.rect(0.1*w, 0.1*h, 0.8*w, 0.8*h).attribute({fill: "none"}).last;
+				const nor = svg.text(0.2*w, 0.2*h, txt, "hnw").last;
+				const sml = svg.text(0.2*w, 0.4*h, txt, "hnw").attribute({"font-size": "smaller"}).last;
+				const lrg = svg.text(0.2*w, 0.6*h, txt, "hnw").attribute({"font-size": "larger"}).last;
+				const upp = Number(rec.getAttribute("width")) / rec.getBoundingClientRect().width;
+				console.log(upp, nor.getBoundingClientRect().width, nor.textContent.length)
+				const data = {
+					normal:  upp*nor.getBoundingClientRect().width/nor.textContent.length,
+					smaller: upp*sml.getBoundingClientRect().width/sml.textContent.length,
+					larger:  upp*lrg.getBoundingClientRect().width/lrg.textContent.length,
+				};
+				img.remove();
+				return data;
+			}
+		},
 	});
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},

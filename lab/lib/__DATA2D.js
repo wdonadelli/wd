@@ -106,6 +106,13 @@ const __DATA2D = {
 	time: function(value) {return __DATETIME.timeID(Math.trunc(value)).locale;},
 	/**. '{void datetime(integer value)}: Retorna o tempo a partir de seu identificador (ver '{__DATETIME}).**/
 	datetime: function(value) {return __DATETIME.dateTimeID(Math.trunc(value)).locale;},
+	/**. '{void dateNtime(integer value)}: Igual ao método '{datetime} mas com quebra de linha entre a data e o tempo.**/
+	dateNtime: function(value) {
+		const datetime = __DATETIME.dateTimeID(Math.trunc(value)).string.split("T");
+		const date     = __DATETIME.match(datetime[0]).locale;
+		const time     = __DATETIME.match(datetime[1]).locale;
+		return `${date}\n${time}`;
+	},
 	/**. '{void stringFit(object fit, string type)}: Define o modelo e a forma visual da regressão conforme seu tipo ('{type}).**/
 	stringFit: function(fit, type) {
 		const math = {
