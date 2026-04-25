@@ -57,15 +57,17 @@ const __PLOT2DRATIO = {
 		if (abs <= 1e-5) return __NUMBER.locale(value, "decimal", abs === 0 ? "decimal" : "scientific", {maxDecimal: 2});
 		return __NUMBER.locale(value, "decimal", "decimal", {maxDecimal: abs > 1 ? 2 : 4});
 	},
+
+
+
+
+
+
+
 	/**. '{void barDesc(object plot)}: Define a descrição inicial para o gŕafico de barras.**/
 	barDesc: function(plot) {
 		return [
-			`This is a horizontal bar graph titled "${plot.title}".`
-			`The chart has a white background and the font is predominantly black.`,
-			`There is a vertical line that centers the bases of the bars.`,
-			`The bars to the right of this line represent positive values, while those to the left represent negative values.`,
-			`At the top of the bars is the value label, while at the bottom is the percentage result.`,
-			`The graph shows ${plot.data.names} dataset${plot.data.names.length > 1 ? "s" : ""} containing ${plot.data.names} identifiers ${plot.data.names.length > 1 ? "s" : ""}.`
+
 		].join("\n");
 	},
 	/**. '{void bar(object plot)}: Define a estrutura visual do gráfico de barras.**/
@@ -85,21 +87,46 @@ const __PLOT2DRATIO = {
 		const dxdv = (xf - xi) / (max - min);
 		const zero = xi - min*dxdv;
 		const left = (zero - xi) > (xf - zero);
+		/*-- Descrição inicial --*/
+		plot.desc.push(
+			`This is a horizontal bar graph titled "${plot.title}".`,
+			`The chart has a white background and the font is predominantly black.`,
+			`At the top of the graph is the title, and below it is the plotting area containing the visual representation of the data.`,
+			`To the right of the plot area is the legend containing the labels, differentiated by color, that identify each data set.`,
+			`The plotting area contains a vertical line that defines the origin of the graph (zero value).`,
+			`Positive and negative values ​​are represented by proportional horizontal bars positioned to the right and left of the vertical line, respectively.`,
+			`Each bar is accompanied by its relative value, near the origin, and its absolute value, near the end.`,
+			`The values ​​are obtained from the absolute values ​​of the dataset.`,
+			`The color of the bars and values ​​corresponds to the color of their respective labels.`,
+			`To demonstrate the origin of the information individually, the datasets are grouped by identifiers, names positioned just above each data group, which display the values ​​originating from that source.`,
+			`The chart shows ${plot.data.names.length} identifier${plot.data.names.length > 1 ? "s, each": ""} containing ${plot.data.labels.length} data set${plot.data.labels.length > 1 ? "s": ""}.`
+		);console.log(plot.desc.join("\n"))
 		/*-- identificadores --*/
-		const idLabel = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
-		const idName  = Array(plot.data.names.length).fill(0).map(function()  {return __ID.value;});
-		const idTitle = __ID.value;
-		const idDesc  = __ID.value;
-		/*-- SVG/título/eixo vertical/descrição --*/
+		plot.id.svg   = __ID.value;
+		plot.id.title = __ID.value;
+		plot.id.desc  = __ID.value;
+		plot.id.label = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
+		plot.id.name  = Array(plot.data.names.length).fill(0).map(function()  {return __ID.value;});
+		/*-- SVG --*/
 		plot.svg = new __SVG(window.screen.width, yf + __SVG.labelSize, 0, 0);
 		plot.svg
-			.attribute({id: plot.id, class: "css-wd-plot", role: "img", "aria-labelledby": idTitle, "aria-describedby": idDesc})
-			.desc(this.barDesc(plot), {lang: "en-US", id: idDesc})
+			.attribute({
+				id: plot.id.svg,
+				class: "css-wd-plot",
+				role: "img",
+				"aria-labelledby": plot.id.title,
+				"aria-describedby": plot.id.desc
+			})
+			.desc("", {lang: "en-US", id: plot.id.desc})
+			/*-- título --*/
 			.text(Math.trunc(0.5 * window.screen.width), yi/2, plot.title, "h")
-			.attribute({id: idTitle, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
+			.attribute({id: plot.id.title, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
+			.title(plot.title)
+			/*-- eixo vertical --*/
 			.line([zero,yi+hbar], [zero,yf])
 			.attribute({class: "css-wd-plot-line", role: "img"})
 			.desc("Centered vertical line of the bars.", {lang: "en-US"})
+			/*-- Rótulo --*/
 			.text(li, yi + hbar/2, plot.data.label, "hw")
 			.title(plot.data.label);
 		/*-- área do gráfico --*/
@@ -108,7 +135,7 @@ const __PLOT2DRATIO = {
 			const yname = yi + (n * hbar * (plot.data.labels.length + 1));
 			plot.svg
 				.text(left ? zero-padd : zero+padd, yname + hbar/2, name, left ? "he" : "hw")
-				.attribute({id: idName[n]})
+				.attribute({id: plot.id.name[n]})
 				.title(name);
 
 			plot.data.labels.forEach(function(label,l,llabel) {
@@ -124,7 +151,8 @@ const __PLOT2DRATIO = {
 				/*-- legenda --*/
 				if (n === 0) plot.svg
 					.text(li, ylabel + hbar/2, label, "hw")
-					.attribute({fill: color, id: idLabel[l]})
+					.attribute({fill: color, id: plot.id.label[l]})
+					.title(label)
 					.desc(color);//TODO o que é isso?
 				/*-- barras, valores, porcentagem --*/
 				plot.svg
@@ -133,18 +161,18 @@ const __PLOT2DRATIO = {
 						fill: color,
 						stroke: color,
 						role: "img",
-						"aria-labelledby": `${idName[n]} ${idLabel[l]} ${idValue} ${idRatio}`,
+						"aria-labelledby": `${plot.id.name[n]} ${plot.id.label[l]} ${idValue} ${idRatio}`,
 						class: "css-wd-plot-area"
 					})
 					.title(`${value} (${(100*ratio).toFixed(2)}%)`)
 					.desc(`Barra exibida na cor "amarela", à direita da linha central, vinculada ao identificador nomeado como "ID" e ao conjunto de dados denominado como "dadinho". Sua dimensão representa o valor de 10.20 unidades num total 200 (soma dos valores absolutos), resultando na proporção de 20%.`, {lang: "en-US"})//TODO fazer a descriçaõ da barra
 					.text(top, ylabel + hbar/2, this.number(value, false), value < 0 ? "he" : "hw")
 					.attribute({id: idValue, fill: color})
-					.title(value)
+					.title(this.number(value, false))
 					.desc("Value label.", {lang: "en-US"})
 					.text(base, ylabel + hbar/2, this.number(ratio, true), value < 0 ? "hw" : "he")
 					.attribute({id: idRatio, fill: color})
-					.title((100*ratio).toFixed(2)+"%")
+					.title(this.number(value, true))
 					.desc("Percentage label.", {lang: "en-US"});
 			}, this);
 		}, this);
@@ -245,7 +273,8 @@ const __PLOT2DRATIO = {
 		/*-- checando dados --*/
 		if (data === null || typeof data !== "object" || !Array.isArray(data.dataset)) return null;
 		const plot = {
-			id:    __ID.value,
+			id:    {},
+			desc:  [],
 			title: "title" in data ? data.title : "Title",
 			type:  (/^sum|count|key$/i).test(data.type) ? data.type.toLowerCase() : "count",
 			view:  (/^bar|pie$/i).test(data.view) ? data.view.toLowerCase() : "bar",
@@ -264,9 +293,12 @@ const __PLOT2DRATIO = {
 		plot.max  = __DATA2D.MAX(plot.data.max);
 		if (plot.min === 0 && plot.max === 0) plot.max = 1;
 		this[plot.view](plot);
-		plot.svg.svg(document.body);//TODO
-		__CSS.handleEvent();//TODO
-		return plot;//TODO
+
+
+
+		plot.svg.svg(document.body).style.width = "50%";//TODO remover essa linha
+		__CSS.handleEvent();//TODO remover essa linha
+		return plot;//TODO remover essa linha
 		return plot.svg.svg();
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/

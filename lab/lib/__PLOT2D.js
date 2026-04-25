@@ -505,7 +505,7 @@ const __PLOT2D = {
 		this.struct(plot);
 		this.curves(plot);
 		this.heap[plot.id.svg] = plot;
-		return plot.svg.svg(document.body);//TODO remover document.body
+		return plot.svg.svg();
 	},
 	/**. '{object guidePosition(string d)}: Retorna as coordenadas da guia a partir do i{path}.**/
 	guidePosition: function(d) {
