@@ -22,20 +22,20 @@
 	}
 	Object.defineProperties(__SVG, {
 		constructor: {value: __SVG},
-		/**. '{finite fontSize(finite size, finite pattern, finite width)}: Calcula e retorna o tamanho da fonte em i{px} a ser definida:
+		/**. '{finite fontSize(finite size, finite pattern, finite width)}: Calcula e retorna o tamanho proporcional da fonte de acordo com o comprimento de referência e o comprimento total disponível, todos os dados em i{px}:
 		|Argumento|Descrição|
-		|'{size}|Tamanho da fonte esperada em i{px}|
-		|'{pattern}|Comprimento de referência em i{px} para exibição da fonte esperada|
-		|'{width}|Comprimento máximo disponível em i{px}|**/
+		|'{size}|Tamanho da fonte esperada para a imagem.|
+		|'{pattern}|Comprimento de referência da imagem para o tamanho da fonte.|
+		|'{width}|Comprimento máximo disponível para a imagem.|**/
 		fontSize: {value: function(size, pattern, width) {return Math.trunc(width/pattern*size);}},
-		/**. '{object main}: Registra as propriedades padrões da fonte.**/
-		main: {value: {pattern: 500, label: 12, title: 14, padd: 4}},
-		/**. '{finite labelSize}: Retorna um valor para rótulos em SVG a partir do tamanho da tela e um padrão.**/
-		labelSize: {get: function() {return this.fontSize(this.main.label, this.main.pattern, window.screen.width);}},
-		/**. '{finite titleSize}: Retorna um valor para títulos em SVG a partir do tamanho da tela e um padrão.**/
-		titleSize: {get: function() {return this.fontSize(this.main.title, this.main.pattern, window.screen.width);}},
-		/**. '{finite paddSize}: Retorna um valor para espaçamento em SVG a partir do tamanho da tela e um padrão.**/
-		paddSize: {get: function() {return this.fontSize(this.main.padd, this.main.pattern, window.screen.width);}},
+		/**. '{object main}: Registra as propriedades padrões da fonte em tela cheia com comprimento de '{500px}.**/
+		main: {value: {pattern: 500, label: 12, title: 14, padd: 4, max: window.screen.width}},
+		/**. '{finite labelSize}: Retorna um tamanho da fonte para rótulos em SVG a partir do padrão estabelecido em '{main}.**/
+		labelSize: {get: function() {return this.fontSize(this.main.label, this.main.pattern, this.main.max);}},
+		/**. '{finite titleSize}: Retorna um tamanho da fonte para títulos em SVG a partir do padrão estabelecido em '{main}.**/
+		titleSize: {get: function() {return this.fontSize(this.main.title, this.main.pattern, this.main.max);}},
+		/**. '{finite paddSize}: Retorna um tamanho da fonte para espaçamentos em SVG a partir do padrão estabelecido em '{main}.**/
+		paddSize: {get: function() {return this.fontSize(this.main.padd, this.main.pattern, this.main.max);}},
 		/**. '{object charWidth(finite size, string family)}: Calcula a média do comprimento do caractere em unidades de pixel no SVG, retonrmando o valor '{normal}, '{smaller} e '{larger}.*/
 		charWidth: {
 			value: function(size, family) {

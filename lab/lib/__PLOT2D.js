@@ -7,7 +7,7 @@ const __PLOT2D = {
 	CSS: __CSS.data.push(`/*-- PLOT2D --*/
 .css-wd-plot {
 	background: white;
-	color: #333333;
+	fill: #333333;
 	font-family: sans-serif;
 	font-size: ${__SVG.labelSize}px;
 	border: thin solid black;

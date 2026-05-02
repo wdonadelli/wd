@@ -72,7 +72,7 @@ const __PLOT2DRATIO = {
 	},
 	/**. '{void bar(object plot)}: Define a estrutura visual do gráfico de barras.**/
 	bar: function(plot) {
-		/*-- espaço --*/
+		/*-- espaços --*/
 		const padd = __SVG.paddSize;
 		const hbar = padd + __SVG.labelSize + padd;
 		/*-- área --*/
@@ -87,57 +87,64 @@ const __PLOT2DRATIO = {
 		const dxdv = (xf - xi) / (max - min);
 		const zero = xi - min*dxdv;
 		const left = (zero - xi) > (xf - zero);
-		/*-- Descrição inicial --*/
-		plot.desc.push(
-			`This is a horizontal bar graph titled "${plot.title}".`,
-			`The chart has a white background and the font is predominantly black.`,
-			`At the top of the graph is the title, and below it is the plotting area containing the visual representation of the data.`,
-			`To the right of the plot area is the legend containing the labels, differentiated by color, that identify each data set.`,
-			`The plotting area contains a vertical line that defines the origin of the graph (zero value).`,
-			`Positive and negative values ​​are represented by proportional horizontal bars positioned to the right and left of the vertical line, respectively.`,
-			`Each bar is accompanied by its relative value, near the origin, and its absolute value, near the end.`,
-			`The values ​​are obtained from the absolute values ​​of the dataset.`,
-			`The color of the bars and values ​​corresponds to the color of their respective labels.`,
-			`To demonstrate the origin of the information individually, the datasets are grouped by identifiers, names positioned just above each data group, which display the values ​​originating from that source.`,
-			`The chart shows ${plot.data.names.length} identifier${plot.data.names.length > 1 ? "s, each": ""} containing ${plot.data.labels.length} data set${plot.data.labels.length > 1 ? "s": ""}.`
-		);console.log(plot.desc.join("\n"))
 		/*-- identificadores --*/
-		plot.id.svg   = __ID.value;
-		plot.id.title = __ID.value;
-		plot.id.desc  = __ID.value;
-		plot.id.label = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
-		plot.id.name  = Array(plot.data.names.length).fill(0).map(function()  {return __ID.value;});
+		const id   = {
+			svg:   __ID.value,
+			title: __ID.value,
+			desc:  __ID.value,
+			name:  Array(plot.data.names.length).fill(0).map(function()  {return __ID.value;}),
+			label: Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;}),
+			value: Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;}),
+			ratio: Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;}),
+		};
+		/*-- descrição --*/
+		const info = {};
+		const desc = [
+			`This is an image representing a horizontal bar chart.`,
+			`By default, the image displays a light background with dark font (the display mode adopted may reverse this setting).`,
+			`At the top of the image is the horizontally centered chart title displaying the value "${plot.title}".`,
+			`Below the title is the plotting area containing the visual representation of the data.`,
+			`To the right of the plotting area is the legend containing the labels that name the existing data sets, visually identified by colors.`,
+			`The plotting area contains a vertical axis that defines the origin of the horizontal bars (zero value).`,
+			`Positive values ​​are represented by bars positioned to the right of the vertical axis, while negative values ​​are represented by bars to the left of that same axis.`,
+			`The length of the bar is proportional to its relative value.`,
+			`The bar and its associated labels have the same color as the legend label.`,
+			`The relative value label is displayed at the base of the bar, near the vertical axis, and the absolute value label is displayed at the end of the bar.`,
+			`The relative value is obtained from the absolute values ​​(modulus) of each data set.`,
+			`From top to bottom, along the vertical axis, are distributed the labels identifying the information source followed by the respective values ​​associated with each dataset from that source.`,
+			`The chart displays the following information:`
+		];
 		/*-- SVG --*/
 		plot.svg = new __SVG(window.screen.width, yf + __SVG.labelSize, 0, 0);
 		plot.svg
 			.attribute({
-				id: plot.id.svg,
+				id: id.svg,
 				class: "css-wd-plot",
 				role: "img",
-				"aria-labelledby": plot.id.title,
-				"aria-describedby": plot.id.desc
+				"aria-labelledby": id.title,
+				"aria-describedby": id.desc
 			})
-			.desc("", {lang: "en-US", id: plot.id.desc})
+			.desc("", {lang: "en-US", id: id.desc})
 			/*-- título --*/
 			.text(Math.trunc(0.5 * window.screen.width), yi/2, plot.title, "h")
-			.attribute({id: plot.id.title, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
+			.attribute({id: id.title, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
 			.title(plot.title)
 			/*-- eixo vertical --*/
 			.line([zero,yi+hbar], [zero,yf])
 			.attribute({class: "css-wd-plot-line", role: "img"})
-			.desc("Centered vertical line of the bars.", {lang: "en-US"})
+			.desc("Vertical axis", {lang: "en-US"})
 			/*-- Rótulo --*/
 			.text(li, yi + hbar/2, plot.data.label, "hw")
 			.title(plot.data.label);
-		/*-- área do gráfico --*/
+		/*-- área do gráfico ([names[labels]]) --*/
 		plot.data.names.forEach(function(name,n,lname) {
-			/*-- nomes --*/
+			/*-- fonte (names) --*/
 			const yname = yi + (n * hbar * (plot.data.labels.length + 1));
 			plot.svg
 				.text(left ? zero-padd : zero+padd, yname + hbar/2, name, left ? "he" : "hw")
-				.attribute({id: plot.id.name[n]})
+				.attribute({id: id.name[n]})
 				.title(name);
-
+			/*-- dados (labels) --*/
 			plot.data.labels.forEach(function(label,l,llabel) {
 				const ylabel  = yname + hbar + (l * hbar);
 				const color   = __PLOT2D.RGB[l%__PLOT2D.RGB.length];
@@ -146,36 +153,43 @@ const __PLOT2DRATIO = {
 				const width   = Math.abs(dxdv * value);
 				const top     = zero + ((value < 0 ? -1 : +1) * (width + padd));
 				const base    = zero + ((value < 0 ? +1 : -1) * (padd));
-				const idValue = __ID.value;
-				const idRatio = __ID.value;
+				const tvalue  = this.number(value, false);
+				const tratio  = this.number(ratio, true);
+				const tcolor  = color.replace(/([A-Z])/g, " $1").toLowerCase();
 				/*-- legenda --*/
 				if (n === 0) plot.svg
 					.text(li, ylabel + hbar/2, label, "hw")
-					.attribute({fill: color, id: plot.id.label[l]})
-					.title(label)
-					.desc(color);//TODO o que é isso?
+					.attribute({fill: color, id: id.label[l]})
+					.title(label);
 				/*-- barras, valores, porcentagem --*/
 				plot.svg
+					/*-- barra --*/
 					.rect(zero + (value < 0 ? -width : 0), ylabel, width, hbar)
 					.attribute({
 						fill: color,
 						stroke: color,
 						role: "img",
-						"aria-labelledby": `${plot.id.name[n]} ${plot.id.label[l]} ${idValue} ${idRatio}`,
+						"aria-labelledby": `${id.name[n]} ${id.label[l]} ${id.value[l]} ${id.ratio[l]}`,
 						class: "css-wd-plot-area"
 					})
-					.title(`${value} (${(100*ratio).toFixed(2)}%)`)
-					.desc(`Barra exibida na cor "amarela", à direita da linha central, vinculada ao identificador nomeado como "ID" e ao conjunto de dados denominado como "dadinho". Sua dimensão representa o valor de 10.20 unidades num total 200 (soma dos valores absolutos), resultando na proporção de 20%.`, {lang: "en-US"})//TODO fazer a descriçaõ da barra
-					.text(top, ylabel + hbar/2, this.number(value, false), value < 0 ? "he" : "hw")
-					.attribute({id: idValue, fill: color})
-					.title(this.number(value, false))
-					.desc("Value label.", {lang: "en-US"})
-					.text(base, ylabel + hbar/2, this.number(ratio, true), value < 0 ? "hw" : "he")
-					.attribute({id: idRatio, fill: color})
-					.title(this.number(value, true))
-					.desc("Percentage label.", {lang: "en-US"});
+					.title(`${label}\n${name}\n${value} (${(100*ratio).toFixed(2)}%)`)
+					/*-- valor absoluto --*/
+					.text(top, ylabel + hbar/2, tvalue, value < 0 ? "he" : "hw")
+					.attribute({id: id.value[l], fill: color})
+					.title(tvalue)
+					/*-- valor relativo --*/
+					.text(base, ylabel + hbar/2, tratio, value < 0 ? "hw" : "he")
+					.attribute({id: id.ratio[l], fill: color})
+					.title(tratio);
+					/*-- informação --*/
+					if (n === 0) info[l] = [`\n${label} [${tcolor}]`];
+					info[l].push(`${name}: ${tvalue} (${tratio})`);
 			}, this);
 		}, this);
+		/*-- finalizando a descrição --*/
+		for(let i in info) desc.push(info[i].join("\n"));
+		plot.svg.svg().getElementById(id.desc).textContent = desc.join("\n");
+		return;
 	},
 	/**. '{void pie(object plot)}: Define a estrutura visual do gráfico de setores.**/
 	pie: function(plot) {
@@ -185,39 +199,78 @@ const __PLOT2DRATIO = {
 		/*-- área de plotagem --*/
 		const xi = Math.trunc(0.25 * window.screen.width);
 		const xf = Math.trunc(0.75 * window.screen.width);
+		const li = xf + 4*padd;
 		const xc = (xi + xf)/2;
 		const yi = padd + __SVG.titleSize + padd;
 		const yf = yi + (xf - xi);
 		const yc = (yi + yf)/2;
 		const r  = (xf - xc) - (padd + side + padd);
 		/*-- identificadores --*/
-		const idLabels = Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;});
-		const idNames  = Array(plot.data.names.length).fill(0).map(function() {return __ID.value;});
-		const idTitle  = __ID.value;
-		/*-- SVG/título/legenda --*/
+		const id   = {
+			svg:   __ID.value,
+			title: __ID.value,
+			desc:  __ID.value,
+			name:  Array(plot.data.names.length).fill(0).map(function()  {return __ID.value;}),
+			label: Array(plot.data.labels.length).fill(0).map(function() {return __ID.value;}),
+		};
+		/*-- descrição --*/
+		const info = {};
+		const desc = [
+			`This is an image representing a pie chart.`,
+			`By default, the image displays a light background with dark font (the display mode adopted may reverse this setting).`,
+			`At the top of the image, the chart title is centered horizontally over the plotting area, displaying the value "${plot.title}".`,
+			`Below the title is the plotting area containing the visual representation of the data.`,
+			`To the right of the plotting area is the legend containing labels that identify the sources of the information, visually differentiated by color.`,
+			`To the left of the plotting area is the legend containing the labels that name the existing datasets.`,
+			`The dataset labels are click-sensitive, toggling the view of the datasets.`,
+			`The plotting area displays a circle divided into sectors (semi-circles) proportional to the relative values ​​of each information source assigned to the selected dataset.`,
+			`Next to each sector, a label is displayed showing the relative value it represents.`,
+			`The sectors and their associated labels share the same color as the information source label.`,
+			`The relative value is obtained from the absolute values ​​(modulus) of each data set.`,
+			`The chart displays the following information:`
+		];
+		/*-- SVG --*/
 		plot.svg = new __SVG(window.screen.width, yf + side, 0, 0);
 		plot.svg
-			.attribute({class: "css-wd-plot", "aria-labelledby": idTitle, id: __ID.value})
+			.attribute({
+				id: id.svg,
+				class: "css-wd-plot",
+				role: "img",
+				"aria-labelledby": id.title,
+				"aria-describedby": id.desc
+			})
+			.desc("", {lang: "en-US", id: id.desc})
+			/*-- título --*/
 			.text((xi + xf)/2, yi/2, plot.title, "h")
-			.attribute({id: idTitle, class: "css-wd-plot-title"})
-			.text(xf + padd, yi + side/2, plot.data.label, "hw");
+			.attribute({id: id.title, class: "css-wd-plot-title", role: "heading", "aria-level": "1"})
+			.title(plot.title)
+			/*-- rótulo --*/
+			.text(li, yi + side/2, plot.data.label, "hw")
+			.title(plot.data.label);
 		/*-- área do gráfico --*/
 		plot.data.labels.forEach(function(label,l,LABEL) {
+			/*-- dados (label) --*/
 			let    start = 0;
 			let controls = [];
+			/*-- descrição --*/
+			desc.push(`\n${label}`);
 			plot.data.names.forEach(function(name,n,NAME) {
-				const color = __PLOT2D.RGB[n%__PLOT2D.RGB.length];
-				const idVal = __ID.value;
-				const idPie = __ID.value;
-				const value = plot.data.values[l][n];
-				const sum   = plot.data.sum[l];
-				const ratio = value/sum;
-				const width = Math.abs(360*ratio);
-				const half  = (start + width/2);
-				const angle = Math.PI*(half/180);
-				const tx    = xc + (r+padd)*Math.cos(angle);
-				const ty    = yc - (r+padd)*Math.sin(angle);
-				const tp    = (
+				/*-- fontes (names) --*/
+				const color  = __PLOT2D.RGB[n%__PLOT2D.RGB.length];
+				const idVal  = __ID.value;
+				const idPie  = __ID.value;
+				const value  = plot.data.values[l][n];
+				const sum    = plot.data.sum[l];
+				const ratio  = value/sum;
+				const width  = Math.abs(360*ratio);
+				const half   = (start + width/2);
+				const angle  = Math.PI*(half/180);
+				const tvalue = this.number(value, false);
+				const tratio = this.number(ratio, true);
+				const tcolor = color.replace(/([A-Z])/g, " $1").toLowerCase();
+				const tx     = xc + (r+padd)*Math.cos(angle);
+				const ty     = yc - (r+padd)*Math.sin(angle);
+				const tp     = (
 					half < 90  ? (half ===   0 ? "hw" : "hsw") : (
 					half < 180 ? (half ===  90 ? "hs" : "hse") : (
 					half < 270 ? (half === 180 ? "he" : "hne") : (
@@ -225,26 +278,43 @@ const __PLOT2DRATIO = {
 				))));
 				/*-- legenda --*/
 				if (l === 0) plot.svg
-					.text(xf + padd, yi + (n + 1)*(side+padd) + side/2, `- ${name}`, "hw")
-					.attribute({fill: color, id: idNames[n]})
+					.text(li, yi + (n + 1)*(side+padd) + side/2, name, "hw")
+					.attribute({fill: color, id: id.name[n]})
+					.title(name)
 					.desc(color);
 				/*-- setor/porcentagem --*/
-				plot.svg.semicircle(xc, yc, r, start, width)
-					.attribute({fill: color, stroke: color, "aria-labelledby": `${idNames[n]} ${idLabels[l]}`})
-					.attribute({class: "css-wd-plot-area", id: idPie, display: l === 0 ? "" : "none"})
-					.desc(`${value} (${(100*ratio).toFixed(2)}%)`)
-					.text(tx, ty, this.number(ratio, true), tp)
-					.attribute({fill: color, id: idVal, display: l === 0 ? "" : "none"})
-					.title(`${value} (${(100*ratio).toFixed(2)}%)`);
+				plot.svg
+					/*-- setor --*/
+					.semicircle(xc, yc, r, start, width)
+					.attribute({
+						id: idPie,
+						fill: color,
+						stroke: color,
+						role: "img",
+						"aria-labelledby": `${id.name[n]} ${id.label[l]} ${idVal}`,
+						class: "css-wd-plot-area",
+						display: l === 0 ? "" : "none"
+					})
+					.title(`${label}\n${name}\n${value} (${(100*ratio).toFixed(2)}%)`)
+					/*-- porcentagem --*/
+					.text(tx, ty, tratio, tp)
+					.attribute({
+						id: idVal,
+						fill: color,
+						display: l === 0 ? "" : "none"
+					})
+					.title(tratio);
 				/*-- incremento --*/
 				start += width;
 				controls.push(idPie, idVal);
+				/*-- descrição --*/
+				desc.push(`${name}: ${tratio} (${tvalue})  [${tcolor}]`);
 			}, this);
-			/*-- rótulo (interativo, lado esquerdo) --*/
+			/*-- rótulos (interativo, lado esquerdo) --*/
 			plot.svg
 				.text(padd, yi + l*(side+padd) + side/2, label, "hw")
 				.attribute({
-					id: idLabels[l],
+					id: id.label[l],
 					tabindex: 0,
 					"text-decoration": l === 0 ? "underline" : "normal",
 					"font-weight": l === 0 ? "bold" : "normal",
@@ -252,10 +322,14 @@ const __PLOT2DRATIO = {
 					role: "button",
 					"aria-expanded": l === 0 ? "true" : "false",
 					"aria-controls": controls.join(" "),
-				});
+				})
+				.title(label);
+			/*-- eventos --*/
 			plot.svg.last.addEventListener("click", this);
 			plot.svg.last.addEventListener("keydown", this);
 		}, this);
+		plot.svg.svg().getElementById(id.desc).textContent = desc.join("\n");
+		return
 	},
 	/**. '{node plot(object data)}: Retorna um gráfico de barras ou de setores em SVG conforme especificado em '{data} ou nulo:
 	|Propriedade|Tipo|Opcional|Descrição|Observação|
@@ -273,8 +347,6 @@ const __PLOT2DRATIO = {
 		/*-- checando dados --*/
 		if (data === null || typeof data !== "object" || !Array.isArray(data.dataset)) return null;
 		const plot = {
-			id:    {},
-			desc:  [],
 			title: "title" in data ? data.title : "Title",
 			type:  (/^sum|count|key$/i).test(data.type) ? data.type.toLowerCase() : "count",
 			view:  (/^bar|pie$/i).test(data.view) ? data.view.toLowerCase() : "bar",
@@ -293,12 +365,6 @@ const __PLOT2DRATIO = {
 		plot.max  = __DATA2D.MAX(plot.data.max);
 		if (plot.min === 0 && plot.max === 0) plot.max = 1;
 		this[plot.view](plot);
-
-
-
-		plot.svg.svg(document.body).style.width = "50%";//TODO remover essa linha
-		__CSS.handleEvent();//TODO remover essa linha
-		return plot;//TODO remover essa linha
 		return plot.svg.svg();
 	},
 	/**. '{void click(object ev)}: Manipulador ao clicar sobre o nome da curva na legenda.**/
