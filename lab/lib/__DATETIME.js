@@ -187,6 +187,10 @@ const __DATETIME = {
 		const list = this.names.MMMM.concat(this.names.MMM).map(function(v,i,a) {return v.toUpperCase();});
 		return list.indexOf(find) < 0 ? null : list.indexOf(find)%12 + 1;
 	},
+	/**. '{integer idMonth(integer year, integer month)}: Retorna um identificador para o mês.**/
+	idMonth: function(year, month) {return 12*year + (month-1);},
+	/**. '{object monthID(integer id)}: Retorna os dados do ano '{Y} e mês '{M} a partir do identificador retornado de '{idMonth}.**/
+	monthID: function(id) {return {Y: Math.floor(id/12), M: (id%12 + (id < 0 ? 12 : 0))%12 + 1};},
 	/**. '{string dayName(any value, boolean short)}: Recebe o valor númerico do dia da semana e retorna seu nome, o inverso ou nulo**/
 	dayName: function(value, short) {
 		this.setTemplates();
@@ -263,11 +267,12 @@ const __DATETIME = {
 	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings" target="_blank"] for correta, retorna verdadeiro.**/
 	week: function(flag) {
 		/*-- checando limite --*/
-		const day = this.idDay(flag.Y, 1, 1);
-		const max = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
+		const year = flag.P === "-" ? -flag.Y : flag.Y;
+		const day  = this.idDay(year, 1, 1);
+		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
 		if (flag.w > max) return false;
 		/*-- localizando data --*/
-		const initY = [flag.Y, flag.Y, flag.Y - 1, flag.Y - 1, flag.Y - 1, flag.Y, flag.Y][day-1];
+		const initY = [year, year, year - 1, year - 1, year - 1, year, year][day-1];
 		const initM = [1, 1, 12, 12, 12, 1, 1][day-1];
 		const initD = [2, 1, 31, 30, 29, 4, 3][day-1];
 		const delta = "d" in flag ? (flag.d - 1) : 0;
@@ -379,7 +384,7 @@ const __DATETIME = {
 	idDate: function(year, month, day) {
 		return this.idYear(year) + (this.dataMonth(year)[month - 1].init - 1) + (day - 1);
 	},
-	/**. '{number idTime(integer hour, integer minute, integer second, integer millisecond)}: Retorna o ID de tempo para um dia.**/
+	/**. '{number idTime(integer hour, integer minute, integer second, integer millisecond)}: Retorna o ID de tempo para o dia.**/
 	idTime: function(hour, minute, second, millisecond) {
 		return Math.trunc(1000*(3600*hour + 60*minute + second) + millisecond);
 	},
@@ -397,41 +402,34 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
-
-
-
+	/**. '{string weekDate(integer year, integer month, integer day)}: Retorna a representação ISO da semana do ano.**/
 	weekDate: function(year, month, day) {
-		const init = this.idDay(flag.Y,   1, 1);
-		const last = this.idDay(flag.Y+1, 1, 1);
-
-
-
-		const days = this.leap(flag.Y) ? 366 : 365;
-
-
-
-
-
-
-
-
-
-
-
-
-		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
-
-
-
-
-
-
-
-
-
+		const date = this.dateID(this.idDate(year, month, day));
+		const week = [Number(year) - 1, Number(year), Number(year) + 1].map(function(v,i,a) {
+			const Y    = Math.abs(v);
+			const YYYY = (v < 0 ? "-" : "") + (Y < 10 ? "000" : (Y < 100 ? "00" : (Y < 1000 ? "0" : ""))) + String(Y);
+			const week = this.match(`${YYYY}-W01`);
+			return {value: week.value, YYYY: YYYY};
+		}, this);
+		/*-- obtendo informações --*/
+		let WEEK, YYYY, DAY = [null,"-7","-1","-2","-3","-4","-5","-6"][date.d];
+		/*-- última semana do ano anterior --*/
+		if (date.value < week[1].value) {
+			WEEK = Math.trunc((date.value - week[0].value)/7) + 1;
+			YYYY = week[0].YYYY;
+		}
+		/*-- primeira semana do ano posterior --*/
+		else if (date.value >= week[2].value) {
+			WEEK = Math.trunc((date.value - week[2].value)/7) + 1;
+			YYYY = week[2].YYYY;
+		}
+		/*-- ano corrente --*/
+		else {
+			WEEK = Math.trunc((date.value - week[1].value)/7) + 1;
+			YYYY = week[1].YYYY;
+		}
+		return `${YYYY}-W${(WEEK < 10 ? "0" : "") + WEEK}${DAY}`;
 	},
-
-
 	/**. '{object nativeDate(integer Y, integer M...)}: Recebe os dados de data ou tempo e devolve a instância nativa de '{Date}.**/
 	nativeDate: function(Y, M, D, H, m, s, l) {
 		const date = new Date(Date.UTC(
@@ -540,7 +538,7 @@ const __DATETIME = {
 		data.type  = "datetime";
 		return this.dateTimeAdjustment(data);
 	},
-	/**. '{void random(string type)}: Faz teste nos métodos que traduzem números em tempo '{type}.**/
+	/**. '{void random(string type)}: Executa teste nos métodos que traduzem números em tempo '{type}.**/
 	random: function(type) {
 		const conf = {
 			time:     {bit: 16, name: "timeID"},
@@ -562,7 +560,19 @@ const __DATETIME = {
 			if (list[i] !== fromStr.value)
 				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > ${fromStr.value} (${fromStr.value - list[i]})`);
 		}
-		return;
+		return null;
+	},
+	/**. '{void wrandom()}: Executa teste nos métodos que traduzem datas em semanas.**/
+	wrandom: function() {
+		const list = __MATH.crypto(16, 10000, false);
+		for (let i = 0; i < list.length; i++) {
+			let flag = this.dateID(list[i]);
+			let week = this.weekDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
+			let date = this.match(week);
+			if (date.value !== flag.value)
+				throw new Error(`Week Error: ${flag.string} > ${week} > ${date.string})`);
+		}
+		return null;
 	},
 	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
 	linear: function(min, max) {
@@ -598,241 +608,84 @@ const __DATETIME = {
 		};
 		return walker.start(min, max);
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**. '{object deltaTime(number value)}: Retona o segundo '{s}, o minuto '{m}, a hora '{H} e a variação diária '{dD} a partir de '{value}.**/
-	deltaTime: function(flag, tag, value) {
-		if (!Number.isFinite(value)) return flag;
-		flag[tag] = 0;
-		const id  = this.idTime(flag.H, flag.m, flag.s, flag.l);
-		const ll  = {H: 3600000, m: 60000, s: 1000, l: 1};
-		return this.timeID(id + (tag in ll ? ll[tag] * value : 0));
+	/**. '{object delta(object flag, string walk)}: Desloca o tempo de '{flag} conforme especificado em '{walk} e retorna uma nova '{flag} redefinida:
+	- '{walk} é uma string que define o tempo a ser deslocado;
+	- O valor de '{walk} consiste em um número inteiro seguido de espaço e da unidade de tempo a deslocar;
+	- As unidades de tempo possíves são '{millisecond, second, minute, hour, day, week, month e year}; e
+	- A unidade de tempo pode estar no singular ou plural e não é sensível à caixa.**/
+	delta: function(flag, walk) {
+		const re   = /^\s*([\-+]?[1-9]\d*)\s+(millisecond|second|minute|hour|day|week|month|year)s?\s*$/i;
+		const find = String(walk).match(re);
+		const jump = find === null ? null : Number(find[1]);
+		const type = find === null ? null : find[2].toLowerCase();
+		const hide = "hide" in flag ? flag.hide : 0;
+		const date = ["week", "month", "date", "datetime"].indexOf(flag.type) >= 0;
+		/*-- apagando dia escondido --*/
+		delete flag.hide;
+		/*-- analisando possibilidades --*/
+		if (type === "millisecond") {
+			if (flag.type === "time")
+				return this.timeID(flag.value + jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + jump);
+		}
+		else if (type === "second") {
+			if (flag.type === "time")
+				return this.timeID(flag.value + 1000*jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + 1000*jump);
+		}
+		else if (type === "minute") {
+			if (flag.type === "time")
+				return this.timeID(flag.value + 60000*jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + 60000*jump);
+		}
+		else if (type === "hour") {
+			if (flag.type === "time")
+				return this.timeID(flag.value + 3600000*jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + 3600000*jump);
+		}
+		else if (type === "day") {
+			if (flag.type === "week" || flag.type === "month" || flag.type === "date")
+				return this.dateID(flag.value + jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + 86400000*jump);
+		}
+		else if (type === "week") {
+			if (flag.type === "week" || flag.type === "month" || flag.type === "date")
+				return this.dateID(flag.value + 7*jump);
+			if (flag.type === "datetime")
+				return this.dateTimeID(flag.value + 604800000*jump);
+		}
+		else if (type === "month" && date) {
+			const attr = flag.type === "datetime" ? "idDateTime" : "idDate";
+			const ID   = this.idMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
+			const date = this.monthID(ID + jump);
+			const last = this.dataMonth(date.Y)[date.M - 1].length;
+			const day  = hide > 0 ? (hide > last ? last : hide) : (flag.D > last ? last : flag.D);
+			const id   = this[attr](date.Y, date.M, day, flag.H, flag.m, flag.s, flag.l);
+			const data = flag.type === "datetime" ? this.dateTimeID(id) : this.dateID(id);
+			/*-- reinserindo hide --*/
+			if (day < hide || day < flag.D)
+				data.hide = day < hide ? hide : flag.D;
+			return data;
+		}
+		else if (type === "year" && date) {
+			const attr = flag.type === "datetime" ? "idDateTime" : "idDate";
+			const year = (flag.P === "-" ? -flag.Y : flag.Y) + jump;
+			const last = this.dataMonth(year)[flag.M - 1].length;
+			const day  = hide > 0 ? (hide > last ? last : hide) : (flag.D > last ? last : flag.D);
+			const id   = this[attr](year, flag.M, day, flag.H, flag.m, flag.s, flag.l);
+			const data = flag.type === "datetime" ? this.dateTimeID(id) : this.dateID(id);
+			/*-- reinserindo hide --*/
+			if (day < hide || day < flag.D)
+				data.hide = day < hide ? hide : flag.D;
+			return data;
+		}
+		/*-- devolvendo hide, por não se enquadrar em nenhuma situação --*/
+		if (hide > 0) flag.hide = hide;
+		return flag;
 	},
-
-	deltaDate: function(flag, tag, value) {
-		if (!(tag in flag)) return flag;
-		if (tag === "D")
-			return;
-
-
-
-
-		const upper = Math.trunc(value);
-		const lower = value - upper;
-
-
-
-		  if (tag === "M") {
-			const month = upper + (upper > 12 ? - 1 : (upper < 1 ? - 12 : 0));
-
-
-
-		}
-
-
-
-	},
-
-
-
-
-
-
-
-
-
-
-	/**. '{object setValues(object input, string name, number value)}: Manipula o elemento '{name} em '{input} conforme '{valua}:
-	|Argumento|Descrição|
-	|input|Registra os dados de data e tempo (Y, M, D, H, m, s) atuais|
-	|name|Nome da propriedade a ser manipulada em '{input}|
-	|value|Valor a ser aplicado à propriedade '{name}|**/
-	setValues(flag, name, value) {
-
-
-		if (name === "s") {
-			data = this.setSeconds(value);
-			input.s = data.s;
-			input.m = data.m === 0 ? ("m" in input ? input.m : 0) : data.m;
-			input.H = data.H === 0 ? ("H" in input ? input.H : 0) : data.H;
-			if (data.dD !== 0)
-				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
-		}
-
-
-
-
-		else if (name === "m") {
-			data = this.setSeconds(60*value);
-			input.s = "s" in input ? input.s : 0;
-			input.m = data.m;
-			input.H = data.H === 0 ? ("H" in input ? input.H : 0) : data.H;
-			if (data.dD !== 0)
-				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
-		}
-		else if (name === "H") {
-			data = this.setSeconds(3600*value);
-			input.s = "s" in input ? input.s : 0;
-			input.m = "m" in input ? input.m : 0;
-			input.H = data.H;
-			if (data.dD !== 0)
-				return this.setValues(input, "D", ("D" in input ? input.D : 0) + data.dD);
-		}
-		else if (name === "D") {
-			let id = this.idMonth("Y" in input ? input.Y : 0, "M" in input ? input.M : 1) - 1 + value;
-			data   = this.dateID(id);
-			input.D = data.D;
-			input.M = data.M;
-			input.Y = (data.P === "-" ? -1 : 1) * data.Y;
-		}
-		else if (name === "M") {
-			data = this.deltaMonth(value);
-			input.D = "D" in input ? input.D : 1;
-			input.M = data.M;
-			input.Y = ("Y" in input ? input.Y : 0) + data.dY;
-		}
-		else if (name === "Y") {
-			input.D = "D" in input ? input.D : 1;
-			input.M = "M" in input ? input.M : 1;
-			input.Y = value;
-		}
-		return input;
-	},
-
-
-
-
-
-
-
-	setValue: function(info, name, value) {
-		name  = String(name).trim().toLowerCase();
-		const list   = [info.P === "-" ? -info.Y : info.Y, info.M, info.D, info.H, info.m, info.s];
-		const item   = {year: 0, month: 1, day: 2, hour: 3, minute: 4, second: 5};
-		const time   = {second: 1, minute: 60, hour: 3600};
-		const isTime = info.type === "time" || info.type === "datetime";
-		const isDate = info.type === "date" || info.type === "datetime";
-		/*-- TEMPO --*/
-		if (name in time && isTime) {
-			list[item[name]] = 0;
-			const input  = info.type === "time" ?      "idTime" : "idDateTime";
-			const array  = info.type === "time" ? list.slice(3) : list;
-			const output = info.type === "time" ?      "timeID" : "dateTimeID";
-			const walk   = Number((time[name] * value).toFixed(3));
-			const id     = this[input].apply(this, array);
-			return this[output](id + walk);
-		}
-		/*-- DIA --*/
-		if (name === "day" && isDate) {
-			list[item.day] = 1;
-			const input  = info.type === "date" ?  "idDay" : "idDateTime";
-			const adjust = info.type === "date" ?        1 : 24*3600;
-			const output = info.type === "date" ? "dateID" : "dateTimeID";
-			const walk   = info.type === "date" ? Math.trunc(adjust * value) : Number((adjust * value).toFixed(3));
-			const id     = this[input].apply(this, list) - adjust;
-			return this[output](id + walk);
-		}
-		/*-- MÊS --*/
-		if (name === "month" && isDate) {
-			const input  = info.type === "date" ?  "idDay" : "idDateTime";
-			const output = info.type === "date" ? "dateID" : "dateTimeID";
-			const data   = this.deltaMonth(list[item.year], Math.trunc(value));
-			const days   = [0,31,this.leap(data.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][data.M];
-			list[item.year]  = data.Y;
-			list[item.month] = data.M;
-			if (value%1 === 0)
-				list[item.day] = list[item.day] > days ? days : list[item.day];
-			else
-				list[item.day] = (days + days*(value%1));
-
-//FIXME é preciso organizar a mudnaça do mês e do ano seguindo a mesma lógica do dia
-
-			console.log(list);
-			list[item.day] = list[item.day] < 0 ? 1 : list[item.day];
-
-
-			const id = this[input].apply(this, list);
-			return this[output](id);
-		}
-
-		return info;
-		/*const mult = {H: 3600, m: 60, s: 1};
-		const info = this.timeID(id);
-		info[attr] = 0;
-		const data = this.idTime(info.H, info.m, info.s);
-		const walk = (attr in mult ? mult[attr] : 0) * value;
-		return this.timeID(data + walk);*/
-	},
-
-
-
-
-/*
-		const data = {Y: 0, M: 1, D: 1, H: 0, m: 0, s: 0};
-		if (typeof input === "object")
-			for (let i in data)
-				data[i] = Number.isFinite(input[i]) ? input[i] : data[i];
-
-		if (!Number.isFinite(value)) return data;
-
-		if (name === "s") {
-			let info = this.setSeconds(value);
-			data.s  = info.s;
-			data.m += info.m;
-			data.H += info.H;
-			return this.setValues(data, "D", data.D + info.dD);
-		}
-		else if (name === "m") {
-			let info = this.setSeconds(60*value);
-			data.m  = info.m;
-			data.H += info.H;
-			return this.setValues(data, "D", data.D + info.dD);
-		}
-		else if (name === "H") {
-			let info = this.setSeconds(3600*value);
-			data.H = info.H;
-			return this.setValues(data, "D", data.D + info.dD);
-		}
-		else if (name === "D") {
-			let id   = this.idMonth(input.Y, input.M) - 1 + value;
-			let info = this.dateID(id);
-			data.D = info.D;
-			data.M = info.M;
-			data.Y = (info.P === "-" ? -1 : 1) * info.Y;
-		}
-		else if (name === "M") {
-			let info = this.deltaMonth(value);
-			data.M  = info.M;
-			data.Y += info.dY;
-		}
-		else if (name === "Y") {
-			data.Y = value;
-		}
-		return data;* /
-	},*/
-
-
-
-
-
-
-
-
 };

@@ -151,16 +151,17 @@ const __PLOT2D = {
 		};
 		plot.desc = {svg: [], curves: [], dataset: []};
 		plot.desc.svg.push(
-			`This is a graph plotted on a Cartesian plane titled "${plot.title}"`,
-			`The chart has a white background and the font is predominantly black.`,
-			`At the top of the graph is the graph title, and below it is the plotting area containing the curves.`,
-			`On the left side of the plotting area is the y-axis scale and its respective label.`,
-			`At the bottom of the plotting area is the x-axis scale and its respective label.`,
-			`The scale values ​​increase from the bottom left corner.`,
-			`On the right side of the plot is the graph legend containing the names of the curves differentiated by color.`,
-			`The x-axis (Abscissa/Horizontal) is labeled "${plot.xLabel}" and its scale (${types[plot.xType]}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.xMin, plot.xType)} to ${this.scale(plot.xMax, plot.xType)}.`,
-			`The y-axis (Ordinate/Vertical) is labeled "${plot.yLabel}" and its scale (${types[plot.yType]}) has ${this.frame.s} equal interval divisions, from ${this.scale(plot.yMin, plot.yType)} to ${this.scale(plot.yMax, plot.yType)}.`,
-			`The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}.`
+			`This image represents a Cartesian plane graph.`,
+			`By default, the image displays a light background with dark font (the display mode adopted may reverse this setting).`,
+			`At the top of the image, the graph title is displayed, centered horizontally in relation to the plotting area, showing the value "${plot.title}".`,
+			`Below the title is the plotting area containing the visual representation of the data.`,
+			`The plotting area is divided, vertically and horizontally, by ${this.frame.s} equidistant lines that mark the scale points.`,
+			`The x-axis (abscissa/horizontal) scale is located at the bottom of the plot area, and its label, named "${plot.xLabel}", is located below it, horizontally centered. The values (${types[plot.xType]}) ​​increase from left to right, from ${this.scale(plot.xMin, plot.xType).replace(/\s+/g, " ")} to ${this.scale(plot.xMax, plot.xType).replace(/\s+/g, " ")}, with subdivisions.`,
+			`The y-axis (ordinate/vertical) scale is located to the left of the plotting area, and its label, called "${plot.xLabel}," is located to its left, centered, and positioned vertically. The values (${types[plot.yType]} type) ​​increase from the bottom to the top, from ${this.scale(plot.yMin, plot.yType).replace(/\s+/g, " ")} to ${this.scale(plot.yMax, plot.yType).replace(/\s+/g, " ")}, with subdivisions.`,
+			`To the right of the plotting area, you will find the legend containing the labels that name the curves, visually identified by the same colors as the curves.`,
+			`The legend labels are click-sensitive, assigning or removing emphasis to the corresponding curve and displaying additional information about it.`,
+			`When you move the mouse cursor over the plotting area, two complementary axes (vertical and horizontal) will be displayed, intersecting at the mouse pointer's position to mark the specific point in the area.. The same behavior can be achieved using the keyboard by focusing on the plotting area.`,
+			`The chart has ${plot.yData.length} dataset${plot.yData.length > 1 ? "s" : ""}:`
 		);
 		/*-- informações sobre as curvas --*/
 		plot.yData.forEach(function(v,i,a) {
@@ -169,20 +170,16 @@ const __PLOT2D = {
 			const yMax  = __DATA2D.MAX(yList);
 			const yMin  = __DATA2D.MIN(yList);
 			plot.desc.svg.push([
-				`The curve named "${v.name}" is represented by the color "${color}" and its shape is defined as "${v.curve}".`,
+				`${i+1}) The curve named "${v.name}" is represented by the color "${color}" and its shape is defined as "${v.curve}".`,
 				v.fit === null ? "" : v.fit.desc
 			].join(" ").trim());
 			plot.desc.curves.push([
-				`-- CURVE DATA --\n`,
-				`Name:  ${v.name};\n`,
-				`Color: ${color};\n`,
-				`Shape: ${v.curve};\n`,
-				v.fit === null ? "" : `\n-- CURVE FITTING DATA --\n`,
-				v.fit === null ? "" : `Fitting: ${v.fit.t};\n`,
-				v.fit === null ? "" : `Shape:   ${v.fit.m};\n`,
-				v.fit === null ? "" : (v.fit.a === null ? "" : `a: ${v.fit.a};\n`),
-				v.fit === null ? "" : (v.fit.b === null ? "" : `b: ${v.fit.b};\n`),
-				v.fit === null ? "" : (v.fit.d === null ? "" : `σ: ${v.fit.d};\n`),
+				`${v.name}\n`,
+				v.fit === null ? "" : `${v.fit.t}\n`,
+				v.fit === null ? "" : `${v.fit.m}\n`,
+				v.fit === null ? "" : (v.fit.a === null ? "" : `a: ${v.fit.a}\n`),
+				v.fit === null ? "" : (v.fit.b === null ? "" : `b: ${v.fit.b}\n`),
+				v.fit === null ? "" : (v.fit.d === null ? "" : `σ: ${v.fit.d}\n`),
 			].join("").trim());
 			plot.desc.dataset.push([
 				`Coordinates of the dataset:`,
@@ -234,11 +231,11 @@ const __PLOT2D = {
 				tabindex: "0",
 				class: "css-wd-plot-line",
 			})
-			.desc(`When you move the mouse pointer within the plot area, two tabs, one vertical and one horizontal, will intersect at the pointer's position to dynamically display the x and y coordinates. The same behavior can be manipulated via the keyboard by focusing on the plot area.`, {lang: "en-US"})
-			.last;
-			plot.svg.last.addEventListener("focusin", this);
-			plot.svg.last.addEventListener("focusout", this);
-			plot.svg.last.addEventListener("keydown", this);
+			.desc(`Plotting area.`, {lang: "en-US"});
+		/*-- disparadores --*/
+		plot.svg.last.addEventListener("focusin",  this);
+		plot.svg.last.addEventListener("focusout", this);
+		plot.svg.last.addEventListener("keydown",  this);
 		/*-- rótulos --*/
 		plot.svg
 			.text(this.frame.xm, this.frame.h - this.frame.p, plot.xLabel, "hs")
@@ -330,23 +327,34 @@ const __PLOT2D = {
 					cursor: "pointer",
 				})
 				.title(v.name)
-				.desc("Displays and hides curve detail.", {lang: "en-US"});
+				.desc("Enables/Disables curve highlighting.", {lang: "en-US"});
+			/*-- disparadores --*/
 			plot.svg.last.addEventListener("click", this);
 			plot.svg.last.addEventListener("keydown", this);
 			/*-- curva --*/
 			plot.svg
 				.path(this.svgPath(main, v.curve))
 				.attribute(attr[v.curve](v.color))
-				.attribute({id: plot.id.curve[i].curve, "aria-labelledby": plot.id.curve[i].legend, role: "img", cursor: "help"})
+				.attribute({
+					id: plot.id.curve[i].curve,
+					role: "img",
+					"aria-labelledby": plot.id.curve[i].legend,
+					cursor: "help"
+				})
 				.title(v.name)
-				.desc(plot.desc.dataset[i], {lang: "en-US"});
+				.desc("Ordinary Curve", {lang: "en-US"});
 			/*-- ajuste --*/
 			if (v.fit !== null) plot.svg
 				.path(this.svgPath(this.convert(plot, v.fit.data), v.fit.curve))
 				.attribute(attr[v.fit.curve](v.color))
-				.attribute({id: plot.id.curve[i].fit, role: "img", "aria-labelledby": plot.id.curve[i].legend, cursor: "help"})
-				.title(`${v.name}:\n${v.fit.v}`)
-				.desc(v.fit.desc, {lang: "en-US"});
+				.attribute({
+					id: plot.id.curve[i].fit,
+					role: "img",
+					"aria-labelledby": plot.id.curve[i].legend,
+					cursor: "help"
+				})
+				.title(`${v.name}\n${v.fit.v}`)
+				.desc("Fitted Curve", {lang: "en-US"});
 			/*-- detalhes --*/
 			plot.svg
 				.text(this.frame.xi + this.frame.p, this.frame.yi + this.frame.p, plot.desc.curves[i], "hnw")
@@ -358,7 +366,7 @@ const __PLOT2D = {
 					lang: "en-US",
 					"font-family": "math monospace",
 				})
-				.desc("Information about the curve.");
+				.desc("Curve Information");
 		}, this);
 		return;
 	},
