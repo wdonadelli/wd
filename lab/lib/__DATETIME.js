@@ -444,21 +444,26 @@ const __DATETIME = {
 		if (Number.isInteger(Y)) date.setUTCFullYear(Y);
 		return isNaN(date.getDate()) ? null : date;
 	},
-	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos métodos do objeto nativo '{Date}.**/
-	locale: function(flag) {
+	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}[href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options" target="_blank"] do objeto nativo '{Date}.**/
+	locale: function(flag, cfg) {
+		const data = typeof cfg === "object" && cfg !== null ? cfg : {};
 		const date = this.nativeDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
-		const data = {timeZone: "UTC", era: date.getUTCFullYear() < 1 ? "short" : undefined};
-		if (date === null)
-			return flag.string;
-		if (flag.type === "month")
-			return date.toLocaleDateString(__LANG.value, Object.assign({month: "numeric", year: "numeric"}, data));
-		if (flag.type === "date")
-			return date.toLocaleDateString(__LANG.value, data);
-		if (flag.type === "time")
-			return date.toLocaleTimeString(__LANG.value, data);
-		if (flag.type === "datetime")
-			return date.toLocaleString(__LANG.value, data);
-		return flag.string;
+		const type = flag.type === "datetime" || flag.type === "time" ? flag.type : "date";
+		const attr = {date: "toLocaleDateString", time: "toLocaleTimeString", datetime: "toLocaleString"};
+		const none = {
+			date: /^(hour|minute|second|dayPeriod|fractionalSecondDigits|timeZoneName|hour12|hourCycle|timeStyle)$/,
+			time: /^(day|month|year|weekday|era|calendar|dateStyle)$/
+		};
+		if (date === null) return flag.string;
+		/*-- opções padrão --*/
+		data.timeZone = !("timeZone" in data) ? "UTC" : data.timeZone;
+		data.era      = !("era" in data) && date.getUTCFullYear() < 1 ? "short" : data.era;
+		/*-- apagar configurações desconexas --*/
+		if (type !== "datetime") {
+			for (let i in data)
+				if (none[type].test(i)) delete data[i];
+		}
+		return date[attr[type]](__LANG.value, data);
 	},
 	/**. '{integer workDaysYear(integer year, integer month, integer day)}: Retorna os dias úteis desde o dia 2 de janeiro.**/
 	workDaysYear: function(year, month, day) {
@@ -537,76 +542,6 @@ const __DATETIME = {
 		const data = Object.assign({}, date, time);
 		data.type  = "datetime";
 		return this.dateTimeAdjustment(data);
-	},
-	/**. '{void random(string type)}: Executa teste nos métodos que traduzem números em tempo '{type}.**/
-	random: function(type) {
-		const conf = {
-			time:     {bit: 16, name: "timeID"},
-			date:     {bit: 16, name: "dateID"},
-			datetime: {bit: 32, name: "dateTimeID"},
-		};
-		const attr = type in conf ? conf[type] : conf.datetime;
-		const list = __MATH.crypto(attr.bit, 10000, false);
-		for (let i = 0; i < list.length; i++) {
-			/*-- obter e checar de id para string --*/
-			let fromInt = this[attr.name](list[i]);
-			if (fromInt === null)
-				throw new Error(`${attr.name} Error: ${list[i]} > null (${i})`);
-			/*-- retornar de string para id --*/
-			let fromStr = this.match(fromInt.string);
-			if (fromStr === null)
-				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > null (${i})`);
-			/*-- comparar a coerência --*/
-			if (list[i] !== fromStr.value)
-				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > ${fromStr.value} (${fromStr.value - list[i]})`);
-		}
-		return null;
-	},
-	/**. '{void wrandom()}: Executa teste nos métodos que traduzem datas em semanas.**/
-	wrandom: function() {
-		const list = __MATH.crypto(16, 10000, false);
-		for (let i = 0; i < list.length; i++) {
-			let flag = this.dateID(list[i]);
-			let week = this.weekDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
-			let date = this.match(week);
-			if (date.value !== flag.value)
-				throw new Error(`Week Error: ${flag.string} > ${week} > ${date.string})`);
-		}
-		return null;
-	},
-	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
-	linear: function(min, max) {
-		const walker = {
-			Y: 0, M: 0, D: 0, d: 0, value: 0, end: 0,
-			get last() {return [31,__DATETIME.leap(this.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][this.M - 1];},
-			check: function() {
-				const flag = __DATETIME.dateID(this.value);
-				if (
-					flag.D !== this.D || flag.M !== this.M || flag.Y !== Math.abs(this.Y) || flag.d !== this.d || flag.value !== this.value
-				) throw new Error(`\nflag:\n\t${JSON.stringify(flag)}\nwalker:\n\t${JSON.stringify(this)}`);
-			},
-			next: function() {
-				const last = this.last;
-				this.Y = this.D === last && this.M === 12 ? this.Y + 1 : this.Y;
-				this.M = this.D === last ? (this.M === 12 ? 1 : this.M + 1) : this.M;
-				this.D = this.D === last ? 1 : this.D + 1;
-				this.d = this.d === 7 ? 1 : this.d + 1;
-				this.value++;
-				return this.value <= this.end;
-			},
-			start: function(min, max) {
-				const flag = __DATETIME.dateID(max >= min ? min : max);
-				this.end   = max >= min ? max : min;
-				this.value = flag.value;
-				this.Y = flag.P === "-" ? -flag.Y : flag.Y;
-				this.M = flag.M;
-				this.D = flag.D;
-				this.d = flag.d;
-				while(this.next()) this.check();
-				return null;
-			}
-		};
-		return walker.start(min, max);
 	},
 	/**. '{object delta(object flag, string walk)}: Desloca o tempo de '{flag} conforme especificado em '{walk} e retorna uma nova '{flag} redefinida:
 	- '{walk} é uma string que define o tempo a ser deslocado;
