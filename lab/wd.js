@@ -1023,7 +1023,7 @@ const wd = (function() {
 		if (arguments.length === 0)
 			input = [];
 		else if (arguments.length > 1)
-			input = Array.prototype.slice.call(arguments);
+			input = Array.from(arguments);
 		else
 			input = __Type(arguments[0]).array ? arguments[0] : [arguments[0]];
 
@@ -1143,7 +1143,7 @@ const wd = (function() {
 		check: {
 			value: function() {
 				if (arguments.length === 0) return false;
-				const list = Array.prototype.slice.call(arguments);
+				const list = Array.from(arguments);
 				for (let i = 0; i < list.length; i++)
 				  if (this._value.indexOf(list[i]) < 0) return false;
 				return true;
@@ -1161,7 +1161,7 @@ const wd = (function() {
 		/**. '{array hide(any  ...)}: Retorna uma lista ignorando os valores informados como argumento.**/
 		hide: {
 			value: function() {
-				const hide = Array.prototype.slice.call(arguments);
+				const hide = Array.from(arguments);
 				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
@@ -1276,7 +1276,7 @@ const wd = (function() {
 		/**. '{array toggle(any  ...)}: Remove, se existente, ou insere ao fim, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
-				const tgl  = Array.prototype.slice.call(arguments);
+				const tgl  = Array.from(arguments);
 				for (let i = 0; i < tgl.length; i++) {
 					if (this._value.indexOf(tgl[i]) < 0)
 					  this.add(tgl[i]);

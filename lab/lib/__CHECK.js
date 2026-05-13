@@ -13,7 +13,7 @@ const __CHECK = {
 	reEmail: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 	/**. '{array nodes(any list)}: Transforma uma lista de nós em array.**/
 	nodes: function(list) {
-		return Array.prototype.slice.call(list).filter(function(v,i,a) {return v.nodeType === 1;});
+		return Array.from(list).filter(function(v,i,a) {return v.nodeType === 1;});
 	},
 	/**. '{object String(any input)}: Retorna os dados da String.**/
 	String: function(input) {

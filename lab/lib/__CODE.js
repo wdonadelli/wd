@@ -233,6 +233,7 @@ const __CODE = {
 		data.jsRule  = {init: `"use strict"`, close: /./, look: "css-wd-code-rule", rules: []};
 		data.jsValue = {init: /(false|null|true|undefined|NaN|Infinity|\d+n)(?!\w)/, close: /./, look: "css-wd-code-value", rules: []};
 		data.jsName  = {init: /(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|throw|try|typeof|var|void|while|with|let|static|yied|await|async|this)(?!\w)/, close: /./, look: "css-wd-code-name", rules: []};
+		//FIXME acho que tem um erro na proxima regexp ":?"?
 		data.jsRegex = {init: /\/(?:\[(:?\\\]|[^\]])*\]|\\.|[^/])*\/[gimuy]?/i, close: /./, look: "css-wd-code-value", rules: []};
 		type.JS = [data.jsRule, data.quotes, data.quote, data.string, data.lineComment, data.blockComment, data.number, data.jsValue, data.jsName, data.jsRegex];
 

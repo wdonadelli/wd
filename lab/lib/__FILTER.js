@@ -7,7 +7,7 @@ const __FILTER = {
 	/**. '{node mark(string text)}: Retorna a tag de marcação com o texto a ser renderizado.**/
 	mark: function(text) {return __HTML("mark", {className: "css-wd-filter", textContent: text});},
 	/**. '{node marks(node node)}: Retorna todas as tags de marcação dentro do nó.**/
-	marks: function(node) {return Array.prototype.slice.call(node.querySelectorAll(".css-wd-filter"));},
+	marks: function(node) {return Array.from(node.querySelectorAll(".css-wd-filter"));},
 	/**. '{array textNodes(node node)}: Retorna uma lista de nós de texto.**/
 	textNodes: function(node) {
 		const list = node.childNodes;
@@ -168,7 +168,7 @@ const __FILTER = {
 		const empty = size === 0 && find === "";
 		const short = typeof find === "string" && find.length < Math.abs(size);
 		this.marks(node).forEach(function(v,i,a) {return this.tagText(v);}, this);
-		Array.prototype.slice.call(node.children).forEach(function(v,i,a) {
+		Array.from(node.children).forEach(function(v,i,a) {
 			v.hidden = empty ? false : (short ? size < 0 : false);
 			if (empty) {
 				v.hidden = false;

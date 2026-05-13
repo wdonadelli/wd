@@ -176,7 +176,7 @@ const __MOVE = {
 	},
 	/**. '{void data(object ev)}: Retorna os dados envolvendo manipulador ou nulo.**/
 	data: function(ev) {
-		const list = Array.prototype.slice.call(ev.currentTarget.children);
+		const list = Array.from(ev.currentTarget.children);
 		const item = list.indexOf(ev.target);
 		return {
 			node: ev.currentTarget.parentElement,

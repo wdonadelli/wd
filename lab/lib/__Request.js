@@ -5,7 +5,7 @@ O constructor '{__Request} tem o objetivo de efetuar a{requisições Web}[href="
 |url|Alvo da requisição ou da leitura, não necessariamente uma URL, é obrigatória.|
 |call|Função que define o disparador a ser chamado a cada interação.|
 |type|O tipo da resposta de retorno|
-A propriedade '{type} substitui os seguintes propriedades ou métodos:
+A propriedade '{type} substitui as seguintes propriedades ou métodos:
 |Valor|send (responseType)|read|fetch|
 |text|text|readAsText|text|
 |buffer|arraybuffer|readAsArrayBuffer|arrayBuffer|

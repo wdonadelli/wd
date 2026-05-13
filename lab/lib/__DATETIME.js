@@ -77,7 +77,7 @@ const __DATETIME = {
 		{flag: {P: 1, D: 2, M: 3, Y: 4}, type: "date", model: "(P)(D) (MMMM) (YYYY)"},
 		{flag: {P: 1, D: 3, M: 2, Y: 4}, type: "date", model: "(P)(MMM) (D) (YYYY)"},
 		{flag: {P: 1, D: 3, M: 2, Y: 4}, type: "date", model: "(P)(MMMM) (D) (YYYY)"},
-		/*-- meses numéricos --*/
+		/*-- meses numéricos --*/ //TODO remover esse tipo de formato para entrar no __CHECK? não, preciso disso para o __FORM
 		{flag: {P: 1, M: 3, Y: 2}, type: "month", model: "(P)(YYYY)-(MM)"},
 		{flag: {P: 1, M: 2, Y: 3}, type: "month", model: "(P)(MM)/(YYYY)"},
 		{flag: {P: 1, M: 2, Y: 3}, type: "month", model: "(P)(MM)-(YYYY)"},
@@ -326,7 +326,7 @@ const __DATETIME = {
 		if (data.type === "month" && !this.month(data))
 			return null;
 		/*-- complemento --*/
-		data.locale  = this.locale(data);
+		data.locale  = this.locale(data, data.type === "month" ? {month: "long", year: "numeric"} : {});
 		data.default = data.string;
 		return data;
 	},

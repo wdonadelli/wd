@@ -6,7 +6,7 @@ const __HASH = {
 	/**. '{array fixed}: Retorna uma lista de nós com posicionamento fixo a '{body}.**/
 	get fixed() {
 		const css   = "body > :not([data-js-wd-window])";
-		const query = Array.prototype.slice.call(document.querySelectorAll(css));
+		const query = Array.from(document.querySelectorAll(css));
 		return query.filter(function(node,i,a) {
 			const style = window.getComputedStyle(node, null);
 			return style.position === "fixed";

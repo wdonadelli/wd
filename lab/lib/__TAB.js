@@ -119,7 +119,7 @@ const __TAB = {
 	},
  	/**. '{void keydown(object ev)}: Manipulador para navegar pelas abas pelo teclado.**/
 	keydown: function (ev) {
-		const tabs = Array.prototype.slice.call(ev.currentTarget.children);
+		const tabs = Array.from(ev.currentTarget.children);
 		const item = tabs.indexOf(ev.target);
 		const jump = {
 			ArrowDown:  item + 1, ArrowUp:   item - 1, Home: 0,

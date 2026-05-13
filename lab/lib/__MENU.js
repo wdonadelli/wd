@@ -231,7 +231,7 @@ const __MENU = {
 	keydown: function(ev) {
 		const item  = ev.target.parentElement;
 		const menu  = item.parentElement;
-		const list  = Array.prototype.slice.call(menu.children);
+		const list  = Array.from(menu.children);
 		const index = list.indexOf(item);
 		const width = list.length;
 		if (ev.key === "Home")

@@ -102,7 +102,7 @@ const __SETHTML = {
 	|remove|Adiciona os valores separados por espaço|
 	Se não for objeto chama o método '{className}. Todos os valores das propriedades são string.**/
 	classList: function(node, value) {
-		const check = __CHECK.test(value);
+		const check = __CHECK.match(value);
 		if (check.type === "object") {
 			const prop = ["replace", "toggle", "add", "remove"];
 			const name = node.getAttribute("class");
