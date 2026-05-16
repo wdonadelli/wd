@@ -25,6 +25,9 @@ const __LOADER = {
 		const html = this.model[node.id];
 		const find = /\{\{([^}]+)\}\}/g;
 		const load = [];
+
+		setTimeout(function() {
+
 		/*-- clonando e substituindo --*/
 		list.forEach(function(v,i,a) {
 			if (v === null || typeof v !== "object") return;
@@ -37,6 +40,9 @@ const __LOADER = {
 		/*-- encerrando --*/
 		__HTML(node, {innerHTML: load.join("\n")});
 		node.setAttribute("aria-busy", "false");
+
+		},1);
+
 		return;
 	},
 	/**. '{string fileType(object headers)}: Retorna o tipo de arquivo informado no cabeçalho da requisição ou nulo.**/
@@ -51,40 +57,19 @@ const __LOADER = {
 		}
 		return null;
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/**. '{object fileRepeat(node node, object http)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV), e retornando a instância do contrutor '{__Request}. Os dados da requisição são definidos pelo argumento '{http}.**/
 	fileRepeat: function(node, http) {
 		if (http === null || typeof http !== "object") return null;
 		http.type = "text";
 		http.call = function(x) {
 			if (x.ok)
-				switch(__LOADER.fileType(x.headers)) {
-					case "json": return __LOADER.repeat(node, JSON.parse(x.response));
-					case "csv":  return __LOADER.repeat(node, __CSV.list(x.response));
-					default:     return __LOADER.repeat(node, []);
-				}
+				try {
+					switch(__LOADER.fileType(x.headers)) {
+						case "json": return __LOADER.repeat(node, JSON.parse(x.response));
+						case "csv":  return __LOADER.repeat(node, __CSV.parseList(x.response));
+						default:     return __LOADER.repeat(node, []);
+					}
+				} catch(e) {__LOADER.repeat(node, []);};
 			return;
 		};
 		return new __Request(http);

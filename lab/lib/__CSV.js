@@ -14,8 +14,10 @@ O objeto '{__CVS} tem por objetivo trabalhar com dados tabulares em texto ([CSV]
 - o primeiro caractere após o primeiro campo do primeiro registro empacotado por aspas será o delimitador; e
 - na situação anterior, outros caracteres poderão ser utilizados como delimitadores de campo;**/
 const __CSV = {
-	/**. '{array parse(string csv)}: Decodifica a entrada CSV para uma matriz 2x2:**/
-	parse: function(csv) {
+	/**. '{array parse(string csv)}: Retorna o resultado do método '{parseMatrix}.**/
+	parse: function(csv) {return this.parseMatrix(csv);},
+	/**. '{array parseMatrix(string csv)}: Decodifica a entrada CSV e retorna uma matriz 2x2.**/
+	parseMatrix: function(csv) {
 		const reader = {
 			re: {
 				quote:  /^\'((?:\'\'|[^'])*)(?:\'|$)/,
@@ -77,9 +79,9 @@ const __CSV = {
 		while(reader.next());
 		return reader.result();
 	},
-	/**. '{array list(string csv)}: Decodifica a entrada CSV para uma lista de objetos. Os nomes dos objetos correspondem ao título da coluna (primeira linha) e os valores às informações da respectiva coluna na linha específica. Evitar títulos repetidos para as colunas.**/
-	list: function(csv) {
-		const grid = this.parse(csv);
+	/**. '{array parseList(string csv)}: Decodifica a entrada CSV e retorna uma lista de objetos. Os nomes dos objetos correspondem ao título da coluna (primeira linha) e os valores às informações da respectiva coluna na linha específica. Evitar títulos repetidos para as colunas.**/
+	parseList: function(csv) {
+		const grid = this.parseMatrix(csv);
 		const list = [];
 		const head = {};
 		for (let row = 1; row < grid.length; row++) {
@@ -91,62 +93,147 @@ const __CSV = {
 		}
 		return list;
 	},
-	/**. '{node table(string csv, boolean head, boolean foot)}: Decodifica a entrada CSV para uma tabela HTML:
+	/**. '{node parseTable(string csv, boolean head, boolean foot, boolean line, string caption)}: Decodifica a entrada CSV e retorna uma tabela HTML:
 	|Argumento|Descrição|Padrão|
 	|'{head}|Se verdadeiro, o primeiro registro será o cabeçalho da tabela|'{true}|
-	|'{foot}|Se verdadeiro, o último registro será o rodapé da tabela|'{false}|**/
-	table: function(csv, head, foot) {
-		const grid  = this.parse(csv);
+	|'{foot}|Se verdadeiro, o último registro será o rodapé da tabela|'{false}|
+	|'{line}|Se verdadeiro, a primeira célula de cada linha do corpo da tabela será o título da linha|'{false}|
+	|'{caption}|Se definido, a tabela conterá uma legenda||**/
+	parseTable: function(csv, head, foot, line, caption) {
+		/*-- ajustando argumentos --*/
+		head = head !== false;
+		foot = foot === true;
+		line = line === true;
+		caption = typeof caption === "string" ? caption : null;
+		/*-- constantes --*/
+		const grid  = this.parseMatrix(csv);
 		const table = document.createElement("table");
 		/*-- containers --*/
-		if (head !== false) table.appendChild(document.createElement("thead"));
-												table.appendChild(document.createElement("tbody"));
-		if (foot === true)  table.appendChild(document.createElement("tfoot"));
+		if (head)
+			table.createTHead();
+		table.createTBody();
+		if (foot)
+			table.createTFoot();
+		if (caption !== null)
+			table.createCaption().textContent = caption;
 		/*-- linhas e colunas --*/
-		let td, tr;
+		let td, tr, th, node, type;
 		for (let row = 0; row < grid.length; row++) {
-			tr = document.createElement("tr");
+			/*-- linha --*/
+			tr   = document.createElement("tr");
+			type = (row === 0 && head) ? "head" : ((row === grid.length - 1 && foot) ? "foot" : "body");
+			node = type === "head" ? table.tHead : (type === "foot" ? table.tFoot : table.tBodies[0]);
+			node.appendChild(tr);
+			/*-- colunas --*/
 			for (let col = 0; col < grid[row].length; col++) {
-				td = document.createElement(row === 0 && table.tHead !== null ? "th" : "td");
+				th = type === "head" ? "col" : (type === "body" && col === 0 && line ? "row" : null)
+				td = document.createElement(th === null ? "td" : "th");
 				td.textContent = grid[row][col];
+				if (th !== null) td.scope = th;
 				tr.appendChild(td);
 			}
-			if (row === 0 && table.tHead !== null)
-				table.tHead.appendChild(tr);
-			else if (row === grid.length - 1 && table.tFoot !== null)
-				table.tFoot.appendChild(tr);
-			else
-				table.tBodies[0].appendChild(tr);
 		}
 		return table;
 	},
-
 	/**. '{string stringify(any data)}: Codifica uma matriz 2x2 ou uma tabela em código CSV.**/
 	stringify: function(data) {
-
-
-
-
+		if (Array.isArray(data) && Array.isArray(data[0]))
+			return this.matrixCSV(data);
+		if (Array.isArray(data) && typeof data[0] === "object" && data[0] !== null)
+			return this.matrixCSV(this.listMatrix(data));
+		if (data instanceof HTMLTableElement)
+			return this.matrixCSV(this.tableMatrix(data));
+		return "";
 	},
-
-
-
-	matrix: function(table) {
-		if (!(table instanceof HTMLTableElement)) return null;
-		/*-- ajustando span --*/
-		Array.from(table.rows).forEach(function(row,r,list) {
-
-
-
-
-
+	/**. '{string matrixCSV(array matrix)}: Codifica uma matriz 2x2 em código CSV.**/
+	matrixCSV: function(matrix) {
+		let max = 0;
+		/*-- filtrando apenas itens array --*/
+		return matrix.filter(function(v,i,a) {
+			const check = Array.isArray(v);
+			max = check && v.length > max ? v.length : max;
+			return check;
+		})
+		/*-- codificando para CSV --*/
+		.map(function(row,r,ROW) {
+			while(row.length < max) row.push("");
+			return '"' + row.map(function(col,c,COL) {
+				return String(col).replace(/\"/g, '""');
+			}).join('","') + '"';
+		}).join("\r\n");
+	},
+	/**. '{string listMatrix(array list)}: Transforma uma lista de objetos em matriz 2x2.**/
+	listMatrix: function(list) {
+		const matrix = [[]];
+		/*-- capturando cabeçalho e filtrando objetos --*/
+		list.filter(function(v,i,a) {
+			if (typeof v === "object" && v !== null) {
+				for (let name in v) {
+					if (matrix[0].indexOf(name) < 0)
+						matrix[0].push(name);
+				}
+				return true;
+			}
+			return false;
+		})
+		/*-- capturando células --*/
+		.forEach(function(v,i,a) {
+			if (i > 0) {
+				const col = Array(matrix[0].length).fill("");
+				for (let name in v)
+					col[matrix[0].indexOf(name)] = v[name];
+				matrix.push(col);
+			}
 		});
-
-
-		/*-- retornando matriz --*/
-		return Array.from(table.rows).map(function(row,r,ROW) {
-			return Array.from(row.cells).map(function(cell,c,CELL) {
-				return cell.textContent;
+		return matrix;
+	},
+	/**. '{node tableAdjust(node table)}: Retorna uma cópia tabela HTML eliminando os efeitos dos atributos '{rowSpan} e '{colSpan}.**/
+	tableAdjust: function(table) {
+		const matrix = table.cloneNode(true);
+		/*-- número máximo de colunas --*/
+		const limit  = Array.from(matrix.rows).reduce(function(num,row,r,ROW) {
+			let col = row.cells;
+			let len = -1;
+			while(++len < col.length)
+				if (col[len].colSpan > 1) return num;
+			return len > num ? len : num;
+		}, 0);
+		/*-- ajustando colSpan --*/
+		Array.from(matrix.rows).forEach(function(row,r,ROW) {
+			Array.from(row.cells).forEach(function(col,c,COL) {
+				while (col.colSpan > 1) {
+					let td = col.cloneNode();
+					td.colSpan = 1;
+					/*-- não adicionando colunas além do limite --*/
+					if (limit === 0 || row.childElementCount < limit)
+						(col.nextElementSibling === null ? row.appendChild(td) : row.insertBefore(td, col.nextElementSibling));
+					col.colSpan--;
+				}
+			});
+		});
+		/*-- ajustando rowSpan --*/
+		Array.from(matrix.rows).forEach(function(row,r,ROW) {
+			Array.from(row.cells).forEach(function(col,c,COL) {
+				/*-- não adicionar linhas além das já existentes --*/
+				if (col.rowSpan > 1) {
+					const td = col.cloneNode();
+					const tr = row.nextElementSibling;
+					td.rowSpan  = col.rowSpan - 1;
+					col.rowSpan = 1;
+					/*-- não adicionando linhas além do limite --*/
+					if (tr !== null)
+						tr.insertBefore(td, tr.children[c === 0 ? 0 : c]);
+				}
+			});
+		});
+		return matrix;
+	},
+	/**. '{array tableMatrix(node table, boolean text)}: Transforma as células de um tabela HTML em matriz 2x2. O argumento '{text}, se falso, definirá como valor o nó da célula no lugar de seu conteúdo textual.**/
+	tableMatrix: function(table, text) {
+		const matrix = this.tableAdjust(table);
+		return Array.from(matrix.rows).map(function(row,r,ROW) {
+			return Array.from(row.cells).map(function(col,c,COL) {
+				return text === false ? col : col.textContent;
 			});
 		});
 	},
@@ -172,64 +259,9 @@ const __CSV = {
 
 
 
-	/**. '{object tableMatrix}: Transforma tabela HTML em matriz 2x2.**/
-	tableMatarix: {
-		get: function() {
-			if ("tableMatrix" in this._saved)
-				return new __Parser(this._saved.tableMatrix);
-			let data = null;
-			if (this._table) {
-				const matrix = Array.from(this._data.rows);
-				for (let i = 0; i < matrix.length; i++)
-				  matrix[i] = Array.from(matrix[i].cells);
-				data = matrix;
-			}
-			this._saved["tableMatrix"] = data;
-			return this.tableMatrix;
-		}
-	},
-	/**. '{object tableValues}: Igual à propriedade '{tableMatrix}, mas exibindo os valores das células.**/
-	tableValues: {
-		get: function() {
-			if ("tableValues" in this._saved)
-				return new __Parser(this._saved.tableValues);
-			let data = this.tableMatrix.get();
-			if (data !== null) {
-				for (let i = 0; i < data.length; i++)
-					for (let j = 0; j < data[i].length; j++)
-						data[i][j] = data[i][j].innerText;
-			}
-			this._saved["tableValues"] = data;
-			return this.tableValues;
-		}
-	},
-	/**. '{object matrixCSV}: Transforma uma matriz em string CSV.**/
-	matrixCSV: {
-		get: function() {
-			if ("matrixCSV" in this._saved)
-				return new __Parser(this._saved.matrixCSV);
-			let data = null;
-			if (this._check.array) {
-				try {
-					const csv = [];
-					this._data.forEach(function (row,i,a) {
-						csv.push([]);
-						row.forEach(function (col,j,b) {
-							let text = String(col).replace(/\"/g, "''");
-							csv[i].push("\"" + text + "\"");
-						});
-						csv[i] = csv[i].join(",");
-					});
-					data = csv.join("\r\n");
-				} catch(e) {}
-			}
-			this._saved["matrixCSV"] = data;
-			return this.matrixCSV;
-		}
-	},
 
 
-
+//FIXME o que fazer com esses métodos?
 	/**. '{object fileURL}: Transforma dados em string URL.**/
 	fileURL: {
 		get: function() {
