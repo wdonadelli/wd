@@ -290,9 +290,6 @@ const __CSV = {
 			return this.dataBlob;
 		}
 	},
-
-
-
 	//FIXME não funciona, tem que estar fora de um objeto
 	/**. '{void mixin(object supplier, array exceptions)}: Cópia as propriedades do __objeto__ definido em '{supplier} para o __objeto__ de entrada, exceto aquelas propriedades listadas em '{exceptions}.**/
 	mixin: {

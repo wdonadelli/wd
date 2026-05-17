@@ -77,7 +77,7 @@ const __DATETIME = {
 		{flag: {P: 1, D: 2, M: 3, Y: 4}, type: "date", model: "(P)(D) (MMMM) (YYYY)"},
 		{flag: {P: 1, D: 3, M: 2, Y: 4}, type: "date", model: "(P)(MMM) (D) (YYYY)"},
 		{flag: {P: 1, D: 3, M: 2, Y: 4}, type: "date", model: "(P)(MMMM) (D) (YYYY)"},
-		/*-- meses numéricos --*/ //TODO remover esse tipo de formato para entrar no __CHECK? não, preciso disso para o __FORM
+		/*-- meses numéricos --*/
 		{flag: {P: 1, M: 3, Y: 2}, type: "month", model: "(P)(YYYY)-(MM)"},
 		{flag: {P: 1, M: 2, Y: 3}, type: "month", model: "(P)(MM)/(YYYY)"},
 		{flag: {P: 1, M: 2, Y: 3}, type: "month", model: "(P)(MM)-(YYYY)"},
@@ -139,7 +139,7 @@ const __DATETIME = {
 		const list = [];
 		const date = [];
 		const time = [];
-		/*-- looping pelos típos básicos --*/
+		/*-- looping pelos tipos básicos --*/
 		for (let i = 0; i < this.base.length; i++) {
 			let base  = this.base[i];
 			let data = {};
@@ -176,196 +176,35 @@ const __DATETIME = {
 		this.templates = list;
 		return;
 	},
-	/**. '{string monthName(any value, boolean short)}: Recebe o valor númerico do mês e retorna seu nome, o inverso ou nulo**/
-	monthName: function(value, short) {
+	/**. '{any name(any value, string type, boolean short)}: Retorna o valor numérico ou textual do mês ou dia.
+	|Nome|Descrição|
+	|value|Se valor numérico, retorna o nome, se valor textual, o número|
+	|type|´{month} para avaliar meses e `{day} (padrão) para avaliar dias|
+	|short|Sensível apenas no retorno de valor textual que, se verdadeiro, retornará a abreviação|**/
+	name: function(value, type, short) {
 		this.setTemplates();
-		const find = String(value).toUpperCase().trim();
-		/*-- número --*/
-		if ((/^(0?[1-9]|1[0-2])$/).test(find))
-			return this.names[short === true ? "MMM" : "MMMM"][Number(find) - 1];
-		/*-- nome --*/
-		const list = this.names.MMMM.concat(this.names.MMM).map(function(v,i,a) {return v.toUpperCase();});
-		return list.indexOf(find) < 0 ? null : list.indexOf(find)%12 + 1;
+		const find = Number.isInteger(Number(value)) ? Number(value) : String(value).normalize().toUpperCase().trim();
+		const rest = type === "month" ? 12 : 7;
+		const list = type === "month" ? this.names.MMMM.concat(this.names.MMM) : this.names.dddd.concat(this.names.ddd);
+		for (let i = 0; i < list.length/2; i++) {
+			if (list[i].toUpperCase() === find || list[i+rest].toUpperCase() === find)
+				return i + 1;
+			if (i+1 === find)
+				return list[short === true ? i+rest : i];
+		}
+		return null;
 	},
-	/**. '{integer idMonth(integer year, integer month)}: Retorna um identificador para o mês.**/
-	idMonth: function(year, month) {return 12*year + (month-1);},
-	/**. '{object monthID(integer id)}: Retorna os dados do ano '{Y} e mês '{M} a partir do identificador retornado de '{idMonth}.**/
-	monthID: function(id) {return {Y: Math.floor(id/12), M: (id%12 + (id < 0 ? 12 : 0))%12 + 1};},
-	/**. '{string dayName(any value, boolean short)}: Recebe o valor númerico do dia da semana e retorna seu nome, o inverso ou nulo**/
-	dayName: function(value, short) {
-		this.setTemplates();
-		const find = String(value).toUpperCase().trim();
-		/*-- número --*/
-		if ((/^0?[1-7]$/).test(find))
-			return this.names[short === true ? "ddd" : "dddd"][Number(find) - 1];
-		/*-- nome --*/
-		const list = this.names.dddd.concat(this.names.ddd).map(function(v,i,a) {return v.toUpperCase();});
-		return list.indexOf(find) < 0 ? null : list.indexOf(find)%7 + 1;
+	/**. '{string digits(integer num, interger n)}: Retorna o número na quantidade mínima de caracteres '{n}.**/
+	digits: function(num, n) {
+		n   = Math.trunc(Math.abs(n));
+		num = Math.trunc(num);
+		if (Math.abs(num) >= Math.pow(10, n)) return String(num);
+		return (num < 0 ? "-" : "") + (("0").repeat(n) + String(Math.abs(num))).slice(-n);
 	},
 	/**. '{boolean leap(integer year)}: Informar se o ano definido no argumento é bissexto.**/
 	leap: function(year) {
 		const y = Math.abs(year);
 		return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
-	},
-	/**. '{array dataMonth(integer year)}: Retorna uma lista de objetos contendo os dados dos meses do ano ´{year}:
-	|Propriedade|Tipo|Descrição|
-	|month|integer|Mês do ano, de 1 a 12|
-	|init|integer|Dia do ano no início do mês (a partir de 1)|
-	|last|integer|Dia do ano no término do mês (até 365 ou 366)|
-	|length|integer|Número de dias do mês|**/
-	dataMonth: function(year) {
-		return [31,this.leap(year) ? 29 : 28,31,30,31,30,31,31,30,31,30,31].map(function(v,i,a) {
-			return {
-				month:  i+1,
-				init:   a.slice(0,i+0).reduce(function(sum,v,i,a) {return sum+v;}, 0) + 1,
-				last:   a.slice(0,i+1).reduce(function(sum,v,i,a) {return sum+v;}, 0),
-				short:  this.names.MMM[i],
-				long:   this.names.MMMM[i],
-				length: v,
-			};
-		}, this);
-	},
-	/**. '{boolean date(object flag)}: Analisa e manipula a i{flag} recebida e, se a data for correta, retorna verdadeiro.**/
-	date: function(flag) {
-		/*-- chencando ano --*/
-		flag.P = flag.P === "-" ? (flag.Y === 0 ? "" : "-") : "";
-		/*-- transformando o mês --*/
-		flag.M = typeof flag.M !== "number" ? Number(this.monthName(flag.M)) : flag.M;
-		/*-- checando número máximo de dias --------------------------------------*/
-		if (flag.D > this.dataMonth(flag.Y)[flag.M - 1].length) return null;
-		/*-- dia da semana --*/
-		flag.d = this.idDay(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
-		/*-- nomes --*/
-		flag.names = {
-			MMM: this.names.MMM[flag.M - 1], MMMM: this.names.MMMM[flag.M - 1],
-			ddd: this.names.ddd[flag.d - 1], dddd: this.names.dddd[flag.d - 1]
-		}
-		/*-- value --*/
-		flag.value = this.idDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
-		/*-- string --*/
-		const width  = flag.Y < 10 ? 3 : (flag.Y < 100 ? 2 : (flag.Y < 1000 ? 1 : 0));
-		const week   = flag.type === "week";
-		flag.string  = flag.P + String("0").repeat(width) + String(flag.Y);
-		if (flag.type === "week") {
-			flag.string += "-W" + (flag.w < 10 ? "0" : "") + String(flag.w);
-			flag.string += "-" + String(flag.d === 1 ? 7 : flag.d - 1);
-		} else {
-			flag.string += "-" + (flag.M < 10 ? "0" : "") + String(flag.M);
-		}
-		if (flag.type === "date" || flag.type === "datetime") {
-			flag.string += "-" + (flag.D < 10 ? "0" : "") + String(flag.D);
-		}
-		/*-- form --*/
-		flag.form = flag.P === "-" || flag.Y < 1 ? null : (flag.type === "week" ? flag.string.replace(/\-\d$/, "") : flag.string);
-		return true;
-	},
-	/**. '{boolean month(object flag)}: Analisa e manipula a i{flag} recebida e, se o mês for correto, retorna verdadeiro.**/
-	month: function(flag) {
-		flag.D = 1;
-		return this.date(flag);
-	},
-	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings" target="_blank"] for correta, retorna verdadeiro.**/
-	week: function(flag) {
-		/*-- checando limite --*/
-		const year = flag.P === "-" ? -flag.Y : flag.Y;
-		const day  = this.idDay(year, 1, 1);
-		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
-		if (flag.w > max) return false;
-		/*-- localizando data --*/
-		const initY = [year, year, year - 1, year - 1, year - 1, year, year][day-1];
-		const initM = [1, 1, 12, 12, 12, 1, 1][day-1];
-		const initD = [2, 1, 31, 30, 29, 4, 3][day-1];
-		const delta = "d" in flag ? (flag.d - 1) : 0;
-		const find  = this.idDate(initY, initM, initD) + 7*(flag.w - 1) + delta
-		const date  = this.dateID(find);
-		flag.Y = date.Y;
-		flag.M = date.M;
-		flag.D = date.D;
-		return this.date(flag);
-	},
-	/**. '{boolean time(object flag)}: Analisa e manipula a i{flag} recebida e, se o tempo for correto, retorna verdadeiro.**/
-	time: function(flag) {
-		/*-- manipulando valores --*/
-		flag.s  = !("s" in flag)  || flag.s  === "" ? 0 : flag.s;
-		flag.l  = !("l" in flag)  || flag.l  === "" ? 0 : flag.l;
-		flag.dD = !("dD" in flag) || flag.dD === "" ? 0 : flag.dD;
-		if ("H" in flag) {
-			flag.H = flag.H%24;
-			flag.p = flag.H >= 12 ? "PM": "AM";
-			flag.h = flag.H === 0 ? 12 : flag.H - (flag.H < 13 ? 0 : 12);
-		}
-		else if ("h" in flag) {
-			flag.H = flag.h%12 + (flag.p === "PM" ? 12 : 0);
-		}
-		/*-- value --*/
-		if (flag.type === "datetime") {
-			flag.value = this.idDateTime(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
-		} else {
-			flag.value = this.idTime(flag.H, flag.m, flag.s, flag.l);
-		}
-		/*-- string -- */
-		const width  = flag.l < 10 ? 2 : (flag.l < 100 ? 1 : 0);
-		flag.string  = flag.type === "datetime" ? (flag.string + "T") : "";
-		flag.string += (flag.H < 10 ?  "0" : "") + String(flag.H) + ":";
-		flag.string += (flag.m < 10 ?  "0" : "") + String(flag.m) + ":";
-		flag.string += (flag.s < 10 ?  "0" : "") + String(flag.s) + ".";
-		flag.string += String("0").repeat(width) + String(flag.l);
-		/*-- form --*/
-		flag.form = flag.form === null ? null : flag.string.replace(/\:\d\d\.\d\d\d$/, "");
-		return true;
-	},
-	/**. '{object dateTimeAdjustment(object data)}: Recebe os dados básicos, checa, detalha e o retorna ou nulo.**/
-	dateTimeAdjustment: function(data) {
-		/*-- checagem (date deve vir antes de time por causa do datetime --*/
-		if ((data.type === "date" || data.type === "datetime") && !this.date(data))
-			return null;
-		if ((data.type === "time" || data.type === "datetime") && !this.time(data))
-			return null;
-		if (data.type === "week" && !this.week(data))
-			return null;
-		if (data.type === "month" && !this.month(data))
-			return null;
-		/*-- complemento --*/
-		data.locale  = this.locale(data, data.type === "month" ? {month: "long", year: "numeric"} : {});
-		data.default = data.string;
-		return data;
-	},
-	/**. '{object parser(string value, object match)}: Captura e retorna os dados casados ou nulo.**/
-	parser: function(value, match) {
-		const data = {type: match.type};
-		const find = String(value).match(match.re);
-		/*-- capturar dados casados --*/
-		for (let i in match.flag) {
-			let str = find[match.flag[i]] === undefined ? "" : find[match.flag[i]];
-			data[i] = str !== "" && isFinite(str) ? Number(str) : str.toUpperCase();
-		}
-		return this.dateTimeAdjustment(data);
-	},
-	/**. '{object match(string value)}: Retorna os dados da informação se '{value} casar com algum i{template}.**/
-	match: function(value) {
-		this.setTemplates();
-		const type = typeof value;
-		/*-- para o objeto padrão Date --*/
-		if (type === "object" && value instanceof Date)
-			return this.parserDate(value);
-		/*-- para tempo em forma de string --*/
-		if (type === "string" || (type === "object" && value instanceof String)) {
-			const string = String(value).trim();
-			for (let i = 0; i < this.templates.length; i++) {
-				if (this.templates[i].re.test(string))
-					return this.parser(string, this.templates[i]);
-			}
-		}
-		return null;
-	},
-	/**. '{object parserDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
-	parserDate: function(date) {
-		const data = {
-			Y: Math.abs(date.getFullYear()), M: date.getMonth() + 1, D: date.getDate(),
-			H: date.getHours(),              m: date.getMinutes(),   s: date.getSeconds(),
-			l: date.getMilliseconds(),    type: "datetime",          P: date.getFullYear() < 0 ? "-" : ""
-		};
-		return this.dateTimeAdjustment(data);
 	},
 	/**. '{integer idYear(integer year)}: Retorna o ID da data no u{primeiro dia do ano} ('{01/01/YYYY}).**/
 	idYear: function(year) {
@@ -380,6 +219,8 @@ const __DATETIME = {
 		const y100 = Math.trunc(year/100);
 		return zero + d365 + y004 - y100 + y400 - back;
 	},
+	/**. '{integer idToMonth(integer year, integer month)}: Retorna um identificador exclusivo para o mês.**/
+	idToMonth: function(year, month) {return 12*year + (month-1);},
 	/**. '{integer idDate(integer year, integer month, integer day)}: Retorna o ID de data no dia.**/
 	idDate: function(year, month, day) {
 		return this.idYear(year) + (this.dataMonth(year)[month - 1].init - 1) + (day - 1);
@@ -402,12 +243,178 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
+	/**. '{array dataMonth(integer year)}: Retorna uma lista de objetos contendo os dados dos meses do ano ´{year}:
+	|Propriedade|Tipo|Descrição|
+	|month|integer|Mês do ano, de 1 a 12|
+	|init|integer|Dia do ano no início do mês (a partir de 1)|
+	|last|integer|Dia do ano no término do mês (até 365 ou 366)|
+	|length|integer|Número de dias do mês|**/
+	dataMonth: function(year) {
+		return [31,this.leap(year) ? 29 : 28,31,30,31,30,31,31,30,31,30,31].map(function(v,i,a) {
+			return {
+				month:  i+1,
+				init:   a.slice(0,i+0).reduce(function(sum,v,i,a) {return sum+v;}, 0) + 1,
+				last:   a.slice(0,i+1).reduce(function(sum,v,i,a) {return sum+v;}, 0),
+				short:  this.names.MMM[i],
+				long:   this.names.MMMM[i],
+				length: v,
+			};
+		}, this);
+	},
+	/**. '{boolean date(object flag)}: Analisa e manipula a i{flag} recebida e, se a data for correta, retorna verdadeiro.**/
+	date: function(flag) {
+		/*-- mês --*/
+		flag.M    = typeof flag.M !== "number" ? Number(this.name(flag.M, "month")) : flag.M;
+		flag.MMM  = this.names.MMM[flag.M - 1]
+		flag.MMMM = this.names.MMMM[flag.M - 1]
+		/*-- dia --*/
+		const max = this.dataMonth(flag.Y)[flag.M - 1].length;
+		if (flag.D > max) return null;
+		flag.d    = this.idDay(flag.Y, flag.M, flag.D);
+		flag.ddd  = this.names.ddd[flag.d - 1];
+		flag.dddd = this.names.dddd[flag.d - 1];
+		/*-- valor --*/
+		flag.value = this.idDate(flag.Y, flag.M, flag.D);
+		/*-- string/form/locale --*/
+		const str = {
+			Y: this.digits(flag.Y, 4),
+			M: this.digits(flag.M, 2),
+			D: this.digits(flag.D, 2)
+		};
+		if (flag.type === "date" || flag.type === "datetime") {
+			flag.string = `${str.Y}-${str.M}-${str.D}`;
+			flag.form   = flag.Y < 1 ? null : `${str.Y}-${str.M}-${str.D}`;
+			flag.locale = this.locale(flag);
+		}
+		else if (flag.type === "month") {
+			flag.string = `${str.Y}-${str.M}`;
+			flag.form   = flag.Y < 1 ? null : `${str.Y}-${str.M}`;
+			flag.locale = this.locale(flag, {month: "long", year: "numeric"});
+		}
+		flag.default = flag.string;
+		return true;
+	},
+	/**. '{boolean month(object flag)}: Analisa e manipula a i{flag} recebida e, se o mês for correto, retorna verdadeiro.**/
+	month: function(flag) {
+		flag.D = 1;
+		return this.date(flag);
+	},
+	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings" target="_blank"] for correta, retorna verdadeiro.**/
+	week: function(flag) {
+		/*-- checando limite --*/
+		const year = flag.Y;
+		const day  = this.idDay(year, 1, 1);
+		const max  = day === 5 || (day === 4 && this.leap(flag.Y)) ? 53 : 52;
+		if (flag.w > max) return false;
+		/*-- localizando data --*/
+		const initY = [year, year, year - 1, year - 1, year - 1, year, year][day-1];
+		const initM = [1, 1, 12, 12, 12, 1, 1][day-1];
+		const initD = [2, 1, 31, 30, 29, 4, 3][day-1];
+		const delta = "d" in flag ? (flag.d - 1) : 0;
+		const find  = this.idDate(initY, initM, initD) + 7*(flag.w - 1) + delta
+		const date  = this.dateID(find);
+		const str   = {
+			Y: this.digits(flag.Y, 4),
+			w: this.digits(flag.w, 2),
+			d: String(date.d === 1 ? 7 : date.d - 1),
+		};
+		/*-- string/form --*/
+		flag.string = `${str.Y}-W${str.w}-${str.d}`;
+		flag.form   = flag.Y < 0 ? null : `${str.Y}-W${str.w}`;
+		/*-- redefinindo para a data --*/
+		flag.Y = date.Y;
+		flag.M = date.M;
+		flag.D = date.D;
+		/*-- locale --*/
+		flag.locale = this.locale(flag, {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+		return this.date(flag);
+	},
+	/**. '{boolean time(object flag)}: Analisa e manipula a i{flag} recebida e, se o tempo for correto, retorna verdadeiro.**/
+	time: function(flag) {
+		/*-- variação de dias --*/
+		flag.dD = !("dD" in flag) || flag.dD === "" ? 0 : flag.dD;
+		/*-- hora --*/
+		if ("H" in flag) {
+			flag.H = flag.H%24;
+			flag.p = flag.H >= 12 ? "PM": "AM";
+			flag.h = flag.H === 0 ? 12 : flag.H - (flag.H < 13 ? 0 : 12);
+		}
+		else if ("h" in flag) {
+			flag.H = flag.h%12 + (flag.p === "PM" ? 12 : 0);
+		}
+		/*-- segundos, milissegundos --*/
+		flag.s  = !("s" in flag) || flag.s  === "" ? 0 : flag.s;
+		flag.l  = !("l" in flag) || flag.l  === "" ? 0 : flag.l;
+		/*-- value --*/
+		if (flag.type === "datetime")
+			flag.value = this.idDateTime(flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
+		else
+			flag.value = this.idTime(flag.H, flag.m, flag.s, flag.l);
+		/*-- string/form/locale -- */
+		const str = {
+			H: this.digits(flag.H, 2),
+			m: this.digits(flag.m, 2),
+			s: this.digits(flag.s, 2),
+			l: this.digits(flag.l, 3),
+		};
+		const date   = flag.type === "datetime";
+		const form   = !date || flag.Y > 0;
+		flag.string  = `${date ? (flag.string + "T") : ""}${str.H}:${str.m}:${str.s}.${str.l}`;
+		flag.form    = form ? `${date ? (flag.form + "T") : ""}${str.H}:${str.m}` : null;
+		flag.locale  = this.locale(flag);
+		flag.default = flag.string;
+		return true;
+	},
+	/**. '{boolean datetime(object flag)}: Analisa e manipula a i{flag} recebida e, se o data/tempo for correto, retorna verdadeiro.**/
+	datetime: function(flag) {
+		return this.date(flag) && this.time(flag);
+	},
+	/**. '{object parser(string value, object match)}: Captura e retorna os dados casados ou nulo.**/
+	parser: function(value, match) {
+		const data = {type: match.type};
+		const find = String(value).match(match.re);
+		/*-- capturar dados casados --*/
+		for (let i in match.flag) {
+			let str = find[match.flag[i]] === undefined ? "" : find[match.flag[i]];
+			data[i] = str !== "" && isFinite(str) ? Number(str) : str.toUpperCase();
+		}
+		/*-- eliminando influência de P --*/
+		if ("Y" in data)
+			data.Y = data.P === "-" ? -data.Y : data.Y;
+		/*-- retornando valores --*/
+		return this[data.type](data) ? data : null;
+	},
+	/**. '{object parserDate(object date)}: Retorna a mesma informação do método '{match} mas a partir da instância de '{Date}.**/
+	parserDate: function(date) {
+		const data = {
+			Y: date.getFullYear(),     M: date.getMonth() + 1, D: date.getDate(),
+			H: date.getHours(),        m: date.getMinutes(),   s: date.getSeconds(),
+			l: date.getMilliseconds(), type: "datetime",       P: date.getFullYear() < 0 ? "-" : ""
+		};
+		return this.datetime(data) ? data : null;
+	},
+	/**. '{object match(string value)}: Retorna os dados da informação se '{value} casar com algum i{template}.**/
+	match: function(value) {
+		this.setTemplates();
+		const type = typeof value;
+		/*-- para o objeto padrão Date --*/
+		if (type === "object" && value instanceof Date)
+			return this.parserDate(value);
+		/*-- para tempo em forma de string --*/
+		if (type === "string" || (type === "object" && value instanceof String)) {
+			const string = String(value).trim();
+			for (let i = 0; i < this.templates.length; i++) {
+				if (this.templates[i].re.test(string))
+					return this.parser(string, this.templates[i]);
+			}
+		}
+		return null;
+	},
 	/**. '{string weekDate(integer year, integer month, integer day)}: Retorna a representação ISO da semana do ano.**/
 	weekDate: function(year, month, day) {
 		const date = this.dateID(this.idDate(year, month, day));
 		const week = [Number(year) - 1, Number(year), Number(year) + 1].map(function(v,i,a) {
-			const Y    = Math.abs(v);
-			const YYYY = (v < 0 ? "-" : "") + (Y < 10 ? "000" : (Y < 100 ? "00" : (Y < 1000 ? "0" : ""))) + String(Y);
+			const YYYY = this.digits(v, 4);
 			const week = this.match(`${YYYY}-W01`);
 			return {value: week.value, YYYY: YYYY};
 		}, this);
@@ -447,7 +454,7 @@ const __DATETIME = {
 	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}[href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options" target="_blank"] do objeto nativo '{Date}.**/
 	locale: function(flag, cfg) {
 		const data = typeof cfg === "object" && cfg !== null ? cfg : {};
-		const date = this.nativeDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
+		const date = this.nativeDate(flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
 		const type = flag.type === "datetime" || flag.type === "time" ? flag.type : "date";
 		const attr = {date: "toLocaleDateString", time: "toLocaleTimeString", datetime: "toLocaleString"};
 		const none = {
@@ -474,7 +481,7 @@ const __DATETIME = {
 			return sum + ((week+i)%7 === 0 || (week+i)%7 === 6 ? 0 : 1);
 		},0);
 	},
-	/**. '{integer workDays(string date1, string date2)}: Retorna a quantidades de dias úteis entre as data inclindo 1º de janeiro.**/
+	/**. '{integer workDays(string date1, string date2)}: Retorna a quantidades de dias úteis entre as datas iniciando 1º de janeiro.**/
 	workDays: function(date1, date2) {
 		const init = this.match(date1);
 		const last = this.match(date2);
@@ -505,19 +512,22 @@ const __DATETIME = {
 		/*-- retornando a soma dos períodos --*/
 		return Math.sign(id) * (400*n400 + 100*n100 + 4*n004 + 1*n001 + rest);
 	},
+	/**. '{object monthFromID(integer id)}: Retorna os dados do ano '{Y} e mês '{M} a partir do identificador retornado de '{idToMonth}.**/
+	monthFromID: function(id) {return {Y: Math.floor(id/12), M: (id%12 + (id < 0 ? 12 : 0))%12 + 1};},
 	/**. '{object dateID(integer id)}: Retorna os dados de '{match} para data a partir do '{id} em u{dias} ou nulo.**/
 	dateID: function (id) {
 		if (!Number.isInteger(id)) return null;
 		const year = this.yearID(id);
 		const days = id - this.idYear(year) + 1;
 		const info = this.dataMonth(year).filter(function(v,i,a) {return days >= v.init && days <= v.last;})[0];
-		return this.dateTimeAdjustment({
+		const date = {
 			type: "date",
 			P: id < 0 ? "-" : "",
-			Y: Math.abs(year),
+			Y: year,
 			M: info.month,
 			D: days - info.init + 1
-		});
+		};
+		return this.date(date) ? date : null;
 	},
 	/**. '{object timeId(integer id)}: Retorna os dados de '{match} para tempo a partir do '{id} em u{segundos}.**/
 	timeID: function(id) {
@@ -530,7 +540,7 @@ const __DATETIME = {
 		time.s     = Math.trunc((data - 3600000*time.H - 60000*time.m)/1000);
 		time.l     = data - 3600000*time.H - 60000*time.m - 1000*time.s;
 		time.dD    = Math.trunc(id/h24) + (id < 0 ? -1 : 0);
-		return this.dateTimeAdjustment(time);
+		return this.time(time) ? time : null;
 	},
 	/**. '{object dateTimeID(integer id)}: Retorna os dados de '{match} para data/tempo a partir do '{id} em u{segundos}.**/
 	dateTimeID: function(id) {
@@ -541,7 +551,9 @@ const __DATETIME = {
 		const date = this.dateID(days);
 		const data = Object.assign({}, date, time);
 		data.type  = "datetime";
-		return this.dateTimeAdjustment(data);
+		data.P     = data.Y < 0 ? "-" : "";
+		data.Y     = data.Y;
+		return this.datetime(data) ? data : null;
 	},
 	/**. '{object delta(object flag, string walk)}: Desloca o tempo de '{flag} conforme especificado em '{walk} e retorna uma nova '{flag} redefinida:
 	- '{walk} é uma string que define o tempo a ser deslocado;
@@ -596,8 +608,8 @@ const __DATETIME = {
 		}
 		else if (type === "month" && date) {
 			const attr = flag.type === "datetime" ? "idDateTime" : "idDate";
-			const ID   = this.idMonth(flag.P === "-" ? -flag.Y : flag.Y, flag.M);
-			const date = this.monthID(ID + jump);
+			const ID   = this.idToMonth(flag.Y, flag.M);
+			const date = this.monthFromID(ID + jump);
 			const last = this.dataMonth(date.Y)[date.M - 1].length;
 			const day  = hide > 0 ? (hide > last ? last : hide) : (flag.D > last ? last : flag.D);
 			const id   = this[attr](date.Y, date.M, day, flag.H, flag.m, flag.s, flag.l);
@@ -609,7 +621,7 @@ const __DATETIME = {
 		}
 		else if (type === "year" && date) {
 			const attr = flag.type === "datetime" ? "idDateTime" : "idDate";
-			const year = (flag.P === "-" ? -flag.Y : flag.Y) + jump;
+			const year = flag.Y + jump;
 			const last = this.dataMonth(year)[flag.M - 1].length;
 			const day  = hide > 0 ? (hide > last ? last : hide) : (flag.D > last ? last : flag.D);
 			const id   = this[attr](year, flag.M, day, flag.H, flag.m, flag.s, flag.l);

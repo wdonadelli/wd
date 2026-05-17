@@ -202,8 +202,120 @@ CARACTERES:     &{code}
 			}, this)},
 		]};
 	},
-	/**. '{object dl(array list)}: Retorna a estrutura do elemento '{dl}.**/
-	dl: function(list) {
+
+
+	/**. '{string inner(string code)}: Decodifica o conteúdo textual para código HTML e o retorna.**/
+	inner: function(code) {
+		const  re  = /(\&amp\;|'|[a-z]+)\{([^\}]*)\}(?:\[([^\]]*)\])?/;
+		let inner = code.trim().replace(/\&/g, "&amp;").replace(/\>/g, "&gt;").replace(/\</g, "&lt;");
+		while(re.test(inner)) {
+			let find = inner.match(re);
+			let attr = find[3] ? find[3] : "";
+			switch(find[1]) {
+				case "'":     inner = inner.replace(find[0], `<code ${attr} translate="no">${find[2]}</code>`); break;
+				case "&amp;": inner = inner.replace(find[0], `&${find[2]};`); break;
+				default:      inner = inner.replace(find[0], `<${find[1]} ${attr}>${find[2]}</${find[1]}>`);
+			}
+		}
+		return inner;
+	},
+	/**. '{node create(node body, string tag)}: Retorna o nó especificado em '{tag} filho de '{body}.**/
+	create: function(body, tag) {
+		const html = body.lastElementChild;
+		if (html.tagName.toLowerCase() !== tag) {
+			const node = document.createElement(tag);
+			body.appendChild(node);
+			return node;
+		}
+		return html;
+	},
+	/**. '{boolean head(node body, string code)}: Checa e adiciona estrutura de títulos e retorna o resultado.**/
+	head: function(body, code) {
+		const re = /^\s*\#([1-6])(.*)$/;
+		if (!re.test(code)) return false;
+		/*-- registrar --*/
+		const find = code.match(re);
+		const elem = document.createElement(`h${find[1]}`);
+		if (find[2].trim() !== "") {
+			elem.innerHTML = this.inner(find[2].trim());
+			elem.id = __ID.value;
+			body.appendChild(elem);
+		}
+		return true;
+	},
+	/**. '{boolean table(node body, string code)}: Checa e adiciona estrutura de tabela e retorna o resultado.**/
+	table: function(body, code) {
+		const re = /^\s*\|(.*)\|\s*$/;
+		if (!re.test(code)) return false;
+		/*-- registrar --*/
+		const find = code.match(re);
+		const elem = this.create(body, "table");
+		const tbox = elem.tHead === null ? "head" : "body";
+		const trow = document.createElement("tr");
+		/*-- criando containers --*/
+		if (elem.tHead === null)       elem.createTHead();
+		if (elem.tBodies.length === 0) elem.createTBody();
+		/*-- capturando células --*/
+		find[1].split("|").forEach(function(v,i,a) {
+			const cell = document.createElement(tbox === "head" ? "th" : "td");
+			cell.innerHTML = this.inner(v);
+			trow.appendChild(cell);
+		}, this);
+		/*-- adicionando linha --*/
+		if (trow.childElementCount > 0)
+			(tbox === "head" ? elem.tHead.appendChild(trow) : elem.tBodies[0].appendChild(trow));
+		return true;
+	},
+	/**. '{boolean list(node body, string code)}: Checa e adiciona estrutura de lista e retorna o resultado.**/
+	list: function(body, code) {
+		const re = /^\s*([.+\-])\s+(.+)$/;
+		if (!re.test(code)) return false;
+		/*-- registrar --*/
+		const tags = {"+": "ol", "-": "ul", ".": "dl"};
+		const find = code.match(re);
+		const elem = this.create(body, tags[find[1]]);
+		/*-- listas ordenadas e não ordenadas --*/
+		if (find[2] && (tags[find[1]] === "ul" || tags[find[1]] === "ol")) {
+			const li = document.createElement("li");
+			li.innerHTML = this.inner(find[2]);
+			elem.appendChild(li);
+		}
+		/*-- listas descritivas --*/
+		else if (find[2] && tags[find[1]] === "dl") {
+			const dl = find[2].trim().match(/^(?:(?:([^:]+)\:)?(.+))$/);
+			if (dl[1]) {
+				const dt = document.createElement("dt");
+				dt.innerHTML = this.inner(dl[1]);
+				elem.appendChild(dt);
+			}
+			if (dl[2]) {
+				const dd = document.createElement("dd");
+				dd.innerHTML = this.inner(dl[2].trim());
+				elem.appendChild(dd);
+			}
+		}
+		return true;
+	},
+
+	/**. '{boolean append(node body, string code)}: Checa e adiciona estruturas e retorna o resultado.**/
+	append: function(body, code) {
+		if (this.list(body, code))  return true;
+		if (this.table(body, code)) return true;
+		if (this.head(body, code))  return true;
+		return false;
+	},
+
+
+
+
+
+
+
+
+
+
+
+	dl2: function(list) {
 		const dl = {tag: "dl", attr: {}, child: []};
 		const re = /^([^:]+)\:(.+)$/;
 		list.forEach(function(v,i,a) {

@@ -7,75 +7,71 @@ const __TEST = {
 	/**. '{void random(string type)}: Executa teste nos métodos que traduzem números em tempo '{type}.**/
 	random: function(type) {
 		const conf = {
-			time:     {bit: 16, name: "timeID"},
-			date:     {bit: 16, name: "dateID"},
-			datetime: {bit: 32, name: "dateTimeID"},
+			time:     {bit: 16, name: "timeID", uint: true},
+			date:     {bit: 16, name: "dateID", uint: false},
+			datetime: {bit: 32, name: "dateTimeID", uint: false},
 		};
 		const attr = type in conf ? conf[type] : conf.datetime;
-		const list = __MATH.crypto(attr.bit, 10000, false);
-		for (let i = 0; i < list.length; i++) {
+		__MATH.crypto(attr.bit, 10000, attr.uint).forEach(function(v,i,a) {
 			/*-- obter e checar de id para string --*/
-			let fromInt = __DATETIME[attr.name](list[i]);
+			const fromInt = __DATETIME[attr.name](v);
 			if (fromInt === null)
-				throw new Error(`${attr.name} Error: ${list[i]} > null (${i})`);
+				throw new Error(`${attr.name} Error: ${v} > null (${i})`);
 			/*-- retornar de string para id --*/
-			let fromStr = __DATETIME.match(fromInt.string);
+			const fromStr = __DATETIME.match(fromInt.string);
 			if (fromStr === null)
-				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > null (${i})`);
+				throw new Error(`${attr.name} Error: ${v} > ${fromInt.string} > null (${i})`);
 			/*-- comparar a coerência --*/
-			if (list[i] !== fromStr.value)
-				throw new Error(`${attr.name} Error: ${list[i]} > ${fromInt.string} > ${fromStr.value} (${fromStr.value - list[i]})`);
-		}
-		return null;
+			if (v !== fromStr.value)
+				throw new Error(`${attr.name} Error: ${v} > ${fromInt.string} > ${fromStr.value} (${i})`);
+		});
+		return;
 	},
 	/**. '{void wrandom()}: Executa teste nos métodos que traduzem datas em semanas.**/
 	wrandom: function() {
-		const list = __MATH.crypto(16, 10000, false);
-		for (let i = 0; i < list.length; i++) {
-			let flag = __DATETIME.dateID(list[i]);
-			let week = __DATETIME.weekDate(flag.P === "-" ? -flag.Y : flag.Y, flag.M, flag.D);
-			let date = __DATETIME.match(week);
+		__MATH.crypto(16, 10000, false).forEach(function(v,i,a) {
+			const flag = __DATETIME.dateID(v);
+			const week = __DATETIME.weekDate(flag.Y, flag.M, flag.D);
+			const date = __DATETIME.match(week);
 			if (date.value !== flag.value)
 				throw new Error(`Week Error: ${flag.string} > ${week} > ${date.string})`);
-		}
-		return null;
+		});
+		return;
 	},
 	/**. '{void linear(integer min, integer max)}: Teste a linearidade do dia da semana e do valor da escala.**/
 	linear: function(min, max) {
 		const walker = {
-			Y: 0, M: 0, D: 0, d: 0, value: 0, end: 0,
-			get last() {return [31,__DATETIME.leap(this.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][this.M - 1];},
-			check: function() {
-				const flag = __DATETIME.dateID(this.value);
-				if (
-					flag.D !== this.D           ||
-					flag.M !== this.M           ||
-					flag.Y !== Math.abs(this.Y) ||
-					flag.d !== this.d           ||
-					flag.value !== this.value
-				) throw new Error(`\nflag:\n\t${JSON.stringify(flag)}\nwalker:\n\t${JSON.stringify(this)}`);
+			data: null,
+			start: function(min, max) {
+				this.min  = max >= min ? min : max;
+				this.max  = max >= min ? max : min;
+				this.data = __DATETIME.dateID(this.min);
+				return;
+			},
+			shift: function() {
+				const last = [31,__DATETIME.leap(this.data.Y) ? 29 : 28,31,30,31,30,31,31,30,31,30,31][this.data.M - 1];;
+				this.data.Y = this.data.D === last && this.data.M === 12 ? this.data.Y + 1 : this.data.Y;
+				this.data.M = this.data.D === last ? (this.data.M === 12 ? 1 : this.data.M + 1) : this.data.M;
+				this.data.D = this.data.D === last ? 1 : this.data.D + 1;
+				this.data.d = this.data.d === 7 ? 1 : this.data.d + 1;
+				this.data.value++;
+				return;
 			},
 			next: function() {
-				const last = this.last;
-				this.Y = this.D === last && this.M === 12 ? this.Y + 1 : this.Y;
-				this.M = this.D === last ? (this.M === 12 ? 1 : this.M + 1) : this.M;
-				this.D = this.D === last ? 1 : this.D + 1;
-				this.d = this.d === 7 ? 1 : this.d + 1;
-				this.value++;
-				return this.value <= this.end;
-			},
-			start: function(min, max) {
-				const flag = __DATETIME.dateID(max >= min ? min : max);
-				this.end   = max >= min ? max : min;
-				this.value = flag.value;
-				this.Y = flag.P === "-" ? -flag.Y : flag.Y;
-				this.M = flag.M;
-				this.D = flag.D;
-				this.d = flag.d;
-				while(this.next()) this.check();
-				return null;
+				const flag = __DATETIME.dateID(this.data.value + 1);
+				this.shift();
+				if (
+					flag.D !== this.data.D ||
+					flag.M !== this.data.M ||
+					flag.Y !== this.data.Y ||
+					flag.d !== this.data.d ||
+					flag.value !== this.data.value
+				) throw new Error(`\nflag:\n\t${JSON.stringify(flag)}\nwalker:\n\t${JSON.stringify(this)}`);
+				return this.data.value < this.max;
 			}
 		};
-		return walker.start(min, max);
+		walker.start(min, max);
+		while(walker.next());
+		return;
 	},
 };
