@@ -5,53 +5,6 @@ O objeto '{__DOCODE} segrega as linhas de comentário do código fonte podendo s
 const __DOCODE = {
 	/**. '{object split(string code, string open, string stop)}: Separa o código conforme caracteres de abertura e fechamento de comentário ('{open/stop}) retornando um objeto contendo informação da fonte ('{src}) e dos comentários ('{doc}).
 	. Os caracteres de abertura e fechamento de comentários não podem estar contidos em strings!**/
-	split: function(code, open, stop) {
-		const data = {
-			open: open === undefined ? "//" : String(open).normalize(),
-			stop: stop === undefined ? "\n" : String(stop).normalize(),
-			list: String(code).normalize().split(""),
-			src:  [],
-			doc:  [],
-			/*-- registra o tipo de caractere em vigor --*/
-			type: "src",
-			/*-- registra os caracteres de src ou doc até a mundança de type --*/
-			temp: [],
-			i: 0,
-			/*-- identifica se os próximo caracteres casam com open ou stop e retorna sua quantidade --*/
-			match: function() {
-				const find = this.type === "src" ? this.open : this.stop;
-				const text = this.list.slice(this.i, this.i + find.length).join("");
-				return find === text ? find.length : 0;
-			},
-			next: function() {
-				/*-- encerrar looping --*/
-				if (this.i >= this.list.length) {
-					this[this.type].push(this.temp.join(""));
-					return false;
-				}
-				const match = this.match();
-				/*-- caracteres não casados, registra em temp e avança 1 --*/
-				if (match === 0) {
-					this.temp.push(this.list[this.i]);
-					this.i++;
-				}
-				/*-- caracteres casados, define o valor e avança a quantidade casada --*/
-				else {
-					const line = this.list.slice(this.i, this.i + match).indexOf("\n") >= 0;
-					this[this.type].push(this.temp.join(""));
-					this.temp = [this.type === "src" || line ? "\n" : ""];
-					this.type = this.type === "src" ? "doc" : "src";
-					this.i += match;
-				}
-				return true;
-			}
-		};
-		while (data.next());
-		return {
-			src: data.src.join("").replace(/\n(\s+)?\n/g, "\n"),
-			doc: data.doc.join(""),
-		};
-	},
 	/**. '{object marks}: Registra as notações da codificação que são analisadas a cada quebra de linha:
 	|Blocos|Notação|
 	|Citação|O caracter &{#x0022} delimita o início e o fim do bloco, as linhas entre os caracteres definirão seu conteúdo.|
@@ -66,64 +19,8 @@ const __DOCODE = {
 	- Os caracteres de lista e título devem estar no começo da linha e seguido de um espaço e o seu conteúdo;
 	- Utilize o caracter &{#x003A} para separar o título do item de sua descrição na lista descritiva; e
 	- Se nenhuma notação acima for utilizada, será considerado um parágrafo.**/
-	marks: {
-		ul:    /^\-\s+(.+)$/,     ol: /^\+\s+(.+)$/,   dl: /^\.\s+(.+)$/,
-		h1:    /^\#1\s+(.+)$/,    h2: /^\#2\s+(.+)$/,  h3: /^\#3\s+(.+)$/,
-		h4:    /^\#4\s+(.+)$/,    h5: /^\#5\s+(.+)$/,  h6: /^\#6\s+(.+)$/,
-		table: /^\|(.+)\|$/,   quote: /^\"()$/,       pre: /^\'()$/,
-	},
-	/**. '{object info(string line)}: Retorna valor ('{value}) e tipo ('{type}) da notação da linha ('{line}) conforme '{marks}**/
-	info: function(line) {
-		line = line.trim();
-		let info = null;
-		for (let name in this.marks) {
-			if (info === null && this.marks[name].test(line))
-				info = {type: name, value: line.match(this.marks[name])[1]};
-		}
-		return info === null ? {type: "p", value: line} : info;
-	},
-	/**. '{node html(string code)}: Retorna um nó HTML contendo o código renderizado nessa linguagem.**/
-	html: function(code) {
-		const line = String(code).normalize().split("\n");
-		const main = [];
-		let   type = null;
-		/*-- obter dados de cada linha --*/
-		line.map(function(v,i,a) {
-			const info = this.info(v);
-			/*-- bloco de texto aberto --*/
-			if (type === "pre" || type === "quote") {
-				type = info.type === type ? null : type;
-				return type === null ? null : {type: type, value: type === "pre" ? v : v.trim()};
-			}
-			/*-- abrir bloco de texto --*/
-			if (info.type === "pre" || info.type === "quote") {
-				type = info.type;
-				return null;
-			}
-			return info.value === "" ? null : info;
-		}, this)
-		/*-- agrupar ordenadamente por tipo em main --*/
-		.forEach(function(v,i,a) {
-			if (v !== null) {
-				const item = main.length - 1;
-				const last = item < 0 ? {} : main[item];
-				const unit = (/^(p|h[1-6])$/).test(v.type);
-				if (v.type !== last.type || unit)
-					main.push({type: v.type, value: [v.value]});
-				else
-					main[item].value.push(v.value);
-			}
-			return;
-		});
-		/*-- registrar os elementos filhos --*/
-		return __DOM({tag: "section", attr: {}, child: main.map(function(v,i,a) {
-			return this[v.type](v.value);
-		}, this)}).tag;
-	},
+
 	/**. '{node doc(string code, string open, string stop)}`: Retorna os comentários renderizados como documento.**/
-	doc: function(code, open, stop) {
-		return this.html(this.split(code, open, stop).doc);
-	},
 	/**. '{string inline(string inner)}: Retorna o valor de '{innerHTML} para formatar os elementos filhos profundos e possibilitar a definição de elementos i{inline}:
 '
 COM ATRIBUTOS:  tag{texto}[atributo1="valor1" atributo2="valor2"]
@@ -131,79 +28,37 @@ SEM ATRIBUTOS:  tag{texto}
 CODE ABREVIADO: '{texto}
 CARACTERES:     &{code}
 '**/
-	inline: function(inner) {
-		const long  = /([a-z]+)\{([^\}]+)\}\[([^\]]+)\]/g;
-		const short = /([a-z]+)\{([^\}]+)\}/g;
-		const code  = /\'\{([^\}]+)\}/g;
-		const ding  = /\&amp\;\{([^\}]+)\}/g;
-		inner = inner.replace(/\&/g, "&amp;").replace(/\>/g, "&gt;").replace(/\</g, "&lt;")
-		if (long.test(inner))
-			inner = inner.replace(long, `<$1 $3>$2</$1>`);
-		if (short.test(inner))
-			inner = inner.replace(short, `<$1>$2</$1>`);
-		if (code.test(inner))
-			inner = inner.replace(code, `<code translate="no">$1</code>`);
-		if (ding.test(inner))
-			inner = inner.replace(ding, `&$1;`);
-		return inner;
-	},
-	/**. '{object ul(array list, boolean ol)}: Retorna a estrutura do elemento '{ul}.**/
-	ul: function(list, ol) {
-		return {tag: ol === true ? "ol" : "ul", attr: {}, child: list.map(function(v,i,a) {
-			return {tag: "li", attr: {innerHTML: this.inline(v)}, child: []};
-		}, this)}
-	},
-	/**. '{object ol(array list)}: Retorna a estrutura do elemento '{ol}.**/
-	ol: function(list) {return this.ul(list, true);},
-	/**. '{object pre(array list)}: Retorna a estrutura do elemento '{pre}.**/
-	pre: function(list) {
-		return {tag: "pre", attr: {innerText: list.join("\n"), setAttribute: ["translate", "no"]}, child: []};
-	},
-	/**. '{object quote(array list)}: Retorna a estrutura do elemento '{blockquote}.**/
-	quote: function(list) {
-		return {tag: "blockquote", attr: {}, child: list.map(function(v,i,a) {
-			return {tag: "p", attr: {innerHTML: this.inline(v.trim())}, child: []};
-		}, this)}
-	},
-	/**. '{object p(array list)}: Retorna a estrutura do elemento '{p}.**/
-	p: function(list) {
-		return {tag: "p", attr: {innerHTML: this.inline(list[0])}, child: []};
-	},
-	/**. '{object h1(array list, integer n)}: Retorna a estrutura do elemento '{h1}.**/
-	h1: function(list, n) {
-		n = Number.isInteger(n) ? n : 1;
-		return {tag: `h${n}`, attr: {id: __ID.value, textContent: list[0]}, child: []};
-	},
-	/**. '{object h2(array list)}: Retorna a estrutura do elemento '{h2}.**/
-	h2: function(list) {return this.h1(list, 2);},
-	/**. '{object h3(array list)}: Retorna a estrutura do elemento '{h3}.**/
-	h3: function(list) {return this.h1(list, 3);},
-	/**. '{object h4(array list)}: Retorna a estrutura do elemento '{h4}.**/
-	h4: function(list) {return this.h1(list, 4);},
-	/**. '{object h5(array list)}: Retorna a estrutura do elemento '{h5}.**/
-	h5: function(list) {return this.h1(list, 5);},
-	/**. '{object h6(array list)}: Retorna a estrutura do elemento '{h6}.**/
-	h6: function(list) {return this.h1(list, 6);},
-	/**. '{object table(array list)}: Retorna a estrutura do elemento '{table}.**/
-	table: function(list) {
-		const rows = list.map(function(v,i,a) {return v.split("|");});
-		const head = rows.slice(0,1);
-		const body = rows.slice(1);
-		return {tag: "table", attr: {border: 1}, child: [
-			{tag: "thead", attr: {}, child: head.map(function(row,i,a) {
-				return {tag: "tr", attr: {}, child: row.map(function(col,y,z) {
-					return {tag: "th", attr: {innerHTML: this.inline(col)}, child: []};
-				}, this)};
-			}, this)},
-			{tag: "tbody", attr: {}, child: body.map(function(row,i,a) {
-				return {tag: "tr", attr: {}, child: row.map(function(col,y,z) {
-					return {tag: "td", attr: {innerHTML: this.inline(col)}, child: []};
-				}, this)};
-			}, this)},
-		]};
-	},
 
 
+
+
+
+
+
+
+
+	split: function(code, start, close) {
+		code  = typeof close === "string" ? code.normalize()         : null;
+		start = typeof start === "string" ? start.normalize().trim() : null;
+		close = typeof close === "string" ? close.normalize().trim() : "\n";
+		if (code === null || start === null) return null;
+		const data = [];
+		let init, line, last, find, text, eof = false;
+		while (!eof) {
+			init = code.indexOf(start);
+			line = code.slice(init + start.length).indexOf(close);
+			last = (init + start.length) + (line < 0 ? Infinity : line) + close.length;
+			eof  = init < 0 || line < 0;
+			if (init >= 0) {
+				text = code.slice(init, last);
+				find = text.slice(start.length, line < 0 ? Infinity : text.length - close.length);
+				code = code.replace(text, "");
+				data.push(find);
+			}
+		}
+		data.push(`''${code.replace(/^\s*$/g, "")}''`);
+		this.render(document.body, data.join("\n"))
+	},
 	/**. '{string inner(string code)}: Decodifica o conteúdo textual para código HTML e o retorna.**/
 	inner: function(code) {
 		const  re  = /(\&amp\;|'|[a-z]+)\{([^\}]*)\}(?:\[([^\]]*)\])?/;
@@ -222,7 +77,7 @@ CARACTERES:     &{code}
 	/**. '{node create(node body, string tag)}: Retorna o nó especificado em '{tag} filho de '{body}.**/
 	create: function(body, tag) {
 		const html = body.lastElementChild;
-		if (html.tagName.toLowerCase() !== tag) {
+		if (html === null || html.tagName.toLowerCase() !== tag) {
 			const node = document.createElement(tag);
 			body.appendChild(node);
 			return node;
@@ -296,38 +151,69 @@ CARACTERES:     &{code}
 		}
 		return true;
 	},
-
-	/**. '{boolean append(node body, string code)}: Checa e adiciona estruturas e retorna o resultado.**/
+	/**. '{boolean text(node body, string code)}: Checa e adiciona estrutura de blocos de texto e retorna o resultado.**/
+	text: function(body, code) {
+		const node = body.lastElementChild;
+		const tag  = node === null ? null : node.tagName.toLowerCase();
+		const data = {
+			pre:        {start: /^(\s*\'\')/, close: /(\'\'\s*)$/,},
+			blockquote: {start: /^(\s*\"\")/, close: /(\"\"\s*)$/,},
+		};
+		/*-- definindo status --*/
+		for (let name in data) {
+			let open  = name === tag && node.dataset.open == "1";
+			let start = data[name].start.test(code);
+			let close = data[name].close.test(code);
+			data[name].status = open ? (close ? "close" : "add") : (start ? "open" : null);
+		}
+		/*-- blocos específicos --*/
+		for (let name in data) {
+			if (data[name].status === "open") {
+				const elem = document.createElement(name);
+				body.appendChild(elem);
+				elem.dataset.open = "1";
+				return this.text(body, code.replace(data[name].start, ""));
+			}
+			if (data[name].status === "add") {
+				if (name === "pre") {
+					node.textContent += `\n${code}`;
+				}
+				else if (name === "blockquote") {
+					const elem = document.createElement("p");
+					elem.innerHTML = this.inner(code.trim());
+					node.appendChild(elem);
+				}
+				return true;
+			}
+			if (data[name].status === "close") {
+				this.text(body, code.replace(data[name].close, ""));
+				delete node.dataset.open;
+				return true;
+			}
+		}
+		return false;
+	},
+	/**. '{boolean append(node body, string code)}: Checa, adiciona estruturas e retorna o resultado.**/
 	append: function(body, code) {
+		/*-- text precisa ser o primeiro --*/
+		if (this.text(body, code))  return true;
 		if (this.list(body, code))  return true;
 		if (this.table(body, code)) return true;
 		if (this.head(body, code))  return true;
+		/*-- parágrafo genérico --*/
+		if (code.trim().length > 0) {
+			const elem = document.createElement("p");
+			elem.innerHTML = this.inner(code.trim());
+			body.appendChild(elem);
+			return true;
+		}
 		return false;
 	},
-
-
-
-
-
-
-
-
-
-
-
-	dl2: function(list) {
-		const dl = {tag: "dl", attr: {}, child: []};
-		const re = /^([^:]+)\:(.+)$/;
-		list.forEach(function(v,i,a) {
-			console.log(v, re.test(v))
-
-			if (re.test(v)) {
-				dl.child.push({tag: "dt", attr: {innerHTML: this.inline(v.replace(re, "$1").trim())}, child:[]});
-				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v.replace(re, "$2").trim())}, child:[]});
-			} else {
-				dl.child.push({tag: "dd", attr: {innerHTML: this.inline(v)}, child:[]});
-			}
+	/**. '{void render(node body, string code)}: Renderiza o código no elemento '{body}.**/
+	render: function(body, code) {
+		String(code).trim().normalize().split("\n").forEach(function(v,i,a) {
+			return this.append(body, v);
 		}, this);
-		return dl;
+		return;
 	},
 };
