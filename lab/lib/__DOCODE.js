@@ -1,4 +1,7 @@
 /**
+
+@menu
+
 #3 Segregando Código
 O objeto '{__DOCODE} permite que comentários, ou outras informações delimitadas por caracteres específicos, possam ser segregados do código fonte.
 Também contempla a decodificação de uma linguagem de marcação específica em elementos HTML, permitindo, em conjunto com a ferramenta de segregação, a elaboração de instruções do código dentro do próprio código fonte se utilizando dos comentários.
@@ -8,7 +11,7 @@ A notação possui as seguintes regras:
 + Linhas sem caracteres imprimíveis são desconsideradas, exceto dentro de um bloco de texto pré formatado;
 + Cada elemento HTML é identificado por caraceres específicos definidos pela notação;
 + Os caracteres &{amp}, &{lt} e &{gt} são tratados como texto, não sendo sensíveis ao código HTML gerado;
-+ Há notação para elementos de bloco e elementos textuais (em linha);
++ Há notação para elementos de bloco, elementos textuais (em linha) e outros especiais;
 + Cada notação deve estar separada por quebra de linha, excetos elementos textuais;
 + Blocos de citação e de texto pré formatado podem conter múltiplas linhas;
 + Os caracteres utilizados na notação devem ser informados no início de cada linha seguidos de seu conteúdo;
@@ -40,10 +43,20 @@ A notação possui as seguintes regras:
 |Caractere|Descrição|Exemplo|
 |&{#x0027}|Atalho para o elemento '{code}|&{#x0027}&{#x007B}x = 1&{#x007D} e igual à code&{#x007B}x = 1&{#x007D}|
 |&|Atalho para caracteres especiais do tipo i{&#x003B;}|&&{#x007B}#x003B&{#x007D} (sem &{#x003B})|
-[tabela do caralho a quatro]
+@caption "Tabela de atalhos para alguns componentes em HTML"
 
-FIXME falta o menu e o caption
-
+#4 Elementos Especiais
++ Os elementos especiais iniciam com o símbolo &{#x0040} seguido de seu nome;
++ Após o nome, atributos poderão ser informados conforme elemento;
++ Os atributos devem estar delimitados por aspas duplas (&{#x0022});
++ O nome e os atributos devem estar separados por espaços; e
++ Todas as informações do elemento devem estar em uma única linha.
+|Nome|Descrição|Atributo 1|Atributo 2|
+|'{menu}|Define um menu para listar i{links} para os cabeçalhos de u{níveis 2 a 6} b{posteriores} à notação.|-|-|
+|'{figure}|Define um quadro para uma imagem.|Caminho para o arquivo.|Descrição da imagem ('{alt}).|
+|'{caption}|Define a legenda do b{elemento anterior} nos casos de u{tabela e figura} ('{@figure}).|Texto da legenda|-|
+|'{file}|Define um quadro para comportar arquivos.|Caminho para o arquivo|MIME TYPE do arquivo|
+@caption "Nome dos elementos especiais"
 
 #4 Métodos
 O argumento '{body} corresponde ao elemento HTML onde a notação é renderizada.**/
@@ -99,7 +112,7 @@ const __DOCODE = {
 		}
 		return html;
 	},
-	/**. '{boolean head(node body, string code)}: Checa e adiciona estrutura de títulos e retorna o resultado.**/
+	/**. '{boolean head(node body, string code)}: Checa, adiciona estrutura de títulos e retorna o resultado.**/
 	head: function(body, code) {
 		const re = /^\s*\#([1-6])(.*)$/;
 		if (!re.test(code)) return false;
@@ -107,13 +120,25 @@ const __DOCODE = {
 		const find = code.match(re);
 		const elem = document.createElement(`h${find[1]}`);
 		if (find[2].trim() !== "") {
+			const id = __ID.value;
 			elem.innerHTML = this.inner(find[2].trim());
-			elem.id = __ID.value;
+			elem.id = id;
 			body.appendChild(elem);
+			/*-- adicionar ao menu --*/
+			if (Number(find[1]) > 1) {
+				const item = document.createElement("li");
+				const link = document.createElement("a");
+				item.appendChild(link);
+				link.href = `#${id}`;
+				link.textContent = (". . ").repeat(find[1] - 2) + elem.textContent;
+				Array.from(body.querySelectorAll("menu")).forEach(function(v,i,a) {
+					v.appendChild(item.cloneNode(true));
+				});
+			}
 		}
 		return true;
 	},
-	/**. '{boolean table(node body, string code)}: Checa e adiciona estrutura de tabela e retorna o resultado.**/
+	/**. '{boolean table(node body, string code)}: Checa, adiciona estrutura de tabela e retorna o resultado.**/
 	table: function(body, code) {
 		const re = /^\s*\|(.*)\|\s*$/;
 		if (!re.test(code)) return false;
@@ -137,7 +162,7 @@ const __DOCODE = {
 			(tbox === "head" ? elem.tHead.appendChild(trow) : elem.tBodies[0].appendChild(trow));
 		return true;
 	},
-	/**. '{boolean list(node body, string code)}: Checa e adiciona estrutura de lista e retorna o resultado.**/
+	/**. '{boolean list(node body, string code)}: Checa, adiciona estrutura de lista e retorna o resultado.**/
 	list: function(body, code) {
 		const re = /^\s*([.+\-])\s+(.+)$/;
 		if (!re.test(code)) return false;
@@ -167,7 +192,7 @@ const __DOCODE = {
 		}
 		return true;
 	},
-	/**. '{boolean text(node body, string code)}: Checa e adiciona estrutura de blocos de texto e retorna o resultado.**/
+	/**. '{boolean text(node body, string code)}: Checa, adiciona estrutura de blocos de texto e retorna o resultado.**/
 	text: function(body, code) {
 		const node = body.lastElementChild;
 		const tag  = node === null ? null : node.tagName.toLowerCase();
@@ -209,6 +234,45 @@ const __DOCODE = {
 		}
 		return false;
 	},
+	/**. '{boolean plus(node body, string code)}: Checa, adiciona estruturas especiais e retorna o resultado.**/
+	plus: function(body, code) {
+		const re   = /^\s*\@(\w+)(?:\s+\"([^"]+)\")?(?:\s+\"([^"]+)\")?\s*$/;
+		const file = /([^/\\]+)$/;
+		const find = code.match(re);
+		if (find === null) {
+			return false;
+		}
+		if (find[1].toLowerCase() === "menu") {
+			const elem = document.createElement("menu");
+			body.appendChild(elem);
+			return true;
+		}
+		if (find[1].toLowerCase() === "figure" && find[2] !== undefined) {
+			const elem = document.createElement("figure");
+			const img  = __FILE.frame(find[2], find[2].match(file)[1], "image");
+			img.alt = find[3];
+			elem.appendChild(img);
+			body.appendChild(elem);
+			return true;
+		}
+		if (find[1].toLowerCase() === "file" && find[2] !== undefined && find[3] !== undefined) {
+			const elem = __FILE.frame(find[2], find[2].match(file)[1], find[3]);
+			body.appendChild(elem);
+			return true;
+		}
+		if (find[1].toLowerCase() === "caption" && find[2] !== undefined) {
+			const last = body.lastElementChild;
+			const name = last === null ? null : last.tagName.toLowerCase();
+			const tags = {table: "caption", figure: "figcaption"};
+			if (name in tags) {
+				const elem = document.createElement(tags[name]);
+				elem.innerHTML = this.inner(find[2])
+				last.appendChild(elem);
+			}
+			return name in tags;
+		}
+		return false;
+	},
 	/**. '{boolean append(node body, string code)}: Checa, adiciona estruturas e retorna o resultado.**/
 	append: function(body, code) {
 		/*-- text precisa ser o primeiro --*/
@@ -216,6 +280,7 @@ const __DOCODE = {
 		if (this.list(body, code))  return true;
 		if (this.table(body, code)) return true;
 		if (this.head(body, code))  return true;
+		if (this.plus(body, code))  return true;
 		/*-- parágrafo genérico --*/
 		if (code.trim().length > 0) {
 			const elem = document.createElement("p");
@@ -225,7 +290,7 @@ const __DOCODE = {
 		}
 		return false;
 	},
-	/**. '{void render(node body, string code)}: Renderiza o código no elemento '{body}.**/
+	/**. '{void render(node body, string code)}: Renderiza as notações no elemento '{body}.**/
 	render: function(body, code) {
 		String(code).trim().normalize().split("\n").forEach(function(v,i,a) {
 			return this.append(body, v);
