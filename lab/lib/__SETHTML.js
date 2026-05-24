@@ -5,7 +5,7 @@ O objeto __SETHTML define um conjunto de métodos para definir propriedades em e
 const __SETHTML = {
 	/**. '{void value(node node, string value)}: Define o valor da propriedade ou atributo '{value}.**/
 	value: function(node, value) {
-		return __FIELDS.value(node, value);
+		return __FORMDATA.value(node, value);
 	},
 	/**. '{void innerHTML(node node, string value)}: Define o valor da propriedade e reanalisa o documento.**/
 	innerHTML: function(node, value) {

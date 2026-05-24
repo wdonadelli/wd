@@ -1,6 +1,6 @@
 /**
 #3 Formulário
-O objeto '{__FORM} cria elementos de formulários a partir de objetos. Os seguinte argumentos são tratados em seus métodos:
+O objeto '{__FORMCREATE} cria elementos de formulários a partir de objetos. Os seguinte argumentos são tratados em seus métodos:
 |Argumento|Tipo|Descrição|Obrigatório|
 |type|string|Tipo de formulário|Sim|
 |label|string|Rótulo do formulário|Sim|
@@ -12,8 +12,206 @@ O objeto '{__FORM} cria elementos de formulários a partir de objetos. Os seguin
 |check|list|Valores padrão do formulário, se aplicável|Não|
 |id|string|Identificador do formulário|Não|
 **/
-const __FORM = {
+
+
+
+const __FORMCODE = {
+
+	input: function(form, code) {
+		const re = /^\s*([^*:]+)(\*)?\:\s*\[([^\]]*)\]\.(text|tel|emails?|url|search|number|range|files?|hidden|password|date|time|datetime|month|week|textarea|datetime\-local)\.(\w+)(?:\:(.*))?\s*$/;
+		if (!re.test(code)) return false;
+		const find = code.match(re);
+		const data = find[6] === undefined || find[6].trim() === "" || find[4] === "textarea" ? null : find[6].split(",");
+		const trim = ["date", "month", "week", "time", "datetime-local", "number", "range"];
+		const mult = find[4] === "files" || find[4] === "emails";
+		/*-- datalist --*/
+		const datalist = data === null || trim.indexOf(find[4]) >= 0  ? null : {
+			tag:  "datalist",
+			attr: {id: __ID.value},
+			child: data.map(function(v,i,a) {
+				return {tag: "option", attr: {value: v.trim()}, child: []};
+			})
+		};
+		/*-- campo --*/
+		const field = {
+			tag: find[4] === "textarea" ? find[4] : "input",
+			attr: {
+				type:     find[4] === "textarea" ? null : (mult ? find[4].replace(/s$/, "") : find[4]),
+				value:    find[3] === undefined ? "" : find[3],
+				name:     find[5],
+				required: find[2] === "*",
+				id:        __ID.value,
+			},
+			child: []
+		};
+		/*-- atributos específicos --*/
+		if (data !== null && trim.indexOf(find[4]) > 0 && __Type(data[0]).number)
+			field.attr.min = Number(data[0]);
+		if (data !== null && trim.indexOf(find[4]) > 0 && __Type(data[1]).number)
+			field.attr.max = Number(data[1]);
+		if (data !== null && trim.indexOf(find[4]) > 0 && __Type(data[2]).number)
+			field.attr.step = Number(data[2]);
+		if (datalist !== null)
+			field.attr.setAttribute = ["list", datalist.attr.id];
+		if (mult)
+			field.attr.multiple = true;
+		/*-- rótulo --*/
+		const label = {tag: "label", attr: {
+				for: field.attr.id,
+				textContent: find[1].trim() + (find[2] === undefined ? "" : "*"),
+			}, child: []
+		};
+		/*-- definindo --*/
+		__DOM({tag: form, attr: {}, child: [datalist, label, field]});
+		return true;
+	},
+
+	button: function(form, code) {
+		const re = /^\s*\[([^\]]+)\]\.(button|submit|reset|image|color)\.(\w+)(?:\:(.*))?\s*$/;
+		if (!re.test(code)) return false;
+		const find = code.match(re);
+		/*-- capturando dados do campo --*/
+		const field = {
+			tag: find[2] === "image" || find[2] === "color" ? "input" : "button",
+			attr: {
+				type:        find[2],
+				value:       find[2] === "color" ? find[1] : (find[2] !== "image" && find[4] !== undefined ? find[4].trim() : null),
+				name:        find[3],
+				id:           __ID.value,
+				textContent: find[2] === "button" ? find[1].trim() : "",
+				alt:         find[2] === "image" && find[4] !== undefined  ? find[4] : null,
+				src:         find[2] === "image" ? find[1].trim() : null,
+			},
+			child: []
+		}
+		__DOM({tag: form, attr: {}, child:[field]});
+		return true;
+	},
+
+	/*
+		select:   {method: "list",  tag: "select"},
+*/
+	check: function(form, code) {
+		const re = /^\s*(\(\s*x?\s*\)|\[\s*x?\s*\])\s+([^{]+)\{\s*(\w+)\:([^}]*)\}\s*$/;
+		if (!re.test(code)) return false;
+		const find = code.match(re);
+		console.log(find)
+		/*-- campo --*/
+		const field = {
+			tag: "input",
+			attr: {
+				type:    find[1][0] === "(" ? "radio" : "checkbox",
+				checked: (/x/i).test(find[1]),
+				name:   find[3],
+				value:  find[4] === undefined ? "" : find[4].trim(),
+			},
+			child: [],
+		};
+		/*-- rótulo --*/
+		const label = {
+			tag: "label",
+			attr: {},
+			child: [field, {
+				tag: "span",
+				attr: {textContent: find[2].trim() + " "},
+				child: []
+			}]
+		};
+		__DOM({tag: form, attr: {}, child:[label]});
+		return true;
+	},
+
+	fieldset: function(form, code) {
+		const start = /^\s*\-\-\s*(\-[^-]+|[^-]+)\s*\-\-\s*$/;
+		const close = /^\s*\-\-\s*$/;
+		const last  = form.lastElementChild;
+		const open  = last !== null && last.tagName.toLowerCase() === "fieldset" && last.dataset.open === "1";
+		/*-- sair se a análise estiver num fieldset --*/
+		if (form.tagName.toLowerCase() === "fieldset")
+			return false;
+		/*-- abrir fieldset --*/
+		if (!open && start.test(code)) {
+			const label = code.match(start)[1].trim();
+			const field = __DOM({
+				tag: "fieldset",
+				attr: {setAttribute: ["data-open", "1"]},
+				child: [label === "" ? null : {tag:  "legend", attr: {textContent: label}, child: []}]
+			}).tag;
+			__DOM({tag: form, attr: {}, child: [{tag: field, attr: {}, child: []}]});
+			return true;
+		}
+		/*-- fechar fieldset --*/
+		if (open && close.test(code)) {
+			delete last.dataset.open;
+			return true;
+		}
+		/*-- incluir em fieldset --*/
+		if (open) {
+			this.append(last, code);
+			return true;
+		}
+		return false;
+	},
+
+
+	append: function(form, code) {
+		if (this.fieldset(form, code)) return true;
+		if (this.input(form, code))    return true;
+		if (this.button(form, code))   return true;
+		if (this.check(form, code))    return true;
+		return false;
+	}
+
+
+
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+const __FORMCREATE = {
 	/**. '{object info}: Define a tábula de campos de formulário.**/
+	/*
+	* indica campo obrigatório
+	Nome*: [Meu Nome]@text.name
+	Telefone*: [9999999999]@tel.telefone
+	e-mail*: [loko@loko]@email.correio[mult]
+	url*: [loko@loko]@url.site
+	Altura: [1]@range.altura[1-2]
+	Idade: [1]@number.idade[1-2]
+	Observações: [loucura]@textarea.obs
+	[OK]@submit.ok
+	-- Campo --
+	(x) Opção 1.opcao
+	( ) Opção 2.opcao
+	( ) Opção 3.opcao
+	----
+
+	[x] Opção 1.opcao1
+	[ ] Opção 2.opcao2
+	[ ] Opção 3.opcao3
+
+	[x] Opção 1.opcao1
+	[ ] Opção 2.opcao2
+	[ ] Opção 3.opcao3
+
+
+
+
+
+	*/
 	field: Object.freeze({
 		text:     {method: "combo", tag: "input"},
 		tel:      {method: "combo", tag: "input"},

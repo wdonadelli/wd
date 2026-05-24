@@ -1,6 +1,6 @@
 /**
 #3 Tipos de Formulários
-O objeto '{__FTYPES} define os tipos de campos de formulário com a respectiva função para obter ou definir valor:
+O objeto '{__FORMTYPES} define os tipos de campos de formulário com a respectiva função para obter ou definir valor:
 - Campos numéricos são definidos por números finitos (string ou number) e retornam valores numéricos.
 - Campos de checagem e opção retornam o valor do atributo, se checados ou selecionados, ou nulo.
 - Campos de checagem e opção podem ser definido por valores booleanos para definir o estado da checagem ou seleção.
@@ -11,7 +11,7 @@ O objeto '{__FTYPES} define os tipos de campos de formulário com a respectiva f
 - Os valores dos campos "url" e "email" devem estar no respectivo formato para serem definidos ou retornados.
 - O campo "color" pode ser definido por um número inteiro, por uma lista com os valores (0-255) de RGB, nessa ordem, ou por um objeto contendo os valores das propriedades i{red}, i{green}, i{blue}.
 	- Outros elementos retornam ou definem o valor da propriedade ou atributo.**/
-const __FTYPES = {
+const __FORMTYPES = {
 	button:   function(node, value) {return this.text(node, value);},
 	reset:    function(node, value) {return this.text(node, value);},
 	submit:   function(node, value) {return this.text(node, value);},

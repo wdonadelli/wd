@@ -76,6 +76,8 @@ Object.defineProperties(__Type.prototype, {
 	node: {get: function() {return this.type === "node";}},
 	/**. '{boolean object}: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
 	object: {get: function() {return this.type === "object";}},
+	/**. '{boolean url}: Checa se o argumento é uma URL.**/
+	url: {get: function() {try {new URL(this._input); return true;} catch(e) {return false;}}},
 	/*-- Sem valores ---------------------------------------------------------*/
 	/**. '{boolean null}: Checa se o valor é nulo.**/
 	null: {get: function () {return this.type === "null";}},

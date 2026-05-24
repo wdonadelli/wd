@@ -1,7 +1,7 @@
 /**
 #3 Campos de Formulários
-O objeto '{__FIELDS} define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
-const __FIELDS = {
+O objeto '{__FORMDATA} define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
+const __FORMDATA = {
 	/**. '{string tag(node node)}: Informa a tag do elemento.**/
 	tag: function(node) {return node.tagName.toLowerCase();},
 	/**. '{string tag(node node)}: Informa o tipo de campo ou nulo.**/
@@ -11,9 +11,9 @@ const __FIELDS = {
 		if (list[tag] === 1) {
 			const attr = String(node.getAttribute("type")).toLowerCase();
 			const prop = String(node.type).toLowerCase();
-			return attr in __FTYPES ? attr : (prop in __FTYPES ? prop : null);
+			return attr in __FORMTYPES ? attr : (prop in __FORMTYPES ? prop : null);
 		}
-		return tag in __FTYPES ? tag : null;
+		return tag in __FORMTYPES ? tag : null;
 	},
 	/**. '{boolean hasMask(node node)}: Informa se o campo tem máscara nativa.**/
 	hasMask: function(node) {
@@ -28,8 +28,8 @@ const __FIELDS = {
 	/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} do nó**/
 	value: function(node, value) {
 		const type = this.type(node);
-		if (type in __FTYPES)
-			return __FTYPES[type](node, value);
+		if (type in __FORMTYPES)
+			return __FORMTYPES[type](node, value);
 		if (value === undefined)
 			return "value" in node ? node.value : node.getAttribute("value");
 		if ("value" in node)

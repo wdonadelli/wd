@@ -104,13 +104,13 @@ const __DOCODE = {
 	},
 	/**. '{node create(node body, string tag)}: Retorna o nó especificado em '{tag} filho de '{body}.**/
 	create: function(body, tag) {
-		const html = body.lastElementChild;
-		if (html === null || html.tagName.toLowerCase() !== tag) {
+		const last = body.lastElementChild;
+		if (last === null || last.tagName.toLowerCase() !== tag) {
 			const node = document.createElement(tag);
 			body.appendChild(node);
 			return node;
 		}
-		return html;
+		return last;
 	},
 	/**. '{boolean head(node body, string code)}: Checa, adiciona estrutura de títulos e retorna o resultado.**/
 	head: function(body, code) {
@@ -235,6 +235,16 @@ const __DOCODE = {
 		return false;
 	},
 	/**. '{boolean plus(node body, string code)}: Checa, adiciona estruturas especiais e retorna o resultado.**/
+
+	//FIXME alterar e criar:
+	//@menu
+	//@caption: texto da legenda //tabela e figura
+	//@figure: caminho da imagem
+	//@alt: descrição da imagem //figura
+	//FIXME mudar para __DOM e __HTML
+	//FIXME lembrar que var !== null && typeof var === object não é apenas um objeto, pode ser regex
+
+
 	plus: function(body, code) {
 		const re   = /^\s*\@(\w+)(?:\s+\"([^"]+)\")?(?:\s+\"([^"]+)\")?\s*$/;
 		const file = /([^/\\]+)$/;
@@ -263,13 +273,16 @@ const __DOCODE = {
 		if (find[1].toLowerCase() === "caption" && find[2] !== undefined) {
 			const last = body.lastElementChild;
 			const name = last === null ? null : last.tagName.toLowerCase();
-			const tags = {table: "caption", figure: "figcaption"};
-			if (name in tags) {
-				const elem = document.createElement(tags[name]);
+			if (name === "table") {
+				last.createCaption().innerHTML = this.inner(find[2]);
+				return true;
+			}
+			else if (name === "figure") {
+				const elem = document.createElement("figcaption");
 				elem.innerHTML = this.inner(find[2])
 				last.appendChild(elem);
+				return true;
 			}
-			return name in tags;
 		}
 		return false;
 	},
