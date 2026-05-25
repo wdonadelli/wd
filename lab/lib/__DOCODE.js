@@ -19,31 +19,61 @@ A notação possui as seguintes regras:
 + Se não for identificada nenhuma notação, o conteúdo será definido como parágrafo; e
 + Cuidar para que os caracteres delimitadores não estejam contidos em i{strings} ou expressões regulares;
 
-#4 Elementos de Blocos
+#4 Listas
 - Itens de u{listas não ordenadas} são identificadas pelo caractere &{#x002D} seguido de espaço em branco;
 - Itens de u{listas ordenadas} são identificadas pelo caractere &{#x002B} seguido de espaço em branco;
-- Itens de u{listas de definição} são identificadas pelo caractere &{#x002E} seguido de espaço em branco;
-- Para adicionar um termo à uma u{lista de definição}, deve-se separar o termo da sua descrição com o caractere &{#x003A};
-- u{Tabelas} são identificadas pelo pelo caractere &{#x007C}, utilizado no início, no fim e como separador de colunas;
-- A primeira linha de uma u{tabela} será seu cabeçalho; e
+- Itens de u{listas de definição} são identificadas pelo caractere &{#x002E} seguido de espaço em branco; e
+- Para adicionar um termo à uma u{lista de definição}, deve-se separar o termo da sua descrição com o caractere &{#x003A}.
+''- Item 1
+- Item 2
+- Item 3
+
++ Item 1
++ Item 2
++ Item 3
+
+. Data 1: Item 1.1
+. Data 2: Item 2.1
+. Item 2.2
+. Item 3.3''
+
+#4 Tabelas
+- Tabelas são identificadas pelo pelo caractere &{#x007C}, presente no início, no fim e como separador de colunas;
+- A primeira linha da notação contendo colunas será seu cabeçalho;
+- O texto da legenda deve estar entre os caracteres &{#x007C}&{#x0022}&{#x0022} e &{#x0022}&{#x0022}&{#x007C} e ser adjacente aos demais campos (); e
 - u{Títulos} são identificados pelo caractere &{#x0023} seguido do respectivo nível (1-6) e um espaço em branco.
 
-#4 Blocos Multilinhas
-- Um bloco de u{citação} deve iniciar e terminar com um duplo caractere &{#x0022};
-- Um bloco de u{texto pré formatado} deve iniciar e terminar com um duplo caractere &{#x0027}; e
+''|Head 1|Head 2|Head 3|
+|Cell 1.1|Cell 1.2|Cell 1.3|
+|Cell 2.1|Cell 2.2|Cell 2.3|
+|""Caption""|''
+
+#4 Blocos de Texto Multilinhas
+- Um bloco de u{citação} deve iniciar e terminar com os caracteres &{#x0022}&{#x0022};
+- Um bloco de u{texto pré formatado} deve iniciar e terminar com os caracteres &{#x0027}&{#x0027}; e
 - Os blocos citados podem conter múltiplas linhas, sendo os caracteres da notação os delimitadores de seu conteúdo.
 
 #4 Elementos Textuais (em linha)
-+ Elementos textuais são identificados pelo nome (i{tag}) seguindo de seu conteúdo textual delimitado pelos carateres &{#x007B} e &{#x007D} (span&{#x007B}texto&{#x007D} é igual a <span>texto</span>);
-+ Os atributos do elemento textual, se necessário, são informados após o caractere &{#x007D}, da mesma forma ocorrida nos elementos HTML, delimitados pelos caracters &{#x005B} e &{#x005D};
++ Elementos textuais são identificados pelo nome (i{tag} HTML) seguido de seu conteúdo textual delimitado pelos carateres &{#x007B} e &{#x007D};
++ Os atributos (opcional) são informados após o caractere &{#x007D}, delimitados pelos caracteres &{#x005B} e &{#x005D};
++ Os atributos são definidos semelhante ao HTML: nome, caracter &{#x003D} e valor delimitado pelos caracteres &{#x0022};
++ Os pares nome/valor devem ser separados por espaço;
 + Não é possível definir filhos aos elementos textuais;
-+ Elementos do tipo bloco também são permitidos, mas podem não fazer sentido;
-+ Elemento do tipo '{script} é ignorado, o objetivo da notação é formatação textual; e
++ Qualquer tipo de elemento, exceto '{script}, pode ser definido, observar o que faz sentido ao conteúdo;
 + Os seguintes atalhos podem ser utilizados em substituição ao nome do elemento:
-|Caractere|Descrição|Exemplo|
-|&{#x0027}|Atalho para o elemento '{code}|&{#x0027}&{#x007B}x = 1&{#x007D} e igual à code&{#x007B}x = 1&{#x007D}|
-|&|Atalho para caracteres especiais do tipo i{&#x003B;}|&&{#x007B}#x003B&{#x007D} (sem &{#x003B})|
-@caption "Tabela de atalhos para alguns componentes em HTML"
+|""Tabela de atalhos para alguns componentes em HTML""|
+|Caractere|Descrição|
+|&{#x0027}|Atalho para o elemento '{code}|
+|&|Atalho para caracteres especiais do tipo i{&#x003B;}|
+
+''Esta u{frase} contém uma '{palavra}[class="style" id="abc"] sublinhada. &{#x270E}
+
+Equivale a:
+
+Esta <u>frase<u> contém uma <code class="style" id="abc">palavra</code> sublinhada. &#x270E;
+
+Que renderiza como:''
+""Esta u{frase} contém uma '{palavra}[class="style" id="abc"] sublinhada. &{#x270E}""
 
 #4 Elementos Especiais
 + Os elementos especiais iniciam com o símbolo &{#x0040} seguido de seu nome;
@@ -55,8 +85,10 @@ A notação possui as seguintes regras:
 |'{menu}|Define um menu para listar i{links} para os cabeçalhos de u{níveis 2 a 6} b{posteriores} à notação.|-|-|
 |'{figure}|Define um quadro para uma imagem.|Caminho para o arquivo.|Descrição da imagem ('{alt}).|
 |'{caption}|Define a legenda do b{elemento anterior} nos casos de u{tabela e figura} ('{@figure}).|Texto da legenda|-|
+|""Nome dos ""elementos" b{especiais}""|
 |'{file}|Define um quadro para comportar arquivos.|Caminho para o arquivo|MIME TYPE do arquivo|
-@caption "Nome dos elementos especiais"
+
+
 
 #4 Métodos
 O argumento '{body} corresponde ao elemento HTML onde a notação é renderizada.**/
@@ -145,9 +177,16 @@ const __DOCODE = {
 		/*-- registrar --*/
 		const find = code.match(re);
 		const elem = this.create(body, "table");
+		/*-- checando legenda --*/
+		const caption = /^\s*\|\"\"((?:\"[^"]|\"\"[^|]|[^"])+)\"\"\|\s*$/;
+		if (caption.test(code)) {
+			const text = code.match(caption)[1].trim();
+			elem.createCaption().innerHTML = this.inner(text);
+			return true;
+		}
+		/*-- verificar container --*/
 		const tbox = elem.tHead === null ? "head" : "body";
 		const trow = document.createElement("tr");
-		/*-- criando containers --*/
 		elem.border = 1;
 		if (elem.tHead === null)       elem.createTHead();
 		if (elem.tBodies.length === 0) elem.createTBody();
@@ -192,59 +231,58 @@ const __DOCODE = {
 		}
 		return true;
 	},
-	/**. '{boolean text(node body, string code)}: Checa, adiciona estrutura de blocos de texto e retorna o resultado.**/
-	text: function(body, code) {
-		const node = body.lastElementChild;
-		const tag  = node === null ? null : node.tagName.toLowerCase();
+	/**. '{boolean block(node body, string code)}: Checa, adiciona estrutura de blocos e retorna o resultado.**/
+	//FIXME não é possível abri o mesmo bloco dentro dele
+	block: function(body, code) {
+		/*-- avançando para o último bloco em aberto --*/
+		const open = body.querySelector("[data-wd-notation='1']");
+		if (open !== null) return this.append(open, code);
+		/*-- checando tipo de bloco --*/
+		const name = body.tagName.toLowerCase();
 		const data = {
 			pre:        {start: /^(\s*\'\')/, close: /(\'\'\s*)$/,},
 			blockquote: {start: /^(\s*\"\")/, close: /(\"\"\s*)$/,},
+			fieldset:   {start: /^(?:\s*\_\_((?:\_[^_]|[^_])+)\_\_\s*)$/, close: /^(\s*\_\_\s*)$/}
 		};
-		/*-- definindo status --*/
-		for (let name in data) {
-			let open  = name === tag && node.dataset.open == "1";
-			let start = data[name].start.test(code);
-			let close = data[name].close.test(code);
-			data[name].status = open ? (close ? "close" : "add") : (start ? "open" : null);
-		}
-		/*-- blocos específicos --*/
-		for (let name in data) {
-			if (data[name].status === "open") {
-				const elem = document.createElement(name);
+		for (let tag in data) {
+			/*-- abrir bloco --*/
+			if (data[tag].start.test(code) && name !== tag) {
+				const find = code.match(data[tag].start);
+				const elem = document.createElement(tag);
+				elem.dataset.wdNotation = 1;
 				body.appendChild(elem);
-				elem.dataset.open = "1";
-				return this.text(body, code.replace(data[name].start, ""));
-			}
-			if (data[name].status === "add") {
-				if (name === "pre") {
-					node.textContent += `\n${code}`;
+				if (tag === "fieldset") {
+					const legend = document.createElement("legend");
+					legend.innerHTML = this.inner(find[1].trim());
+					elem.appendChild(legend);
 				}
-				else if (name === "blockquote" && code.trim() !== "") {
-					const elem = document.createElement("p");
-					elem.innerHTML = this.inner(code.trim());
-					node.appendChild(elem);
-				}
+				this.append(elem, code.replace(data[tag].start, ""));
 				return true;
 			}
-			if (data[name].status === "close") {
-				this.text(body, code.replace(data[name].close, ""));
-				delete node.dataset.open;
+			/*-- fechar bloco --*/
+			if (data[tag].close.test(code) && name === tag) {
+				delete body.dataset.wdNotation;
+				this.append(body, code.replace(data[tag].close, ""));
 				return true;
 			}
+		}
+		/*-- adicionar dados aos elementos específicos --*/
+		if (name === "pre") {
+			body.textContent += `${code}\n`;
+			return true;
 		}
 		return false;
 	},
-	/**. '{boolean plus(node body, string code)}: Checa, adiciona estruturas especiais e retorna o resultado.**/
+
 
 	//FIXME alterar e criar:
 	//@menu
-	//@caption: texto da legenda //tabela e figura
 	//@figure: caminho da imagem
 	//@alt: descrição da imagem //figura
 	//FIXME mudar para __DOM e __HTML
 	//FIXME lembrar que var !== null && typeof var === object não é apenas um objeto, pode ser regex
 
-
+	/**. '{boolean plus(node body, string code)}: Checa, adiciona estruturas especiais e retorna o resultado.**/
 	plus: function(body, code) {
 		const re   = /^\s*\@(\w+)(?:\s+\"([^"]+)\")?(?:\s+\"([^"]+)\")?\s*$/;
 		const file = /([^/\\]+)$/;
@@ -289,7 +327,7 @@ const __DOCODE = {
 	/**. '{boolean append(node body, string code)}: Checa, adiciona estruturas e retorna o resultado.**/
 	append: function(body, code) {
 		/*-- text precisa ser o primeiro --*/
-		if (this.text(body, code))  return true;
+		if (this.block(body, code)) return true;
 		if (this.list(body, code))  return true;
 		if (this.table(body, code)) return true;
 		if (this.head(body, code))  return true;
