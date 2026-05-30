@@ -3,7 +3,7 @@
 O objeto `{__LANG} faz a gestão da linguagem local da biblioteca.
 **/
 const __LANG = {
-	/**. '{regexp re}: Expressão regular para o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
+	/**. '{regexp re}: Expressão regular para o formato de a{linguagem}@href{https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)}.**/
 	re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 	/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e ascendentes.**/
 	node: function(elem) {

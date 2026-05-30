@@ -1,6 +1,6 @@
 /**
 #3 Figuras
-	O construtor '{__SVG} permite a criação de imagens SVG simples por meio de uma cadeia de métodos que atribuem valor ao elemento principal. Possui os seguintes argumento opcionais relacionados ao a{viewBox}[target="blank" href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox"]:
+	O construtor '{__SVG} permite a criação de imagens SVG simples por meio de uma cadeia de métodos que atribuem valor ao elemento principal. Possui os seguintes argumento opcionais relacionados ao a{viewBox}@target{blank}href{https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox}:
 	|Argumento|Tipo|Padrão|Descrição|
 	|width|number|100|Tamanho horizontal da imagem|
 	|height|number|100|Tamanho vertical da imagem|

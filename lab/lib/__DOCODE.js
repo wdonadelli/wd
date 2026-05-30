@@ -8,72 +8,161 @@ Também contempla a decodificação de uma linguagem de marcação específica e
 
 #4 Regras Gerais
 A notação possui as seguintes regras:
-+ Linhas sem caracteres imprimíveis são desconsideradas, exceto dentro de um bloco de texto pré formatado;
-+ Cada elemento HTML é identificado por caraceres específicos definidos pela notação;
-+ Os caracteres &{amp}, &{lt} e &{gt} são tratados como texto, não sendo sensíveis ao código HTML gerado;
-+ Há notação para elementos de bloco, elementos textuais (em linha) e outros especiais;
-+ Cada notação deve estar separada por quebra de linha, excetos elementos textuais;
-+ Blocos de citação e de texto pré formatado podem conter múltiplas linhas;
-+ Os caracteres utilizados na notação devem ser informados no início de cada linha seguidos de seu conteúdo;
-+ A continuidade de uma determinada notação pressupõe a continuidade do elemento por ela definido;
++ Há anotações para elementos contínuos, únicos, de escopo, de formatação textual e especiais e para atributos;
++ Linhas sem caracteres imprimíveis são desconsideradas, exceto dentro do escopo de texto pré formatado;
++ Os caracteres &{amp}, &{lt} e &{gt} são tratados como texto, não sendo sensíveis ao código HTML;
++ A notação é definida por caracteres específicos que identificam o tipo de elemento a ser gerado;
++ Cada notação deve estar contida numa única linha, excetos os escopos, que aceitam múltiplas linhas;
++ Os caracteres que abrem ou identificam a notação devem estar no início da linha, exceto a notação para atributos;
 + Se não for identificada nenhuma notação, o conteúdo será definido como parágrafo; e
-+ Cuidar para que os caracteres delimitadores não estejam contidos em i{strings} ou expressões regulares;
++ Quando a notação estiver compartilhada com o código fonte, os caracteres delimitadores não podem estar contidos em i{strings} ou expressões regulares.
 
-#4 Listas
-- Itens de u{listas não ordenadas} são identificadas pelo caractere &{#x002D} seguido de espaço em branco;
-- Itens de u{listas ordenadas} são identificadas pelo caractere &{#x002B} seguido de espaço em branco;
-- Itens de u{listas de definição} são identificadas pelo caractere &{#x002E} seguido de espaço em branco; e
+#4 Notação de Atributos
+A notação para atributo estabelece relação com os atributos HTML a serem definidos ao elemento.
++ Somente os elementos de formatação textual, campos de formulários e especiais permitem definir atributos;
++ A notação para atributo inicia com o caractere &{#x0040} seguida dos nomes e valores do atributos;
++ Cada atributo é definido pelo seu nome seguindo do respectivo valor delimitado pelos caracteres &{#x007B} e &{#x007D};
++ Vários conjuntos de atributos podem ser definidos em sequência;
++ Nomes de atributos podem conter caracteres alfanumérico, sublinhado e traço apenas; e
++ Para informar um caractere &{#x007D} como valor do atributo, ele deve ser previamente escapado com &{#x005C}.
+
+#4 Elementos Contínuos
+A continuidade de uma determinada notação pressupõe também a continuidade do seu respectivo elemento por ela representado.
+
+#5 Listas
+Há notações para listas ordenadas, não ordenadas e de definição:
+- Itens de u{listas não ordenadas} são identificados pelo caractere &{#x002D} seguido de espaço em branco e seu conteúdo;
+- Itens de u{listas ordenadas} são identificados pelo caractere &{#x002B} seguido de espaço em branco e seu conteúdo;
+- Itens de u{listas de definição} são identificados pelo caractere &{#x002E} seguido de espaço em branco e seu conteúdo; e
 - Para adicionar um termo à uma u{lista de definição}, deve-se separar o termo da sua descrição com o caractere &{#x003A}.
-''- Item 1
-- Item 2
-- Item 3
 
-+ Item 1
-+ Item 2
-+ Item 3
+#5 Tabelas
+No caso de tabelas, há notação para linhas/colunas e para legenda.
+- Linhas de tabelas são identificadas pelo pelo caractere &{#x007C}, presente no início, no fim e como separador de colunas;
+- A primeira linha da notação identificando colunas será o cabeçalho da tabela;
+- O conteúdo da célula deve ficar entre os delimitadores de coluna;
+- O texto da legenda deve estar numa linha separada entre os caracteres &{#x007C}&{#x0022}&{#x0022} e &{#x0022}&{#x0022}&{#x007C} e ser adjacente às demais linhas;
 
-. Data 1: Item 1.1
-. Data 2: Item 2.1
-. Item 2.2
-. Item 3.3''
+#4 Elementos Únicos
+Elementos únicos são aqueles que não possuem uma continuidade, ocupando a notação de uma única linha.
 
-#4 Tabelas
-- Tabelas são identificadas pelo pelo caractere &{#x007C}, presente no início, no fim e como separador de colunas;
-- A primeira linha da notação contendo colunas será seu cabeçalho;
-- O texto da legenda deve estar entre os caracteres &{#x007C}&{#x0022}&{#x0022} e &{#x0022}&{#x0022}&{#x007C} e ser adjacente aos demais campos (); e
-- u{Títulos} são identificados pelo caractere &{#x0023} seguido do respectivo nível (1-6) e um espaço em branco.
+#5 Títulos/Cabeçalhos
+u{Títulos} são identificados pelo caractere &{#x0023} seguido do nível (1-6), de um espaço em branco e seu conteúdo.
 
-''|Head 1|Head 2|Head 3|
-|Cell 1.1|Cell 1.2|Cell 1.3|
-|Cell 2.1|Cell 2.2|Cell 2.3|
-|""Caption""|''
+#5 Campos de Formulários
+A notação de formulários está dividida em u{quatro elementos}, todos u{separados por espaço}: o caractere identificador da notação; o rótulo do campo; os atributos do campo; e o valor ou a lista de valores.
++ Os campos de formulários não precisam estar dentro de um escopo de formulário;
++ A u{notação} de campo de fomulário é definida pelo caractere &{#x002A} no início da linha;
++ O u{rótulo} consiste numa i{string} que identifica visualmente o nome do formulário;
++ Se o campo for de u{preenchimento obrigatório}, o caractere &{#x002A} deve ser adicionado ao fim do rótulo;
++ A função dos u{atributos} é definir o tipo e nome do campo e outras u{características específicas};
++ O primeiro atributo deve ser o u{tipo} do campo, incluídos os valores '{textarea} e '{select};
++ O valor do primeiro atributo (tipo) é o u{nome} do campo;
++ Após os atributos, é possível definir o u{valor inicial} do campo ou uma u{lista da valores} (para elementos que a comportam);
++ A u{lista/valor} é delimitada pelos caracteres &{#x005B} e &{#x005D} - múltipla escolha - ou &{#x0028} e &{#x0029} - escolha única;
++ A definição entre u{múltipla escolha} e u{escolha única} tem relevância apenas para os campos '{select, file, email} e '{radio};
++ A u{lista/valor} é opcional e seu conteúdo pode ser vazio;
++ Para definir uma u{lista}, deve-se separar os itens com caractere &{#x002C};
++ Caso valor e o rótulo do u{item da lista} sejam diferentes, deve-se separá-los com caractere &{#x003A}, nessa ordem; e
++ Para marcar u{item padrão da lista}, o caractere &{#x002A} deve ser adicionado ao fim de seu rótulo.
+Com as informações da notação, é possível dispensar o preenchimentos dos seguintes atributos: '{required, type, name, value, multiple, list} e '{checked/selected}. Para os demais atributos mais específicos, é preciso definis-lo após o tipo de campo.
 
-#4 Blocos de Texto Multilinhas
-- Um bloco de u{citação} deve iniciar e terminar com os caracteres &{#x0022}&{#x0022};
-- Um bloco de u{texto pré formatado} deve iniciar e terminar com os caracteres &{#x0027}&{#x0027}; e
-- Os blocos citados podem conter múltiplas linhas, sendo os caracteres da notação os delimitadores de seu conteúdo.
 
-#4 Elementos Textuais (em linha)
+					UF     @select{uf} [PR,SC*,RS]
+					Nome   @text{nome}required{true} ()
+					Cor    @text{cor} > [Azul, Verde, Vermelho]
+					Aceite @checkbox{ok}actived{true}
+					Idade  @number{idade}min{0}max{80}step{1}
+					OK     @submit.send.formmethod{GET}
+					OK     @type{submit}name{send}formmethod{GET}formaction{loko.php}
+
+					@audio?src{loko.mp3}controls{true}
+					@audio  loko.mp3
+					@video  loko.mpeg
+					@figure loko.jpeg <legenda> <descrição da imagem>
+					@file   loko.xml
+					@menu
+					@figure loko.jpeg "O louco. Pintura de Maluco" "Homem doido sentado de pernas para o ar"
+					! loko.jpeg
+					!	""O louco. Pintura de Maluco""
+					! "Homem doido sentado de pernas para o ar"
+
+
+
+
+
+#4 Elementos de Escopo
+- O escopo de u{citação} inicia e termina com um duplo caracter &{#x0022};
+- O escopo de u{texto pré formatado} inicia e termina com um duplo caracter &{#x0027};
+- O escopo de u{formulário} inicia e termina com um duplo caracter &{#x002A};
+- Os dados para submissão do formulários devem ser inseridos num campo do tipo '{submit} ou '{image};
+- O escopo de u{agrupamento de campos} inicia com o nome da legenda delimitado por um duplo caractere &{#x005F};
+- O escopo de u{agrupamento de campos} termina com um duplo caracter &{#x005F};
+- É possível a um escopo conter um escopo de outro tipo, exceto o de texto pré formatado; e
+- Os escopos de texto pré formatado e citação podem conter conteúdo após ou antes dos caracteres delimitadores, respecitvamente;
+
+#4 Elementos de Formatção Textual (em linha)
 + Elementos textuais são identificados pelo nome (i{tag} HTML) seguido de seu conteúdo textual delimitado pelos carateres &{#x007B} e &{#x007D};
-+ Os atributos (opcional) são informados após o caractere &{#x007D}, delimitados pelos caracteres &{#x005B} e &{#x005D};
-+ Os atributos são definidos semelhante ao HTML: nome, caracter &{#x003D} e valor delimitado pelos caracteres &{#x0022};
-+ Os pares nome/valor devem ser separados por espaço;
++ Os atributos podem são informados após o caractere &{#x007D};
 + Não é possível definir filhos aos elementos textuais;
-+ Qualquer tipo de elemento, exceto '{script}, pode ser definido, observar o que faz sentido ao conteúdo;
++ Qualquer tipo de elemento, exceto '{script}, pode ser definido, observar o que faz sentido ao conteúdo textual (em linha);
 + Os seguintes atalhos podem ser utilizados em substituição ao nome do elemento:
 |""Tabela de atalhos para alguns componentes em HTML""|
 |Caractere|Descrição|
 |&{#x0027}|Atalho para o elemento '{code}|
 |&|Atalho para caracteres especiais do tipo i{&#x003B;}|
 
-''Esta u{frase} contém uma '{palavra}[class="style" id="abc"] sublinhada. &{#x270E}
+#4 Exemplos
 
-Equivale a:
+''Lista não ordernada:
+- Item 1
+- Item 2
+- Item 3
 
+Lista ordenada:
++ Item 1
++ Item 2
++ Item 3
+
+Lista de definições:
+. Termo: Definição
+. Definição
+. Termo: Definição
+
+Tabela:
+|Head 1|Head 2|Head 3|
+|Cell 1.1|Cell 1.2|Cell 1.3|
+|Cell 2.1|Cell 2.2|Cell 2.3|
+|""Caption""|
+
+Cabeçalhos:
+#3 Título de Nível 3
+#1 Título de Nível 1
+
+Citação:
+""Início da Citação.
+Meio da citação.
+Fim da citação""
+
+Agrupamento de Campos:
+__ Legenda __
+...
+__
+
+Formulário:
+** method{get}action{/file.php} **
+...
+**
+
+Elemento Textuais:
+Esta u{frase} contém uma '{palavra}@class{style}id{abc}] sublinhada. &{#x270E}
+
+Equivale a
 Esta <u>frase<u> contém uma <code class="style" id="abc">palavra</code> sublinhada. &#x270E;
+''
 
-Que renderiza como:''
-""Esta u{frase} contém uma '{palavra}[class="style" id="abc"] sublinhada. &{#x270E}""
+Esta u{frase} contém uma '{palavra}@class{style}id{abc} sublinhada. &{#x270E}
+
 
 #4 Elementos Especiais
 + Os elementos especiais iniciam com o símbolo &{#x0040} seguido de seu nome;
@@ -85,7 +174,7 @@ Que renderiza como:''
 |'{menu}|Define um menu para listar i{links} para os cabeçalhos de u{níveis 2 a 6} b{posteriores} à notação.|-|-|
 |'{figure}|Define um quadro para uma imagem.|Caminho para o arquivo.|Descrição da imagem ('{alt}).|
 |'{caption}|Define a legenda do b{elemento anterior} nos casos de u{tabela e figura} ('{@figure}).|Texto da legenda|-|
-|""Nome dos ""elementos" b{especiais}""|
+|""Nome dos elementos especiais""|
 |'{file}|Define um quadro para comportar arquivos.|Caminho para o arquivo|MIME TYPE do arquivo|
 
 
@@ -118,18 +207,39 @@ const __DOCODE = {
 		}
 		return {code: code.replace(/^\s*$/gm, "").replace(/\n+/g, "\n"), data: data.join("\n")};
 	},
+	/**. '{object attr(string code)}: Checa se '{code} está em formato de atributo da notação e retorna as seguintes informaçẽos:
+	|:Tabela de retorno do método '{attr}:|
+	|Nome|Tipo|Descrição|
+	|'{find}|string|Fragmento da notação de atributo casado|
+	|'{html}|string|Codificação do fragmento casado para a notação de atributos HTML|
+	|'{json}|object|Codificação do fragmento casado para objeto|**/
+	attr: function(code) {
+		const attr = /^\@(?:(?:((?:\w|-)+)\{((?:\\\}|[^}])*)\})+)/;
+		const data = /((?:\w|-)+)\{((?:\\\}|[^}])*)\}/g;
+		const find = code.match(attr);
+		const base = find === null ? "" : find[0].replace(/^\@/, "").replace(/\"/g, `\\"`);
+		return {
+			find: find === null ? "" : find[0],
+			html: base.replace(data, `$1="$2" `).replace(/\\\}/g, "}").trim(),
+			json: JSON.parse("{" + base.replace(data, `"$1": "$2",`).replace(/\\\}/g, "}").replace(/\,$/, "") + "}"),
+		}
+	},
 	/**. '{string inner(string code)}: Decodifica o conteúdo textual para código HTML e o retorna.**/
 	inner: function(code) {
-		const  re  = /(\&amp\;|'|[a-z]+)\{([^\}]*)\}(?:\[([^\]]*)\])?/;
+		const  re = /(?:^|\s)((\&amp\;|'|[a-zA-Z0-9\-]+)\{((?:\\\}|[^}])*)\})(\@.+)?/;
 		let inner = code.trim().replace(/\&/g, "&amp;").replace(/\>/g, "&gt;").replace(/\</g, "&lt;");
 		while(re.test(inner)) {
 			let find = inner.match(re);
-			let attr = find[3] ? find[3] : "";
-			switch(find[1].toLowerCase()) {
-				case "'":      inner = inner.replace(find[0], `<code ${attr} translate="no">${find[2]}</code>`); break;
-				case "&amp;":  inner = inner.replace(find[0], `&${find[2]};`); break;
-				case "script": inner = inner.replace(find[0], ""); break;
-				default:       inner = inner.replace(find[0], `<${find[1]} ${attr}>${find[2]}</${find[1]}>`);
+			let base = find[1];
+			let name = find[2].toLowerCase();
+			let text = find[3].replace(/\\\}/g, "}");
+			let attr = this.attr(find[4] ? find[4] : "");
+			let swap = `${base}${attr.find}`;
+			switch(name) {
+				case "'":      inner = inner.replace(swap, `<code ${attr.html} translate="no">${text}</code>`); break;
+				case "&amp;":  inner = inner.replace(swap, `&${text};`); break;
+				case "script": inner = inner.replace(swap, ""); break;
+				default:       inner = inner.replace(swap, `<${name} ${attr.html}>${text}</${name}>`);
 			}
 		}
 		return inner;
@@ -144,6 +254,37 @@ const __DOCODE = {
 		}
 		return last;
 	},
+
+	form: function(body, code) {
+		const re   = /^\s*\*\s*([^@]+)(\@\w+\{.*?\}[^\[\(]*)(\[[^\]]*\]|\([^\)]*\))?\s*$/;
+		const info = /\@(\w+)\{(.*?)\}/;
+		if (!re.test(code)) return false;
+		/*-- registrar --*/
+		const find = code.match(re);
+		const data = {};
+		data.label    = find[1].trim().replace(/\s*\*$/, "*");
+		data.required = data.label.slice(-1) === "*";
+		data.attr     = this.attr(find[2].trim());
+		data.main     = find[3] ? find[3] : "()";
+		data.multiple = data.main[0] === "[";
+		data.info     = find[2].trim().match(info);
+		data.type     = data.info[1] ? data.info[1] : "";
+		data.name     = !data.info[2] || data.info[2].trim() === "" ? label.replace(/\*+$/, "") : data.info[2].trim();
+		data.list     = data.main.slice(1, data.main.length - 1).split(",").map(function(v,i,a) {
+			const item  = v.split(":");
+			const check = v.trim().slice(-1) === "*"
+			return {active: check, value: item[0].trim(), text: item[item.length > 1 ? 1 : 0].trim()};
+		});
+		//data.value    =
+		//data.checked  =
+		return data;
+	},
+
+
+
+
+
+
 	/**. '{boolean head(node body, string code)}: Checa, adiciona estrutura de títulos e retorna o resultado.**/
 	head: function(body, code) {
 		const re = /^\s*\#([1-6])(.*)$/;
@@ -231,9 +372,9 @@ const __DOCODE = {
 		}
 		return true;
 	},
-	/**. '{boolean block(node body, string code)}: Checa, adiciona estrutura de blocos e retorna o resultado.**/
+	/**. '{boolean scope(node body, string code)}: Checa, adiciona estrutura de blocos e retorna o resultado.**/
 	//FIXME não é possível abri o mesmo bloco dentro dele
-	block: function(body, code) {
+	scope: function(body, code) {
 		/*-- avançando para o último bloco em aberto --*/
 		const open = body.querySelector("[data-wd-notation='1']");
 		if (open !== null) return this.append(open, code);
@@ -242,11 +383,13 @@ const __DOCODE = {
 		const data = {
 			pre:        {start: /^(\s*\'\')/, close: /(\'\'\s*)$/,},
 			blockquote: {start: /^(\s*\"\")/, close: /(\"\"\s*)$/,},
-			fieldset:   {start: /^(?:\s*\_\_((?:\_[^_]|[^_])+)\_\_\s*)$/, close: /^(\s*\_\_\s*)$/}
+			form:       {start: /^(\s*\*\*)/, close: /(\*\*\s*)$/,},
+			fieldset:   {start: /^(?:\s*\_\_((?:\_[^_]|[^_])+)\_\_\s*)$/, close: /^(\s*\_\_\s*)$/},
+			figure:     {start: /^(?:\s*\=\=((?:\=[^=]|[^=])+)\=\=\s*)$/, close: /^(\s*\=\=\s*)$/},
 		};
 		for (let tag in data) {
 			/*-- abrir bloco --*/
-			if (data[tag].start.test(code) && name !== tag) {
+			if (data[tag].start.test(code) && name !== tag && name !== "pre") {
 				const find = code.match(data[tag].start);
 				const elem = document.createElement(tag);
 				elem.dataset.wdNotation = 1;
@@ -256,6 +399,12 @@ const __DOCODE = {
 					legend.innerHTML = this.inner(find[1].trim());
 					elem.appendChild(legend);
 				}
+				else if (tag === "figure") {
+					const img = document.createElement("img");
+					img.src = find[1].trim();
+					elem.appendChild(img);
+				}
+
 				this.append(elem, code.replace(data[tag].start, ""));
 				return true;
 			}
@@ -327,7 +476,7 @@ const __DOCODE = {
 	/**. '{boolean append(node body, string code)}: Checa, adiciona estruturas e retorna o resultado.**/
 	append: function(body, code) {
 		/*-- text precisa ser o primeiro --*/
-		if (this.block(body, code)) return true;
+		if (this.scope(body, code)) return true;
 		if (this.list(body, code))  return true;
 		if (this.table(body, code)) return true;
 		if (this.head(body, code))  return true;

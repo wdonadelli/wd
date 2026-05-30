@@ -56,7 +56,7 @@ const __NUMBER = {
 			data.type = "nan";
 		return data;
 	},
-	/**. '{string locale(number value, string type, string data, object extra)}: Retorna o número no a{formato local}[href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat" target="_blank"] conforme especificado:
+	/**. '{string locale(number value, string type, string data, object extra)}: Retorna o número no a{formato local}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}target{_blank} conforme especificado:
 	|Argumento|Descrição|
 	|value|Valor a ser transformado|
 	|type|Tipo do formato|
@@ -64,11 +64,11 @@ const __NUMBER = {
 	|extra|Configurações adicionais e opcionais|
 	. Tipos e suas especificações:
 	|'{type}|Descrição|'{data}|
-	|currency|Formato monetário|a{Código monetário}[href="https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes" target="_blank"]|
+	|currency|Formato monetário|a{Código monetário}@href{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}target{_blank}|
 	|currencyNarrow|Formato monetário com símbolo estreito|Idem|
 	|currencyName|Formato monetário em texto|Idem|
 	|currencyCode|Formato monetário com código monetário|Idem|
-	|unit|Unidade de medida|a{Nome da unidade de medida}[href="https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier" target="_blank"]|
+	|unit|Unidade de medida|a{Nome da unidade de medida}@href{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}target{_blank}|
 	|unitLong|Unidade de medida longa|Idem|
 	|unitNarrow|Unidade de medida estreita|Idem|
 	|compact|Valor textual compacto|Expressão longa ('{long}) ou curta ('{short})|

@@ -38,10 +38,10 @@ const __ICON = {
 	/**. '{void style(node, image, size, repeat, position, origin)}: Define o estilo do fundo do nó ('{node}):
 	|Nome|Tipo|CSS|Padrão|
 	|image|object|-|Ver método '{image}|
-	|size|string|a{backgroundSize}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"]|1em|
-	|repeat|string|a{backgroundRepeat}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"]|no-repeat|
-	|position|string|a{backgroundPosition}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"]|50% 50%|
-	|origin|string|a{backgroundOrigin}[href="https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"]|content-box|**/
+	|size|string|a{backgroundSize}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-size}|1em|
+	|repeat|string|a{backgroundRepeat}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat}|no-repeat|
+	|position|string|a{backgroundPosition}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-position}|50% 50%|
+	|origin|string|a{backgroundOrigin}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin}|content-box|**/
 	style: function(node, image, size, repeat, position, origin) {
 		node.style.backgroundImage    = this.image(image);
 		node.style.backgroundSize     = typeof size     === "string" ? size     : "1em";

@@ -3,7 +3,7 @@
 O objeto '{__FILE} define um conjunto de ferramentas envolvendo arquivos.
 **/
 const __FILE = {
-	/**. '{string RFC5987(string name)}: Retorna o valor de nome em formato a{RFC5987}[href ="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#encoding_for_content-disposition_and_link_headers"].**/
+	/**. '{string RFC5987(string name)}: Retorna o valor de nome em formato a{RFC5987}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#encoding_for_content-disposition_and_link_headers}.**/
 	RFC5987: function(name) {
 		return String(name).normalize("NFC").split("").map(function(v,i,a) {
 			const code = (/['()*]/).test(v) ? `%${v.charCodeAt(0).toString(16).toUpperCase()}` : encodeURIComponent(v);
@@ -12,7 +12,7 @@ const __FILE = {
 	},
 	/**. '{object toHeaders(object file)}: Retorna um cabeçalho contendo os dados do arquivo ('{File}/'{Blob}) se existentes:
 	|Cabeçalho|Popriedade|Valor|
-	|content-type|type|a{MIME Type}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types"]|
+	|content-type|type|a{MIME Type}@href{https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types}|
 	|content-length|size|Tamanho do arquivo|
 	|last-modified|lastModified|Última modificação|
 	|content-disposition|name|Nome do arquivo guardado no atributo '{filename}|**/

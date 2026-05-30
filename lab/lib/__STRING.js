@@ -109,7 +109,7 @@ const __STRING = {
 		}
 		catch(e) {return null;}
 	},
-	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de a{unicode}[href="https://symbl.cc/pt/unicode-table/" target="_blank"] e a retorna.**/
+	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de a{unicode}@href{https://symbl.cc/pt/unicode-table/}target{_blank} e a retorna.**/
 	unicode: function(str, decode) {
 		decode = decode === true;
 		str    = String(str).normalize();

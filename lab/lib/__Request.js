@@ -1,6 +1,6 @@
 /**
 #3 Requisições
-O constructor '{__Request} tem o objetivo de efetuar a{requisições Web}[href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"] ou leituras de a{arquivos}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"]. Recebe como argumento um objeto cujos nomes e valores dependem do método de leitura escolhido. As propriedades abaixo são comuns aos três métodos de leitura:
+O constructor '{__Request} tem o objetivo de efetuar a{requisições Web}@href{https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest} ou leituras de a{arquivos}@href{https://developer.mozilla.org/en-US/docs/Web/API/FileReader}. Recebe como argumento um objeto cujos nomes e valores dependem do método de leitura escolhido. As propriedades abaixo são comuns aos três métodos de leitura:
 |Propriedade|Descrição|
 |url|Alvo da requisição ou da leitura, não necessariamente uma URL, é obrigatória.|
 |call|Função que define o disparador a ser chamado a cada interação.|
@@ -33,7 +33,7 @@ function __Request(data) {
 }
 Object.defineProperties(__Request.prototype, {
 	constructor: {value: __Request},
-	/**. '{void send()}: Envia os dados de '{body} uma requisição ao servidor via a{XMLHttpRequest}[href="https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest" target="_blank"]. As propriedades específicas são '{method}, {async}, '{user}, '{password}, '{withCredentials}, '{overrideMimeType}, '{responseType}, '{headers} e '{timeout}.**/
+	/**. '{void send()}: Envia os dados de '{body} uma requisição ao servidor via a{XMLHttpRequest}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest}target{_blank}. As propriedades específicas são '{method}, {async}, '{user}, '{password}, '{withCredentials}, '{overrideMimeType}, '{responseType}, '{headers} e '{timeout}.**/
 	send: {
 		value: function(body) {
 			if (this.info !== null) return;
@@ -69,7 +69,7 @@ Object.defineProperties(__Request.prototype, {
 			return;
 		},
 	},
-	/**. '{void read()}: Lê um arquivo via a{FileReader}[href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader" target="_blank"].**/
+	/**. '{void read()}: Lê um arquivo via a{FileReader}@href{https://developer.mozilla.org/en-US/docs/Web/API/FileReader}target{_blank}.**/
 	read: {
 		value: function() {
 			if (this.info !== null) return;
@@ -101,7 +101,7 @@ Object.defineProperties(__Request.prototype, {
 			return;
 		},
 	},
-	/**. '{void fetch()}: Envia uma requisição ao servidor via a{fetch}[href="https://developer.mozilla.org/pt-BR/docs/Web/API/Fetch_API/Using_Fetch" target="_blank"]. As propriedades específicas são '{method}, {headers}, '{body}, '{mode}, '{cache}, '{credentials}, e '{redirect}.'{fetch}.**/
+	/**. '{void fetch()}: Envia uma requisição ao servidor via a{fetch}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/Fetch_API/Using_Fetch}target{_blank}. As propriedades específicas são '{method}, {headers}, '{body}, '{mode}, '{cache}, '{credentials}, e '{redirect}.'{fetch}.**/
 	fetch: {
 		value: function() {
 			function trigger(status, response, result) {

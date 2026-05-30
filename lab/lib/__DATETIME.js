@@ -34,7 +34,7 @@ Observações:
 - Formatos de tempo correspondem ao ciclo de 24 horas iniciado em ´{00:00:00.000};
 - Formatos de data/tempo correspondem ao período iniciado em ´{0000-01-01T00:00:00.000};
 - Dias da semana são relatados de domingo (1) a sábado (7);
-- Formatos de semana obedecem à a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, começa na segunda-feira (1) e termina no domingo (7).
+- Formatos de semana obedecem à a{ISO 8601}@href{https://en.wikipedia.org/wiki/ISO_8601#Week_dates}, ou seja, começa na segunda-feira (1) e termina no domingo (7).
 - Valores máximos e mínimos de identificadores confiáveis são dados por MAX_SAFE_INTEGER e MIN_SAFE_INTEGER;
 **/
 const __DATETIME = {
@@ -299,7 +299,7 @@ const __DATETIME = {
 		flag.D = 1;
 		return this.date(flag);
 	},
-	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings" target="_blank"] for correta, retorna verdadeiro.**/
+	/**. '{boolean week(object flag)}: Analisa e manipula a i{flag} recebida e, se a a{semana}@href{https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#week_strings}target{_blank} for correta, retorna verdadeiro.**/
 	week: function(flag) {
 		/*-- checando limite --*/
 		const year = flag.Y;
@@ -451,7 +451,7 @@ const __DATETIME = {
 		if (Number.isInteger(Y)) date.setUTCFullYear(Y);
 		return isNaN(date.getDate()) ? null : date;
 	},
-	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}[href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options" target="_blank"] do objeto nativo '{Date}.**/
+	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options}target{_blank} do objeto nativo '{Date}.**/
 	locale: function(flag, cfg) {
 		const data = typeof cfg === "object" && cfg !== null ? cfg : {};
 		const date = this.nativeDate(flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
