@@ -1,10 +1,15 @@
 /**
 
-@menu{}
+@menu{}label{Capítulos}
+@menu{table}label{Tabelas}
+@menu{figure}label{Figuras}
 
 #3 Segregando Código
 O objeto '{__DOCODE} permite que comentários, ou outras informações delimitadas por caracteres específicos, possam ser segregados do código fonte.
 Também contempla a decodificação de uma linguagem de marcação específica em elementos HTML, permitindo, em conjunto com a ferramenta de segregação, a elaboração de instruções do código dentro do próprio código fonte se utilizando dos comentários.
+
+@figure{chrome://branding/content/about-logo.png}caption{Loucura demais}
+
 
 #4 Regras Gerais
 A notação possui as seguintes regras:
@@ -69,32 +74,33 @@ Os elementos textuais são informados dentro do conteúdo textual e tem por obje
 |&|Atalho para caracteres especiais do tipo i{&#x003B;}|
 
 #4 Elementos de Bloco
-Exceto pelos cabeçalhos, esses elementos são definidos utilizando a notação de atributos, cujo primeiro par nome/valor define o tipo de elemento e uma característica, devendo ser único na linha. Atributos específicos podem existir, não correspondendo necessariamente ao objetivo do atributo HTML de mesmo nome.
+	Exceto pelos cabeçalhos, esses elementos são definidos utilizando a notação de atributos, cujo primeiro par nome/valor define o tipo de elemento e uma de suas características, devendo ser único na linha. Atributos específicos podem existir, não correspondendo necessariamente ao mesmo objetivo do atributo HTML de mesmo nome.
+	O elementos de bloco não ocuparão necessariamente um espaço vertical isoladamente com ocorre com um elemento '{div}, por exemplo.
 
 #5 Títulos/Cabeçalhos
-u{Títulos} são identificados pelo caractere &{#x0023} seguido do nível (1-6), de um espaço em branco e seu conteúdo.
+	Os títulos ou cabeçalhos são identificados pelo caractere &{#x0023} seguido do nível (1-6), de um espaço em branco e seu conteúdo.
 
 #5 Campos de Formulários
+	Na notação de campo de formulário, o primeiro atributo deve ser nomeado como '{input}, mesmo se o elemento for um '{textarea}, '{select} ou '{button}, e seu valor corresponde ao rótulo do campo. A notação possui os seguintes atributos específicos:
+	- O atributo '{type} identifica o tipo do campo, incluindo os valores '{textarea} e '{select};
+	- O atributo '{list} descreve uma lista de opções, sendo aplicado aos campos '{select} e '{input}, se previsto;
+	- A lista de opções consiste em uma sequência de valores e rótulos separados pelo caractere ${#x002C};
+	- O valor e seu respectivo rótulo são separados pelo caractere ${#x00#A} que, se inexistente, assumirá que o rótulo e o valor possuem a mesma informação; e
+	- Os demais atributos atendem às respetivas correspondências em HTML.
 
+#5 Figura, Áudio e Vídeo
+	Na notação para u{figuras}, o primeiro atributo deve ser nomeado como '{figure} e seu valor corresponde ao endereço da imagem ('{src}). A notação possui os seguintes atributos específicos:
+	- O atributo '{alt} é utilizado para descrever textualmente a imagem;
+	- O atributo '{caption} é utilizado para descrever a legenda da figura; e
+	- Não há outros atributos possíveis.
+	Na notação para áudio e vídeo, o primeiro atributo deve ser nomeado como '{audio} ou '{video}, conforme o caso, e seu valor corresponde ao endereço da mídia ('{src}). Não há outros atributos possíveis.
 
-
-A notação de formulários está dividida em u{quatro elementos}, todos u{separados por espaço}: o caractere identificador da notação; o rótulo do campo; os atributos do campo; e o valor ou a lista de valores.
-+ Os campos de formulários não precisam estar dentro de um escopo de formulário;
-+ A u{notação} de campo de fomulário é definida pelo caractere &{#x002A} no início da linha;
-+ O u{rótulo} consiste numa i{string} que identifica visualmente o nome do formulário;
-+ Se o campo for de u{preenchimento obrigatório}, o caractere &{#x002A} deve ser adicionado ao fim do rótulo;
-+ A função dos u{atributos} é definir o tipo e nome do campo e outras u{características específicas};
-+ O primeiro atributo deve ser o u{tipo} do campo, incluídos os valores '{textarea} e '{select};
-+ O valor do primeiro atributo (tipo) é o u{nome} do campo;
-+ os seguintes atributos não têm efeito em razão de seus valores serem capturados da própria notação ou serem automáticos: '{required, type, name, value, multiple, list, id} e '{checked/selected};
-+ Após os atributos, é possível definir o u{valor inicial} do campo ou uma u{lista da valores} (para elementos que a comportam);
-+ A u{lista/valor} é delimitada pelos caracteres &{#x005B} e &{#x005D} - múltipla escolha - ou &{#x0028} e &{#x0029} - escolha única;
-+ A definição entre u{múltipla escolha} e u{escolha única} tem relevância apenas para os campos '{select, file, email} e '{radio};
-+ A u{lista/valor} é opcional e seu conteúdo pode ser vazio;
-+ Para definir uma u{lista}, deve-se separar os itens com caractere &{#x003B};
-+ Caso valor e o rótulo do u{item da lista} sejam diferentes, deve-se separá-los com caractere &{#x003A}, nessa ordem; e
-+ Para marcar u{item padrão da lista}, o caractere &{#x002A} deve ser adicionado ao fim de seu rótulo.
-
+#5 Menu
+	Na notação para u{menu}, o primeiro atributo deve ser nomeado como '{menu} e seu valor vai indicar o objetivo:
+	- O valor '{figure} indica que é um menu destinado a figuras;
+	- O valor '{table} indica que é um menu destinado a tabelas; e
+	- Outros valores indicam que se destina a cabeçalhos.
+	Há também o atributo '{label}, que define um rótulo para o menu. Os elementos listados no menu correspondem àqueles criados após a sua definição.
 
 #4 Exemplos
 
@@ -134,9 +140,22 @@ __ Legenda __
 __
 
 Formulário:
-** method{get}action{/file.php} **
+**
 ...
 **
+
+Figura, Áudio, Vídeo e menu
+	@figure{imagem.jpeg}alt{Uma imagem do sol}caption{Imagem vencedora do concurso de 2015}
+	@audio{musica.mp3}
+	@video{filme.mp3}
+	@menu{}head{Capítulos}
+
+Campos de Formulários
+	@input{Nome}type{text}name{nome}
+	@input{Idade}type{number}name{idade}min{18}max{80}step{1}
+	@input{Estatura}type{select}name{estatura}list{-1: Baixa, 0: Média, 1: Alta}
+	@input{Aceita Condições}type{checkbox}name{aceite}value{1}checked{}
+	@input{OK}type{submit}formaction{cadastro.php}formmethod{POST}
 
 Elemento Textuais:
 Esta u{frase} contém uma '{palavra}@class{style}id{abc}] sublinhada. &{#x270E}
@@ -144,25 +163,6 @@ Esta u{frase} contém uma '{palavra}@class{style}id{abc}] sublinhada. &{#x270E}
 Equivale a
 Esta <u>frase<u> contém uma <code class="style" id="abc">palavra</code> sublinhada. &#x270E;
 ''
-
-Esta u{frase} contém uma '{palavra}@class{style}id{abc} sublinhada. &{#x270E}
-
-
-#4 Elementos Especiais
-+ Os elementos especiais iniciam com o símbolo &{#x0040} seguido de seu nome;
-+ Após o nome, atributos poderão ser informados conforme elemento;
-+ Os atributos devem estar delimitados por aspas duplas (&{#x0022});
-+ O nome e os atributos devem estar separados por espaços; e
-+ Todas as informações do elemento devem estar em uma única linha.
-|Nome|Descrição|Atributo 1|Atributo 2|
-|'{menu}|Define um menu para listar i{links} para os cabeçalhos de u{níveis 2 a 6} b{posteriores} à notação.|-|-|
-|'{figure}|Define um quadro para uma imagem.|Caminho para o arquivo.|Descrição da imagem ('{alt}).|
-|'{caption}|Define a legenda do b{elemento anterior} nos casos de u{tabela e figura} ('{@figure}).|Texto da legenda|-|
-|""Nome dos elementos especiais""|
-|'{file}|Define um quadro para comportar arquivos.|Caminho para o arquivo|MIME TYPE do arquivo|
-
-
-
 #4 Métodos
 O argumento '{body} corresponde ao elemento HTML onde a notação é renderizada.**/
 const __DOCODE = {
@@ -258,7 +258,6 @@ const __DOCODE = {
 		delete attr.json[attr.list[0].name];
 		delete attr.json.list;
 		delete attr.json.type;
-
 		/*-- elementos básicos --*/
 		const elem  = document.createElement(tag);
 		const label = document.createElement("label");
@@ -323,7 +322,7 @@ const __DOCODE = {
 				item.appendChild(link);
 				link.href = `#${id}`;
 				link.textContent = (". . ").repeat(find[1] - 2) + elem.textContent;
-				Array.from(body.querySelectorAll("menu")).forEach(function(v,i,a) {
+				Array.from(body.querySelectorAll(`menu[data-docode-menu="head"]`)).forEach(function(v,i,a) {
 					v.appendChild(item.cloneNode(true));
 				});
 			}
@@ -340,11 +339,19 @@ const __DOCODE = {
 		elem.id    = __ID.id(elem);
 		/*-- checando legenda --*/
 		const caption = /^\s*\|\"\"((?:\"[^"]|\"\"[^|]|[^"])+)\"\"\|\s*$/;
-		//FIXME adicionar a um menu de tabelas
-
 		if (caption.test(code)) {
 			const text = code.match(caption)[1].trim();
-			elem.createCaption().innerHTML = this.inner(text);
+			const item = document.createElement("li");
+			const link = document.createElement("a");
+			if (text !== "") {
+				elem.createCaption().textContent = text;
+				item.appendChild(link);
+				link.href = `#${elem.id}`;
+				link.textContent = text;
+				Array.from(body.querySelectorAll(`menu[data-docode-menu="table"]`)).forEach(function(v,i,a) {
+					v.appendChild(item.cloneNode(true));
+				});
+			}
 			return true;
 		}
 		/*-- verificar container --*/
@@ -406,7 +413,6 @@ const __DOCODE = {
 			blockquote: {start: /^(\s*\"\")/, close: /(\"\"\s*)$/,},
 			form:       {start: /^(\s*\*\*)/, close: /(\*\*\s*)$/,},
 			fieldset:   {start: /^(?:\s*\_\_((?:\_[^_]|[^_])+)\_\_\s*)$/, close: /^(\s*\_\_\s*)$/},
-			figure:     {start: /^(?:\s*\=\=((?:\=[^=]|[^=])+)\=\=\s*)$/, close: /^(\s*\=\=\s*)$/},
 		};
 		for (let tag in data) {
 			/*-- abrir bloco --*/
@@ -420,12 +426,6 @@ const __DOCODE = {
 					legend.innerHTML = this.inner(find[1].trim());
 					elem.appendChild(legend);
 				}
-				else if (tag === "figure") {
-					const img = document.createElement("img");
-					img.src = find[1].trim();
-					elem.appendChild(img);
-				}
-
 				this.append(elem, code.replace(data[tag].start, ""));
 				return true;
 			}
@@ -443,37 +443,50 @@ const __DOCODE = {
 		}
 		return false;
 	},
-
-
-	//FIXME alterar e criar:
-	//@menu
-	//@figure: caminho da imagem
-	//@alt: descrição da imagem //figura
-	//FIXME mudar para __DOM e __HTML
 	//FIXME lembrar que var !== null && typeof var === object não é apenas um objeto, pode ser regex
-
 	/**. '{boolean block(node body, string code)}: Checa, adiciona estruturas de bloco e retorna o resultado.**/
 	block: function(body, code) {
 		const attr = this.attr(code.trim());
 		if (attr.list.length === 0) return false;
+		/*-- menu --*/
 		if (attr.list[0].name === "menu") {
-			const elem = document.createElement("menu");
-			body.appendChild(elem);
-			//FIXME adicionar menu tipo tabela e figura
+			const menu = document.createElement("menu");
+			const head = document.createElement("h3");
+			const type = attr.list[0].value.trim().toLowerCase();
+			if ("label" in attr.json && attr.json.label.trim() !== "") {
+				head.textContent = attr.json.label.trim();
+				head.id          = __ID.value;
+				menu.setAttribute("aria-labelledby", head.id);
+				body.appendChild(head);
+			}
+			menu.dataset.docodeMenu = (type === "table" || type === "figure") ? type : "head";
+			body.appendChild(menu);
 			return true;
 		}
+		/*-- figure --*/
 		if (attr.list[0].name === "figure") {
-			const figure      = document.createElement("figure");
-			const img         = document.createElement("img");
-			const caption     = document.createElement("figcaption");
-			img.src           = attr.list[0].value;
-			img.alt           = "alt" in attr.json ? attr.json.alt.trim() : "";
-			caption.innerHTML = "caption" in attr.json ? this.inner(attr.json.caption.trim()) : "";
-			figure.id         = __ID.value;
-			//FIXME adicionar a figura ao menu
+			const text          = "caption" in attr.json ? this.inner(attr.json.caption.trim()) : "";
+			const figure        = document.createElement("figure");
+			const img           = document.createElement("img");
+			img.src             = attr.list[0].value;
+			img.alt             = "alt" in attr.json ? attr.json.alt.trim() : "";
+			figure.id           = __ID.value;
 			figure.appendChild(img);
-			figure.appendChild(caption);
 			body.appendChild(figure);
+			/*-- legenda --*/
+			if (text !== "") {
+				const caption = document.createElement("figcaption");
+				const item    = document.createElement("li");
+				const link    = document.createElement("a");
+				caption.textContent = text;
+				figure.appendChild(caption);
+				item.appendChild(link);
+				link.href = `#${figure.id}`;
+				link.textContent = text;
+				Array.from(body.querySelectorAll(`menu[data-docode-menu="figure"]`)).forEach(function(v,i,a) {
+					v.appendChild(item.cloneNode(true));
+				});
+			}
 			return true;
 		}
 		if (attr.list[0].name === "audio" || attr.list[0].name === "video") {
@@ -520,6 +533,9 @@ const __DOCODE = {
 		String(code).trim().normalize().split("\n").forEach(function(v,i,a) {
 			return this.append(body, v);
 		}, this);
+		Array.from(body.querySelectorAll("menu[data-docode-menu]")).forEach(function(v,i,a) {
+			delete v.dataset.docodeMenu;
+		});
 		return;
 	},
 };
