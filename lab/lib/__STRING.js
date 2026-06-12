@@ -118,4 +118,11 @@ const __STRING = {
 			return decode ? String.fromCharCode(parseInt(v, 16)) : "%"+v.charCodeAt(0).toString("16");
 		}).join("");
 	},
+	/**. '{string RFC5987(string name)}: Retorna o valor de nome em formato a{RFC5987}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#encoding_for_content-disposition_and_link_headers}.**/
+	RFC5987: function(name) {
+		return String(name).normalize("NFC").split("").map(function(v,i,a) {
+			const code = (/['()*]/).test(v) ? `%${v.charCodeAt(0).toString(16).toUpperCase()}` : encodeURIComponent(v);
+			return (/[|`^]/).test(v) ? v : code;
+		}).join("");
+	},
 };

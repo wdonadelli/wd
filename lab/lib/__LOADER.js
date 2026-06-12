@@ -40,9 +40,7 @@ const __LOADER = {
 		/*-- encerrando --*/
 		__HTML(node, {innerHTML: load.join("\n")});
 		node.setAttribute("aria-busy", "false");
-
 		},1);
-
 		return;
 	},
 	/**. '{string fileType(object headers)}: Retorna o tipo de arquivo informado no cabeçalho da requisição ou nulo.**/

@@ -3,13 +3,6 @@
 O objeto '{__FILE} define um conjunto de ferramentas envolvendo arquivos.
 **/
 const __FILE = {
-	/**. '{string RFC5987(string name)}: Retorna o valor de nome em formato a{RFC5987}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#encoding_for_content-disposition_and_link_headers}.**/
-	RFC5987: function(name) {
-		return String(name).normalize("NFC").split("").map(function(v,i,a) {
-			const code = (/['()*]/).test(v) ? `%${v.charCodeAt(0).toString(16).toUpperCase()}` : encodeURIComponent(v);
-			return (/[|`^]/).test(v) ? v : code;
-		}).join("");
-	},
 	/**. '{object toHeaders(object file)}: Retorna um cabeçalho contendo os dados do arquivo ('{File}/'{Blob}) se existentes:
 	|Cabeçalho|Popriedade|Valor|
 	|content-type|type|a{MIME Type}@href{https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types}|
@@ -22,7 +15,7 @@ const __FILE = {
 		if (file.size)         data.append("content-length", file.size);
 		if (file.lastModified) data.append("last-modified",  file.lastModified);
 		if (file.name) {
-			const RFC5987 = this.RFC5987(file.name);
+			const RFC5987 = __STRING.RFC5987(file.name);
 			data.append("content-disposition", `attachment; filename="${file.name}"; filename*=UTF-8''${RFC5987}`);
 		}
 		return data.toHeaders;

@@ -115,7 +115,7 @@ const __DROP = {
 			/*-- ação padrão --*/
 			else {
 				const attr = {copy: "text", link: "link", move: "frame"};
-				const file = new __Request({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
+				__REQUEST.read({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
 					drop.setAttribute("aria-busy", "true");
 					if (x.ok) {
 						const head = __FILE.fromHeaders(x.headers);
@@ -125,7 +125,6 @@ const __DROP = {
 					if (x.done) drop.setAttribute("aria-busy", "false");
 					return;
 				}});
-				file.read();
 			}
 			/*-- zerar comportamento --*/
 			window.removeEventListener("dragleave", this);

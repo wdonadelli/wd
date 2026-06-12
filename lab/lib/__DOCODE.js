@@ -496,14 +496,12 @@ const __DOCODE = {
 			body.appendChild(midia);
 			return true;
 		}
-
 		if (attr.list[0].name === "input") {
 			return this.input(body, attr);
 		}
-
-
-
-		/*if (find[1].toLowerCase() === "file" && find[2] !== undefined && find[3] !== undefined) {
+		/*
+		FIXME faço isso para arquivos genéricos?
+		if (find[1].toLowerCase() === "file" && find[2] !== undefined && find[3] !== undefined) {
 			const elem = __FILE.frame(find[2], find[2].match(file)[1], find[3]);
 			body.appendChild(elem);
 			return true;
