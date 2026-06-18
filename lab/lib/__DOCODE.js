@@ -285,6 +285,9 @@ const __DOCODE = {
 			label.insertBefore(elem, span);
 			body.appendChild(label);
 		}
+		else if (type === "hidden") {
+			body.appendChild(elem);
+		}
 		else {
 			if (list.length > 0 && ["hidden", "password", "color", "textarea"].indexOf(type) < 0) {
 				const data = document.createElement("datalist");
@@ -450,6 +453,7 @@ const __DOCODE = {
 		if (attr.list.length === 0) return false;
 		/*-- menu --*/
 		if (attr.list[0].name === "menu") {
+			//FIXME criar cabeçalho de menu com `#3 Nome`? analisar consequências (como fica aria-label).
 			const menu = document.createElement("menu");
 			const head = document.createElement("h3");
 			const type = attr.list[0].value.trim().toLowerCase();
@@ -499,14 +503,7 @@ const __DOCODE = {
 		if (attr.list[0].name === "input") {
 			return this.input(body, attr);
 		}
-		/*
-		FIXME faço isso para arquivos genéricos?
-		if (find[1].toLowerCase() === "file" && find[2] !== undefined && find[3] !== undefined) {
-			const elem = __FILE.frame(find[2], find[2].match(file)[1], find[3]);
-			body.appendChild(elem);
-			return true;
-		}*/
-
+		/*TODO faço um para arquivos genéricos? não né?!*/
 		return false;
 	},
 	/**. '{boolean append(node body, string code)}: Checa, adiciona estruturas e retorna o resultado.**/

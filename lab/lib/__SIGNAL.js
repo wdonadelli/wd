@@ -28,9 +28,6 @@ const __SIGNAL = {
 	background: none;
 	border: 0;
 }`) - 1,
-
-
-
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
 	handleEvent: function(ev) {
 		ev.preventDefault();
@@ -58,7 +55,7 @@ const __SIGNAL = {
 			innerHTML: "&#x2715;"
 		}};
 	},
-	/**. '{node alert(string body, string head, string quit)}: Exibe e retorna um nó de alerta (ver evento '{wdwinow}) ou nulo:
+	/**. '{node alert(string body, string head, string quit)}: Exibe e retorna um nó de alerta (ver evento '{wdwindow}) ou nulo:
 	|Argumento|Descrição|Observação|
 	|body|Texto da mensagem|Obrigatório|
 	|head|Texto do título|Opcional|

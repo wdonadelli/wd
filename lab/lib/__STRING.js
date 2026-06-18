@@ -98,16 +98,17 @@ const __STRING = {
 	fit: function(str) {
 		return String(str).replace(/(\s)+/g, "$1");
 	},
-	/**. '{object parser(string str, string type)}: Retorna a string transformada em DOM (html, xml, svg ou um MIMETYPE) ou nulo.**/
-	parser: function(str, type) {
-		type = String(type).toLowerCase();
-		const data = {html: "text/html", xml: "application/xml", svg: "image/svg+xml"};
+	/**. '{object parserDOM(string str, string mime)}: Retorna a string transformada em DOM a partir do MIME TYPE (ext/html
+	- text/xml
+	- application/xml
+	- application/xhtml+xml
+	- image/svg+xml**/
+	parserDOM: function(str, mime) {
 		try {
-			if (type === "json") return JSON.parse(str);
 			const parser = new DOMParser();
-			return parser.parseFromString(str, type in data ? data[type] : type);
-		}
-		catch(e) {return null;}
+			return parser.parseFromString(str, String(mime).replace(/\s+/g, "").toLowerCase());
+		} catch(e) {}
+		return null;
 	},
 	/**. '{string unicode(string str, boolean decode)}: Codifica ou decodifica a string em sequência de a{unicode}@href{https://symbl.cc/pt/unicode-table/}target{_blank} e a retorna.**/
 	unicode: function(str, decode) {

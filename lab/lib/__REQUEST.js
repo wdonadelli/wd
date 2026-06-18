@@ -24,7 +24,29 @@ const __REQUEST = {
 		}
 		return null;
 	},
-	//FIXME criar método master? incorporar __FILE aqui?
+	/**. '{object fileHeader(object file)}: Retorna um cabeçalho contendo os dados do arquivo ('{File}/'{Blob}) se existentes:
+	|Cabeçalho|Popriedade|Valor|
+	|content-type|type|a{MIME Type}@href{https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types}|
+	|content-length|size|Tamanho do arquivo|
+	|last-modified|lastModified|Última modificação|
+	|content-disposition|name|Nome do arquivo guardado no atributo '{filename}|**/
+	fileHeader: function(file) {
+		const data = new __DataSet();
+		const name = file.name ? __STRING.RFC5987(file.name) : null;
+		if (file.type)         data.append("content-type",   file.type);
+		if (file.size)         data.append("content-length", file.size);
+		if (file.lastModified) data.append("last-modified",  file.lastModified);
+		if (name !== null)     data.append("content-disposition", `attachment; filename="${file.name}"; filename*=UTF-8''${name}`);
+		return data.toHeaders;
+	},
+	/**. '{object blob(string content, string type)}: Retorna um objeto do tipo '{Blob} com o conteúdo e tipo informado.**/
+	blob: function(content, type) {
+		return new Blob([content], {type: typeof type === "string" ? type.trim() : "application/octet-stream"});
+	},
+
+
+
+	//FIXME incorporar __FILE aqui?
 
 	/**. '{object type}: Registra o parâmetro da propriedade '{type} que dispara as seguintes propriedades/métodos dos mecanismos nativos utilizados nas interações:
 |Valor|'{send}|'{read}|'{fetch}|
@@ -41,6 +63,8 @@ const __REQUEST = {
 	},
 	/**. '{void fix(object data)}: Acerta propriedades específicas da configuração da requisição.**/
 	fix: function(data) {
+		if (!__Type(data).object || !("url" in data))
+			throw new TypeError(`The argument must be an object containing the "url" property.`);
 		const method  = /^\s*(post|connect|delete|get|head|options|patch|put|trace)\s*$/i;
 		const timeout = Number.isInteger(Number(data.timeout)) ? Number(data.timeout) : 0;
 		data.method   = method.test(data.method) ? data.method.trim().toLowerCase() : "get";
@@ -51,6 +75,15 @@ const __REQUEST = {
 		data.body    = !("body" in data) || (data.method === "get" || data.method === "head") ? null : data.body;
 		return;
 	},
+	/**. '{string make(object data)}: Efetua a requisição ('{send}) ou leitura ('{read}) conforme o conteúdo da propriedade '{url}.**/
+	make: function(data) {
+		this.fix(data);
+		if (data.url instanceof FileList || data.url instanceof Blob || data.url instanceof File)
+			return this.read(data);
+		return this.send(data);
+	},
+
+
 	/**. '{string send(object data)}: Efetua a requisição ao servidor via a{XMLHttpRequest}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest}target{_blank} e retorna seu identificador. As propriedades específicas são:
 	- a{async}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#async}target{_blank} (boolean);
 	- a{user}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#user}target{_blank} (string);
@@ -86,14 +119,14 @@ const __REQUEST = {
 	},
 	/**. '{string read(object data)}: Lê um arquivo via a{FileReader}@href{https://developer.mozilla.org/en-US/docs/Web/API/FileReader}target{_blank} e retorna seu identificador.**/
 	read: function(data) {
+		this.fix(data);
 		/*-- lista de arquivos --*/
 		if (__Type(data.url).instanceOf("FileList")) {
 			for (let i = 0; i < data.url.length; i++)
-				this.read({url: data.url[i], type: data.type, call: data.call, url: data.url});
+				this.read({url: data.url[i], type: data.type, call: data.call});
 			return;
 		}
 		/*-- um único arquivo --*/
-		this.fix(data);
 		const request = new FileReader();
 		const events  = ["abort", "error", "load", "progress"];
 		events.forEach(function(ev,i,a) {
@@ -167,7 +200,7 @@ const __REQUEST = {
 		data.status   = done[ev.type] === false ? ev.type : `${ev.target.readyState} ${status}`;
 		data.progress = data.done ? 1 : (comp ? ev.loaded/ev.total : undefined);
 		data.result   = data.ok ? ev.target.result : null;
-		data.headers  = data.ok ? __FILE.toHeaders(heap.url) : null;
+		data.headers  = data.ok ? this.fileHeader(heap.url) : null;
 		return data;
 	},
 	/**. '{constructor Fetch(object data)}: Disparador para o método '{fetch} para adequação à ferramenta face ausência de ouvintes.**/
@@ -214,6 +247,7 @@ const __REQUEST = {
 	|'{result}|any|Conteúdo retornado da interação.|
 	|'{mime}|string|Tipo do conteúdo extraído da propriedade '{headers}.|
 	|'{time}|integer|Tempo decorrido desde o início da interação.|
+	|'{url}|any|Alvo da requisição/leitura.|
 	|'{progress}|number|Valor do progresso da interação.|
 	A interação pode terminar com sucesso ('{ok} verdadeiro) e o valor de '{result} ser falso se o tipo de resposta não corresponder ao conteúdo do alvo.**/
 	handleEvent: function(ev) {
@@ -232,7 +266,8 @@ const __REQUEST = {
 		const head   = data.headers === null ? null : new __DataSet(data.headers);
 		data.time    = Date.now() - heap.init;
 		data.headers = head === null ? null : head.toHeaders;
-		data.mime    = head === null ? null : head.getAll("content-type").join(",");
+		data.mime    = head === null ? null : head.getAll("content-type")[0].split(";")[0].replace(/\s+/g, "").toLowerCase();
+		data.url     = heap.url;
 		data.target  = ev.target;
 		/*-- exibindo progresso --*/
 		__PROGRESS.value(id, data.progress);

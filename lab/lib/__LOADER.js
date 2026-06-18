@@ -25,12 +25,9 @@ const __LOADER = {
 		const html = this.model[node.id];
 		const find = /\{\{([^}]+)\}\}/g;
 		const load = [];
-
-		setTimeout(function() {
-
 		/*-- clonando e substituindo --*/
 		list.forEach(function(v,i,a) {
-			if (v === null || typeof v !== "object") return;
+			if (!__Type(v).object) return;
 			let inner = html;
 			for (let name in v)
 				inner = inner.split(`{{${name}}}`).join(v[name]);
@@ -40,60 +37,54 @@ const __LOADER = {
 		/*-- encerrando --*/
 		__HTML(node, {innerHTML: load.join("\n")});
 		node.setAttribute("aria-busy", "false");
-		},1);
 		return;
 	},
-	/**. '{string fileType(object headers)}: Retorna o tipo de arquivo informado no cabeçalho da requisição ou nulo.**/
-	fileType: function(headers) {
-		const head = __FILE.fromHeaders(headers);
-		switch(head.type) {
-			case "application/json":     return "json";
-			case "text/csv":             return "csv";
-			case "text/html":            return "html";
-			case "application/xml+html": return "html";
-			case "image/svg+xml":        return "svg";
-		}
-		return null;
-	},
-	/**. '{object fileRepeat(node node, object http)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV), e retornando a instância do contrutor '{__Request}. Os dados da requisição são definidos pelo argumento '{http}.**/
-	fileRepeat: function(node, http) {
-		if (http === null || typeof http !== "object") return null;
-		http.type = "text";
-		http.call = function(x) {
-			if (x.ok)
-				try {
-					switch(__LOADER.fileType(x.headers)) {
-						case "json": return __LOADER.repeat(node, JSON.parse(x.response));
-						case "csv":  return __LOADER.repeat(node, __CSV.parseList(x.response));
-						default:     return __LOADER.repeat(node, []);
-					}
-				} catch(e) {__LOADER.repeat(node, []);};
-			return;
-		};
-		return new __Request(http);
-	},
-	/**. '{object requestHTML(node node, object http)}: Carrega o código página HTML a partir de arquivos externos. Retorna a instância do contrutor '{__Request}, sendo os dados da requisição definidos pelo argumento '{http}. O argumento '{replace}, se verdadeiro, substituirá o nó pelo conteúdo, caso contrário, o carregará como conteúdo interno.**/
-	requestHTML: function(node, http, replace) {
-		if (http === null || typeof http !== "object") return null;
-		replace = replace === true;
-		node.setAttribute("aria-busy", "true");
-		http.type = "text";
-		http.call = function(x) {
-			if (x.ok) {
-				const info = new __Parser(x.response);
-				const head = __FILE.fromHeaders(x.headers);
-				const attr = {}
-				if (head.type === "text/html" || head.type === "application/xml+html")
-					attr[replace ? "outerHTML" : "innerHTML"] = info.stringHTML.get().body.innerHTML;
-				else if (head.type === "image/svg+xml")
-					attr[replace ? "outerHTML" : "innerHTML"] = info.stringSVG.get();
-				else if ((/^(application|text)\//).test(head.type))
-					attr[replace ? "outerText" : "innerText"] = x.response;
-				__HTML(node, attr);
+	/**. '{object urlRepeat(node elem, object data)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
+	urlRepeat: function(elem, data) {
+		if (!__Type(data).object) return;
+		data.type = "text";
+		data.call = function(x) {
+			if (x.ok && x.result !== null) try {
+				const mime = x.mime.split(";")[0].trim().toLowerCase();
+				if (mime === "text/csv")
+					return __LOADER.repeat(elem, __CSV.parseList(x.result));
+				if (mime === "application/json")
+					return __LOADER.repeat(elem, JSON.parse(x.result));
+			} catch(e) {
+				return __LOADER.repeat(elem, []);
 			}
-			if (x.done) node.setAttribute("aria-busy", "false");
+		};
+		__REQUEST.make(data);
+		return;
+	},
+	/**. '{object urlHTML(node elem, object data, boolean replace)}: Carrega o código HTML ou o conteúdo textual, conforme o caso, a partir de fontes externas:
+	|Argumento|Descrição|
+	|'{elem}|Onde onde serão carregados o código ou o texto do arquivo externo.|
+	|'{data}|Parâmetros da requisição ou leitura (ver __REQUEST).|
+	|'{replace}|Se verdadeiro, o elemento será substituído pelo conteúdo, caso contrário, o receberá.|**/
+	urlHTML: function(elem, data, replace) {
+		if (!__Type(data).object) return null;
+		elem.setAttribute("aria-busy", "true");
+		data.type  = "text";
+		const form = ["textarea", "input"].indexOf(elem.tagName.toLowerCase()) >= 0;
+		data.call = function(x) {
+			if (x.ok && x.result !== null) {
+				const html = replace === true ? "outerHTML" : (form ? "value" : "innerHTML");
+				const text = replace === true ? "outerText" : (form ? "value" : "innerText");
+				const attr = {};
+				if (x.mime === "text/csv")
+					attr[html] = form ? x.result : __CSV.parseTable(x.result).outerHTML;
+				else if (x.mime === "text/html" || x.mime === "application/xml+html" || x.mime === "image/svg+xml")
+					attr[html] = __STRING.parserDOM(x.result, x.mime).body.innerHTML;
+				else
+					attr[text] = x.result;
+				elem.setAttribute("aria-busy", "false");
+				__HTML(elem, attr);
+			}
+			else if (x.done) elem.setAttribute("aria-busy", "false");
 			return;
 		};
-		return new __Request(http);
+		__REQUEST.make(data);
+		return;
 	},
 };

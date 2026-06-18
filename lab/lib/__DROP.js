@@ -115,16 +115,21 @@ const __DROP = {
 			/*-- ação padrão --*/
 			else {
 				const attr = {copy: "text", link: "link", move: "frame"};
-				__REQUEST.read({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
+
+
+
+
+
+
+				//FIXME trocar pelo método de URL e acabar com uso de __FILE
+				/*__REQUEST.read({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
 					drop.setAttribute("aria-busy", "true");
 					if (x.ok) {
-						const head = __FILE.fromHeaders(x.headers);
-						const node = __FILE[attr[effect]](x.response, head.name, head.type);
-						drop.appendChild(node);
+						TODO ver método append
 					}
 					if (x.done) drop.setAttribute("aria-busy", "false");
 					return;
-				}});
+				}});*/
 			}
 			/*-- zerar comportamento --*/
 			window.removeEventListener("dragleave", this);
@@ -143,4 +148,44 @@ const __DROP = {
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 	handleEvent: function(ev) {return this[ev.type](ev);},
+
+	//TODO eu estava tentando melhorar isso, mas o que esperar quando arrastar e soltar um arquivo na página?
+	//FIXME o input.file já faz isso, só não exibe a mídia.
+	//FIXME será que não é melhor não fazer nada?
+	append: function(file, drop, effect) {
+		if (!(file instanceof Blob)) return null;
+		const name = "name" in file ? file.name : "blob";
+		const type = ("type" in file ? file.type : "application/octet-stream").trim().toLowerCase().split(";")[0];
+		const main = type.split("/")[0];
+		const href = URL.createObjectURL(file);
+		const link = __HTML("a", {href: href, textContent: name, download: name, type: type});
+		if (effect === "link") {
+			drop.appendChild(link);
+			return;
+		}
+		if (main === "audio") {
+			drop.appendChild(__DOM({tag: "audio", attr: {src: href, controls: true}, child: [link]}).tag);
+			return;
+		}
+		if (main === "video") {
+			drop.appendChild(__DOM({tag: "video", attr: {src: href, controls: true}, child: [link]}).tag);
+			return;
+		}
+		if (main === "image") {
+			drop.appendChild(__DOM({tag: "img", attr: {src: href, alt: name}, child: [link]}).tag);
+			return;
+		}
+		if (main === "text") {
+			URL.revokeObjectURL(href);
+			__REQUEST.make({url: file, type: "text", call: function(x) {
+				if (x.ok && x.result !== null)
+					drop.appendChild(__HTML("pre", {innerText: x.result}));
+			}});
+			return;
+		}
+		drop.appendChild(__DOM({tag: "iframe", attr: {src: href}, child: [link]}).tag);
+		return;
+	},
+
+
 };
