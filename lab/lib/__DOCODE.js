@@ -211,7 +211,7 @@ const __DOCODE = {
 	},
 	/**. '{string inner(string code)}: Decodifica o conteúdo textual para código HTML e o retorna.**/
 	inner: function(code) {
-		const  re = /(?:^|\s)((\&amp\;|'|[a-zA-Z0-9\-]+)\{((?:\\\}|[^}])*)\})(\@.+)?/;
+		const  re = /((\&amp\;|'|[a-zA-Z0-9\-]+)\{((?:\\\}|[^}])*)\})(\@.+)?/;
 		let inner = code.trim().replace(/\&/g, "&amp;").replace(/\>/g, "&gt;").replace(/\</g, "&lt;");
 		while(re.test(inner)) {
 			let find = inner.match(re);

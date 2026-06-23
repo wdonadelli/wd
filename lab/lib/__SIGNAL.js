@@ -28,49 +28,55 @@ const __SIGNAL = {
 	background: none;
 	border: 0;
 }`) - 1,
-	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
-	handleEvent: function(ev) {
-		ev.preventDefault();
-		if (ev.type === "wdwindow") {
-			if (ev.detail.status === "canceled" || ev.detail.status === "closed") {
-				const form = ev.target.querySelector("form");
-				if (form !== null) {
-					form.remove();
-					form.removeEventListener("submit", this)
-				}
-			}
-		}
-		else if (ev.type === "click" || ev.type === "submit") {
-			__WINDOW.remove(ev.target);
-		}
-		return;
+
+	/**. '{string head(string text)}: Retorna o cabeçalho definido em '{text}.**/
+	head: function(text) {return String(text || "").trim() || document.title.trim() || window.location.hostname;},
+	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos.**/
+	struct: function() {
+		const struct = {};
+		struct.quit = __HTML("button", {type: "button", className: "css-wd-signal-quit", "aria-label": "Close", innerHTML: "&#x2715;"});
+		struct.head = __HTML("h1",  {className: "css-wd-signal-head", id: __ID.value});
+		struct.body = __HTML("div", {className: "css-wd-signal-body", id: __ID.value});
+		struct.main = __DOM({
+			tag: "div",
+			attr: {"aria-labelledby": struct.head.id, "aria-describedby": struct.body.id, className: "css-wd-signal"},
+			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}],
+		}).tag;
+		struct.quit.addEventListener("click", function(ev) {return __WINDOW.detach(ev.currentTarget.parentElement);})
+		return struct;
 	},
-	/**. '{object quit(string label)}: Retorna a estrutura do botão de fechar o alerta. O argumento define a descrição do botão.**/
-	quit: function(label) {
-		return {tag:  "button", attr: {
-			type: "button",
-			className: "css-wd-quit",
-			"aria-label": String(label || "").trim() || "Close",
-			addEventListener: {click: this},
-			innerHTML: "&#x2715;"
-		}};
-	},
+
+
+
+
+
+
+
+
+
+
+
+
 	/**. '{node alert(string body, string head, string quit)}: Exibe e retorna um nó de alerta (ver evento '{wdwindow}) ou nulo:
 	|Argumento|Descrição|Observação|
 	|body|Texto da mensagem|Obrigatório|
 	|head|Texto do título|Opcional|
 	|quit|Rótulo do botão fechar|Recomendado|**/
-	alert: function(body, head, quit) {
-		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
-		body = String(body || "").trim() || null;
-		/*-- alerta --*/
-		const box0 = {tag: "div", attr: {role: "alert", className: "css-wd-alert"}};
-		const box1 = {tag:  "h1", attr: {innerHTML: head}};
-		const box2 = {tag:   "p", attr: {innerHTML: body}};
-		box0.child = [box1, box2, this.quit(quit)];
-		const data = body === null ? null : __WINDOW.add(__DOM(box0).tag, "frame");
-		return data === null ? null : __WINDOW.find(data).window;
+	alert: function(body, head, time) {
+		const html = this.struct();
+		//TODO criar função timeout
+		const fire = !Number.isInteger(time) || time < 1 ? null : function(elem, type, ev) {
+			setTimeout(function() {__WINDOW.detach(html.main);}, time);
+		}
+		html.main.setAttribute("role", "alert");
+		html.head.textContent = this.head(head);
+		html.body.textContent = body;
+		return __WINDOW.attach(html.main, "frame", fire);
 	},
+
+
+
+
 	/**. '{node dialog(node form, string head, string quit)}: Exibe e retorna um nó de diálogo (ver evento '{wdwinow}) ou nulo:
 	|Argumento|Descrição|Observação|
 	|form|Formulário para o diálogo|Obrigatório|
@@ -112,6 +118,23 @@ const __SIGNAL = {
 				Notification.requestPermission().then(function(x) {
 					if (x === "granted") new Notification(head, config);
 				});
+		}
+		return;
+	},
+	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
+	handleEvent: function(ev) {
+		ev.preventDefault();
+		if (ev.type === "wdwindow") {
+			if (ev.detail.status === "canceled" || ev.detail.status === "closed") {
+				const form = ev.target.querySelector("form");
+				if (form !== null) {
+					form.remove();
+					form.removeEventListener("submit", this)
+				}
+			}
+		}
+		else if (ev.type === "click" || ev.type === "submit") {
+			__WINDOW.remove(ev.target);
 		}
 		return;
 	},

@@ -1,7 +1,6 @@
 /**
 #3 Barra de Progresso
-O objeto '{__PROGRESS} registra a barra de progresso das requisições da biblioteca.
-**/
+	O objeto '{__PROGRESS} registra a barra de progresso das requisições da biblioteca.**/
 const __PROGRESS = {
 	//TODO https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/progress#describing_a_particular_region
 
