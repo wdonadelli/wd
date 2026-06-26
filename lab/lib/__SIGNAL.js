@@ -31,20 +31,69 @@ const __SIGNAL = {
 
 	/**. '{string head(string text)}: Retorna o cabeçalho definido em '{text}.**/
 	head: function(text) {return String(text || "").trim() || document.title.trim() || window.location.hostname;},
-	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos.**/
+	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos:
+	|Nome|Descrição|
+	|'{quit}|Botão padrão para fechar diálogo|
+	|'{heap}|Elemento para o cabeçalho|
+	|'{body}|Elemento para a mensagem|
+	|'{base}|Elemento para anexar estrutura HTML|
+	|'{main}|Caixa estruturada com os elementos acima|**/
 	struct: function() {
 		const struct = {};
 		struct.quit = __HTML("button", {type: "button", className: "css-wd-signal-quit", "aria-label": "Close", innerHTML: "&#x2715;"});
 		struct.head = __HTML("h1",  {className: "css-wd-signal-head", id: __ID.value});
-		struct.body = __HTML("div", {className: "css-wd-signal-body", id: __ID.value});
+		struct.body = __HTML("p",   {className: "css-wd-signal-body", id: __ID.value});
+		struct.html = __HTML("div", {id: __ID.value});
 		struct.main = __DOM({
 			tag: "div",
-			attr: {"aria-labelledby": struct.head.id, "aria-describedby": struct.body.id, className: "css-wd-signal"},
-			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}],
+			attr: {"aria-labelledby": struct.head.id, className: "css-wd-signal"},
+			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}, {tag: struct.html}],
 		}).tag;
 		struct.quit.addEventListener("click", function(ev) {return __WINDOW.detach(ev.currentTarget.parentElement);})
 		return struct;
 	},
+	/**. '{boolean isDialog(node data)}: Retorna se o argumento é ou possui um formulário com botão de submissão.**/
+	isDialog: function(data) {
+		const html = typeof data === "object" && data instanceof HTMLElement;
+		const form = html ? (data instanceof HTMLFormElement || data.querySelector("form") !== null) : false;
+		const elem = form ? (data instanceof HTMLFormElement ? data : data.querySelector("form")) : null;
+		const exit = form ? elem.querySelector(`input[type="submit"], input[type="image"], button[type="submit"]`) !== null : false;
+		return exit;
+	},
+
+	window: function (data) {
+		data = __Type(data).object ? data : {};
+		const base = this.struct();
+		/*-- cabeçalho --*/
+		base.head.textContent = this.head(data.head);
+		/*-- mensagem --*/
+		if ("body" in data) {
+			base.body.textContent = String(data.body).trim();
+			base.main.setAttribute("aria-describedby", base.body.id);
+		} else {
+			base.body.remove();
+			data.body = null;
+		}
+		/*-- estrutura HTML --*/
+		if (typeof data.html === "object" && data.html instanceof HTMLElement) {
+			base.html.appendChild(data.html);
+			if (data.body === null)
+				base.main.setAttribute("aria-details", base.html.id);
+		} else {
+			base.html.remove();
+			data.html = null;
+		}
+		/*-- role --*/
+		const role = this.isDialog(base.main) ? (data.modal === true ? "alertdialog" : "dialog") : "alert";
+		base.main.setAttribute("role", role);
+		if (role !== "alert")
+			base.quit.remove();
+		/*-- janela --*/
+		const win = {alert: "frame", dialog: "float", alertdialog: "modal"};
+		return __WINDOW.attach(base.main, win[role], data.call);
+	},
+
+
 
 
 
@@ -106,7 +155,7 @@ const __SIGNAL = {
 	},
 	/**. '{void notify(string body, string head)}: Exibe uma notificação (ver método i{alert}).**/
 	notify: function (body, head) {
-		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
+		head = this.head(head);
 		body = String(body || "").trim() || null;
 		if (body !== null) {
 			const config = {lang: __LANG.value, body: body, tag: __ID.value,};
