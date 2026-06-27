@@ -14,8 +14,8 @@ Características:
 - A janela '{float} deixa o documento estático;
 - A cada mudança no estado da janela, uma função disparadora, se definida, é chamada enviando como argumentos:
 |Argumento|Tipo|Descrição|
+|'{signal}|string|O estado da janela|
 |'{window}|node|Elemento da janela|
-|'{status}|string|O estado da janela|
 |'{event}|object|Dados do evento '{submit}, se for o caso|
 |""Tabela de argumentos da função disparadora.""|
 	Os seguintes estados da janela podem ser anunciados:
@@ -123,8 +123,10 @@ const __WINDOW = {
 	/**. '{void inert(boolean ok)}: Define a inércia no documento, exceto para a parede "modal".**/
 	inert: function(ok) {
 		const query = ok ? document.body.children : document.querySelectorAll("body > *[inert]");
-		for (let i = 0; i < query.length; i++)
+		for (let i = 0; i < query.length; i++) {
 			(!ok || query[i] === this.modal ? query[i].removeAttribute("inert") : query[i].setAttribute("inert", "true"));
+			(!ok || query[i] === this.modal ? query[i].removeAttribute("aria-hidden") : query[i].setAttribute("aria-hidden", "true"));
+		}
 		return;
 	},
 	/**. '{void freeze(boolean x)}: Define o congelamento do documento.**/
@@ -213,7 +215,7 @@ const __WINDOW = {
 		}
 		/*-- acionar disparador --*/
 		if (heap.call !== null)
-			heap.call("attach", heap.win);
+			heap.call("attach", heap.win, null);
 		return;
 	},
 	/**. '{void update(integer index)}: Verifica o atendimento da fila.**/
@@ -283,8 +285,10 @@ const __WINDOW = {
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{click, keydown e submit}.**/
 	handleEvent: function(ev) {
-		if (ev.type === "submit")
-			return this.close(this.match({win: ev.target}), "submit", ev);
+		if (ev.type === "submit") {
+			ev.preventDefault();
+			return this.close(this.match({win: ev.currentTarget}), "submit", ev);
+		}
 		if (ev.type === "click" && ev.target === ev.currentTarget)
 			return this.close(this.match({win: ev.currentTarget.firstElementChild}), "offtarget");
 		if (ev.type === "keydown" && /*ev.target === ev.currentTarget &&*/ ev.key === "Escape")

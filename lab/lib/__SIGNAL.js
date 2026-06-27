@@ -5,28 +5,53 @@ O objeto '{__SIGNAL} renderiza mensagens e notificações.
 const __SIGNAL = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- SIGNAL --*/
-.css-wd-alert, .css-wd-dialog {
+.css-js-wd-signal {
+	position: relative;
 	font-size: 14px;
-	font-family: var(--var-js-wd-font-type);
+	font-family: sans-serif;
 	border: thin solid black;
 	border-radius: 0.25em;
-	position: relative;
-}
-.css-wd-alert > *, .css-wd-dialog > * {
-	margin: 0;
 	padding: 0.5em;
+	background: white;
+	color: black;
 }
-.css-wd-alert > h1, .css-wd-dialog > h1 {font-size: 1.0em; padding-right: 2em;}
-.css-wd-alert > p  {font-size: 0.9em;}
-.css-wd-quit {
+.css-js-wd-signal > .css-js-wd-signal-quit {
 	font-size: 1em;
 	position: absolute;
 	top: 0.5em;
-	right: 1em;
+	right: 0.5em;
 	margin: 0;
 	padding: 0;
-	background: none;
 	border: 0;
+	background: none;
+	cursor: pointer;
+}
+.css-js-wd-signal > .css-js-wd-signal-head {
+	font-size: larger;
+	border-radius: 0.25em 0.25em 0 0;
+	color: white;
+	background: rgba(0,0,255,0.3);
+	margin: -0.5em -0.5em 0 -0.5em;
+	padding: 0.3em 2em 0.3em 0.3em;
+}
+.css-js-wd-signal > .css-js-wd-signal-body {
+	margin: 1em 0;
+}
+.css-js-wd-signal > .css-js-wd-signal-form {
+	position: flex;
+	align-items: center;
+  justify-content: space-around;
+	margin: 0;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > * {
+	font-size: inherit;
+	font-family: inherit;
+	background: white;
+	color: black;
+	border: thin solid black;
+	border-radius: 0.25em;
+	cursor: pointer;
+	margin: 0 0.5em;
 }`) - 1,
 
 	/**. '{string head(string text)}: Retorna o cabeçalho definido em '{text}.**/
@@ -40,57 +65,18 @@ const __SIGNAL = {
 	|'{main}|Caixa estruturada com os elementos acima|**/
 	struct: function() {
 		const struct = {};
-		struct.quit = __HTML("button", {type: "button", className: "css-wd-signal-quit", "aria-label": "Close", innerHTML: "&#x2715;"});
-		struct.head = __HTML("h1",  {className: "css-wd-signal-head", id: __ID.value});
-		struct.body = __HTML("p",   {className: "css-wd-signal-body", id: __ID.value});
-		struct.html = __HTML("div", {id: __ID.value});
+		struct.quit = __HTML("button", {className: "css-js-wd-signal-quit", type: "button", "aria-label": "Close", innerHTML: "&#x2715;"});
+		struct.head = __HTML("h1",     {className: "css-js-wd-signal-head", id: __ID.value});
+		struct.body = __HTML("p",      {className: "css-js-wd-signal-body", id: __ID.value});
+		struct.form = __HTML("form",   {className: "css-js-wd-signal-form"});
 		struct.main = __DOM({
 			tag: "div",
-			attr: {"aria-labelledby": struct.head.id, className: "css-wd-signal"},
-			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}, {tag: struct.html}],
+			attr: {"aria-labelledby": struct.head.id, "aria-describedby": struct.body.id, className: "css-js-wd-signal"},
+			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}, {tag: struct.form}],
 		}).tag;
-		struct.quit.addEventListener("click", function(ev) {return __WINDOW.detach(ev.currentTarget.parentElement);})
+		struct.quit.addEventListener("click", function(ev) {return __WINDOW.detach(ev.currentTarget.parentElement);});
+		struct.form.addEventListener("keydown", this);
 		return struct;
-	},
-	/**. '{boolean isDialog(node data)}: Retorna se o argumento é ou possui um formulário com botão de submissão.**/
-	isDialog: function(data) {
-		const html = typeof data === "object" && data instanceof HTMLElement;
-		const form = html ? (data instanceof HTMLFormElement || data.querySelector("form") !== null) : false;
-		const elem = form ? (data instanceof HTMLFormElement ? data : data.querySelector("form")) : null;
-		const exit = form ? elem.querySelector(`input[type="submit"], input[type="image"], button[type="submit"]`) !== null : false;
-		return exit;
-	},
-
-	window: function (data) {
-		data = __Type(data).object ? data : {};
-		const base = this.struct();
-		/*-- cabeçalho --*/
-		base.head.textContent = this.head(data.head);
-		/*-- mensagem --*/
-		if ("body" in data) {
-			base.body.textContent = String(data.body).trim();
-			base.main.setAttribute("aria-describedby", base.body.id);
-		} else {
-			base.body.remove();
-			data.body = null;
-		}
-		/*-- estrutura HTML --*/
-		if (typeof data.html === "object" && data.html instanceof HTMLElement) {
-			base.html.appendChild(data.html);
-			if (data.body === null)
-				base.main.setAttribute("aria-details", base.html.id);
-		} else {
-			base.html.remove();
-			data.html = null;
-		}
-		/*-- role --*/
-		const role = this.isDialog(base.main) ? (data.modal === true ? "alertdialog" : "dialog") : "alert";
-		base.main.setAttribute("role", role);
-		if (role !== "alert")
-			base.quit.remove();
-		/*-- janela --*/
-		const win = {alert: "frame", dialog: "float", alertdialog: "modal"};
-		return __WINDOW.attach(base.main, win[role], data.call);
 	},
 
 
@@ -111,47 +97,30 @@ const __SIGNAL = {
 	|body|Texto da mensagem|Obrigatório|
 	|head|Texto do título|Opcional|
 	|quit|Rótulo do botão fechar|Recomendado|**/
-	alert: function(body, head, time) {
-		const html = this.struct();
-		//TODO criar função timeout
-		const fire = !Number.isInteger(time) || time < 1 ? null : function(elem, type, ev) {
-			setTimeout(function() {__WINDOW.detach(html.main);}, time);
-		}
-		html.main.setAttribute("role", "alert");
-		html.head.textContent = this.head(head);
-		html.body.textContent = body;
-		return __WINDOW.attach(html.main, "frame", fire);
+	alert: function(head, body, dialog, call) {
+		const base = this.struct();
+		base.head.textContent = head;
+		base.body.textContent = body;
+		if (Array.isArray(dialog)) dialog.forEach(function(v,i,a){
+			const text = v.trim().replace(/\*$/, "");
+			const auto = (/\*$/).test(v.trim());
+			const send = __HTML("button", {type: "submit", textContent: text, autofocus: auto, value: i});
+			base.form.appendChild(send);
+			//TODO navegar com as setas do teclado
+		});
+		const form = base.form.childElementCount > 0;
+		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
+		base.main.setAttribute("role", form ? "alertdialog" : "alert");
+		base[form ? "quit" : "form"].remove();
+		return __WINDOW.attach(base.main, form ? "modal" : "frame", fire);
 	},
 
-
-
-
-	/**. '{node dialog(node form, string head, string quit)}: Exibe e retorna um nó de diálogo (ver evento '{wdwinow}) ou nulo:
-	|Argumento|Descrição|Observação|
-	|form|Formulário para o diálogo|Obrigatório|
-	|head|Texto do título|Opcional|
-	|quit|Rótulo do botão fechar|Recomendado|**/
-	dialog: function(form, head, quit) {
-		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
-		form = typeof form === "object" && form instanceof HTMLFormElement ? form : null;
-		/*-- Barrar formulário inválido ou já existente --*/
-		if (form === null || __WINDOW.find(form) !== null)
-			return null;
-		if (form.method.toLowerCase() === "dialog") form.method = "get";
-		/*-- diálogo --*/
-		const attr = {
-			"aria-labelledby":  __ID.value,
-			"aria-describedby": form.id.trim() !== "" ? form.id : __ID.value,
-			addEventListener:   {wdwindow: this},
-			role:               "alertdialog",
-			className:          "css-wd-dialog"
-		};
-		const box0 = {tag: "div", attr: attr};
-		const box1 = {tag:  "h1", attr: {id: attr["aria-labelledby"], innerHTML: head}};
-		const box2 = {tag:  form, attr: {id: attr["aria-describedby"], addEventListener: {submit: this}}};
-		box0.child = [box1, box2, this.quit(quit)];
-		const data = __WINDOW.add(__DOM(box0).tag, "modal");
-		return data === null ? null : __WINDOW.find(data).window;
+	dialog: function(form, call) {
+		if (!(form instanceof HTMLFormElement)) return null;
+		const type = form.getAttribute("role") === "alertdialog" ? "modal" : "float";
+		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
+		form.setAttribute("role", type === "modal" ? "alertdialog" : "dialog");
+		return __WINDOW.attach(form, type, fire);
 	},
 	/**. '{void notify(string body, string head)}: Exibe uma notificação (ver método i{alert}).**/
 	notify: function (body, head) {
@@ -170,20 +139,25 @@ const __SIGNAL = {
 		}
 		return;
 	},
+
+
+
+
+
+
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
 	handleEvent: function(ev) {
-		ev.preventDefault();
-		if (ev.type === "wdwindow") {
-			if (ev.detail.status === "canceled" || ev.detail.status === "closed") {
-				const form = ev.target.querySelector("form");
-				if (form !== null) {
-					form.remove();
-					form.removeEventListener("submit", this)
-				}
-			}
-		}
-		else if (ev.type === "click" || ev.type === "submit") {
-			__WINDOW.remove(ev.target);
+		if (ev.type === "keydown") {
+			const prev = ev.target.previousElementSibling;
+			const next = ev.target.nextElementSibling;
+			if ((ev.key === "ArrowUp" || ev.key === "ArrowLeft") && prev !== null)
+				return prev.focus();
+			if ((ev.key === "ArrowDown" || ev.key === "ArrowRight") && next !== null)
+				return next.focus();
+			if (ev.key === "Home")
+				return ev.target.parentElement.firstElementChild.focus();
+			if (ev.key === "End")
+				return ev.target.parentElement.lastElementChild.focus();
 		}
 		return;
 	},
