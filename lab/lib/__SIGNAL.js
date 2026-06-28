@@ -5,18 +5,22 @@ O objeto '{__SIGNAL} renderiza mensagens e notificações.
 const __SIGNAL = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- SIGNAL --*/
+:root {
+	--var-js-wd-signal-fg: #303030;
+	--var-js-wd-signal-bg: #f1f1f1;
+}
 .css-js-wd-signal {
 	position: relative;
+	padding: 0.5em;
 	font-size: 14px;
 	font-family: sans-serif;
+	background: var(--var-js-wd-signal-bg);
+	color: var(--var-js-wd-signal-fg);
 	border: thin solid black;
 	border-radius: 0.25em;
-	padding: 0.5em;
-	background: white;
-	color: black;
 }
 .css-js-wd-signal > .css-js-wd-signal-quit {
-	font-size: 1em;
+	font-size: inherit;
 	position: absolute;
 	top: 0.5em;
 	right: 0.5em;
@@ -24,38 +28,56 @@ const __SIGNAL = {
 	padding: 0;
 	border: 0;
 	background: none;
+	color: var(--var-js-wd-signal-bg);
 	cursor: pointer;
 }
 .css-js-wd-signal > .css-js-wd-signal-head {
-	font-size: larger;
-	border-radius: 0.25em 0.25em 0 0;
-	color: white;
-	background: rgba(0,0,255,0.3);
 	margin: -0.5em -0.5em 0 -0.5em;
-	padding: 0.3em 2em 0.3em 0.3em;
+	padding: 0.5em 2em 0.5em 0.5em;
+	font-size: inherit;
+	font-weight: bold;
+	color: var(--var-js-wd-signal-bg);
+	background: var(--var-js-wd-signal-fg);
+	border-radius: 0.25em 0.25em 0 0;
 }
 .css-js-wd-signal > .css-js-wd-signal-body {
 	margin: 1em 0;
 }
 .css-js-wd-signal > .css-js-wd-signal-form {
-	position: flex;
-	align-items: center;
-  justify-content: space-around;
 	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+  justify-content: space-around;
 }
-.css-js-wd-signal > .css-js-wd-signal-form > * {
+.css-js-wd-signal > .css-js-wd-signal-form > button {
 	font-size: inherit;
 	font-family: inherit;
-	background: white;
-	color: black;
 	border: thin solid black;
 	border-radius: 0.25em;
 	cursor: pointer;
-	margin: 0 0.5em;
+	margin: 0.25em 0;
+	padding: 0.25em 0.5em;
+	color: var(--var-js-wd-signal-fg);
+	background: #d9d9d9;
+	appearance: none;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > button:hover {
+	background: #c0c0c0;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > button:focus {
+	outline: 0.25em solid dodgerblue;
+}
+@media screen and (min-width: 768px) {
+	.css-js-wd-signal > .css-js-wd-signal-form {
+		flex-direction: row;
+		align-items: center;
+	}
+	.css-js-wd-signal > .css-js-wd-signal-form > button {
+		margin: 0 0.5em;
+	}
 }`) - 1,
-
-	/**. '{string head(string text)}: Retorna o cabeçalho definido em '{text}.**/
-	head: function(text) {return String(text || "").trim() || document.title.trim() || window.location.hostname;},
 	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos:
 	|Nome|Descrição|
 	|'{quit}|Botão padrão para fechar diálogo|
@@ -78,25 +100,20 @@ const __SIGNAL = {
 		struct.form.addEventListener("keydown", this);
 		return struct;
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**. '{node alert(string body, string head, string quit)}: Exibe e retorna um nó de alerta (ver evento '{wdwindow}) ou nulo:
-	|Argumento|Descrição|Observação|
-	|body|Texto da mensagem|Obrigatório|
-	|head|Texto do título|Opcional|
-	|quit|Rótulo do botão fechar|Recomendado|**/
+	/**. '{void alert(string head, string body, array dialog, function call)}: Exibe uma caixa de alerta ou de diálogo:
+	|Argumento|Opcional|Descrição|
+	|'{head}|Não|Define o título da caixa.|
+	|'{body}|Não|Define a mensagem da caixa.|
+	|'{dialog}|Sim|Lista com os rótulos dos botões do diálogo.|
+	|'{call}|Sim|Função a ser executada a cada mudança de '{status} da caixa.|
+	|""Tabela com os argumentos do método '{alert}""|
+	- Se '{dialog} for informado, a caixa será de diálogo, caso contrário, de alerta;
+	- Adicione um asterisco ao final do rótulo do botão de diálogo para definí-lo como focável;
+	- A funcão '{call} recebe dois argumentos: uma string com o '{status} da janela e os dados do evento '{submit};
+	- Quanto aos tipos de '{status}, ver objeto __WINDOW;
+	- Os dados de '{submit} serão enviados quando clicado no botão de diálogo, fechando a caixa, caso contrário retorna nulo;
+	- Utilize a propriedade '{submitter} para identificar o botão que foi clicado;
+	- O valor do item da lista de diálogo será o rótulo do botão e seu índice estará definido na propriedade '{value}.**/
 	alert: function(head, body, dialog, call) {
 		const base = this.struct();
 		base.head.textContent = head;
@@ -106,7 +123,6 @@ const __SIGNAL = {
 			const auto = (/\*$/).test(v.trim());
 			const send = __HTML("button", {type: "submit", textContent: text, autofocus: auto, value: i});
 			base.form.appendChild(send);
-			//TODO navegar com as setas do teclado
 		});
 		const form = base.form.childElementCount > 0;
 		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
@@ -114,7 +130,12 @@ const __SIGNAL = {
 		base[form ? "quit" : "form"].remove();
 		return __WINDOW.attach(base.main, form ? "modal" : "frame", fire);
 	},
-
+	/**. '{void dialog(node form, function call)}: Define uma caixa de diálogo livre a partir de um formulário.
+	- O argumento '{form} deve ser um elemento de formulário HTML;
+	- O argumento '{call} trabalha da mesma forma que no método '{alert};
+	- O formulário deve ser preparado previamente para acessibilidade e conter campos capazes de provocar sua submissão;
+	- O atributo '{role} do formulário deve ter os valores '{alertdialog} ou '{dialog} (padrão); e
+	- Na situação de múltiplas chamadas, atribua o nó HTML a uma variável ou chame o método por um ouvinte de clique caso o formulário esteja inserido na árvore do DOM.**/
 	dialog: function(form, call) {
 		if (!(form instanceof HTMLFormElement)) return null;
 		const type = form.getAttribute("role") === "alertdialog" ? "modal" : "float";
@@ -122,9 +143,9 @@ const __SIGNAL = {
 		form.setAttribute("role", type === "modal" ? "alertdialog" : "dialog");
 		return __WINDOW.attach(form, type, fire);
 	},
-	/**. '{void notify(string body, string head)}: Exibe uma notificação (ver método i{alert}).**/
-	notify: function (body, head) {
-		head = this.head(head);
+	/**. '{void notify(string head, string body)}: Exibe uma notificação (ver método '{alert} quanto aos argumentos).**/
+	notify: function (head, body) {
+		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 		body = String(body || "").trim() || null;
 		if (body !== null) {
 			const config = {lang: __LANG.value, body: body, tag: __ID.value,};
@@ -139,25 +160,25 @@ const __SIGNAL = {
 		}
 		return;
 	},
-
-
-
-
-
-
-	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{submit e click}.**/
+	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{keydown}.**/
 	handleEvent: function(ev) {
-		if (ev.type === "keydown") {
+		const re = /^(Arrow(Up|Left|Down|Right)|Home|End)$/;
+		if (ev.type === "keydown" && re.test(ev.key)) {
 			const prev = ev.target.previousElementSibling;
 			const next = ev.target.nextElementSibling;
-			if ((ev.key === "ArrowUp" || ev.key === "ArrowLeft") && prev !== null)
+			const init = ev.target.parentElement.firstElementChild;
+			const last = ev.target.parentElement.lastElementChild;
+			const row  = init.getBoundingClientRect().top === last.getBoundingClientRect().top;
+			if (init === last)
+				return;
+			if (((!row && ev.key === "ArrowUp")   || (row && ev.key === "ArrowLeft")) && prev)
 				return prev.focus();
-			if ((ev.key === "ArrowDown" || ev.key === "ArrowRight") && next !== null)
+			if (((!row && ev.key === "ArrowDown") || (row && ev.key === "ArrowRight")) && next)
 				return next.focus();
 			if (ev.key === "Home")
-				return ev.target.parentElement.firstElementChild.focus();
+				return init.focus();
 			if (ev.key === "End")
-				return ev.target.parentElement.lastElementChild.focus();
+				return last.focus();
 		}
 		return;
 	},

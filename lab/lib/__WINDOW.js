@@ -31,6 +31,15 @@ Características:
 const __WINDOW = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- WINDOW --*/
+:root {
+	--var-js-wd-window-zindex-0: 9999;
+	--var-js-wd-window-zindex-1: 9998;
+	--var-js-wd-window-zindex-2: 9997;
+}
+@keyframes js-wd-window-emerge {
+	from {opacity: 0; transform: scale(0);}
+	to   {opacity: 1; transform: scale(1);}
+}
 .js-wd-freeze {overflow: hidden !important;}
 [data-js-wd-window] {
 	position:   fixed !important;
@@ -43,14 +52,18 @@ const __WINDOW = {
 	padding:    0 !important;
 	background: tranparent !important;
 }
+[data-js-wd-window] > * {
+	animation: js-wd-window-emerge 0.5s ease;
+}
 [data-js-wd-window="frame"] {
 	top:            initial !important;
 	display:        flex !important;
 	flex-direction: column !important;
 	margin:         0.5em !important;
+	padding-right:  10px !important;
 	max-height:     calc(100vh - 1em) !important;
 	overflow-y:     auto !important;
-	z-index:        var(--var-js-wd-z-index-3) !important;
+	z-index:        var(----var-js-wd-window-zindex-3) !important;
 }
 @media screen and (min-width: 768px) {
 	[data-js-wd-window="frame"] {
@@ -63,7 +76,7 @@ const __WINDOW = {
 }
 [data-js-wd-window="float"] {
 	display: block !important;
-	z-index: var(--var-js-wd-z-index-2) !important;
+	z-index: var(--var-js-wd-window-zindex-2) !important;
 }
 [data-js-wd-window="float"] > * {
 	position: absolute !important;
@@ -72,14 +85,18 @@ const __WINDOW = {
 }
 [data-js-wd-window="modal"] {
 	padding: 0.5em !important;
-	overflow-y: auto !important;
-	z-index: var(--var-js-wd-z-index-1);
+	z-index: var(--var-js-wd-window-zindex-1);
 	background: rgb(50,50,50) !important;
-	background: rgba(50,50,50,0.5) !important;
+	background: rgba(50,50,50,0.3) !important;
 	display:         flex !important;
 	flex-direction:  row !important;
 	justify-content: center !important;
 	align-items:     center !important;
+}
+[data-js-wd-window="modal"] > * {
+	max-width:  90vw;
+	max-height: 90vh;
+	overflow-y: auto !important;
 }`),
 	/**. '{array heap}: Estabelece a fila de janelas anexadas com as seguintes propriedades:
 	|Nome|Tipo|Descrição|
@@ -200,7 +217,8 @@ const __WINDOW = {
 		heap.win.addEventListener("submit", this);
 		heap.win.setAttribute("aria-modal", heap.type === "modal" ? "true" : "false" );
 		this[heap.type].appendChild(heap.win);
-		document.body.appendChild(this[heap.type]);
+		if (this[heap.type].parentElement !== document.body)
+			document.body.appendChild(this[heap.type]);
 		/*-- definindo comportamento de modal ou float --*/
 		if (heap.type === "modal" || heap.type === "float") {
 			/*-- posicionando float --*/
@@ -210,7 +228,8 @@ const __WINDOW = {
 			/*-- fixando foco --*/
 			const auto = heap.win.querySelector("[autofocus]");
 			const main = auto === null ? heap.win : auto;
-			main.setAttribute("tabindex", main.tabIndex >= 0 ? main.tabIndex : (auto === null ? -1 : 0));
+			if (main.tabIndex < 0)
+				main.setAttribute("tabindex", auto === null ? -1 : 0);
 			main.focus();
 		}
 		/*-- acionar disparador --*/
@@ -249,8 +268,8 @@ const __WINDOW = {
 			if (!open) this[heap.type === "modal" ? "inert" : "freeze"](false);
 			/*-- definindo o foco após fechamento da janela --*/
 			if (heap.source !== null) {
-				const tab = heap.source.tabIndex;
-				heap.source.setAttribute("tabindex", tab >= 0 ? tab : -1);
+				if (heap.source.tabIndex < 0)
+					heap.source.setAttribute("tabindex", -1);
 				heap.source.focus();
 			}
 		}
