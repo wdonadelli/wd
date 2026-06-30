@@ -74,6 +74,37 @@ const __MENU = {
 	left: auto;
 	right: 0;
 }`),
+
+
+
+
+/*
+<form>
+	<menu>
+		<button>Menu 1</button>
+		<li><submit>Item 1</submit></li>
+		<li>
+			<button>Menu 2</button>
+			<menu>
+				<li><submit>Item 2.1</submit></li>
+				<li><submit>Item 2.2</submit></li>
+			</menu>
+		</li>
+		<li><submit>Item 3</submit></li>
+		<li><submit>Item 4</submit></li>
+	</menu>
+</form>
+*/
+
+
+
+
+
+
+
+
+
+
 	/**. '{string label(any input)}: Devolve o valor do rótulo conforme item do array ou nulo.**/
 	label: function(input) {
 		const test = new __Type(input);

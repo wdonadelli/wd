@@ -59,7 +59,7 @@ const __SIGNAL = {
 	cursor: pointer;
 	margin: 0.25em 0;
 	padding: 0.25em 0.5em;
-	color: var(--var-js-wd-signal-fg);
+	color: #000000;
 	background: #d9d9d9;
 	appearance: none;
 }
@@ -112,17 +112,21 @@ const __SIGNAL = {
 	- A funcão '{call} recebe dois argumentos: uma string com o '{status} da janela e os dados do evento '{submit};
 	- Quanto aos tipos de '{status}, ver objeto __WINDOW;
 	- Os dados de '{submit} serão enviados quando clicado no botão de diálogo, fechando a caixa, caso contrário retorna nulo;
-	- Utilize a propriedade '{submitter} para identificar o botão que foi clicado;
-	- O valor do item da lista de diálogo será o rótulo do botão e seu índice estará definido na propriedade '{value}.**/
+	- O valor do item da lista de diálogo será o rótulo do botão e seu índice estará definido na propriedade '{value};
+	- Utilize a propriedade '{submitter} para identificar o botão clicado; e
+	- Também é possível identificar o índice do botão clicado por meio do atributo '{data-dialog-index} fixado ao alvo do evento '{submit} ('{form}).**/
 	alert: function(head, body, dialog, call) {
 		const base = this.struct();
+		const elem = document.createElement("div");
 		base.head.textContent = head;
 		base.body.textContent = body;
 		if (Array.isArray(dialog)) dialog.forEach(function(v,i,a){
 			const text = v.trim().replace(/\*$/, "");
 			const auto = (/\*$/).test(v.trim());
-			const send = __HTML("button", {type: "submit", textContent: text, autofocus: auto, value: i});
+			elem.innerHTML = text;
+			const send = __HTML("button", {type: "submit", textContent: elem.textContent, autofocus: auto, value: i});
 			base.form.appendChild(send);
+			send.addEventListener("click", function(ev) {ev.currentTarget.form.dataset.dialogIndex = i;});
 		});
 		const form = base.form.childElementCount > 0;
 		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
@@ -130,34 +134,41 @@ const __SIGNAL = {
 		base[form ? "quit" : "form"].remove();
 		return __WINDOW.attach(base.main, form ? "modal" : "frame", fire);
 	},
-	/**. '{void dialog(node form, function call)}: Define uma caixa de diálogo livre a partir de um formulário.
+	/**. '{void dialog(node form, boolean modal, function call)}: Define uma caixa de diálogo livre a partir de um formulário.
 	- O argumento '{form} deve ser um elemento de formulário HTML;
+	- O argumento '{modal}, se falso, não interromperá o acesso ao documento;
 	- O argumento '{call} trabalha da mesma forma que no método '{alert};
 	- O formulário deve ser preparado previamente para acessibilidade e conter campos capazes de provocar sua submissão;
 	- O atributo '{role} do formulário deve ter os valores '{alertdialog} ou '{dialog} (padrão); e
 	- Na situação de múltiplas chamadas, atribua o nó HTML a uma variável ou chame o método por um ouvinte de clique caso o formulário esteja inserido na árvore do DOM.**/
-	dialog: function(form, call) {
+	dialog: function(form, modal, call) {
 		if (!(form instanceof HTMLFormElement)) return null;
-		const type = form.getAttribute("role") === "alertdialog" ? "modal" : "float";
 		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
-		form.setAttribute("role", type === "modal" ? "alertdialog" : "dialog");
-		return __WINDOW.attach(form, type, fire);
+		form.setAttribute("role", modal === false ? "dialog" : "alertdialog");
+		return __WINDOW.attach(form, modal === false ? "float" : "modal", fire);
 	},
-	/**. '{void notify(string head, string body)}: Exibe uma notificação (ver método '{alert} quanto aos argumentos).**/
-	notify: function (head, body) {
+	/**. '{void notify(string head, string body, function call)}: Exibe uma notificação:
+	- Pode não funcionar em navegadores móveis em razão da maneira como construído a{exigências}@href{https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification}target{_blank};
+	- Os argumentos '{head} e '{body} definem o cabeçalho e o texto da mensagem, respectivamente;
+	- O argumento '{call} é uma função chamada após o envio da notificação que recebe o status da notificação;
+	- A funcão opcional '{call} recebe como argumento uma string com o '{status} da notificação; e
+	- Os status possíveis são ´{granted}, se a notificação foi permitida, e '{denied}, se foi negada.**/
+	notify: function (head, body, call) {
 		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
-		body = String(body || "").trim() || null;
-		if (body !== null) {
-			const config = {lang: __LANG.value, body: body, tag: __ID.value,};
-			if (Notification.permission === "denied")
-				return;
-			if (Notification.permission === "granted")
-				new Notification(head, config);
-			else
-				Notification.requestPermission().then(function(x) {
-					if (x === "granted") new Notification(head, config);
-				});
+		call = typeof call === "function" ? call : null;
+		const config = {lang: __LANG.value, body: body};
+		if (Notification.permission === "denied") {
+			return call !== null ? call("denied") : undefined;
 		}
+		if (Notification.permission === "granted") {
+			new Notification(head, config);
+			return call !== null ? call("granted") : undefined;
+		}
+		else
+			Notification.requestPermission().then(function(x) {
+				if (x === "granted") new Notification(head, config);
+				return call !== null ? call(x) : undefined;
+			});
 		return;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{keydown}.**/

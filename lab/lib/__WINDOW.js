@@ -22,6 +22,7 @@ Características:
 	|Evento|Descrição|'{modal}|'{float}|'{frame}|
 	|'{attach}|Anexado à janela principal|Sim|Sim|Sim|
 	|'{detach}|Janela removida pelo método `{detach}|Sim|Sim|Sim|
+	|'{cancelled}|Janela removida pelo método `{detach} antes de ser exibida|Sim|Não|Não|
 	|'{rejected}|A exibição da janela foi rejeitada|Não|Sim|Sim|
 	|'{pushed}|Janela removida por outra janela|Não|Sim|Não|
 	|'{escape}|Janela removida pela tecla '{esc}|Sim|Sim|Não|
@@ -254,7 +255,7 @@ const __WINDOW = {
 			heap.parent.appendChild(heap.win);
 		else
 			heap.parent.insertBefore(heap.win, heap.next);
-		/*-- fechando parede se estiver janela aberta --*/
+		/*-- fechando parede se não tiver janela sendo exibida --*/
 		if (!open) this[heap.type].remove();
 		/*-- reestabelecendo características --*/
 		heap.win[heap.style === null ? "removeAttribute" : "setAttribute"]("style", heap.style);
@@ -264,10 +265,10 @@ const __WINDOW = {
 		heap.win.hidden = heap.hidden;
 		/*-- definindo comportamento de modal ou float --*/
 		if (heap.type === "modal" || heap.type === "float") {
-			/*-- desligando inert ou freeze --*/
+			/*-- desligando inert ou freeze se não tiver janela sendo exibida --*/
 			if (!open) this[heap.type === "modal" ? "inert" : "freeze"](false);
-			/*-- definindo o foco após fechamento da janela --*/
-			if (heap.source !== null) {
+			/*-- foco após fechamento da janela, se não existir janela aberta --*/
+			if (!open && heap.source !== null) {
 				if (heap.source.tabIndex < 0)
 					heap.source.setAttribute("tabindex", -1);
 				heap.source.focus();
@@ -300,7 +301,8 @@ const __WINDOW = {
 	},
 	/**. '{void detach(node win)}: Desanexa a janela da tela.**/
 	detach: function(win) {
-		return this.close(this.match({win: win}), "detach");
+		const find = this.match({win: win});
+		return find < 0 ? undefined : this.close(find, this.heap[find].open ? "detach" : "cancelled");
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{click, keydown e submit}.**/
 	handleEvent: function(ev) {
