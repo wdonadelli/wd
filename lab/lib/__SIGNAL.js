@@ -77,7 +77,8 @@ const __SIGNAL = {
 	.css-js-wd-signal > .css-js-wd-signal-form > button {
 		margin: 0 0.5em;
 	}
-}`) - 1,
+}
+`) - 1,
 	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos:
 	|Nome|Descrição|
 	|'{quit}|Botão padrão para fechar diálogo|

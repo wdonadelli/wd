@@ -81,23 +81,61 @@ const __MENU = {
 /*
 <form>
 	<menu>
-		<button>Menu 1</button>
-		<li><submit>Item 1</submit></li>
+		<li>Item 1.1</li>
+		<li>Item 1.2</li>
 		<li>
-			<button>Menu 2</button>
 			<menu>
-				<li><submit>Item 2.1</submit></li>
-				<li><submit>Item 2.2</submit></li>
+				<li>Item 2.1</li>
+				<li>Item 2.2</li>
 			</menu>
 		</li>
-		<li><submit>Item 3</submit></li>
-		<li><submit>Item 4</submit></li>
+		<li>Item 1.3</li>
+		<li>Item 1.4</li>
 	</menu>
 </form>
+{menu: "loucura", icon: "&#x4574;" list: []}
+
+
+
 */
 
+	/*novoItem: function(label, type) {
+		const item = __HTML("li");
+		const text = __HTML("button", {id: __ID.value, type: type});
+		text.innerHTML = label;
+		text.textContent = text.textContent;
+		item.appendChild(text);
+		return item;
+	},*/
 
 
+
+	novo: function(name, list) {
+		//const menu = __HTML("menu", {id: __ID.value, "arial-labelledby": __ID.value});
+		document.body.appendChild(__HTML("div", {innerHTML: `
+<menu role="menu">
+	<li role="menuitem">Item 1</li>
+	<li>Item 2</li>
+	<li>Item 3
+		<menu>
+			<li>Item 3.1</li>
+			<li>Item 3.2</li>
+		</menu>
+	</li>
+	<li>Item 4</li>
+	<li>Item 5</li>
+</menu>
+		`}));
+
+
+
+
+
+
+
+
+		//return menu;
+	},
 
 
 

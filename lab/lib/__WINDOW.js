@@ -26,6 +26,7 @@ Características:
 	|'{rejected}|A exibição da janela foi rejeitada|Não|Sim|Sim|
 	|'{pushed}|Janela removida por outra janela|Não|Sim|Não|
 	|'{escape}|Janela removida pela tecla '{esc}|Sim|Sim|Não|
+	|'{tab}|Janela removida pela tecla '{Tab}|Não|Sim|Não|
 	|'{offtarget}|Janela removida por clique fora do alvo|Não|Sim|Não|
 	|'{submit}|Janela removida por submissão de formulário|Sim|Sim|Sim|
 	|""Tabela de estados da janela""|*/
@@ -133,9 +134,15 @@ const __WINDOW = {
 	},
 	/**. '{void walls()}: Cria as paredes para recepcionar as janelas ('{frame, modal, float}) do objeto.**/
 	walls: function() {
-		this.frame = this.frame ? this.frame : __HTML("div", {"data-js-wd-window": "frame"});
-		this.modal = this.modal ? this.modal : __HTML("div", {"data-js-wd-window": "modal", addEventListener: {keydown: this}, tabIndex: -1});
-		this.float = this.float ? this.float : __HTML("div", {"data-js-wd-window": "float", addEventListener: {keydown: this, click: this}, tabIndex: -1});
+		const ev = {
+			frame: {submit: this},
+			modal: {submit: this, keydown: this},
+			float: {submit: this, keydown: this, click: this}
+		};
+		for (let i in ev) {
+			let attr = {"data-js-wd-window": i, addEventListener: ev[i], tabindex: -1};
+			this[i] = this[i] ? this[i] : __HTML("div", attr);
+		}
 		return;
 	},
 	/**. '{void inert(boolean ok)}: Define a inércia no documento, exceto para a parede "modal".**/
@@ -207,6 +214,7 @@ const __WINDOW = {
 		const modal  = this.match({open: true, type: "modal"});
 		const float  = this.match({open: true, type: "float"});
 		const frame  = this.match({open: true, type: "frame"});
+		this.walls();
 		/*-- casos específicos --*/
 		if (modal >= 0)
 			return this.close(heap.type === "modal" ? -1 : index, "rejected");
@@ -215,7 +223,6 @@ const __WINDOW = {
 		/*-- adicionando à janela --*/
 		heap.open = true;
 		heap.win.hidden = false;
-		heap.win.addEventListener("submit", this);
 		heap.win.setAttribute("aria-modal", heap.type === "modal" ? "true" : "false" );
 		this[heap.type].appendChild(heap.win);
 		if (this[heap.type].parentElement !== document.body)
@@ -256,12 +263,14 @@ const __WINDOW = {
 		else
 			heap.parent.insertBefore(heap.win, heap.next);
 		/*-- fechando parede se não tiver janela sendo exibida --*/
-		if (!open) this[heap.type].remove();
+		if (!open) {
+			this[heap.type].remove();
+			this[heap.type] = null;
+		}
 		/*-- reestabelecendo características --*/
 		heap.win[heap.style === null ? "removeAttribute" : "setAttribute"]("style", heap.style);
 		heap.win[heap.index === null ? "removeAttribute" : "setAttribute"]("tabindex", heap.index);
 		heap.win.removeAttribute("aria-modal");
-		heap.win.removeEventListener("submit", this);
 		heap.win.hidden = heap.hidden;
 		/*-- definindo comportamento de modal ou float --*/
 		if (heap.type === "modal" || heap.type === "float") {
@@ -284,7 +293,6 @@ const __WINDOW = {
 		if (!__Type(win).instanceOf("HTMLElement")) return null;
 		if (this.contains(win)) return null;
 		type = String(type).trim().toLowerCase();
-		this.walls();
 		this.heap.push({
 			open: 	false,
 			win:    win,
@@ -306,14 +314,28 @@ const __WINDOW = {
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{click, keydown e submit}.**/
 	handleEvent: function(ev) {
+		/*-- submit: aplica-se às três paredes --*/
 		if (ev.type === "submit") {
 			ev.preventDefault();
-			return this.close(this.match({win: ev.currentTarget}), "submit", ev);
+			const child = ev.currentTarget.children;
+			for (let i = 0; i < child.length; i++) {
+				if (child[i].contains(ev.target))
+					this.close(this.match({win: child[i]}), "submit", ev);
+			}
+			return;
 		}
-		if (ev.type === "click" && ev.target === ev.currentTarget)
+		/*-- click: aplica-se à parede float --*/
+		if (ev.type === "click" && ev.target === ev.currentTarget) {
 			return this.close(this.match({win: ev.currentTarget.firstElementChild}), "offtarget");
-		if (ev.type === "keydown" && /*ev.target === ev.currentTarget &&*/ ev.key === "Escape")
-			return this.close(this.match({win: ev.currentTarget.firstElementChild}), "escape");
+		}
+		/*-- keydown: aplica-se às paredes float e modal --*/
+		if (ev.type === "keydown") {
+			const find = this.match({win: ev.currentTarget.firstElementChild});
+			if (ev.key === "Escape")
+				return this.close(find, "escape");
+			if (ev.key === "Tab" && find >= 0 && this.heap[find].type === "float")
+				return this.close(find, "tab");
+		}
 		return;
 	},
 };
