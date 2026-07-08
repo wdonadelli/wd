@@ -12,14 +12,16 @@ Características:
 - Um clique fora da janela '{float} a derruba;
 - A janela '{modal} deixa o documento inerte;
 - A janela '{float} deixa o documento estático;
-- A cada mudança no estado da janela, uma função disparadora, se definida, é chamada enviando como argumentos:
-|Argumento|Tipo|Descrição|
+- A cada mudança no estado da janela, uma função disparadora, se definida, é chamada enviando um objeto como argumento:
+|Propriedade|Tipo|Descrição|
 |'{signal}|string|O estado da janela|
 |'{window}|node|Elemento da janela|
-|'{event}|object|Dados do evento '{submit}, se for o caso|
+|'{open}|boolean|Informa se a janela foi exibida|
+|'{close}|boolean|Informa se a janela foi fechada|
+|'{submit}|object|Dados do evento '{submit}, se for o caso|
 |""Tabela de argumentos da função disparadora.""|
 	Os seguintes estados da janela podem ser anunciados:
-	|Evento|Descrição|'{modal}|'{float}|'{frame}|
+	|Sinal|Descrição|'{modal}|'{float}|'{frame}|
 	|'{attach}|Anexado à janela principal|Sim|Sim|Sim|
 	|'{detach}|Janela removida pelo método `{detach}|Sim|Sim|Sim|
 	|'{cancelled}|Janela removida pelo método `{detach} antes de ser exibida|Sim|Não|Não|
@@ -242,7 +244,7 @@ const __WINDOW = {
 		}
 		/*-- acionar disparador --*/
 		if (heap.call !== null)
-			heap.call("attach", heap.win, null);
+			heap.call({signal: "attach", window: heap.win, close: false, open: true, submit: null});
 		return;
 	},
 	/**. '{void update(integer index)}: Verifica o atendimento da fila.**/
@@ -285,7 +287,7 @@ const __WINDOW = {
 		}
 		/*-- disparando evento --*/
 		if (heap.call !== null)
-			heap.call(signal, heap.win, ev ? ev : null);
+			heap.call({signal: signal, window: heap.win, close: true, open: heap.open, submit: ev ? ev : null});
 		return this.update();
 	},
 	/**. '{void attach(node win, string type, function call)}: Anexa a janela, conforme o tipo, e define um disparador.**/

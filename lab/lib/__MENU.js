@@ -18,123 +18,242 @@ O objeto '{__MENU} cria elementos de menus a partir de arrays:
 const __MENU = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- MENU --*/
-.css-wd-menu {
-	padding: 0.3em;
+.css-js-wd-menu {
+	display: inline-block;
+	list-style: none;
+	padding: 0.5em;
 	margin: 0;
 	color: black;
 	border-radius: 0.2em;
 	border: thin solid black;
-	font-size: var(--var-js-wd-font-size);
-	font-family: var(--var-js-wd-font-type);
+	font-size: 14px;
+	font-family: sans-serif;
 }
-.css-wd-menu * {
-	font-size: inherit;
-	font-family: inherit;
-}
-.css-wd-menu menu {
+
+.css-js-wd-menu [role="menu"] {
 	list-style: none;
 	padding: 0;
 	margin: 0
 }
-.css-wd-menu li {
+.css-js-wd-menu li {
 	padding: 0;
-	margin: 0.3em 0 0 0;
+	margin: 0;
 }
-.css-wd-menu > *:first-child {
-	text-align: center;
-	font-weight: bold;
-	padding: 0;
-	margin: 0.3em 0 0 0;
-}
-.css-wd-menu button {
-	text-align: left;
-	font-weight: normal;
+.css-js-wd-menu [role="menuitem"] {
+	position: relative;
+	padding: 0.2em 1.5em;
+	margin: 0;
+	border-radius: 0.25em;
 	cursor: pointer;
 }
-.css-wd-menu button {
-	position: relative;
-	display: block;
-	width: 100%;
-	margin: 0;
-	padding: 0.25em 2em;
-	font-size: inherit;
-	font-family: inherit;
-	border-radius: 0.2em;
+
+.css-js-wd-menu [role="menuitem"]:hover,
+.css-js-wd-menu [role="menuitem"]:focus {
+	background: black;
+	color: white;
 }
-.css-wd-menu [aria-controls]:after {
-	display: inline-block;
+
+.css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
+	font-weight: bold;
+	text-align: center;
+}
+
+.css-js-wd-menu [role="menuitem"][aria-expanded="false"]:after {
 	position: absolute;
-	width: 2em;
+	display: inline-block;
+	right:  0;
+	top:    0.2em;
+	bottom: 0.2em;
+	width:  1.5em;
+	text-align: center;
+	content: "\\276F";
+}
+
+.css-js-wd-menu [role="menuitem"][aria-expanded="true"]:before {
+	position: absolute;
+	display: inline-block;
+	left:   0;
+	top:    0.2em;
+	bottom: 0.2em;
+	width:  1.5em;
 	text-align: center;
 	content: "\\276E";
-	left: 0;
 }
-.css-wd-menu [aria-controls][aria-expanded]:after {
-	content: "\\276F";
-	left: auto;
-	right: 0;
-}`),
-
 
 
 
 /*
-<form>
-	<menu>
-		<li>Item 1.1</li>
-		<li>Item 1.2</li>
-		<li>
-			<menu>
-				<li>Item 2.1</li>
-				<li>Item 2.2</li>
-			</menu>
-		</li>
-		<li>Item 1.3</li>
-		<li>Item 1.4</li>
-	</menu>
-</form>
-{menu: "loucura", icon: "&#x4574;" list: []}
+.css-js-wd-menu [role="menuitem"][aria-expanded="false"] ~ [role="menu"] {
+	display: none;
+}
 
-
-
+.css-js-wd-menu [role="menuitem"][aria-expanded="true"] ~ [role="menu"] {
+	display: block;
+}
 */
 
-	/*novoItem: function(label, type) {
-		const item = __HTML("li");
-		const text = __HTML("button", {id: __ID.value, type: type});
-		text.innerHTML = label;
-		text.textContent = text.textContent;
-		item.appendChild(text);
-		return item;
-	},*/
-
-
-
-	novo: function(name, list) {
-		//const menu = __HTML("menu", {id: __ID.value, "arial-labelledby": __ID.value});
-		document.body.appendChild(__HTML("div", {innerHTML: `
-<menu role="menu">
-	<li role="menuitem">Item 1</li>
-	<li>Item 2</li>
-	<li>Item 3
-		<menu>
-			<li>Item 3.1</li>
-			<li>Item 3.2</li>
-		</menu>
-	</li>
-	<li>Item 4</li>
-	<li>Item 5</li>
-</menu>
-		`}));
 
 
 
 
 
 
+`),
 
 
-		//return menu;
+
+
+	label: function(text) {
+		const elem = __HTML("div");
+		elem.innerHTML = String(text).trim();
+		return elem.textContent;
+	},
+
+	menu: function(name, list) {
+		const menu = __HTML("menu", {"aria-label": name, role: "menu", id: __ID.value, tabindex: -1});
+		if (Array.isArray(list)) list.forEach(function (v,i,a) {
+			/*-- submenu --*/
+			if (Array.isArray(v)) {
+				const li  = __HTML("li", {role: "none"});
+				const sub = this.menu(`${name}/${v[0]}`, v.slice(1));
+				const div = __HTML("div", {
+					textContent: this.label(v[0]),
+					id: __ID.value,
+					tabindex: -1,
+					role: "menuitem",
+					"aria-haspopup": "true",
+					"aria-controls": sub.id,
+					"aria-expanded": "false",
+				});
+				sub.hidden = true;
+				li.appendChild(div);
+				li.appendChild(sub);
+				menu.appendChild(li);
+			}
+			/*-- item --*/
+			else {
+				const li  = __HTML("li", {textContent: this.label(v), role: "menuitem", id: __ID.value, tabindex: -1});
+				menu.appendChild(li);
+			}
+		}, this);
+		return menu;
+	},
+
+	create: function(target, name, list, call) {
+		const menu = this.menu(name, list);
+		__HTML(menu, {className: "css-js-wd-menu"});
+		menu.addEventListener("mouseover", this);
+		menu.addEventListener("keydown", this);
+		menu.addEventListener("click", this);
+
+		//TODO provisórios
+		menu.setAttribute("aria-activedescendant", menu.querySelector(`[role="menuitem"]`).id);
+		document.body.appendChild(menu);
+	},
+
+	/**. '{array getPath(node item)}: Retorna a lista de menus ancestrais a partir do item, da raiz para o atual.**/
+	getPath: function(item) {
+		const path = [];
+		while(item !== null && !item.hasAttribute("aria-activedescendant")) {
+			if (item.getAttribute("role") === "menu")
+				path.unshift(item);
+			item = item.parentElement;
+		}
+		path.unshift(item);
+		return path;
+	},
+	/**. '{array getItems(node item)}: Retorna a lista dos itens do menu, do topo para a base.**/
+	getItems: function(menu) {
+		return Array.from(menu.children).map(function(v,i,a) {
+			return v.getAttribute("role") === "menuitem" ? v : v.firstElementChild;
+		});
+	},
+	/**. '{void setActive(node item)}: Define o item ativo.**/
+	setActive: function(item) {
+		const path = this.getPath(item);
+		path[0].setAttribute("aria-activedescendant", item.id);
+		item.focus();
+		return;
+	},
+	/**. '{void subMenu(boolean show, node menu)}: Define o submenu a abrir ou fechar.**/
+	subMenu: function(show, menu) {
+		const path  = this.getPath(menu);
+		/*-- abre o menu --*/
+		if (show) {
+			menu.hidden = false;
+			const item = menu.parentElement.firstElementChild;
+			const prev = this.getItems(path[path.length - 2]);
+			const next = this.getItems(path[path.length - 1]);
+			item.setAttribute("aria-expanded", "true");
+			prev.forEach(function(v,i,a) {v.hidden = v !== item;});
+			this.setActive(next[0]);
+			if (path.length > 2)
+				path[path.length - 2].parentElement.firstElementChild.hidden = true;
+		}
+		/*-- fecha o menu, se não for o raiz --*/
+		else if (path.length > 1) {
+			menu.hidden = true;
+			const prev  = path[path.length - 2];
+			const child = this.getItems(prev);
+			child.forEach(function(v,i,a) {
+				if (v.getAttribute("aria-expanded") === "true") {
+					v.setAttribute("aria-expanded", "false");
+					this.setActive(v);
+				}
+				v.hidden = false;
+			}, this);
+			if (path.length > 2)
+				path[path.length - 2].parentElement.firstElementChild.hidden = false;
+		}
+		return;
+	},
+	/**. '{void mouseover(object ev)}: Manipulador para definir foco no item pelo mouse.**/
+	mouseover: function(ev) {
+		if (ev.target.getAttribute("role") !== "menuitem")      return;
+		if (ev.target.getAttribute("aria-expanded") === "true") return;
+		return this.setActive(ev.target);
+	},
+	/**. '{void keydown(object ev)}: Manipulador para navegar pelos itens.**/
+	keydown: function(ev) {
+		if (ev.target.getAttribute("role") !== "menuitem") return;
+		if (ev.target.getAttribute("aria-expanded") === "true") return;
+		const path  = this.getPath(ev.target);
+		const items = this.getItems(path[path.length - 1]);
+		const index = items.indexOf(ev.target);
+		const click = ev.key === "Enter" || ev.key === " ";
+		/*-- baixo --*/
+		if (ev.key === "ArrowDown") {
+			const active = items[(index + 1)%items.length];
+			return this.setActive(active);
+		}
+		/*-- topo --*/
+		if (ev.key === "ArrowUp") {
+			const active = items[(items.length + index - 1)%items.length];
+			return this.setActive(active);
+		}
+		/*-- primeiro/último --*/
+		if (ev.key === "Home" || ev.key === "End") {
+			const active = items[ev.key === "Home" ? 0 : items.length - 1];
+			return this.setActive(active);
+		}
+		/*-- abrir --*/
+		if ((ev.key === "ArrowRight" || click) && ev.target.getAttribute("aria-expanded") === "false") {
+			this.subMenu(true, ev.target.nextElementSibling);
+			return;
+		}
+		/*-- fechar --*/
+		if (ev.key === "ArrowLeft" && path.length > 1) {
+			this.subMenu(false, path[path.length - 1]);
+			return;
+		}
+		return;
+	},
+	/**. '{void click(object ev)}: Manipulador para abrir e fechar submenu pelo mouse.**/
+	click: function(ev) {
+		if (ev.target.getAttribute("role") !== "menuitem") return;
+		if (!ev.target.hasAttribute("aria-expanded"))      return;
+		const open = ev.target.getAttribute("aria-expanded") === "false";
+		return this.subMenu(open, ev.target.nextElementSibling);
 	},
 
 
@@ -143,8 +262,68 @@ const __MENU = {
 
 
 
+
+	handleEvent: function(ev) {
+		this[ev.type](ev);
+	},
+
+
+
+
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const nada = {
 	/**. '{string label(any input)}: Devolve o valor do rótulo conforme item do array ou nulo.**/
-	label: function(input) {
+	_label: function(input) {
 		const test = new __Type(input);
 		if (test.object)
 			return "label" in input ? String(input.label) : null;

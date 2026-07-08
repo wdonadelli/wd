@@ -67,7 +67,7 @@ const __SIGNAL = {
 	background: #c0c0c0;
 }
 .css-js-wd-signal > .css-js-wd-signal-form > button:focus {
-	outline: 0.25em solid dodgerblue;
+	outline: 0.2em solid dodgerblue;
 }
 @media screen and (min-width: 768px) {
 	.css-js-wd-signal > .css-js-wd-signal-form {
@@ -97,56 +97,88 @@ const __SIGNAL = {
 			attr: {"aria-labelledby": struct.head.id, "aria-describedby": struct.body.id, className: "css-js-wd-signal"},
 			child: [{tag: struct.quit}, {tag: struct.head}, {tag: struct.body}, {tag: struct.form}],
 		}).tag;
-		struct.quit.addEventListener("click", function(ev) {return __WINDOW.detach(ev.currentTarget.parentElement);});
-		struct.form.addEventListener("keydown", this);
+		/*-- fechamento janela --*/
+		struct.quit.addEventListener("click", function(x) {__WINDOW.detach(struct.main);});
 		return struct;
 	},
-	/**. '{void alert(string head, string body, array dialog, function call)}: Exibe uma caixa de alerta ou de diálogo:
+	/**. '{void alert(string head, string body, any dialog, function call)}: Exibe uma caixa de alerta ou de diálogo:
 	|Argumento|Opcional|Descrição|
 	|'{head}|Não|Define o título da caixa.|
 	|'{body}|Não|Define a mensagem da caixa.|
-	|'{dialog}|Sim|Lista com os rótulos dos botões do diálogo.|
+	|'{dialog}|Sim|Pode ser uma lista de rótulos ou um nó de formulário.|
 	|'{call}|Sim|Função a ser executada a cada mudança de '{status} da caixa.|
 	|""Tabela com os argumentos do método '{alert}""|
-	- Se '{dialog} for informado, a caixa será de diálogo, caso contrário, de alerta;
-	- Adicione um asterisco ao final do rótulo do botão de diálogo para definí-lo como focável;
-	- A funcão '{call} recebe dois argumentos: uma string com o '{status} da janela e os dados do evento '{submit};
-	- Quanto aos tipos de '{status}, ver objeto __WINDOW;
-	- Os dados de '{submit} serão enviados quando clicado no botão de diálogo, fechando a caixa, caso contrário retorna nulo;
-	- O valor do item da lista de diálogo será o rótulo do botão e seu índice estará definido na propriedade '{value};
-	- Utilize a propriedade '{submitter} para identificar o botão clicado; e
-	- Também é possível identificar o índice do botão clicado por meio do atributo '{data-dialog-index} fixado ao alvo do evento '{submit} ('{form}).**/
+	. Quanto ao argumento '{dialog}, observar as regras abaixo:
+	- O comportamento padrão é a exibição de uma caixa de alerta com um botão para possibilitar seu fechamento;
+	- Se '{dialog} for uma lista ou um nó de formulário, uma caixa de diálogo será exibida;
+	- A lista e o nó de formulário precisam ter itens/campos maiores que zero;
+	- No caso de uma lista, cada item corresponderá ao rótulo do botão de ação;
+	- Adicionar um asterisco ao fim do rótulo o define com foco principal;
+	- No caso de um nó de formulário, um campo de submissão será necessário para fechar a caixa de diálogo;
+	- O nó de formulário utilizado não terá qualquer ação personalizada pelo método;
+	- A funcão '{call} recebe o mesmo argumento do objeto '{__WINDOW}, exceto pela propriedade '{window}; e
+	- No caso de uma lista, a propriedade '{submit} apresentará o índice da lista no lugar dos dados do evento.**/
 	alert: function(head, body, dialog, call) {
 		const base = this.struct();
 		const elem = document.createElement("div");
-		base.head.textContent = head;
-		base.body.textContent = body;
-		if (Array.isArray(dialog)) dialog.forEach(function(v,i,a){
-			const text = v.trim().replace(/\*$/, "");
-			const auto = (/\*$/).test(v.trim());
-			elem.innerHTML = text;
-			const send = __HTML("button", {type: "submit", textContent: elem.textContent, autofocus: auto, value: i});
-			base.form.appendChild(send);
-			send.addEventListener("click", function(ev) {ev.currentTarget.form.dataset.dialogIndex = i;});
+		/*-- título e mensagem ---------------------------------------------------*/
+		elem.innerHTML = head;
+		base.head.textContent = elem.textContent;
+		elem.innerHTML = body;
+		base.body.textContent =  elem.textContent;
+		/*-- diálogo de ações ----------------------------------------------------*/
+		if (Array.isArray(dialog) && dialog.length > 0) {
+			base.main.setAttribute("role", "alertdialog");
+			base.quit.remove();
+			/*-- botões --*/
+			dialog.forEach(function(v,i,a) {
+				elem.innerHTML = v.trim().replace(/\*$/, "");
+				const send = __HTML("button", {type: "submit", textContent: elem.textContent, autofocus: (/\*$/).test(v.trim())});
+				send.addEventListener("keydown", this);
+				send.addEventListener("click", function(x) {base.main.dataset.dialogIndex = i;});
+				base.form.appendChild(send);
+			}, this);
+			/*-- disparador --*/
+			return __WINDOW.attach(base.main, "modal", typeof call !== "function" ? null : function(x) {
+				if (x.signal === "submit" && "dialogIndex" in x.window.dataset) {
+					x.submit = Number(x.window.dataset.dialogIndex);
+					delete x.window.dataset.dialogIndex;
+				}
+				delete x.window;
+				return call(x);
+			});
+		}
+		/*-- diálogo com formulário próprio --------------------------------------*/
+		if (__Type(dialog).instanceOf("HTMLFormElement") && dialog.length > 0) {
+			base.main.setAttribute("role", "alertdialog");
+			base.quit.remove();
+			/*-- formulário --*/
+			const parent = dialog.parentElement;
+			base.main.replaceChild(dialog, base.form);
+			/*-- disparador --*/
+			return __WINDOW.attach(base.main, "modal", typeof call !== "function" ? null : function(x) {
+				if (x.close) parent.appendChild(dialog);
+				delete x.window;
+				return call(x);
+			});
+		}
+		/*-- um alerta -----------------------------------------------------------*/
+		base.main.setAttribute("role", "alert");
+		base.form.remove();
+		return __WINDOW.attach(base.main, "frame", typeof call !== "function" ? null : function(x) {
+			delete x.window;
+			return call(x);
 		});
-		const form = base.form.childElementCount > 0;
-		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
-		base.main.setAttribute("role", form ? "alertdialog" : "alert");
-		base[form ? "quit" : "form"].remove();
-		return __WINDOW.attach(base.main, form ? "modal" : "frame", fire);
 	},
-	/**. '{void dialog(node form, boolean modal, function call)}: Define uma caixa de diálogo livre a partir de um formulário.
-	- O argumento '{form} deve ser um elemento de formulário HTML;
-	- O argumento '{modal}, se falso, não interromperá o acesso ao documento;
-	- O argumento '{call} trabalha da mesma forma que no método '{alert};
-	- O formulário deve ser preparado previamente para acessibilidade e conter campos capazes de provocar sua submissão;
-	- O atributo '{role} do formulário deve ter os valores '{alertdialog} ou '{dialog} (padrão); e
-	- Na situação de múltiplas chamadas, atribua o nó HTML a uma variável ou chame o método por um ouvinte de clique caso o formulário esteja inserido na árvore do DOM.**/
-	dialog: function(form, modal, call) {
-		if (!(form instanceof HTMLFormElement)) return null;
-		const fire = typeof call !== "function" ? null : function(sig, win, ev) {return call(sig, ev);};
-		form.setAttribute("role", modal === false ? "dialog" : "alertdialog");
-		return __WINDOW.attach(form, modal === false ? "float" : "modal", fire);
+	/**. '{void dialog(node box, function call)}: Exibe uma caixa de diálogo modal a partir de um nó HTML já preparado:
+	- O nó HTML precisará conter um formulário para submissão para fechar o diálogo; e
+	- O argumento '{call} receberá o mesmo parâmetro do objeto '{__WINDOW}.**/
+	dialog: function(box, call) {
+		if (__Type(box).instanceOf("HTMLElement")) {
+			__HTML(box, {role: "alertdialog"});
+			__WINDOW.attach(box, "modal", call);
+		}
+		return;
 	},
 	/**. '{void notify(string head, string body, function call)}: Exibe uma notificação:
 	- Pode não funcionar em navegadores móveis em razão da maneira como construído a{exigências}@href{https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification}target{_blank};
@@ -172,14 +204,14 @@ const __SIGNAL = {
 			});
 		return;
 	},
-	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{keydown}.**/
-	handleEvent: function(ev) {
+	/**. '{void keydown(object ev)}: Manipulador para teclado.**/
+	keydown: function(ev) {
 		const re = /^(Arrow(Up|Left|Down|Right)|Home|End)$/;
 		if (ev.type === "keydown" && re.test(ev.key)) {
-			const prev = ev.target.previousElementSibling;
-			const next = ev.target.nextElementSibling;
-			const init = ev.target.parentElement.firstElementChild;
-			const last = ev.target.parentElement.lastElementChild;
+			const prev = ev.currentTarget.previousElementSibling;
+			const next = ev.currentTarget.nextElementSibling;
+			const init = ev.currentTarget.parentElement.firstElementChild;
+			const last = ev.currentTarget.parentElement.lastElementChild;
 			const row  = init.getBoundingClientRect().top === last.getBoundingClientRect().top;
 			if (init === last)
 				return;
@@ -193,5 +225,9 @@ const __SIGNAL = {
 				return last.focus();
 		}
 		return;
+	},
+	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{keydown click}.**/
+	handleEvent: function(ev) {
+		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
 };
