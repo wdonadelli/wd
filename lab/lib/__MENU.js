@@ -39,7 +39,14 @@ const __MENU = {
 	padding: 0;
 	margin: 0;
 }
-.css-js-wd-menu [role="menuitem"] {
+
+.css-js-wd-menu [role="separator"] {
+	border-bottom: thin solid black;
+}
+
+
+.css-js-wd-menu [role="menuitem"],
+.css-js-wd-menu [role="menuitemcheckbox"] {
 	position: relative;
 	padding: 0.2em 1.5em;
 	margin: 0;
@@ -48,37 +55,48 @@ const __MENU = {
 }
 
 .css-js-wd-menu [role="menuitem"]:hover,
-.css-js-wd-menu [role="menuitem"]:focus {
+.css-js-wd-menu [role="menuitem"]:focus,
+.css-js-wd-menu [role="menuitemcheckbox"]:hover,
+.css-js-wd-menu [role="menuitemcheckbox"]:focus {
 	background: black;
 	color: white;
 }
-
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
 	font-weight: bold;
 	text-align: center;
 }
-
-.css-js-wd-menu [role="menuitem"][aria-expanded="false"]:after {
+.css-js-wd-menu [role="menuitem"][aria-expanded]:after,
+.css-js-wd-menu [role="menuitem"][aria-expanded]:before,
+.css-js-wd-menu [role="menuitemcheckbox"]:before {
 	position: absolute;
 	display: inline-block;
-	right:  0;
 	top:    0.2em;
 	bottom: 0.2em;
 	width:  1.5em;
 	text-align: center;
+}
+.css-js-wd-menu [role="menuitem"][aria-expanded="false"]:after {
+	right:  0;
 	content: "\\276F";
 }
-
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"]:before {
-	position: absolute;
-	display: inline-block;
 	left:   0;
-	top:    0.2em;
-	bottom: 0.2em;
-	width:  1.5em;
-	text-align: center;
 	content: "\\276E";
 }
+
+
+.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="true"]:before {
+	left: 0;
+	content: "\\2611\\ ";
+}
+.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="false"]:before {
+	left: 0;
+	content: "\\2610\\ ";
+}
+
+
+
+
 
 
 
@@ -100,7 +118,7 @@ const __MENU = {
 
 `),
 
-
+	heap: {},
 
 
 	label: function(text) {
@@ -110,7 +128,9 @@ const __MENU = {
 	},
 
 	menu: function(name, list) {
-		const menu = __HTML("menu", {"aria-label": name, role: "menu", id: __ID.value, tabindex: -1});
+		const menu  = __HTML("menu", {"aria-label": String(name).trim(), role: "menu", id: __ID.value, tabindex: -1});
+		const check = /^\s*\[\s*(x?)\s*\]\s*/i;
+
 		if (Array.isArray(list)) list.forEach(function (v,i,a) {
 			/*-- submenu --*/
 			if (Array.isArray(v)) {
@@ -130,26 +150,57 @@ const __MENU = {
 				li.appendChild(sub);
 				menu.appendChild(li);
 			}
+			/*-- separador --*/
+			else if (String(v).trim() === "") {
+				menu.appendChild(__HTML("li", {role: "separator"}));
+			}
+			/*-- checkbox --*/
+			else if (check.test(v)) {
+				menu.appendChild(__HTML("li", {
+					role: "menuitemcheckbox",
+					"aria-checked": v.match(check)[1].trim() === "" ? "false" : "true",
+					id: __ID.value,
+					textContent: this.label(v).replace(check, ""),
+					tabindex: -1,
+				}));
+			}
 			/*-- item --*/
 			else {
-				const li  = __HTML("li", {textContent: this.label(v), role: "menuitem", id: __ID.value, tabindex: -1});
-				menu.appendChild(li);
+				menu.appendChild(__HTML("li", {
+					role: "menuitem",
+					id: __ID.value,
+					textContent: this.label(v),
+					tabindex: -1,
+				}));
 			}
 		}, this);
 		return menu;
 	},
 
-	create: function(target, name, list, call) {
+
+
+	menuButton: function(target, name, list, call) {
 		const menu = this.menu(name, list);
 		__HTML(menu, {className: "css-js-wd-menu"});
 		menu.addEventListener("mouseover", this);
 		menu.addEventListener("keydown", this);
 		menu.addEventListener("click", this);
+		this.heap[menu.id] = {type: "menuButton", call: typeof call === "function" ? call : null};
+
+
+
+
+
+
 
 		//TODO provisórios
 		menu.setAttribute("aria-activedescendant", menu.querySelector(`[role="menuitem"]`).id);
 		document.body.appendChild(menu);
 	},
+
+
+
+
 
 	/**. '{array getPath(node item)}: Retorna a lista de menus ancestrais a partir do item, da raiz para o atual.**/
 	getPath: function(item) {
@@ -162,11 +213,18 @@ const __MENU = {
 		path.unshift(item);
 		return path;
 	},
-	/**. '{array getItems(node item)}: Retorna a lista dos itens do menu, do topo para a base.**/
-	getItems: function(menu) {
+	/**. '{boolean isItem(node elem)}: Informa se o nó é um item de menu.**/
+	isItem: function(elem) {
+		return (/^menuitem(checkbox)?$/).test(elem.getAttribute("role"));
+	},
+	/**. '{array getItems(node item, boolean sep)}: Retorna a lista de itens do menu, do topo para base, e do separador, se definido .**/
+	getItems: function(menu, sep) {
 		return Array.from(menu.children).map(function(v,i,a) {
-			return v.getAttribute("role") === "menuitem" ? v : v.firstElementChild;
-		});
+			const item = this.isItem(v);
+			const line = sep === true && v.getAttribute("role") === "separator";
+			const open = v.firstElementChild !== null && this.isItem(v.firstElementChild);
+			return (item || line) ? v : (open ? v.firstElementChild : null);
+		}, this).filter(function(v,i,a) {return v !== null;});
 	},
 	/**. '{void setActive(node item)}: Define o item ativo.**/
 	setActive: function(item) {
@@ -180,47 +238,59 @@ const __MENU = {
 		const path  = this.getPath(menu);
 		/*-- abre o menu --*/
 		if (show) {
-			menu.hidden = false;
 			const item = menu.parentElement.firstElementChild;
-			const prev = this.getItems(path[path.length - 2]);
+			const prev = this.getItems(path[path.length - 2], true);
 			const next = this.getItems(path[path.length - 1]);
+			/*-- exibe o submenu --*/
+			menu.hidden = false;
+			/*-- informar no ativador que o menu está aberto --*/
 			item.setAttribute("aria-expanded", "true");
+			/*-- esconder os itens do menu ancestral --*/
 			prev.forEach(function(v,i,a) {v.hidden = v !== item;});
+			/*-- foca o primeiro item do submenu --*/
 			this.setActive(next[0]);
+			/*-- esconder ativadores ancestrais --*/
 			if (path.length > 2)
 				path[path.length - 2].parentElement.firstElementChild.hidden = true;
 		}
 		/*-- fecha o menu, se não for o raiz --*/
 		else if (path.length > 1) {
-			menu.hidden = true;
 			const prev  = path[path.length - 2];
-			const child = this.getItems(prev);
+			const child = this.getItems(prev, true);
+			/*-- esconde o submenu --*/
+			menu.hidden = true;
 			child.forEach(function(v,i,a) {
+				/*-- ativador --*/
 				if (v.getAttribute("aria-expanded") === "true") {
+					/*-- informar no ativador que o menu está fechado --*/
 					v.setAttribute("aria-expanded", "false");
+					/*-- definir foco no ativador --*/
 					this.setActive(v);
 				}
+				/*-- exibir os itens do menu ancestral --*/
 				v.hidden = false;
 			}, this);
+			/*-- exibir ativador ancestral --*/
 			if (path.length > 2)
 				path[path.length - 2].parentElement.firstElementChild.hidden = false;
 		}
 		return;
 	},
+
+
 	/**. '{void mouseover(object ev)}: Manipulador para definir foco no item pelo mouse.**/
 	mouseover: function(ev) {
-		if (ev.target.getAttribute("role") !== "menuitem")      return;
-		if (ev.target.getAttribute("aria-expanded") === "true") return;
+		if (!this.isItem(ev.target) || ev.target.getAttribute("aria-expanded") === "true") return;
 		return this.setActive(ev.target);
 	},
 	/**. '{void keydown(object ev)}: Manipulador para navegar pelos itens.**/
 	keydown: function(ev) {
-		if (ev.target.getAttribute("role") !== "menuitem") return;
-		if (ev.target.getAttribute("aria-expanded") === "true") return;
+		if (!this.isItem(ev.target) || ev.target.getAttribute("aria-expanded") === "true") return;
 		const path  = this.getPath(ev.target);
 		const items = this.getItems(path[path.length - 1]);
 		const index = items.indexOf(ev.target);
 		const click = ev.key === "Enter" || ev.key === " ";
+		const role  = ev.target.getAttribute("role");
 		/*-- baixo --*/
 		if (ev.key === "ArrowDown") {
 			const active = items[(index + 1)%items.length];
@@ -238,33 +308,80 @@ const __MENU = {
 		}
 		/*-- abrir --*/
 		if ((ev.key === "ArrowRight" || click) && ev.target.getAttribute("aria-expanded") === "false") {
-			this.subMenu(true, ev.target.nextElementSibling);
-			return;
+			return this.subMenu(true, ev.target.nextElementSibling);
 		}
 		/*-- fechar --*/
 		if (ev.key === "ArrowLeft" && path.length > 1) {
-			this.subMenu(false, path[path.length - 1]);
-			return;
+			return this.subMenu(false, path[path.length - 1]);
+		}
+		/*-- caixa de checagem --*/
+		if (click && (role === "menuitemcheckbox" || role === "menuitemradio")) {
+			return this.click(ev);
 		}
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador para abrir e fechar submenu pelo mouse.**/
 	click: function(ev) {
-		if (ev.target.getAttribute("role") !== "menuitem") return;
-		if (!ev.target.hasAttribute("aria-expanded"))      return;
-		const open = ev.target.getAttribute("aria-expanded") === "false";
-		return this.subMenu(open, ev.target.nextElementSibling);
+		if (!this.isItem(ev.target)) return;
+		const role = ev.target.getAttribute("role");
+		/*-- abrir e fechar submenu --*/
+		if (role === "menuitem" && ev.target.hasAttribute("aria-expanded")) {
+			const open = ev.target.getAttribute("aria-expanded") === "false";
+			return this.subMenu(open, ev.target.nextElementSibling);
+		}
+		/*-- checagem de caixa --*/
+		if (role === "menuitemcheckbox") {
+			const open = ev.target.getAttribute("aria-checked") === "true";
+			ev.target.setAttribute("aria-checked", open ? "false" : "true");
+			return;
+		}
+
+
 	},
 
 
 
+	fire: function(ev) {
+		const menu = ev.currentTarget;
+		const item = this.isItem(ev.target) && !ev.target.hasAttribute("aria-haspopup") ? ev.target : null;
+		const heap = menu.id in this.heap ? this.heap[menu.id] : null;
+		const fire = ev.type === "click" || (ev.type === "keydown" && (ev.key === "Enter" || ev.key === " "));
+		const type = {menuitem: "item", menuitemcheckbox: "checkbox", menuitemradio: "radio"};
+		if (!item || !heap || !fire) return;
 
+		/*-- acionando disparador do usuário --*/
+		if (heap.call !== null) heap.call({
+			type:    type[item.getAttribute("role")],
+			checked: item.getAttribute("aria-checked") === "true",
+			label:   item.textContent,
+			path:    item.parentElement.getAttribute("aria-label"),
+		});
+
+		/*-- fechando diálogo --*/
+		if (heap.type === "menuButton" && (ev.type === "click" || ev.key === "Enter")) {
+			console.log("Fechar e mudar botão");
+
+
+		}
+
+		return;
+
+	},
 
 
 
 
 	handleEvent: function(ev) {
 		this[ev.type](ev);
+		this.fire(ev);
+
+
+
+
+
+
+
+
 	},
 
 
