@@ -162,7 +162,7 @@ const __WINDOW = {
 		return;
 	},
 	/**. '{void affix(node win, node src)}: Fixa a janela '{float} ao elemento que causou seu disparo, ou na posição '{sw}.**/
-	affix: function(win, src) {console.log(win, src)
+	affix: function(win, src) {
 		/*-- dados gerais --*/
 		const p  = Math.min(window.screen.width, window.screen.height)*0.01;
 		const h  = window.innerWidth;
