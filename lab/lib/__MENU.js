@@ -18,18 +18,23 @@ O objeto '{__MENU} cria elementos de menus a partir de arrays:
 const __MENU = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- MENU --*/
+:root {
+	--var-js-wd-menu-fg: #202020;
+	--var-js-wd-menu-bg: #ffffff;
+	--var-js-wd-menu-hv: #eeeeee;
+}
 .css-js-wd-menu {
 	/*display: inline-block;*/
 	list-style: none;
 	padding: 0.5em;
 	margin: 0;
-	color: black;
+	color: var(--var-js-wd-menu-fg);
+	background: var(--var-js-wd-menu-bg);
 	border-radius: 0.2em;
 	border: thin solid black;
 	font-size: 14px;
 	font-family: sans-serif;
 }
-
 .css-js-wd-menu [role="menu"] {
 	list-style: none;
 	padding: 0;
@@ -43,31 +48,36 @@ const __MENU = {
 .css-js-wd-menu [role="separator"] {
 	border-bottom: thin solid black;
 }
-
-
 .css-js-wd-menu [role="menuitem"],
-.css-js-wd-menu [role="menuitemcheckbox"] {
+.css-js-wd-menu [role="menuitemcheckbox"],
+.css-js-wd-menu [role="menuitemradio"] {
 	position: relative;
 	padding: 0.2em 1.5em;
 	margin: 0;
-	border-radius: 0.25em;
+	border-radius: 0.2em;
 	cursor: pointer;
 }
 
 .css-js-wd-menu [role="menuitem"]:hover,
 .css-js-wd-menu [role="menuitem"]:focus,
 .css-js-wd-menu [role="menuitemcheckbox"]:hover,
-.css-js-wd-menu [role="menuitemcheckbox"]:focus {
-	background: black;
-	color: white;
+.css-js-wd-menu [role="menuitemcheckbox"]:focus,
+.css-js-wd-menu [role="menuitemradio"]:hover,
+.css-js-wd-menu [role="menuitemradio"]:focus {
+	background: var(--var-js-wd-menu-hv);
 }
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
 	font-weight: bold;
 	text-align: center;
+	margin-bottom: 0.5em;
+	background: var(--var-js-wd-menu-hv);
 }
 .css-js-wd-menu [role="menuitem"]:after,
 .css-js-wd-menu [role="menuitem"]:before,
-.css-js-wd-menu [role="menuitemcheckbox"]:before {
+.css-js-wd-menu [role="menuitemcheckbox"]:after,
+.css-js-wd-menu [role="menuitemcheckbox"]:before,
+.css-js-wd-menu [role="menuitemradio"]:after,
+.css-js-wd-menu [role="menuitemradio"]:before {
 	position: absolute;
 	display: inline-block;
 	top:    0.2em;
@@ -83,15 +93,21 @@ const __MENU = {
 	left:   0;
 	content: "\\276E";
 }
-
-
 .css-js-wd-menu [role="menuitemcheckbox"][aria-checked="true"]:before {
 	left: 0;
-	content: "\\2612\\ ";
+	content: "\\2612";
 }
 .css-js-wd-menu [role="menuitemcheckbox"][aria-checked="false"]:before {
 	left: 0;
 	content: "\\2610\\ ";
+}
+.css-js-wd-menu [role="menuitemradio"][aria-checked="true"]:before {
+	left: 0;
+	content: "\\1F795\\ ";
+}
+.css-js-wd-menu [role="menuitemradio"][aria-checked="false"]:before {
+	left: 0;
+	content: "\\1F78E\\ ";
 }
 
 
@@ -108,19 +124,29 @@ const __MENU = {
 	- O argumento '{name} define o nome do menu principal;
 	- Cada item da lista definirá o rótulo do item do menu;
 	- Uma string vazia define um separador;
-	- Se o item da lista for um i{array}, um submenu será definido;
-	- O primeiro item do submenu definirá o rótulo do item responsável pela sua abertura e seu nome;
-	- Cada submenu será precedido dos nomes dos menus ancestrais separados por uma barra &{#x002F};
-	- Ao adicionar os caracteres "&{#x005B} &{#x005D}" ao início do rótulo, um '{checkbox} não checado será criado; e
-	- Ao adicionar os caracteres "&{#x005B} x &{#x005D}" ao início do rótulo, um '{checkbox} checado será criado.**/
+	- Adicione o caractere &{#x002B} (adição) no início do item para definir um '{checkbox} ligado;
+	- Adicione o caractere &{#x002D} (subtração) no início do item para definir um '{checkbox} desligado;
+	- Adicione o caractere &{#x002E} (ponto) no início do item para definir um '{radio};
+	- Os rótulos/itens do '{radio} devem estar separados por vírgulas na string após o ponto;
+	- O primeiro rótulo da string de '{radio} define o nome do grupo e os demais as caixas de opções;
+	- Para definir uma caixa de '{radio} como ligada, adicione o caractere &{#x002A} ao fim do rótulo;
+	- Se o item da lista for um i{array}, um submenu será definido; e
+	- O primeiro item do submenu definirá o rótulo do item responsável pela sua abertura e seu nome.**/
 	menu: function(name, list) {
-		const menu  = __HTML("menu", {"aria-label": String(name).trim(), role: "menu", id: __ID.value, tabindex: -1});
-		const check = /^\s*\[\s*(x?)\s*\]\s*/i;
+		const re   = /^\s*([\-+.])\s*/i;
+		const code = /\&.*?\;/g;
+		const menu = __HTML("menu", {
+			role: "menu",
+			"aria-label": String(name).replace(code, "").trim(),
+			id: __ID.value,
+			tabindex: -1
+		});
 		if (Array.isArray(list)) list.forEach(function (v,i,a) {
+			const box = re.test(v) ? v.match(re)[1] : null;
 			/*-- submenu --*/
 			if (Array.isArray(v)) {
 				const li  = __HTML("li", {role: "none"});
-				const sub = this.menu(`${name}/${v[0]}`, v.slice(1));
+				const sub = this.menu(v[0], v.slice(1));
 				const div = __HTML("div", {
 					textContent: this.label(v[0]),
 					id: __ID.value,
@@ -129,6 +155,7 @@ const __MENU = {
 					"aria-haspopup": "true",
 					"aria-controls": sub.id,
 					"aria-expanded": "false",
+					"aria-label": String(v[0]).replace(code, "").trim(),
 				});
 				sub.hidden = true;
 				li.appendChild(div);
@@ -140,19 +167,38 @@ const __MENU = {
 				menu.appendChild(__HTML("li", {role: "separator"}));
 			}
 			/*-- checkbox --*/
-			else if (check.test(v)) {
+			else if (box === "+" || box === "-") {
 				menu.appendChild(__HTML("li", {
 					role: "menuitemcheckbox",
-					"aria-checked": v.match(check)[1].trim() === "" ? "false" : "true",
+					"aria-checked": box === "+" ? "true" : "false",
+					"aria-label": v.replace(re, "").replace(code, "").trim(),
 					id: __ID.value,
-					textContent: this.label(v).replace(check, ""),
+					textContent: this.label(v.replace(re, "")),
 					tabindex: -1,
 				}));
+			}
+			/*-- radio --*/
+			else if (box === ".") {
+				const items = v.replace(re, "").split(",");
+				const open  = /\*$/;
+				const group = __HTML("li", {role: "group", "aria-label": items[0].replace(code, "").trim()});
+				menu.appendChild(group);
+				items.slice(1).forEach(function(x,y,z) {
+					group.appendChild(__HTML("div", {
+						role: "menuitemradio",
+						"aria-checked": open.test(x) ? "true" : "false",
+						"aria-label": x.replace(open, "").replace(code, "").trim(),
+						id: __ID.value,
+						textContent: this.label(x.replace(open, "")),
+						tabindex: -1,
+					}));
+				}, this);
 			}
 			/*-- item --*/
 			else {
 				menu.appendChild(__HTML("li", {
 					role: "menuitem",
+					"aria-label": String(v).replace(code, "").trim(),
 					id: __ID.value,
 					textContent: this.label(v),
 					tabindex: -1,
@@ -170,9 +216,10 @@ const __MENU = {
 	|'{call}|Sim|Função a ser chamada a cada interação com o menu|
 	. A função '{call} receberá um objeto como argumento com as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|'{type}|string|O tipo de item: '{item} ou '{checkbox}|
-	|'{checked}|boolean|É verdadeiro se um '{checkbox} tiver sido marcado|
-	|'{label}|string|O rótulo do '{item} ou '{checkbox} manipulado|
+	|'{type}|string|O tipo de item: '{item}, '{checkbox} ou '{radio}|
+	|'{checked}|boolean|É verdadeiro se um '{checkbox} ou '{radio} tiver sido marcado|
+	|'{label}|string|O rótulo do '{item/checkbox/radio} manipulado|
+	|'{group}|string|O nome do grupo no caso de '{radio}|
 	|'{path}|string|Ancestralidade nominal dos menus separados por &{#x002F} a partir da raiz|**/
 	attach: function(target, name, list, call) {
 		if (!(target instanceof HTMLElement)) return null;
@@ -219,6 +266,9 @@ const __MENU = {
 			target.removeAttribute("aria-expanded");
 			target.removeAttribute("tabindex");
 			target.removeEventListener("click", this.handlerMenuButton);
+			this.heap[id].menu.removeEventListener("mouseover", this);
+			this.heap[id].menu.removeEventListener("keydown", this);
+			this.heap[id].menu.removeEventListener("click", this);
 			this.heap[id].menu.remove();
 			delete this.heap[id];
 		}
@@ -234,8 +284,8 @@ const __MENU = {
 			});
 		return;
 	},
-	/**. '{array getPath(node item)}: Retorna a lista de menus ancestrais a partir do item, da raiz para o atual.**/
-	getPath: function(item) {
+	/**. '{array path(node item)}: Retorna a lista de menus ancestrais a partir do item, da raiz para o atual.**/
+	path: function(item) {
 		const path = [];
 		while(item !== null && !item.hasAttribute("aria-activedescendant")) {
 			if (item.getAttribute("role") === "menu")
@@ -245,124 +295,106 @@ const __MENU = {
 		path.unshift(item);
 		return path;
 	},
-	/**. '{boolean isItem(node elem)}: Informa se o nó é um item de menu.**/
-	isItem: function(elem) {
-		return (/^menuitem(checkbox)?$/).test(elem.getAttribute("role"));
+	/**. '{boolean item(node elem)}: Informa se o nó é um item de menu.**/
+	item: function(elem) {
+		return (/^menuitem(checkbox|radio)?$/).test(elem.getAttribute("role"));
 	},
-	/**. '{array getItems(node item, boolean sep)}: Retorna a lista de itens do menu, do topo para base, e do separador, se definido .**/
-	getItems: function(menu, sep) {
-		return Array.from(menu.children).map(function(v,i,a) {
-			const item = this.isItem(v);
-			const line = sep === true && v.getAttribute("role") === "separator";
-			const open = v.firstElementChild !== null && this.isItem(v.firstElementChild);
-			return (item || line) ? v : (open ? v.firstElementChild : null);
-		}, this).filter(function(v,i,a) {return v !== null;});
+	/**. '{array items(node menu)}: Retorna a lista de itens do menu, do topo para base.**/
+	items: function(menu) {
+		const items = [];
+		Array.from(menu.children).forEach(function(v,i,a) {
+			const role = v.getAttribute("role");
+			if (role === "menuitem" || role === "menuitemcheckbox")
+				items.push(v);
+			else if (role === "none")
+				items.push(v.firstElementChild);
+			else if (role === "group")
+				Array.from(v.children).forEach(function(x,y,z) {items.push(x);});
+		});
+		return items;
 	},
-	/**. '{void setActive(node item)}: Define o item ativo.**/
-	setActive: function(item) {
-		const path = this.getPath(item);
-		path[0].setAttribute("aria-activedescendant", item.id);
+	/**. '{void active(node item)}: Define o item ativo do menu.**/
+	active: function(item) {
+		this.path(item)[0].setAttribute("aria-activedescendant", item.id);
 		item.focus();
 		return;
 	},
-	/**. '{void subMenu(boolean show, node menu)}: Define o submenu a abrir ou fechar.**/
-	subMenu: function(show, menu) {
-		const path = this.getPath(menu);
-		/*-- abre o menu --*/
-		if (show) {
+
+	/**. '{void toggle(node menu)}: Abre ou fecha o submenu especificado.**/
+	toggle: function(menu) {
+		if (!menu.hasAttribute("aria-activedescendant")) {
 			const item = menu.parentElement.firstElementChild;
-			const prev = this.getItems(path[path.length - 2], true);
-			const next = this.getItems(path[path.length - 1]);
-			/*-- exibe o submenu --*/
-			menu.hidden = false;
-			/*-- informar no ativador que o menu está aberto --*/
-			item.setAttribute("aria-expanded", "true");
-			/*-- esconder os itens do menu ancestral --*/
-			prev.forEach(function(v,i,a) {v.hidden = v !== item;});
-			/*-- foca o primeiro item do submenu --*/
-			this.setActive(next[0]);
-			/*-- esconder ativadores ancestrais --*/
-			if (path.length > 2)
-				path[path.length - 2].parentElement.firstElementChild.hidden = true;
-		}
-		/*-- fecha o menu, se não for o raiz --*/
-		else if (path.length > 1) {
-			const prev  = path[path.length - 2];
-			const child = this.getItems(prev, true);
-			/*-- esconde o submenu --*/
-			menu.hidden = true;
-			child.forEach(function(v,i,a) {
-				/*-- ativador --*/
-				if (v.getAttribute("aria-expanded") === "true") {
-					/*-- informar no ativador que o menu está fechado --*/
-					v.setAttribute("aria-expanded", "false");
-					/*-- definir foco no ativador --*/
-					this.setActive(v);
-				}
-				/*-- exibir os itens do menu ancestral --*/
-				v.hidden = false;
-			}, this);
-			/*-- exibir ativador ancestral --*/
-			if (path.length > 2)
-				path[path.length - 2].parentElement.firstElementChild.hidden = false;
+			const open = item.getAttribute("aria-expanded") === "false";
+			const list = item.parentElement.parentElement.children;
+			/*-- exibir ou ocultar submenu --*/
+			menu.hidden = open ? false : true;
+			/*-- redefinir status do acionador --*/
+			item.setAttribute("aria-expanded", open ? "true" : "false");
+			/*-- ocutar ou exibir itens do menu ancestral --*/
+			for (let i = 0; i < list.length; i++)
+				list[i].hidden = open ? !list[i].contains(item) : false;
+			/*-- redefinir o item ativo --*/
+			this.active(open ? this.items(menu)[0] : item);
+			/*-- ocultar acionadores intermediário FIXME --*/
+			this.path(menu).forEach(function(v,i,a) {
+				const toogle = menu.parentElement.firstElementChild;
+				if (i > 0) toogle.hidden = toogle !== item;
+			});
 		}
 		return;
 	},
 	/**. '{void mouseover(object ev)}: Manipulador para definir foco no item pelo mouse.**/
 	mouseover: function(ev) {
-		if (!this.isItem(ev.target) || ev.target.getAttribute("aria-expanded") === "true") return;
-		return this.setActive(ev.target);
+		if (this.item(ev.target) && ev.target.getAttribute("aria-expanded") !== "true")
+			this.active(ev.target);
+		return;
 	},
 	/**. '{void keydown(object ev)}: Manipulador para navegar pelos itens.**/
 	keydown: function(ev) {
-		if (!this.isItem(ev.target) || ev.target.getAttribute("aria-expanded") === "true") return;
-		const path  = this.getPath(ev.target);
-		const items = this.getItems(path[path.length - 1]);
+		if (!this.item(ev.target) || ev.target.getAttribute("aria-expanded") === "true") return;
+		const path  = this.path(ev.target);
+		const items = this.items(path[path.length - 1]);
 		const index = items.indexOf(ev.target);
 		const click = ev.key === "Enter" || ev.key === " ";
 		const role  = ev.target.getAttribute("role");
 		/*-- baixo --*/
-		if (ev.key === "ArrowDown") {
-			const active = items[(index + 1)%items.length];
-			return this.setActive(active);
-		}
+		if (ev.key === "ArrowDown")
+			return this.active(items[(index + 1)%items.length]);
 		/*-- topo --*/
-		if (ev.key === "ArrowUp") {
-			const active = items[(items.length + index - 1)%items.length];
-			return this.setActive(active);
-		}
+		if (ev.key === "ArrowUp")
+			return this.active(items[(items.length + index - 1)%items.length]);
 		/*-- primeiro/último --*/
-		if (ev.key === "Home" || ev.key === "End") {
-			const active = items[ev.key === "Home" ? 0 : items.length - 1];
-			return this.setActive(active);
-		}
+		if (ev.key === "Home" || ev.key === "End")
+			return this.active(items[ev.key === "Home" ? 0 : items.length - 1]);
 		/*-- abrir --*/
-		if ((ev.key === "ArrowRight" || click) && ev.target.getAttribute("aria-expanded") === "false") {
-			return this.subMenu(true, ev.target.nextElementSibling);
-		}
+		if ((ev.key === "ArrowRight" || click) && ev.target.getAttribute("aria-expanded") === "false")
+			return this.toggle(ev.target.nextElementSibling);
 		/*-- fechar --*/
-		if (ev.key === "ArrowLeft" && path.length > 1) {
-			return this.subMenu(false, path[path.length - 1]);
-		}
+		if (ev.key === "ArrowLeft" && path.length > 1)
+			return this.toggle(path[path.length - 1]);
 		/*-- caixa de checagem --*/
-		if (click && (role === "menuitemcheckbox" || role === "menuitemradio")) {
+		if (click && (role === "menuitemcheckbox" || role === "menuitemradio"))
 			return this.click(ev);
-		}
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador para abrir e fechar submenu pelo mouse.**/
 	click: function(ev) {
-		if (!this.isItem(ev.target)) return;
+		if (!this.item(ev.target)) return;
 		const role = ev.target.getAttribute("role");
 		/*-- abrir e fechar submenu --*/
 		if (role === "menuitem" && ev.target.hasAttribute("aria-expanded")) {
-			const open = ev.target.getAttribute("aria-expanded") === "false";
-			return this.subMenu(open, ev.target.nextElementSibling);
+			this.toggle(ev.target.nextElementSibling);
+			return;
 		}
-		/*-- checagem de caixa --*/
-		if (role === "menuitemcheckbox") {
-			const open = ev.target.getAttribute("aria-checked") === "true";
-			ev.target.setAttribute("aria-checked", open ? "false" : "true");
+		/*-- caixa de checagem/radio --*/
+		if (role === "menuitemcheckbox" || role === "menuitemradio") {
+			const check = ev.target.getAttribute("aria-checked") === "false";
+			if (role === "menuitemcheckbox")
+				ev.target.setAttribute("aria-checked", check ? "true" : "false");
+			else
+				Array.from(ev.target.parentElement.children).forEach(function(v,i,a) {
+					v.setAttribute("aria-checked", v === ev.target ? "true" : "false");
+				});
 			return;
 		}
 		return;
@@ -370,279 +402,24 @@ const __MENU = {
 	/**. '{void fire(object ev)}: Provoca o disparador informado a cada interação.**/
 	fire: function(ev) {
 		const menu = ev.currentTarget;
-		const item = this.isItem(ev.target) && !ev.target.hasAttribute("aria-haspopup") ? ev.target : null;
+		const item = this.item(ev.target) && !ev.target.hasAttribute("aria-haspopup") ? ev.target : null;
 		const heap = menu.id in this.heap ? this.heap[menu.id] : null;
 		const fire = ev.type === "click" || (ev.type === "keydown" && (ev.key === "Enter" || ev.key === " "));
 		const type = {menuitem: "item", menuitemcheckbox: "checkbox", menuitemradio: "radio"};
-		if (!item || !heap || !fire) return;
-		/*-- acionando disparador do usuário --*/
-		if (heap.call !== null) heap.call({
-			type:    type[item.getAttribute("role")],
-			checked: item.getAttribute("aria-checked") === "true",
-			label:   item.textContent,
-			path:    item.parentElement.getAttribute("aria-label"),
-		});
+		if (item && heap && fire && heap.call !== null)
+			heap.call({
+				type:    type[item.getAttribute("role")],
+				checked: item.getAttribute("aria-checked") === "true",
+				label:   item.getAttribute("aria-label"),
+				group:   item.getAttribute("role") === "menuitemradio" ? item.parentElement.getAttribute("aria-label") : "",
+				path:    this.path(item).map(function(v,i,a) {return v.getAttribute("aria-label");}).join("/"),
+			});
 		return;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click}, e {mouseover}.**/
 	handleEvent: function(ev) {
 		this[ev.type](ev);
 		this.fire(ev);
-		return;
-	},
-
-
-
-
-
-
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const nada = {
-	/**. '{string label(any input)}: Devolve o valor do rótulo conforme item do array ou nulo.**/
-	_label: function(input) {
-		const test = new __Type(input);
-		if (test.object)
-			return "label" in input ? String(input.label) : null;
-		if (test.array && input.length > 0)
-			return this.label(input[0]);
-		if (test.null || test.undefined)
-			return null;
-		return String(input);
-	},
-	/**. '{object design(array list, string home, array step, array main)}: Organiza as informações para a construção do menu:
-	|Argumento|Descrição|
-	|list|Lista u{obrigatória} que definirá a estrutura do menu.|
-	|home|Identificador do item ancestral ao submenu.|
-	|step|Lista que representa os níveis de navagação do menu.|
-	|main|Lista onde será registrado cada informação dos menus|
-	. Retorna um objeto contendo:
-	|Propriedade|Tipo|Descrição|
-	|menus|array|Lista de informações sobre menus|
-	|back|object|A relação entre o menu é o submenu pelos identificadores|
-	|data|object|Informações sobre os dados enviados nos arrays pelos identificadores|**/
-	design: function(list, home, step, main) {
-		home = typeof home === "string" ? home : null;
-		step = Array.isArray(step) ? step.slice() : [];
-		main = typeof main === "object" ? main : {menus: [], back: {}, data: {}};
-		/*-- obter dados e estruturar menu --*/
-		const menu = {items: [], submenus: [], home: home, step: step};
-		list.forEach(function(v,i,a) {
-			const test = new __Type(v);
-			const text = this.label(v);
-			const item = {};
-			const back = i === 1 && home !== null;
-			const open = i > 1 && test.array && v.length > 0;
-			if (i === 0) {
-				menu.label = text === null ? `Menu ${step.length+1}` : text;
-				menu.step.push(menu.label);
-			}
-			else {
-				item.label = text === null ? `Item ${step.length}.${i}` : text;
-				item.open  = open ? __ID.value : null;
-				item.back  = back ? home : null;
-				item.id    = back ? main.back[home] : __ID.value;
-				item.value = JSON.stringify(open || back ? "" : v);
-				item.focus = main.menus.length === 0 && i === 1;
-				menu.items.push(item);
-				if (open) {
-					main.back[item.id] = item.open;
-					const submenu = v.slice();
-					submenu.splice(1, 0, menu.label);
-					menu.submenus.push({list: submenu, home: item.id});
-				}
-			}
-		}, this);
-		/*-- adicionando menus --*/
-		main.menus.push(menu);
-		/*-- adicionando submenus --*/
-		for (let i = 0; i < menu.submenus.length; i++) {
-			let info = menu.submenus[i];
-			this.design(info.list, info.home, menu.step, main);
-		}
-		return main;
-	},
-	/**. '{object createMenuItem(object data)}: Retorna a estrutura do item de menu.**/
-	createMenuItem: function(data) {
-		const item = {tag: "button", child: [], attr: {
-			id: data.id,
-			innerHTML: data.label,
-			type: "button",
-			value: data.value,
-			autofocus: data.focus,
-			tabIndex: data.focus ? 0 : -1,
-		}};
-		if (data.open !== null) {
-			item.attr["aria-controls"] = data.open;
-			item.attr["aria-haspopup"] = "true";
-			item.attr["aria-expanded"] = "false";
-		}
-		if (data.back !== null) {
-			item.attr["aria-controls"] = data.back;
-		}
-		return item;
-	},
-	/**. '{object createMenu(object data)}: Retorna a estrutura do menu.**/
-	createMenu: function(data) {
-		const menu = {tag: "menu", attr: {}, child: []};
-		for (let i = 0; i < data.items.length; i++)
-			menu.child.push({tag: "li", attr: {}, child: [this.createMenuItem(data.items[i])]});
-		if (data.home !== null)
-			menu.attr["aria-labelledby"] = data.home;
-		else
-			menu.attr["aria-label"] = data.label;
-		return menu;
-	},
-	/**. '{object createHead(object data)}: Retorna a estrutura do cabeçalho do menu.**/
-	createHead: function(data) {
-		const deep = data.step.length;
-		const text = data.step.join(" / ");
-		const head = {tag: deep <= 6 ? `h${deep}` : "div", child: [], attr: {textContent: text, id: __ID.value}};
-		if (deep > 6) {
-			head.attr.role = "heading";
-			head.attr["aria-level"] = deep;
-		}
-		return head;
-	},
-	/**. '{object createBox(object data)}: Retorna a estrutura do container do menu.**/
-	createBox: function(data) {
-		const head = this.createHead(data);
-		const menu = this.createMenu(data);
-		return {tag: "section", child: [head, menu], attr: {
-			className: "css-wd-menu",
-			hidden: data.step.length > 1,
-			"aria-labelledby": head.attr.id,
-		}};
-	},
-	/**. '{node create(array list)}: Retorna o menu.**/
-	create: function(list) {
-		if (!Array.isArray(list)) return null;
-		const data = this.design(list);
-		const fire = {click: this, keydown: this, mouseover: this, focusin: this, focusout: this};
-		const form = {tag: "div", attr: {addEventListener: fire}, child: []};
-		for (let i = 0; i < data.menus.length; i++)
-			form.child.push(this.createBox(data.menus[i]));
-		return __DOM(form, document.body).tag;
-	},
-	/**. '{void view(string show, string hide)}: Exibe e esconde os menus pelos seus identificadores.**/
-	view: function(show, hide) {
-		const open = document.getElementById(show);
-		const lock = document.getElementById(hide);
-		if (open.hasAttribute("aria-expanded"))
-			open.setAttribute("aria-expanded", "false");
-		if (lock.hasAttribute("aria-expanded"))
-			lock.setAttribute("aria-expanded", "true");
-		open.parentElement.parentElement.parentElement.hidden = false;
-		lock.parentElement.parentElement.parentElement.hidden = true;
-		open.focus();
-		return;
-	},
-	/**. '{void wdmenu(object ev)}: Manipulador para disparar evento "wdmenu" ao clicar em botão de ação.**/
-	wdmenu: function(ev) {
-		let data = null;
-		try {data = JSON.parse(ev.target.value);} catch(e) {};
-		const event = new CustomEvent("wdmenu", {detail: data, bubbles: true});
-		ev.target.dispatchEvent(event);
-		return;
-	},
-	/**. '{void click(object ev)}: Manipulador para cliques.**/
-	click: function(ev) {
-		const ctrl = ev.target.hasAttribute("aria-controls");
-		const show = ctrl ? ev.target.getAttribute("aria-controls") : null;
-		const hide = ev.target.id;
-		return ctrl ? this.view(show, hide) : this.wdmenu(ev);
-	},
-	/**. '{void keydown(object ev)}: Manipulador para teclado.**/
-	keydown: function(ev) {
-		const item  = ev.target.parentElement;
-		const menu  = item.parentElement;
-		const list  = Array.from(menu.children);
-		const index = list.indexOf(item);
-		const width = list.length;
-		if (ev.key === "Home")
-			menu.firstElementChild.firstElementChild.focus();
-		else if (ev.key === "End")
-			menu.lastElementChild.firstElementChild.focus();
-		else if (ev.key === "ArrowDown")
-			list[(index + 1)%width].firstElementChild.focus();
-		else if (ev.key === "ArrowUp")
-			list[(width + index - 1)%width].firstElementChild.focus();
-		else if (ev.key === "ArrowLeft" && menu.hasAttribute("aria-labelledby"))
-			this.view(menu.getAttribute("aria-labelledby"), ev.target.id);
-		else if (ev.key === "ArrowRight" && ev.target.hasAttribute("aria-expanded"))
-			this.view(ev.target.getAttribute("aria-controls"), ev.target.id);
-		return;
-	},
-	/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click}, '{focusin}, '{focuout} e {mouseover}.**/
-	handleEvent: function(ev) {
-		if (ev.target.tagName.toLowerCase() !== "button") return;
-		const re  = /^(ArrowDown|ArrowUp|ArrowRight|ArrowLeft|Home|End)$/;
-		ev.stopPropagation();
-		if (ev.type === "mouseover") {
-			ev.target.focus();
-		}
-		else if (ev.type === "focusin") {
-			ev.target.tabIndex  = 0;
-			ev.target.autofocus = false;
-		}
-		else if (ev.type === "focusout") {
-			const exit = ev.relatedTarget === null || !ev.currentTarget.contains(ev.relatedTarget);
-			if (!exit) ev.target.tabIndex = -1;
-		}
-		else if (ev.type === "click") {
-			this.click(ev);
-		}
-		else if (ev.type === "keydown" && re.test(ev.key)) {
-			ev.preventDefault();
-			this.keydown(ev);
-		}
 		return;
 	},
 };
