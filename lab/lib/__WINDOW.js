@@ -40,10 +40,19 @@ const __WINDOW = {
 	--var-js-wd-window-zindex-1: 9998;
 	--var-js-wd-window-zindex-2: 9997;
 }
-@keyframes js-wd-window-emerge {
+@keyframes js-wd-window-modal {
 	from {opacity: 0; transform: scale(0);}
 	to   {opacity: 1; transform: scale(1);}
 }
+@keyframes js-wd-window-float {
+	from {opacity: 0; max-height: 0;}
+	to   {opacity: 1;}
+}
+@keyframes js-wd-window-frame {
+	from {opacity: 0; transform: translate(-100%);}
+	to   {opacity: 1;}
+}
+
 .js-wd-freeze {overflow: hidden !important;}
 [data-js-wd-window] {
 	position:   fixed !important;
@@ -56,9 +65,9 @@ const __WINDOW = {
 	padding:    0 !important;
 	background: tranparent !important;
 }
-[data-js-wd-window] > * {
-	animation: js-wd-window-emerge 0.5s ease;
-}
+[data-js-wd-window="modal"] > * {animation: js-wd-window-modal 0.5s ease;}
+[data-js-wd-window="float"] > * {animation: js-wd-window-float 0.5s ease;}
+[data-js-wd-window="frame"] > * {animation: js-wd-window-frame 0.5s ease;}
 [data-js-wd-window="frame"] {
 	top:            initial !important;
 	display:        flex !important;
@@ -335,8 +344,11 @@ const __WINDOW = {
 			const find = this.match({win: ev.currentTarget.firstElementChild});
 			if (ev.key === "Escape")
 				return this.close(find, "escape");
-			if (ev.key === "Tab" && find >= 0 && this.heap[find].type === "float")
+			if (ev.key === "Tab" && find >= 0 && this.heap[find].type === "float") {
+				ev.preventDefault();
 				return this.close(find, "tab");
+			}
+
 		}
 		return;
 	},

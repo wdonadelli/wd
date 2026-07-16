@@ -132,7 +132,7 @@ const __SIGNAL = {
 			base.quit.remove();
 			/*-- botões --*/
 			dialog.forEach(function(v,i,a) {
-				elem.innerHTML = v.trim().replace(/\*$/, "");
+				elem.innerHTML = String(v).trim().replace(/\*$/, "");
 				const send = __HTML("button", {type: "submit", textContent: elem.textContent, autofocus: (/\*$/).test(v.trim())});
 				send.addEventListener("keydown", this);
 				send.addEventListener("click", function(x) {base.main.dataset.dialogIndex = i;});
