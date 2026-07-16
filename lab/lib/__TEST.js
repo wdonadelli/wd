@@ -1,6 +1,6 @@
 /**
 #3 Ferramentas de Teste
-O objeto `{__TEST} tem o objetivo de acomodar métodos de checagem de ferramentas sendo um componente pertencente à homologação da biblioteca, mas não da versão em produção.
+O objeto '{__TEST} tem o objetivo de acomodar métodos de checagem de ferramentas sendo um componente pertencente à homologação da biblioteca, mas não da versão em produção.
 **/
 const __TEST = {
 	/**#4 __DATETIME**/

@@ -5,10 +5,10 @@
 . float: Parede de profundidade intermediária e posição variável que permite apenas uma janela a cada interação.
 . modal: Parede de profundidade superior posição fixa que permite múltiplas janelas renderizadas em fila.
 Características:
-- A janela '{modal} derruba a janela '{float} aberta e impede a exibição de novas janelas '{float} ou "frame";
+- A janela '{modal} aberta impede a exibição de novas janelas '{float} ou '{frame};
 - Uma nova janela '{float} derruba a que estiver aberta;
 - Uma mesma janela não pode ser renderizada mais de uma vez ao mesmo tempo;
-- A tecla ESC derruba as janelas '{modal} ou '{float};
+- A tecla ESC derruba as janelas '{modal} e '{float};
 - Um clique fora da janela '{float} a derruba;
 - A janela '{modal} deixa o documento inerte;
 - A janela '{float} deixa o documento estático;
@@ -23,8 +23,8 @@ Características:
 	Os seguintes estados da janela podem ser anunciados:
 	|Sinal|Descrição|'{modal}|'{float}|'{frame}|
 	|'{attach}|Anexado à janela principal|Sim|Sim|Sim|
-	|'{detach}|Janela removida pelo método `{detach}|Sim|Sim|Sim|
-	|'{cancelled}|Janela removida pelo método `{detach} antes de ser exibida|Sim|Não|Não|
+	|'{detach}|Janela removida pelo método '{detach}|Sim|Sim|Sim|
+	|'{cancelled}|Janela removida pelo método '{detach} antes de ser exibida|Sim|Não|Não|
 	|'{rejected}|A exibição da janela foi rejeitada|Não|Sim|Sim|
 	|'{pushed}|Janela removida por outra janela|Não|Sim|Não|
 	|'{escape}|Janela removida pela tecla '{esc}|Sim|Sim|Não|
@@ -52,7 +52,6 @@ const __WINDOW = {
 	from {opacity: 0; transform: translate(-100%);}
 	to   {opacity: 1;}
 }
-
 .js-wd-freeze {overflow: hidden !important;}
 [data-js-wd-window] {
 	position:   fixed !important;
@@ -250,6 +249,14 @@ const __WINDOW = {
 			if (main.tabIndex < 0)
 				main.setAttribute("tabindex", auto === null ? -1 : 0);
 			main.focus();
+		}
+		/*-- adicionando cores --*/
+		const wcolor = window.getComputedStyle(heap.win);
+		if (wcolor.background === "none") {
+			const bcolor = window.getComputedStyle(document.body);
+			const empty  = bcolor.background === "none";
+			heap.win.style.background = empty ? "#f9f9f9" : bcolor.background;
+			heap.win.style.color = empty || bcolor.color === "none" ? "#202020" : bcolor.color;
 		}
 		/*-- acionar disparador --*/
 		if (heap.call !== null)

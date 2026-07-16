@@ -1,6 +1,6 @@
 /**
 #3 Gestão de Identificadores
-O objeto `{__ID} faz a gestão e gera identificadores para a biblioteca.
+O objeto '{__ID} faz a gestão e gera identificadores para a biblioteca.
 **/
 const __ID = {
 	/**. '{integer init}: Controla a unicidade na geração de identificadores.**/

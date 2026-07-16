@@ -1,6 +1,6 @@
 /**
 #3 Matemática
-O objeto `{__MATH} apresenta uma série de ferramentas para cálculos genéricos. Nenhum argumento será checado, observar a descrição.**/
+O objeto '{__MATH} apresenta uma série de ferramentas para cálculos genéricos. Nenhum argumento será checado, observar a descrição.**/
 const __MATH = {
 	/**. '{array _primes}: Apresenta uma lista de números primos, que pode aumentar conforme demanda.**/
 	_primes: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97],

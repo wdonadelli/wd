@@ -1,6 +1,6 @@
 /**
 #3 Linguagem
-O objeto `{__LANG} faz a gestão da linguagem local da biblioteca.
+O objeto '{__LANG} faz a gestão da linguagem local da biblioteca.
 **/
 const __LANG = {
 	/**. '{regexp re}: Expressão regular para o formato de a{linguagem}@href{https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)}.**/

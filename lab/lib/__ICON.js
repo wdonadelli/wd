@@ -1,6 +1,6 @@
 /**
 #3 Ícones
-O objeto '{__ICON''} define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.
+O objeto '{__ICON} define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.
 **/
 const __ICON = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/

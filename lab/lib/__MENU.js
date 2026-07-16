@@ -1,26 +1,38 @@
 /**
 #3 Menu
-O objeto '{__MENU} cria elementos de menus a partir de arrays:
-- Um formulário HTML acomodará um conjunto de blocos de menu;
-- Cada bloco de menu possui um cabeçalho e uma lista de itens (menu);
-- Cada bloco será exibido de forma individual na posição vertical;
-- Cada bloco de menu é definido por um array;
-- O texto do cabeçalho do bloco é definido pelo conteúdo do primeiro item do array;
-- O rótulo dos itens do menu é definido pelos demais itens do array;
-- Se o item do array for um objeto, o texto será definido pela propriedade '{label};
-- Se o item do array for outro array, um novo bloco (submenu) será criado;
-- Demais valores definirão o texto do item ou do cabeçalho, conforme o caso;
-- Os itens do menu podem avançar/retroceder pelos menus ou executar uma ação;
-- Ao executar uma ação, o evento '{wdmenu} será disparado no formulário;
-- A propriedade '{detail} do evento disparado conterá o conteúdo do respectivo item do array;
-- Somente valores aceitos no formato JSON poderão ser utilizados.
-**/
+	O objeto '{__MENU} cria um menu a partir de uma lista:
+	- A lista principal é composta por rótulos (strings) ou sub-listas (array);
+	- Rótulos definem o nome do menu ou seus itens;
+	- Sub-listas definem um submenu, mas as mesmas regras da lista principal;
+	- O primeiro rótulo da lista define o nome do menu;
+	- Os rótulos seguintes definem um item de menu ou um grupo;
+	- Um caracter especial antecedendo o rótulo define o tipo de item ou a abertura de um novo grupo:
+	|Caractere|Tipo|Estado|
+	|&{#x002B}|'{checkbox}|Checado|
+	|&{#x002D}|'{checkbox}|Não Checado|
+	|&{#x002A}|'{radio}|Selecionado|
+	|&{#x002E}|'{radio}|Não Selecionado|
+	|'{&unicode;}|'{item}|Item com ícone definido pelo caracter unicode|
+	||'{item}|Item sem ícone|
+	|&{#x0023}|'{group}|Define a abertura de um grupo|
+	|""Tabela de caracteres para criação de itens de menu e grupos""|
+	- O caractere especial não será exibido no rótulo do item ou grupo;
+	- Não é possível criar subgrupos;
+	- O relacionamento entre os itens de '{radio} são estabelecidos entre aqueles dentro de um mesmo menu ou grupo;
+	- Uma função opcional ('{call}) será retornará a cada interação com o menu recebendo como argumento um objeto:
+	|Nome|Tipo|Descrição|
+	|'{type}|string|O tipo de item: '{item}, '{checkbox} ou '{radio}|
+	|'{checked}|boolean|É verdadeiro se um '{checkbox} ou '{radio} tiver sido checado/selecionado|
+	|'{path}|array|Linha sucessória do menu principal ao item interagido|
+	|""Tabela das propriedades retornadas como argumento de '{call}""|
+	- A propriedade '{path} retornará os rótulos dos menus/submenus, dos grupos e do item interagido, da raiz ao item; e
+	- O caminho fornecido em '{path} é idêntico aos rótulos informados na lista, incluindo os caracteres especiais.**/
 const __MENU = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- MENU --*/
 :root {
 	--var-js-wd-menu-fg: #202020;
-	--var-js-wd-menu-bg: #ffffff;
+	--var-js-wd-menu-bg: #f9f9f9;
 	--var-js-wd-menu-hv: #eeeeee;
 }
 .css-js-wd-menu {
@@ -47,7 +59,6 @@ const __MENU = {
 .css-js-wd-menu [role="separator"] {
 	border-bottom: thin solid #bbbbbb;
 }
-
 .css-js-wd-menu [role="heading"][aria-level="1"],
 .css-js-wd-menu [role="menuitem"],
 .css-js-wd-menu [role="menuitemcheckbox"],
@@ -101,9 +112,16 @@ const __MENU = {
 .css-js-wd-menu [role="menuitemradio"][aria-checked="false"]    > span:first-child:before {content: "\\25CB\\ ";}
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"]         > span:first-child:before {content: "\\276E";}
 .css-js-wd-menu [role="menuitem"][aria-expanded="false"]        > span:last-child:before  {content: "\\276F\\ ";}
-
+.css-js-wd-menu-open[aria-expanded="true"]:after  {content: "\\ \\25BE";}
+.css-js-wd-menu-open[aria-expanded="false"]:after {content: "\\ \\25B8";}
 `),
-	/**. '{object heap}: Registra os dados dos menus criados.**/
+	/**. '{object heap}: Registra os dados dos menus criados:
+	|Nome|Tipo|Descrição|
+	|'{type}|string|Tipo do menu ('{menu} ou '{menuButton})|
+	|'{trigger}|node|Disparador que abre o '{menuButton}|
+	|'{menu}|node|Nó HTML do menu|
+	|'{call}|function|Função disparadora do menu|
+	|""Propriedades Registradas dos Menus""|**/
 	heap: {},
 	/**. '{node li(string str, boolean div)}: Cria e retorna um nó de item ou grupo de menu (elemento '{li} ou '{div}).**/
 	li: function(str, div) {
@@ -144,7 +162,7 @@ const __MENU = {
 		li.addEventListener("click",      this);
 		return li;
 	},
-	/**. '{node create(array list)}: Cria e retornar menus e submenus a partir de uma lista contendo os rótulos dos itens e grupos do menu e os submenus submenus.**/
+	/**. '{node create(array list)}: Cria e retornar menus/submenus a partir de uma lista.**/
 	create: function(list) {
 		const menu  = __HTML("menu", {id: __ID.value, role: "menu", tabindex: -1});
 		if (Array.isArray(list)) list.forEach(function(v,i,a) {
@@ -183,44 +201,17 @@ const __MENU = {
 		}, this);
 		return menu;
 	},
-	/**. '{node menu(array list, function call)}: Cria um mecanismo de menu vertical a partir de uma lista (ver método '{create}):
-	|'{list}|Não|Lista contendo os rótulos dos itens e grupos do menu e os submenus submenus|
-	|'{call}|Sim|Função a ser chamada a cada interação com o menu|
-	- O primeiro item da lista define o nome do menu;
-	- Os itens seguintes definem um item, um grupo ou um submenu;
-	- Items e grupos devem possuir um nome para exibição;
-	- Adicione o caractere &{#x002B} (adição) no início do item para definir um '{checkbox} ligado;
-	- Adicione o caractere &{#x002D} (subtração) no início do item para definir um '{checkbox} desligado;
-	- Adicione o caractere &{#x002A} (asterisco) no início do item para definir um '{radio} ligado;
-	- Adicione o caractere &{#x002E} (ponto) no início do item para definir um '{radio} desligado;
-	- Adicione o caractere &{#x0023} (hashtag) no início do item para abrir um grupo;
-	- Adicione um array ao item para criar um submenu;
-	- Não é possível criar subgrupos; e
-	- O itens de '{radio} dentro de um mesmo menu ou grupo serão definidos como relacionados
-	. A função '{call} (opcional) retornará a cada interação com algum item do menu e receberá um objeto como argumento:
-	|Nome|Tipo|Descrição|
-	|'{type}|string|O tipo de item: '{item}, '{checkbox} ou '{radio}|
-	|'{checked}|boolean|É verdadeiro se um '{checkbox} ou '{radio} tiver sido marcado|
-	|'{path}|array|Ver método '{line}|**/
+	/**. '{node menu(array list, function call)}: Cria um mecanismo de menu vertical a partir de uma lista**/
 	menu: function(list, call) {
 		const menu = this.create(list);
 		const item = menu.querySelector(`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`);
 		__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": item.id});
 		item.setAttribute("tabindex", "0");
 		/*-- colocando na pilha --*/
-		this.heap[menu.id] = {
-			type:    "menu",
-			trigger: null,
-			menu:    menu,
-			call:    typeof call === "function" ? call : null,
-		};
+		this.heap[menu.id] = {type: "menu", trigger: null, menu: menu, call: typeof call === "function" ? call : null};
 		return menu;
 	},
-	/**. '{void attach(node target, string name, array list, function call)}: Atribui um menu a um nó HTML:
-	|Argumento|Opcional|Descrição|
-	|'{trigger}|Não|Nó HTML que acionará o menu|
-	|'{list}|Não|Ver médoto '{create}|
-	|'{call}|Sim|Ver método '{menu}|**/
+	/**. '{void attach(node trigger, string name, array list, function call)}: Atribui um menu a um nó HTML ('{trigger})**/
 	attach: function(trigger, list, call) {
 		/*-- checando condições --*/
 		if (!(trigger instanceof HTMLElement) || !Array.isArray(list)) return null;
@@ -234,8 +225,9 @@ const __MENU = {
 			"aria-haspopup": "true",
 			"aria-controls": menu.id,
 			"aria-expanded": "false",
+			className: trigger.className + " css-js-wd-menu-open",
 			tabindex: 0,
-			addEventListener: {click: this.handlerMenuButton, skeydown: this.handlerMenuButton},
+			addEventListener: {click: this.handlerMenuButton, keydown: this.handlerMenuButton},
 		});
 		/*-- manipulando pilha --*/
 		this.heap[menu.id].type    = "menuButton";
@@ -245,15 +237,17 @@ const __MENU = {
 	//FIXME tem que fixar o width em __WINDOW.float
 
 
-	/**. '{void dettach(node target)}: Remove o menu do nó HTML.**/
-	detach: function(target) {
-		const id = target.getAttribute("aria-controls");
+	/**. '{void dettach(node trigger)}: Remove o menu do nó HTML.**/
+	detach: function(trigger) {
+		const id = trigger.getAttribute("aria-controls");
 		if (id in this.heap) {
-			target.removeAttribute("aria-haspopup");
-			target.removeAttribute("aria-controls");
-			target.removeAttribute("aria-expanded");
-			target.removeAttribute("tabindex");
-			target.removeEventListener("click", this.handlerMenuButton);
+			trigger.removeAttribute("aria-haspopup");
+			trigger.removeAttribute("aria-controls");
+			trigger.removeAttribute("aria-expanded");
+			trigger.removeAttribute("tabindex");
+			trigger.removeEventListener("click", this.handlerMenuButton);
+			trigger.removeEventListener("keydown", this.handlerMenuButton);
+			trigger.className = trigger.className.replace("css-js-wd-menu-open", "").replace(/\s+/g, " ").trim(),
 			this.heap[id].menu.remove();
 			delete this.heap[id];
 		}
@@ -297,7 +291,7 @@ const __MENU = {
 		path.unshift(item.getAttribute("data-label"));
 		return path;
 	},
-	/**. '{array items(node box, boolean all)}: Retorna a lista de itens do menu/grupo ou todos os visíveis se '{all} for verdadeiro.**/
+	/**. '{array items(node box, boolean all)}: Retorna a u{lista de itens do menu/grupo} ou todos os visíveis se o argumento '{all} for verdadeiro.**/
 	items: function(box, all) {
 		const list = [];
 		Array.from(box.children).forEach(function(v,i,a) {
@@ -337,12 +331,15 @@ const __MENU = {
 	},
 	/**. '{void keydown(object ev)}: Manipulador para navegar pelos itens.**/
 	keydown: function(ev) {
+		const item  = ev.currentTarget;
 		const path  = this.path(ev.currentTarget);
 		const items = this.items(path[path.length - 1]);
 		const index = items.indexOf(ev.currentTarget);
 		const click = ev.key === "Enter" || ev.key === " ";
 		const role  = ev.currentTarget.getAttribute("role");
-		if (click) ev.preventDefault();
+		/*-- prevenir comportamento padrão --*/
+		if ((/^(Arrow(Down|Up|Left|Right)|Home|End|Enter|\ )$/).test(ev.key))
+			ev.preventDefault();
 		/*-- baixo --*/
 		if (ev.key === "ArrowDown")
 			return items[(index + 1)%items.length].focus();
@@ -353,14 +350,14 @@ const __MENU = {
 		if (ev.key === "Home" || ev.key === "End")
 			return items[ev.key === "Home" ? 0 : items.length - 1].focus();
 		/*-- abrir --*/
-		if ((ev.key === "ArrowRight" || click) && ev.currentTarget.getAttribute("aria-expanded") === "false")
-			return this.click(ev);
+		if ((ev.key === "ArrowRight" || click) && item.getAttribute("aria-expanded") === "false")
+			return item.click();
 		/*-- fechar --*/
 		if (ev.key === "ArrowLeft" && path.length > 1)
 			return path[path.length - 1].previousElementSibling.click();
 		/*-- caixa de checagem --*/
-		if (click && (role === "menuitemcheckbox" || role === "menuitemradio"))
-			return this.click(ev);
+		if (click && (role === "menuitemcheckbox" || role === "menuitemradio" || role === "menuitem"))
+			return item.click();
 		return;
 	},
 	/**. '{void click(object ev)}: Manipulador para abrir e fechar submenu pelo mouse.**/
@@ -421,8 +418,5 @@ const __MENU = {
 		return;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click}, e {mouseover}.**/
-	handleEvent: function(ev) {
-		this[ev.type](ev);
-		return;
-	},
+	handleEvent: function(ev) {return this[ev.type](ev);},
 };
