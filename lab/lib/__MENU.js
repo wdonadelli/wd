@@ -46,6 +46,7 @@ const __MENU = {
 	border: thin solid black;
 	font-size: 14px;
 	font-family: Lucida Sans, sans-serif;
+	box-shadow: 0.25em 0.25em 0 0 #cccccc;
 }
 .css-js-wd-menu [role="menu"] {
 	list-style: none;
@@ -234,9 +235,6 @@ const __MENU = {
 		this.heap[menu.id].trigger = trigger;
 		return;
 	},
-	//FIXME tem que fixar o width em __WINDOW.float
-
-
 	/**. '{void dettach(node trigger)}: Remove o menu do nó HTML.**/
 	detach: function(trigger) {
 		const id = trigger.getAttribute("aria-controls");

@@ -179,7 +179,7 @@ const __DATETIME = {
 	/**. '{any name(any value, string type, boolean short)}: Retorna o valor numérico ou textual do mês ou dia.
 	|Nome|Descrição|
 	|value|Se valor numérico, retorna o nome, se valor textual, o número|
-	|type|´{month} para avaliar meses e '{day} (padrão) para avaliar dias|
+	|type|'{month} para avaliar meses e '{day} (padrão) para avaliar dias|
 	|short|Sensível apenas no retorno de valor textual que, se verdadeiro, retornará a abreviação|**/
 	name: function(value, type, short) {
 		this.setTemplates();

@@ -31,7 +31,7 @@ Características:
 	|'{tab}|Janela removida pela tecla '{Tab}|Não|Sim|Não|
 	|'{offtarget}|Janela removida por clique fora do alvo|Não|Sim|Não|
 	|'{submit}|Janela removida por submissão de formulário|Sim|Sim|Sim|
-	|""Tabela de estados da janela""|*/
+	|""Tabela dos estados da janela""|**/
 const __WINDOW = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
 	CSS: __CSS.data.push(`/*-- WINDOW --*/
@@ -183,6 +183,7 @@ const __WINDOW = {
 		win.style.maxHeight = null;
 		win.style.maxWidth  = `${h - 2*p}px`;
 		win.style.maxHeight = `${v - 2*p}px`;
+		win.style.width     = window.getComputedStyle(win).width;
 		/*-- sem fonte --*/
 		if (src === null) {
 			win.style.left      = `${p}px`;

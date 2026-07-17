@@ -1,0 +1,33 @@
+/**#4 WDstring
+	''constructor object WDstring(any  input, object data)''
+	Construtor genérico para manipulação de strings. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
+	function WDstring(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __String(data.value)},
+		});
+	}
+
+	WDstring.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDstring},
+		/**. '{integer length}: Retorna a quantidade de caracteres.**/
+		length: {get: function() {return this._main.length;}},
+		/**. '{string upper}: Retorna caixa alta.**/
+		upper: {get: function() {return this._main.upper;}},
+		/**. '{string lower}: Retorna caixa baixa.**/
+		lower: {get: function() {return this._main.lower;}},
+		/**. '{string capitalize}: Retorna a primeira letra de cada palavra em caixa alta.**/
+		capitalize: {get: function() {return this._main.capitalize;}},
+		/**. '{string toggle}: Inverte a caixa.**/
+		toggle: {get: function() {return this._main.toggle;}},
+		/**. '{string camel}: Transforma a string em camelCase.**/
+		camel: {get: function() {return this._main.camel;}},
+		/**. '{string dash}: Divide a string em traços.**/
+		dash: {get: function() {return this._main.dash;}},
+		/**. '{string clear}: Remove acentos.**/
+		clear: {get: function() {return this._main.clear(false, true);}},
+		/**. '{string trim}: Remove espaços excedentes.**/
+		trim: {get: function() {return this._main.clear(true, false);}},
+		/**. '{string clean}: Remove acentos e espaços excedentes.**/
+		clean: {get: function() {return this._main.clear();}},
+	});
