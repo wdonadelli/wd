@@ -185,7 +185,7 @@ const __SIGNAL = {
 	- Os argumentos '{head} e '{body} definem o cabeçalho e o texto da mensagem, respectivamente;
 	- O argumento '{call} é uma função chamada após o envio da notificação que recebe o status da notificação;
 	- A funcão opcional '{call} recebe como argumento uma string com o '{status} da notificação; e
-	- Os status possíveis são ´{granted}, se a notificação foi permitida, e '{denied}, se foi negada.**/
+	- Os status possíveis são '{granted}, se a notificação foi permitida, e '{denied}, se foi negada.**/
 	notify: function (head, body, call) {
 		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 		call = typeof call === "function" ? call : null;

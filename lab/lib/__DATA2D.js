@@ -262,7 +262,7 @@ const __DATA2D = {
 		return fit;
 	},
 	/**. '{array ASC(array list)}: Retorna a lista de finitos em ordem ascendente.**/
-	ASC: function(list, order) {
+	ASC: function(list) {
 		return list
 			.filter(function(v,i,a) {return Number.isFinite(v);})
 			.sort(function(a,b) {return a === b ? 0 : (a < b ? -1 : 1);});
@@ -300,7 +300,7 @@ const __DATA2D = {
 		const sum = list.reduce(function (sum,v,i,a) {return sum + (Number.isFinite(v) && v !== 0 ? 1/v : 0);}, 0);
 		return sum === 0 ? 0 : this.round(len/sum);
 	},
-	/**. '{number HARM(array list)}: Retorna a média geométrica da lista de finitos ou zero.**/
+	/**. '{number GEO(array list)}: Retorna a média geométrica da lista de finitos ou zero.**/
 	GEO: function(list) {
 		const len = list.reduce(function (len,v,i,a) {return len + (Number.isFinite(v) && v > 0 ? 1 : 0);}, 0);
 		const sum = list.reduce(function (sum,v,i,a) {return sum * (Number.isFinite(v) && v > 0 ? v : 1);}, 1);
@@ -317,65 +317,24 @@ const __DATA2D = {
 	MOD: function(list) {
 		return list.map(function(v,i,a) {return Number.isFinite(v) ? Math.abs(v) : 0;});
 	},
-
-
-
-
-
-	DISTINCT: function(list, data) {
-		const dist = list.filter(function(v,i,a) {
-			const ok = Number.isFinite(v) || (typeof v === "string" && v.trim() !== "");
-			return ok && a.indexOf(v) === i;
+	/**. '{object COUNT(array list)}: Retorna um objeto contendo a contagem das ocorrências dos números.**/
+	COUNT: function(list) {
+		const count = {};
+		list.forEach(function(v,i,a) {
+			if (Number.isFinite(v))
+				count[v] = v in count ? count[v] + 1 : 1;
 		});
-		return data === true ? dist.reduce(function(obj,v,i,a) {obj[v] = 0; return obj;}, {}) : dist;
+		return count;
 	},
-
-	COUNT: function(list, ratio) {
-		const data = this.DISTINCT(list, true);
-		const item = list.filter(function(v,i,a) {
-			if (v in data) data[v]++;
-			return v in data;
-		});
-		if (ratio === true)
-			for (let i in data) data[i] = data[i]/item.length;
-		return data;
+	/**. '{array MODE(array list)}: Retorna uma lista com os itens mais recorrentes.**/
+	MODE: function(list) {
+		const mode  = [];
+		const count = this.COUNT(list);
+		let max = 0;
+		for (let i in count)
+			max = count[i] > max ? count[i] : max;
+		for (let i in count)
+			if (count[i] === max) mode.push(Number(i));
+		return mode;
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-	path: function(dataXY, type, color) {
-		const x = this.toList(dataXY, "x");
-		const y = this.toList(dataXY, "y");
-		const d = dataXY.map(function(v,i,a) {
-			if (type === "dots")
-
-
-			if (type === "link")
-
-			if (type === "stair")
-
-
-			if (type === "dash")
-
-
-			if (type === "area")
-
-			if (type === "line")
-		});
-	},*/
-
-
-
 };

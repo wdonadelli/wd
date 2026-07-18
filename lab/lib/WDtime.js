@@ -14,8 +14,12 @@ WDtime.prototype = Object.create(WDmain.prototype, {
 	second: {get: function()  {return this._data._data.s;}},
 	/**. '{integer millisecond}: Retorna o valor do milissegundo.**/
 	millisecond: {get: function()  {return this._data._data.l;}},
-	/**. '{string delta(string walk)}: Desloca o tempo.**/
+	/**. '{string delta(string walk)}: Desloca o tempo e retorna o tempo deslocado.**/
 	delta: {value: function(walk) {
 		return __DATETIME.delta(this._data._data, walk).string;
+	}},
+	/**. '{string toLocaleString(object opt)}: Retorna o valor local do tempo.**/
+	toLocaleString: {value: function(opt) {
+		return __DATETIME.locale(this._data._data, opt);
 	}},
 });

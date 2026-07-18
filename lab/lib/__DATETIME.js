@@ -31,8 +31,8 @@ O objeto '{__DATETIME} estabelece as regras para extrair data e tempo a partir d
 Observações:
 - Formatos de data, mês e semana são tratados como data e identificados em dias desde '{0000-01-01};
 - Farmatos de tempo e data/tempo são tratados como tempo e identificados em milissegundos;
-- Formatos de tempo correspondem ao ciclo de 24 horas iniciado em ´{00:00:00.000};
-- Formatos de data/tempo correspondem ao período iniciado em ´{0000-01-01T00:00:00.000};
+- Formatos de tempo correspondem ao ciclo de 24 horas iniciado em '{00:00:00.000};
+- Formatos de data/tempo correspondem ao período iniciado em '{0000-01-01T00:00:00.000};
 - Dias da semana são relatados de domingo (1) a sábado (7);
 - Formatos de semana obedecem à a{ISO 8601}@href{https://en.wikipedia.org/wiki/ISO_8601#Week_dates}, ou seja, começa na segunda-feira (1) e termina no domingo (7).
 - Valores máximos e mínimos de identificadores confiáveis são dados por MAX_SAFE_INTEGER e MIN_SAFE_INTEGER;
@@ -64,7 +64,7 @@ const __DATETIME = {
 		l:   /(\d{1,3})/,                ll:   /(\d\d\d)/,
 		p:   /([AP]M)/,                  P:   /([+\-]?)/
 	},
-	/**. '{array template}: Registra os modelos de tempo e suas configurações.**/
+	/**. '{array base}: Registra os modelos de tempo e suas configurações.**/
 	base: [
 		/*-- datas: meses numéricos --*/
 		{flag: {P: 1, D: 4, M: 3, Y: 2}, type: "date", model: "(P)(YYYY)-(MM)-(DD)"},
@@ -243,7 +243,7 @@ const __DATETIME = {
 		const gap = (now - sun)%7;
 		return (gap < 0 ? gap + 7 : gap) + 1;
 	},
-	/**. '{array dataMonth(integer year)}: Retorna uma lista de objetos contendo os dados dos meses do ano ´{year}:
+	/**. '{array dataMonth(integer year)}: Retorna uma lista de objetos contendo os dados dos meses do ano '{year}:
 	|Propriedade|Tipo|Descrição|
 	|month|integer|Mês do ano, de 1 a 12|
 	|init|integer|Dia do ano no início do mês (a partir de 1)|
@@ -451,7 +451,7 @@ const __DATETIME = {
 		if (Number.isInteger(Y)) date.setUTCFullYear(Y);
 		return isNaN(date.getDate()) ? null : date;
 	},
-	/**. '{string locale(object flag)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options}target{_blank} do objeto nativo '{Date}.**/
+	/**. '{string locale(object flag, object cfg)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options}target{_blank} do objeto nativo '{Date}.**/
 	locale: function(flag, cfg) {
 		const data = typeof cfg === "object" && cfg !== null ? cfg : {};
 		const date = this.nativeDate(flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);

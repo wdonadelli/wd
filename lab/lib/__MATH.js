@@ -69,6 +69,37 @@ const __MATH = {
 		data.den *= Math.sign(den);
 		return data;
 	},
+
+
+
+	dec: function(value) {
+		const num  = Number.isFinite(value) && !Number.isInteger(value) ? String(value) : "0.0";
+		const re   = /^([-+]?)(\d+)\.(\d+)(?:e\-(\d+))?$/i;
+		const find = re.test(num) ? num.match(re) : null;
+		const n    = find[4] ? Number(find[4]) - 1 : 0;
+		if (find === null) return 0;
+		if (!find[4])      return Number(`${find[1]}0.${find[3]}`);
+		return Number(`${find[1]}0.${"0".repeat(n)}${find[2]}${find[3]}`);
+	},
+
+
+//FIXME dizima periódica último caractere é a dúvida
+"021212341234123".match(/(\d+)(\1+)\d$/);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	/**. '{integer bitInt(number value)}: Retorna a quantidade de bits da parte inteira do número.**/
 	bitInt: function(value) {
 		return Math.trunc(Math.abs(value)).toString(2).split(".")[0].length;
@@ -113,6 +144,26 @@ const __MATH = {
 	round: function(value) {
 		return Math.trunc(value)+this.decN(value);
 	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
