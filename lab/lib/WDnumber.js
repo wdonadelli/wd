@@ -12,6 +12,8 @@ WDnumber.prototype = Object.create(WDmain.prototype, {
 	}},
 	/**. '{string mask(string model)}: Retorna o valor formatado pela máscara definida em '{model}.**/
 	mask: {value: function(model) {return __STRING.mask(this._input, model);}},
+	/**. '{number dec(boolean round)}: Retorna a parte decimal do número com arredondamento de dízima precário se '{round} não é falso.**/
+	dec: {value: function(round) {return __MATH.dec(this._input, round);}},
 
 
 
@@ -21,7 +23,7 @@ WDnumber.prototype = Object.create(WDmain.prototype, {
 	/**. '{integer int}: Retorna a parte inteira.**/
 	int: {get: function() {return this._main.int;}},
 	/**. '{number dec}: Retorna a parte decimal.**/
-	dec: {get: function() {return this._main.dec;}},
+	//dec: {get: function() {return this._main.dec;}},
 	/**. '{number abs}: Retorna o valor absoluto.**/
 	abs: {get: function() {return this._main.abs;}},
 	/**. '{boolean prime}: Informa se o número é primo por meio de um Promise.**/
