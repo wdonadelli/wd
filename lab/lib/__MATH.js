@@ -3,83 +3,82 @@
 O objeto '{__MATH} apresenta uma série de ferramentas para cálculos genéricos. Nenhum argumento será checado, observar a descrição.**/
 const __MATH = {
 	/**. '{array _primes}: Apresenta uma lista de números primos, que pode aumentar conforme demanda.**/
-	_primes: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97],
-	/**. '{boolean _isNewPrime(integer value)}: Função de checagem do método '{primes} ('{value} deve ser um positivo ímpar).**/
-	_isNewPrime: function(value) {
-		if (Number.isInteger(Math.sqrt(value))) return false;
-		const end = Math.ceil(Math.sqrt(value));
-		let   num = 0;
-		while (this._primes[++num] < end)
-			if (value%this._primes[num] === 0) return false;
-		return true;
+	primes: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97],
+	/**. '{integer addPrime()}: Adiciona um primo à lista ('{primes}) e o retorna.**/
+	addPrime: function() {
+		const length = this.primes.length;
+		let error, sqrt, item, prime = this.primes[length - 1];
+		/*-- enquanto não for adicionado um primo à lista --*/
+		while (this.primes.length === length) {
+			prime = prime + 2;
+			sqrt  = Math.sqrt(prime);
+			error = false;
+			index = 0;
+			/*-- checar individualmente enquanto a raiz quadrada for maior que o primo --*/
+			while(error === false && this.primes[++index] <= sqrt)
+				error = prime%this.primes[index] === 0;
+			/*-- se não tiver erro, adicionar à lista --*/
+			if (!error) this.primes.push(prime);
+		}
+		return this.primes[length];
 	},
-	/**. '{array primes(integer value)}: Retorna uma lista ascendente de números primos menores ou igual a '{value}.**/
-	primes: function(value) {
-		value = Number.isFinite(value) ? Math.abs(value) : 0;
-		let last = this._primes[this._primes.length - 1];
-		/*-- se o número estiver na lista de primos, retornar os números --*/
-		if (value <= last)
-			return this._primes.filter(function(v,i,a) {return v <= value;});
-		/*-- se não estiver na lista, acrescentar à lista de primos até o primeiro número maior que o valor --*/
-		while(this._primes[this._primes.length - 1] < value)
-			if (this._isNewPrime(last = last + 2)) this._primes.push(last);
-		/*-- retornar lista --*/
-		return this._primes.slice(0, this._primes.length - 1);
+	/**. '{array getPrimes(integer value)}: Retorna uma lista de números primos até o valor positivo inteiro de '{value}.**/
+	getPrimes: function(value) {
+		const data = isNaN(value) ? 0 : Math.trunc(Math.abs(Number(value)));
+		const sqrt = Math.sqrt(data);
+		const list = [];
+		while (this.primes[this.primes.length - 1] <= sqrt) this.addPrime();
+		return this.primes.filter(function(v,i,a) {return v <= sqrt;})
+	},
+	/**. '{boolean isPrime(integer value)}: Retorna verdadeiro se o valor positivo inteiro de '{value} for primo.**/
+	isPrime: function(value) {
+		/*-- valores constantes na lista --*/
+		const data = isNaN(value) ? 0 : Math.trunc(Math.abs(Number(value)));
+		if (this.primes.indexOf(data) >= 0) return true;
+		/*-- valores não constantes na lista --*/
+		const list = this.getPrimes(data);
+		for (let i = 0; i < list.length; i++)
+			if (data%list[i] === 0) return false;
+		return list.length > 0;
 	},
 	/**. '{number exp10(number value)}: Retorna o expoente de base 10 de '{value}.**/
-	//FIXME ver o que se quer com isso, ficou confuso
-
-
 	exp10: function(value) {
-		if (isNaN(value) || Number(value) === 0) return 0;
-		const num = Math.abs(value);
-		const dec = num < 1;
-		let i = 0;
-		while ( dec ? (num < Number(`1e${--i}`)) : (num >= Number(`1e${++i}`)) ) {}
-		return i + (dec ? -1 : -1);
+		const exp = value = isNaN(value) ? "0" : Number(value).toExponential();
+		return Number(exp.match(/e([-+]\d+)$/i)[1]);
 	},
 	/**. '{object reduce(integer num, integer den)}: Retorna um objeto com os argumentos reduzido ao máximo divisor comum '{gcd}.**/
 	reduce: function(num, den) {
+		num = Math.trunc(Math.abs(isNaN(num) ? 0 : Number(num)));
+		den = Math.trunc(Math.abs(isNaN(den) ? 0 : Number(den)));
 		/*-- checar se são inteiros diferentes de zero --*/
-		if (!Number.isInteger(num) || !Number.isInteger(den) || num === 0 || den === 0)
+		if (num === 0 || den === 0)
 			return {num: 0, den: 0, gcd: 0};
-		/*-- checar se são divisíveis --*/
-		if (num >= den ? num%den === 0 : den%num === 0)
+		/*-- checar se são divisíveis entre si --*/
+		if (num%den === 0 || den%num === 0)
 			return {num: num >= den ? num/den : 1, den: num >= den ? 1 : den/num, gcd: num >= den ? den : num};
 		/*-- checar se são divisíveis por 10 --*/
-		let gcd = 1;
+		let p1, p2, gcd = 1;
 		while (num%10 === 0 && den%10 === 0) {
 			num /= 10;
 			den /= 10;
 			gcd *= 10;
 		}
 		/*-- fatorar --*/
-		const base = this.primes(Math.min(num, den));
-		const data = {num: Math.abs(num), den: Math.abs(den), gcd: gcd};
-		let i  = 0;
-		let p1 = base.indexOf(data.num);
-		let p2 = base.indexOf(data.den);
-		/*-- se o primo for maior que um dos números: parar fatoração --*/
-		while (data.num >= base[i] && data.den >= base[i] && i < base.length) {
-			/*-- ambos já são primos: parar a fatoração --*/
-			if (p1 >=0 && p2 >=0) break;
-			/*-- um é primo: adiantar a fatoração --*/
-			if ((p1 >= 0 || p2 >= 0) && (i < p1 || i < p2))
-				i = p1 > p2 ? p1 : p2;
-			if (data.num%base[i] === 0 && data.den%base[i] === 0) {
-				data.num /= base[i];
-				data.den /= base[i];
-				data.gcd *= base[i];
-				p1 = base.indexOf(data.num);
-		    p2 = base.indexOf(data.den);
-			}
-			else {
-				i++;
+		const primes = this.getPrimes(Math.min(num, den));
+		for (let i = 0; i < primes.length; i++) {
+			p1 = this.isPrime(num);
+			p2 = this.isPrime(den);
+			/*-- um deles já é primo --*/
+			if (p1 || p2) return {num: num, den: den, gcd: gcd};
+			/*-- ambos são divisíveis pelo primo --*/
+			if (num%primes[i] === 0 && den%primes[i] === 0) {
+				num /= primes[i];
+				den /= primes[i];
+				gcd *= primes[i];
+				i--;
 			}
 		}
-		data.num *= Math.sign(num);
-		data.den *= Math.sign(den);
-		return data;
+		return {num: num, den: den, gcd: gcd};
 	},
 	/**. '{number dec(number value, boolean round)}: Retorna o decimal do número por meio da valor textual aplicando arredondamento se '{round} for diferente de falso.**/
 	dec: function(value, round) {
@@ -136,7 +135,7 @@ const __MATH = {
 	/**. '{number float64(number value)}: Retorna o decimal do número por meio dos dados binários.**/
 	float64: function(value) {
 		if (isNaN(value) || Number.isInteger(Number(value))) return 0
-		const bin = this.float64(value);
+		const bin = this.float64data(value);
 		let sum = 0
 		for (let i = 0; i < bin.dec.length; i++)
 			sum += bin.dec[i] === "0" ? 0 : Math.pow(2, -(i+1));
@@ -200,7 +199,7 @@ const __MATH = {
 	/**. '{string humanFloat64(number value)}: Retorna o decimal do número por meio dos dados binários.**/
 	humanFloat64: function(value) {
 		if (isNaN(value) || Number.isInteger(Number(value))) return 0
-		const bin = this.float64(value);
+		const bin = this.float64data(value);
 		let val, sum = null;
 		for (let i = 0; i < bin.dec.length; i++) {
 			if (bin.dec[i] === "1") {
@@ -261,6 +260,9 @@ const __MATH = {
 
 
 	frac: function (value) {
+		//FIXME tem que resolver os problemas com as dízimas
+
+
 		let prev = Math.trunc(value);
 		let dec = [];
 		let next, num, den, data, a = 0, b = 1, i = 0;
