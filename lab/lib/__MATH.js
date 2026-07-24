@@ -101,6 +101,8 @@ const __MATH = {
 		const int = Math.trunc(Math.abs(value));
 		return dec === 0 ? int : (int === 0 ? dec : Number(String(dec).replace("0", int)));
 	},
+
+	//TODO apagar isso
 	/**. '{object float64data(number value)}: Retorna informações sobre a notação binária do número flutuante:
 	|Nome|Tipo|Descrição|
 	|bin|string|Representação binária do número|
@@ -109,7 +111,7 @@ const __MATH = {
 	|main|string|Representação binária da mantissa|
 	|note|string|Representação binária da notação|
 	|int|string|Representação binária do inteiro|
-	|dc|string|Representação binária do decimal|**/
+	|dec|string|Representação binária do decimal|**/
 	float64data: function (value) {
 		const data   = {bin: ""};
 		const buffer = new ArrayBuffer(8);
@@ -132,6 +134,7 @@ const __MATH = {
 		data.dec  = exp >= 0 ? ref.slice(exp+1)    : ("0".repeat(-exp-1) + ref);
 		return data;
 	},
+	//TODO apagar isso
 	/**. '{number float64(number value)}: Retorna o decimal do número por meio dos dados binários.**/
 	float64: function(value) {
 		if (isNaN(value) || Number.isInteger(Number(value))) return 0
@@ -141,6 +144,121 @@ const __MATH = {
 			sum += bin.dec[i] === "0" ? 0 : Math.pow(2, -(i+1));
 		return sum;
 	},
+	/**. '{string humanNormalize(string num)}: Retorna a notação decimal normalizada:
+	- O valor deve estar em notação decimal sem sinal;
+	- O ponto separa a parte inteira da decimal;
+	- Valores inteiros não precisam fixar a parte decimal; e
+	- Valor menor que 1 precisa ter a parte inteira fixada em zero.**/
+	humanNormalize: function(num) {
+		const re  = /^[-+]?(?:0+)?(\d+)(?:\.(\d+))?$/;
+		const zr  = /[^0]0+$/;
+		const val = String(num).match(re);
+		const dec = val === null || !val[2] ? "" : "." + (zr.test(val[2]) ? val[2].replace(/0+$/, "") : val[2]);
+		return val === null ? "0" : (val[1] + dec);
+	},
+	/**. '{string humanCompare(string num1, string num2)}: Retorna 0 se os argumentos (ver '{humanNormalize}) forem iguais, 1 se o primeiro for maior que o segundo e -1 se o segundo for maior que o primeiro.**/
+	humanCompare: function(num1, num2) {
+		const data = this.humanMatch(num1, num2)
+		return data.num1 === data.num2 ? 0 : (data.num1 > data.num2 ? 1 : -1);
+	},
+	/**. '{object humanMatch(string num1, string num2)}: Retorna os argumentos (ver '{humanNormalize}) com a quatidade de dígitos (parte inteira e decimal) equiparada.**/
+	humanMatch: function(num1, num2) {
+		num1 = this.humanNormalize(num1);
+		num2 = this.humanNormalize(num2);
+		const re    = /^(\d+)(?:\.(\d+))?$/;
+		const find1 = num1.match(re);
+		const find2 = num2.match(re);
+		const data1 = {int: find1[1].length, dec: find1[2] ? find1[2].length : 0};
+		const data2 = {int: find2[1].length, dec: find2[2] ? find2[2].length : 0};
+		const frac  = (data1.dec + data2.dec) > 0;
+		return {
+			num1: [
+				"0".repeat(data2.int > data1.int ? data2.int - data1.int : 0) + find1[1],
+				frac ? (find1[2] ? find1[2] : "") + ("0".repeat(data2.dec > data1.dec ? data2.dec - data1.dec : 0)) : ""
+			].join(frac ? "." : ""),
+			num2: [
+				"0".repeat(data1.int > data2.int ? data1.int - data2.int : 0) + find2[1],
+				frac ? (find2[2] ? find2[2] : "") + ("0".repeat(data1.dec > data2.dec ? data1.dec - data2.dec : 0)) : ""
+			].join(frac ? "." : "")
+		};
+	},
+	/**. '{string humanSum(string num1, string num2)}: Retorna a soma dos argumentos (ver '{humanNormalize}).**/
+	humanSum: function(num1, num2) {
+		const data  = this.humanMatch(num1, num2);
+		num1 = data.num1.split("");
+		num2 = data.num2.split("");
+		let val, j;
+		for (let i = num1.length - 1; i >= 0; i--) {
+			if (num1[i] === ".") continue;
+			val = Number(num1[i]) + Number(num2[i]);
+			num1[i] = val > 9 && i > 0 ? val%10 : val;
+			if (val > 9 && i > 0) {
+				j = i + (num1[i-1] === "." ? -2 : -1);
+				num1[j] = Number(num1[j]) + 1;
+			}
+		}
+		return this.humanNormalize(num1.join(""));
+	},
+	/**. '{string humanSub(string num1, string num2)}: Retorna a diferença enter argumentos (ver '{humanNormalize}).**/
+	humanSub: function(num1, num2) {
+		const data  = this.humanMatch(num1, num2);
+		const order = this.humanCompare(data.num1, data.num2);
+		if (order === 0) return "0";
+		num1 = (order < 0 ? data.num2 : data.num1).split("");
+		num2 = (order < 0 ? data.num1 : data.num2).split("");
+		let val, j;
+		for (let i = num1.length - 1; i >= 0; i--) {
+			if (num1[i] === ".") continue;
+			val = Number(num1[i]) - Number(num2[i]);
+			num1[i] = val < 0 ? 10 + val : val;
+			if (val < 0) {
+				j = i + (num1[i-1] === "." ? -2 : -1);
+				num1[j] = Number(num1[j]) - 1;
+			}
+		}
+		return this.humanNormalize(num1.join(""));
+	},
+	/**. '{string humanMult(string num1, string num2)}: Retorna a multiplicação dos argumentos (ver '{humanNormalize}).**/
+	humanMult: function(num1, num2) {
+		const zero = /^0+?$/;
+		const data = this.humanMatch(num1, num2);
+		const cut  = data.num1.indexOf(".") >= 0 ? 2*data.num1.split(".")[1].length : 0;
+		num1 = data.num1.replace(".", "");
+		num2 = data.num2.replace(".", "");
+		if (zero.test(num1) || zero.test(num2)) return "0";
+		const sum = Array(2*num1.length - 1);
+		let val;
+		/*-- calculando --*/
+		for (let i = num2.length - 1; i >= 0; i--) {
+			for (let j = num1.length - 1; j >= 0; j--) {
+				val = (Number(num2[i]) * Number(num1[j]))  + (typeof sum[i+j] === "number" ? sum[i+j] : 0);
+				sum[i+j] = val > 9 && (i+j) > 0 ? val%10 : val;
+				if (val > 9 && (i+j) > 0)
+					sum[i+j-1] = (typeof sum[i+j-1] === "number" ? sum[i+j-1] : 0) + Math.trunc(val/10);
+			}
+		}
+		const mult = sum.join("");
+		return this.humanNormalize(cut > 0 ? (mult.slice(0, mult.length - cut) + "." + mult.slice(-cut)) : mult);
+	},
+	/**. '{string humanPow(string num, integer exp)}: Retorna a potencialização dos argumentos (ver '{humanNormalize}). O argumento '{exp} deve ser um inteiro positivo.**/
+	humanPow: function(num, exp) {
+		num = this.humanNormalize(num);
+		exp = isNaN(exp) ? 0 : Math.trunc(Math.abs(Number(exp)));
+		if (exp === 0) return "1";
+		let pow = num;
+		for (let i = 2; i <= exp; i++)
+			pow = this.humanMult(num, pow);
+		return this.humanNormalize(pow);
+	},
+
+
+
+
+
+
+
+
+
 	/**. '{string humanDiv(integer num, integer den, integer dec)}: Retorna a divisão entre dois números inteiros positivos:
 	|Argumento|Descrição|
 	|'{num}|Numerador|
@@ -165,7 +283,7 @@ const __MATH = {
 		return div;
 	},
 	/**. '{string humanSum(string num1, string num2)}: Retorna a soma de dois números decimais positivos escritos em forma de string.**/
-	humanSum: function(num1, num2) {
+	humanSum2: function(num1, num2) {
 		num1 = String(num1) + (String(num1).indexOf(".") < 0 ? ".0" : "");
 		num2 = String(num2) + (String(num2).indexOf(".") < 0 ? ".0" : "");
 		const re   = /^(\d+)\.(\d+)$/;
@@ -196,18 +314,22 @@ const __MATH = {
 		}
 		return sum.join("").replace(/0+$/, "");
 	},
-	/**. '{string humanFloat64(number value)}: Retorna o decimal do número por meio dos dados binários.**/
-	humanFloat64: function(value) {
-		if (isNaN(value) || Number.isInteger(Number(value))) return 0
-		const bin = this.float64data(value);
-		let val, sum = null;
-		for (let i = 0; i < bin.dec.length; i++) {
-			if (bin.dec[i] === "1") {
+	/**. '{string humanDecBit(number value)}: Retorna o valor decimal do número ignorando o último digito (incerteza).**/
+	humanDecBit: function(value) {
+		const bin = Number(isNaN(value) ? 0 : value).toString(2).split(".");
+		const dec = bin.length > 1 ? bin[1] : "0";
+		const sig = bin[0][0] === "-" ? "-" : "";
+		const cut = Math.abs(this.exp10(1/Math.pow(2,dec.length))) + 1;
+		/*-- transformando binário em decimal: soma de bit_n *  1/2^n --*/
+		let val, sum = "0";
+		for (let i = 0; i < dec.length; i++) {
+			if (dec[i] === "1") {
 				val = this.humanDiv(1, Math.pow(2, i+1));
-				sum = this.humanSum(sum === null ? "0" : sum, val);
+				sum = this.humanSum(sum, val);
 			}
 		}
-		return sum;
+		/*-- aplicando ajustes --*/
+		return sig + sum.slice(0, cut);
 	},
 	/**. '{array crypto(integer bit, integer size, boolean uint)}: Retorna uma lista "aleatória" de inteiros:
 	|Argumento|Descrição|
