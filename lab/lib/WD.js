@@ -10,6 +10,8 @@ function WD(input) {
 		case "array":    return new WDarray(input, data);
 		case "date":     return new WDdate(input, data);
 		case "time":     return new WDtime(input, data);
+		case "boolean":  return new WDboolean(input, data);
+		case "regexp":   return new WDregexp(input, data);
 		case "datetime": return new WDdatetime(input, data);
 		case "node":     return new WDnode(input, data);
 		case "string":   return new WDstring(input, data);

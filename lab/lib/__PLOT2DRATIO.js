@@ -336,9 +336,9 @@ const __PLOT2DRATIO = {
 	|title|string|Sim|Título do gráfico||
 	|type|string|Sim|Define o tipo de análise gráfica|Valor padrão é '{count}|
 	|view|string|Sim|Define o tipo de gráfico, se setores ('{pie}) ou de barras ('{bar})|Valor padrão é '{bar}|
-	|y.dataset|array|Não|Conjunto de dados|Lista de objetos|
-	|y.dataset.name|string|Sim|Nome do conjunto de dados||
-	|y.dataset.data|array|Não|Conjunto de dados numericos para análise|Aceita-se números finitos e datas|
+	|dataset|array|Não|Conjunto de dados|Lista de objetos|
+	|dataset.name|string|Sim|Nome do conjunto de dados||
+	|dataset.data|array|Não|Conjunto de dados numericos para análise|Aceita-se números finitos e datas|
 	- Os tipos possíveis são '{key}, '{sum} e '{count};
 	- O tipo '{key} estabelece um relacionamento entre o primeiro conjunto (identificadores) e os demais (valores);
 	- O tipo '{sum} estabelece um relacionamento entre a soma dos conjuntos (valores) e seus respectivos nomes (identificadores);

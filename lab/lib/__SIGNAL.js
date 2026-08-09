@@ -184,23 +184,23 @@ const __SIGNAL = {
 	- Pode não funcionar em navegadores móveis em razão da maneira como construído a{exigências}@href{https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification}target{_blank};
 	- Os argumentos '{head} e '{body} definem o cabeçalho e o texto da mensagem, respectivamente;
 	- O argumento '{call} é uma função chamada após o envio da notificação que recebe o status da notificação;
-	- A funcão opcional '{call} recebe como argumento uma string com o '{status} da notificação; e
+	- A funcão opcional '{call} recebe como argumento um objeto (ver '{alert}) com a propriedade '{signal} informando o '{status} da notificação; e
 	- Os status possíveis são '{granted}, se a notificação foi permitida, e '{denied}, se foi negada.**/
 	notify: function (head, body, call) {
 		head = String(head || "").trim() || document.title.trim() || window.location.hostname;
 		call = typeof call === "function" ? call : null;
 		const config = {lang: __LANG.value, body: body};
 		if (Notification.permission === "denied") {
-			return call !== null ? call("denied") : undefined;
+			return call !== null ? call({signal: "denied", close: false, open: false, submit: null}) : undefined;
 		}
 		if (Notification.permission === "granted") {
 			new Notification(head, config);
-			return call !== null ? call("granted") : undefined;
+			return call !== null ? call({signal: "granted", close: false, open: true, submit: null}) : undefined;
 		}
 		else
 			Notification.requestPermission().then(function(x) {
 				if (x === "granted") new Notification(head, config);
-				return call !== null ? call(x) : undefined;
+				return call !== null ? call({signal: x, close: false, open: x === "granted", submit: null}) : undefined;
 			});
 		return;
 	},

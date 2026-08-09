@@ -2,9 +2,7 @@
 	Construtor genérico para manipulação de listas (ver '{WDmain}).**/
 function WDarray(input, data) {
 	WDmain.call(this, input, data);
-	Object.defineProperties(this, {
-		i: {value: -1, writable: true},
-	});
+	Object.defineProperties(this, {});
 }
 WDarray.prototype = Object.create(WDmain.prototype, {
 	constructor: {value: WDarray},

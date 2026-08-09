@@ -454,6 +454,7 @@ const __DOCODE = {
 		/*-- menu --*/
 		if (attr.list[0].name === "menu") {
 			//FIXME criar cabeçalho de menu com `#3 Nome`? analisar consequências (como fica aria-label).
+			//FIXME criar uma bagaça para carregar arquivo externo
 			const menu = document.createElement("menu");
 			const head = document.createElement("h3");
 			const type = attr.list[0].value.trim().toLowerCase();

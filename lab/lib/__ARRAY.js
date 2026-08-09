@@ -40,8 +40,8 @@ const __ARRAY = {
 				bvalue = B.array ? b.length : B.value;
 			}
 			else if (A.string || A.node) {
-				avalue = __STRING.clear(A.node ? a.innerText : a).toUpperCase();
-				bvalue = __STRING.clear(B.node ? b.innerText : b).toUpperCase();
+				avalue = __STRING.clean(A.node ? a.innerText : a).toUpperCase();
+				bvalue = __STRING.clean(B.node ? b.innerText : b).toUpperCase();
 			}
 			else if (A.function || A.regexp) {
 				avalue = A.function ? a.name : a.source;

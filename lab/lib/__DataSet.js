@@ -3,12 +3,16 @@
 O constructor '{__DataSet} tem o objetivo de gerir conjunto de dados repassados como argumento.**/
 function __DataSet(input) {
 	if (!(this instanceof __DataSet))	return new __DataSet(input);
-	Object.defineProperties(this, {_data: {value: []}});
+	Object.defineProperties(this, {_data: {value: [], configurable: true}});
 	this.import(input);
 }
 
 Object.defineProperties(__DataSet.prototype, {
 	constructor: {value: __DataSet},
+	[Symbol.iterator]: {value: function*() {for (let v of this._data) yield [v.name, v.value];}},
+	entries:           {value: function*() {for (let v of this._data) yield [v.name, v.value];}},
+	keys:              {value: function*() {for (let v of this.entries()) yield v[0];}},
+	values:            {value: function*() {for (let v of this.entries()) yield v[1];}},
 	/**. '{self import(any input)}: Incorpora o conjunto de dados de '{input} para o objeto podendo ser:
 	- string no formato "name: value\r\n";
 	- objeto;
@@ -22,59 +26,62 @@ Object.defineProperties(__DataSet.prototype, {
 			const check  = __Type(input);
 			const self   = this;
 			const header = /^([a-z\-]+\:\ [^\n]+\r\n)+$/;
-			const search = /^([^?]+\?|\?)?([^=]+\=(\&?|[^&]+\&?))+$/;
+			const search = /^([^?]+\?|\?)?([^=]+\=(\&?|[^&]+\&?))+(\#.*)?$/;
 			/*-- string header => name: value\r\n --*/
-			if (check.nonempty && header.test(input)) {
-				const data = input.trim().split("\r\n");
-				for (let i = 0; i < data.length; i++) {
-					let part  = data[i].split(": ");
-					let name  = part[0].trim();
-					let value = part.length > 0 ? part[1].trim() : "";
-					if (name.length > 0) this.append(name, value);
-				}
+			if (header.test(input)) {
+				input.trim().split("\r\n").forEach(function(v,i,a) {
+					const find = v.match(/^([a-z\-]+)\:\ (.*)$/);
+					this.append(find[1].trim(), find[2].trim());
+				}, this);
+				return;
 			}
 			/*-- string search => ?name=value& --*/
-			else if (check.nonempty && search.test(input)) {
-				const url  = input.split("?");
-				const data = url[url.length - 1].trim().split("&");
-				for (let i = 0; i < data.length; i++) {
-					let part  = data[i].split("=");
-					let name  = part[0].trim().replace(/\[\]$/, "");
-					let value = part.length > 1 ? part[1] : "";
-					if (name.length > 0) this.append(name, value);
-				}
+			if (search.test(input)) {
+				//console.log(input.split("?").slice(-1)[0])
+				input.split("?").slice(-1)[0].trim().replace(/\#.*$/, "").split("&").forEach(function(v,i,a) {
+					const find = v.match(/^([^=]+)\=(.*)$/);
+					this.append(find[1].trim(), find[2].trim());
+				}, this);
+				return;
 			}
 			/*-- instância de URL --*/
-			else if (check.instanceOf("URL")) {
+			if (check.instanceOf("URL")) {
 				return this.import(input.search);
 			}
 			/*-- instância de Headers --*/
-			else if (check.instanceOf("Headers")) {
+			if (check.instanceOf("Headers")) {
 				input.forEach(function (value,name,data) {self.append(name, value);});
+				return;
 			}
 			/*-- instância de URLSearchParams --*/
-			else if (check.instanceOf("URLSearchParams")) {
+			if (check.instanceOf("URLSearchParams")) {
 				input.forEach(function (value,name,data) {self.append(name, value);});
+				return;
 			}
 			/*-- instância de FormData --*/
-			else if (check.instanceOf("FormData")) {
+			if (check.instanceOf("FormData")) {
 				for (const data of input.entries()) {this.append(data[0], data[1]);}
+				return;
 			}
 			/*-- instância de Map --*/
-			else if (check.instanceOf("Map")) {
+			if (check.instanceOf("Map")) {
 				input.forEach(function (value,name,data) {self.append(name, value);});
+				return;
 			}
 			/*-- instância de __DataSet --*/
-			else if (input instanceof __DataSet) {
+			if (input instanceof __DataSet) {
 				input.forEach(function (value,name,data) {self.append(name, value);});
+				return;
 			}
 			/*-- JS Array --*/
-			else if (check.array) {
-				for (let i = 0; i < input.length; i++) this.append(String(i), input[i]);
+			if (check.array) {
+				input.forEach(function (value,name,data) {self.append(name, value);});
+				return;
 			}
 			/*-- JS Objeto (ficar por último) --*/
-			else if (check.object) {
+			if (check.object) {
 				for (let name in input) this.append(name, input[name]);
+				return;
 			}
 			return;
 		}
@@ -83,26 +90,17 @@ Object.defineProperties(__DataSet.prototype, {
 	append: {
 		value: function(name, value) {
 			name = String(name).replace(/\[\]$/, "").trim();
-			if (name.length !== 0)
-				this._data.push({name: name, value: value});
-			return this
+			if (name.length > 0) this._data.push({name: name, value: value});
+			return this;
 		}
 	},
 	/**. '{self delete(string name)}: Remove todos os valores associados ao indentificador '{name}.**/
 	delete: {
 		value: function(name) {
 			name = String(name).replace(/\[\]$/, "").trim();
-			if (name.length !== 0)
-				this._data.forEach(function(v,i,a) {
-					if (v !== null && name === v.name) a[i] = null;
-				});
-			return this;
-		}
-	},
-	/**. '{self set(string name, any value)}: Define um valor ('{value}) vinculado a um identificador ('{name}), substuindo os existentes.**/
-	set: {
-		value: function(name, value) {
-			this.delete(name).append(name, value);
+			Object.defineProperty(this, "_data", {writable: true});
+			this._data = this._data.filter(function(v,i,a) {return v.name !== name;});
+			Object.defineProperty(this, "_data", {writable: false});
 			return this;
 		}
 	},
@@ -110,90 +108,80 @@ Object.defineProperties(__DataSet.prototype, {
 	getAll: {
 		value: function(name) {
 			name = String(name).replace(/\[\]$/, "").trim();
-			const list = [];
-			if (name.length !== 0) {
-				for (let i of this.entries())
-					if (name === i[0]) list.push(i[1]);
-			}
-			return list;
+			return this._data.filter(function(v,i,a) {return v.name === name;}).map(function(v,i,a) {return v.value;});
 		}
 	},
+	/**. '{any get(string name)}: Retorna o valor do primeiro identificador '{name} localizado ou indefinido.**/
+	get: {value: function(name) {return this.getAll(name)[0];}},
+	/**. '{self set(string name, any value)}: Redefine todos os identificadores '{name} com o valor '{value}.**/
+	set: {value: function(name, value) {return this.delete(name).append(name, value);}},
 	/**. '{boolean has(string name)}: Retorna verdadeiro se o identificador '{name} existir.**/
-	has: {
-		value: function(name) {
-			name = String(name).replace(/\[\]$/, "").trim();
-			if (name.length !== 0) {
-				for (let i of this.entries())
-					if (name === i[0]) return true;
-			}
-			return false;
+	has: {value: function(name) {return this.getAll(name).length > 0;}},
+	/**. '{integer size}: Retorna um objeto representativo e não utilizável dos dados.**/
+	size: {get: function() {return this._data.length;}},
+	/**. '{self forEach(function' callback, object self)}: Chama '{caller} para cada item, repassando o valor e o nome de cada dado como argumentos.**/
+	forEach: {
+		value: function(callback, self) {
+			if (typeof callback === "function")
+				this._data.slice().forEach(function(v,i,a) {return callback(v.value, v.name,a);}, self);
+			return this;
 		}
 	},
-	/**. '{object toObject}: Converte o conjunto de dados em um objeto com **sobreposição de identificadores**.**/
+	/**. '{object toObject}: Converte o conjunto de dados em um objeto com b{sobreposição de identificadores}.**/
 	toObject: {
 		get: function() {
-			const data = {};
-			for (let i of this.entries()) data[i[0]] = i[1];
-			return data;
+			return this._data.reduce(function(data,v,i,a) {
+				data[v.name] = v.value;
+				return data;
+			}, {});
 		}
 	},
 	/**. '{object toMap}: Converte o conjunto de dados em um Mapa com **sobreposição de identificadores**.**/
 	toMap: {
 		get: function() {
-			const data = new Map();
-			for (let i of this.entries()) data.set(i[0],i[1]);
-			return data;
+			return this._data.reduce(function(data,v,i,a) {
+				data.set(v.name, v.value);
+				return data;
+			}, new Map());
 		}
 	},
-	/**. '{object toListObject}: Converte o conjunto de dados em um objeto organizado em listas de valores.**/
+	/**. '{object toListObject}: Converte o conjunto de dados em um objeto organizado por nome e listas de valores correspondentes.**/
 	toListObject: {
 		get: function() {
-			const data = {};
-			for (let v of this.entries()) {
-				let name  = v[0];
-				let value = v[1];
-				let check = __Type(value);
-				/*-- definição da propriedade, se for objeto analisar cada item adiante --*/
-				if (!(name in data) && !check.object) data[name] = [];
-
+			return this._data.reduce(function(data,v,i,a) {
+				if (!(v.name in data)) data[v.name] = [];
+				const check = new __Type(v.value);
 				if (check.instanceOf("FileList") || check.array) {
-					if (value.length === 0)
-						data[name].push("");
+					if (v.value.length > 0)
+						data[v.name] = data[v.name].concat(check.array ? v.value : Array.from(v.value));
 					else
-						for (let i = 0; i < value.length; i++) data[name].push(value[i]);
+						data[v.name].push("");
 				}
 				else if (check.object) {
-					let count = 0;
-					for (let i in value) count++;
-					if (count === 0) {
+					let i = null, name;
+					for (i in v.value) {
+						name = `${v.name}.${i}`;
 						if (!(name in data)) data[name] = [];
-						data[name].push("");
-					} else {
-						for (let i in value) {
-							let prop = name+"."+i;
-							if (!(prop in data)) data[prop] = [];
-							data[prop].push(value[i]);
-						}
+						data[name].push(v.value[i]);
 					}
+					if (i === null) data[v.name].push("");
+					if (data[v.name].length === 0) delete data[v.name];
 				}
 				else {
-					data[name].push(value);
+					data[v.name].push(v.value);
 				}
-			}
-			return data;
+				return data;
+			}, {});
 		}
 	},
 	/**. '{object toObjectHeaders}: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
 	toObjectHeaders: {
 		get: function() {
+			const list = this.toListObject;
 			const data = {};
-			const src  = this.toListObject;
-			for (let i in src) {
+			for (let i in list) {
 				let name = i.toLowerCase();
-				if (name in data)
-					data[name] = [data[name], src[i].join(", ")].join(", ");
-				else
-					data[name] = src[i].join(", ")
+				data[name] = (name in data ? [data[name], list[i].join(", ")] : list[i]).join(", ")
 			}
 			return data;
 		}
@@ -203,9 +191,9 @@ Object.defineProperties(__DataSet.prototype, {
 		get: function() {
 			if (!("Headers" in window)) return this.toObjectHeaders;
 			const data = new Headers();
-			const src  = this.toListObject;
-			for (let name in src)
-				for (let value of src[name])
+			const list = this.toListObject;
+			for (let name in list)
+				for (let value of list[name])
 					data.append(name, value);
 			return data;
 		}
@@ -214,8 +202,8 @@ Object.defineProperties(__DataSet.prototype, {
 	toStringHeaders: {
 		get: function() {
 			const data = [];
-			const src  = this.toObjectHeaders;
-			for (let i in src) data.push(i + ": " + src[i] + "\r\n");
+			const list = this.toObjectHeaders;
+			for (let i in list) data.push(`${i}: ${list[i]}\r\n`);
 			return data.join("");
 		}
 	},
@@ -224,10 +212,10 @@ Object.defineProperties(__DataSet.prototype, {
 		get: function() {
 			if (!("FormData" in window)) return this.toSearch;
 			const data = new FormData();
-			const src  = this.toListObject;
-			for (let name in src)
-				for (let value of src[name])
-					data.append(name+(src[name].length > 1 ? "[]" : ""), value);
+			const list = this.toListObject;
+			for (let name in list)
+				for (let value of list[name])
+					data.append(name+(list[name].length > 1 ? "[]" : ""), value);
 			return data;
 		}
 	},
@@ -236,11 +224,11 @@ Object.defineProperties(__DataSet.prototype, {
 		get: function() {
 			if (!("URLSearchParams" in window)) return this.toSearch;
 			const data = new URLSearchParams();
-			const src  = this.toListObject;
-			for (let name in src) {
-				for (let value of src[name]) {
+			const list = this.toListObject;
+			for (let name in list) {
+				for (let value of list[name]) {
 					let file = __Type(value).instanceOf("File");
-					let prop = name+(src[name].length > 1 ? "[]" : "")
+					let prop = name+(list[name].length > 1 ? "[]" : "")
 					let val  = file ? value.name : value
 					data.append(prop, val);
 				}
@@ -252,73 +240,17 @@ Object.defineProperties(__DataSet.prototype, {
 	toSearch: {
 		get: function() {
 			const data = [];
-			const src  = this.toListObject;
-			for (let name in src) {
-				for (let value of src[name]) {
+			const list = this.toListObject;
+			for (let name in list) {
+				for (let value of list[name]) {
 					let file = __Type(value).instanceOf("File");
-					let prop = encodeURIComponent(name)+(src[name].length > 1 ? "[]" : "");
+					let prop = encodeURIComponent(name)+(list[name].length > 1 ? "[]" : "");
 					let val  = encodeURIComponent(file ? value.name : value);
 					data.push(prop+"="+val);
 				}
 			}
 			return data.join("&");
 		}
-	},
-	[Symbol.iterator]: {
-		value: function*() {for (let v of this.entries()) yield v;}
-	},
-	/**. '{object entries()}: Retorna um objeto Generator para looping i{for of} das entradas.**/
-	entries: {
-		value: function*() {
-			for (let v of this._data)
-				if (v !== null) yield [v.name, v.value];
-		}
-	},
-	/**. '{object keys()}: Retorna um objeto Generator para looping i{for of} das chaves.**/
-	keys: {
-		value: function*() {for (let v of this.entries()) yield v[0];}
-	},
-	/**. '{object values()}: Retorna um objeto Generator para looping i{for of} dos valores.**/
-	values: {
-		value: function*() {for (let v of this.entries()) yield v[1];}
-	},
-	/**. '{self forEach(function' caller)}: Chama '{caller} para cada item, repassando o valor e nome, e um objeto com o par nome/valor, respectivamente, como argumentos.**/
-	forEach: {
-		value: function(caller) {
-			if (__Type(caller).function) {
-				const dataset = this.valueOf();
-				for (let i in dataset)
-					caller(dataset[i], i.trim(), dataset);
-			}
-			return this;
-		}
-	},
-	/**. '{integer size}: Retorna um objeto representativo e não utilizável dos dados.**/
-	size: {
-		get: function() {
-			let size = 0;
-				for (let i of this.entries()) size++;
-			return size;
-		}
-	},
-	/**. '{object valueOf()}: Retorna uma representação dos dados em forma de objeto.**/
-	valueOf: {
-		value: function() {
-			const counter = {};
-			const dataset = {};
-			for (let i of this.entries()) {
-				let name  = i[0];
-				let value = i[1];
-				if (!(name in counter)) counter[name] = 0;
-				let prop = name + ("\r").repeat(++counter[name]);
-				dataset[prop] = value;
-			}
-			return dataset;
-		}
-	},
-	/**. '{string toString()}: Retorna o mesmo produto da propriedade '{toStringHeaders}.**/
-	toString: {
-		value: function() {return this.toStringHeaders;}
 	},
 	/**. '{object toSubmit(any action, string method)}: O argumento '{action} é a URL (string ou objeto URL) e o argumento '{method} é o método da requisição. O método retorna um objeto com as seguintes propriedades para fins de requisição XMLHttpRequest, devendo inicialmente povoar o objeto com os valores de formulário e depois chamar o método:
 	|Nome|Descrição|
@@ -344,6 +276,27 @@ Object.defineProperties(__DataSet.prototype, {
 				data.url = data.url.split("?")[0]+"?"+dataset.toSearch;
 			}
 			return data;
+		}
+	},
+	/**. '{object valueOf()}: Retorna uma representação dos dados em forma de objeto.**/
+	valueOf: {
+		value: function() {
+			const count = {};
+			return this._data.reduce(function(data,v,i,a) {
+				count[v.name] = v.name in count ? count[v.name] + 1 : 0;
+				data[v.name + ("\r").repeat(count[v.name])] = v.value;
+				return data;
+			},{});
+		}
+	},
+	/**. '{string toString()}: Retorna uma representação dos dados em string.**/
+	toString: {
+		value: function() {
+			return this._data.map(function(v,i,a) {
+				const check = new __Type(v.value);
+				const value = check.array || check.object ? JSON.stringify(v.value) : String(v.value);
+				return `${v.name}: ${value}`;
+			}).join("\n");
 		}
 	},
 });
