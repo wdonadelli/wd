@@ -3,91 +3,6 @@
 O objeto '{__MOVE} atribui ao elemento a posibilidade de movimentação e dimensionamento.
 **/
 const __MOVE = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- MOVE/RESIZE --*/
-.css-wd-move {
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	z-index: 999;
-	border: 2px dashed red;
-	font-size: var(--var-js-wd-font-size);
-	font-family: var(--var-js-wd-font-type);
-}
-.css-wd-move > * {
-	position: absolute;
-	border: 0;
-	background: transparent;
-	font-family: inherit;
-	font-size: inherit;
-}
-/*-- resize vertical --*/
-.css-wd-move-n, .css-wd-move-s {
-	height: var(--var-js-wd-move-edge);
-	left:   calc(var(--var-js-wd-move-edge) / 2);
-	right:  calc(var(--var-js-wd-move-edge) / 2);
-}
-.css-wd-move-n {
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: n-resize;
-}
-.css-wd-move-s {
-	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: s-resize;
-}
-/*-- resize horizontal --*/
-.css-wd-move-w, .css-wd-move-e {
-	width:  var(--var-js-wd-move-edge);
-	top:    calc(var(--var-js-wd-move-edge) / 2);
-	bottom: calc(var(--var-js-wd-move-edge) / 2);
-}
-.css-wd-move-w {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: w-resize;
-}
-.css-wd-move-e {
-	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: e-resize;
-}
-/*-- resize bidimensional --*/
-.css-wd-move-nw, .css-wd-move-ne, .css-wd-move-sw, .css-wd-move-se {
-	width:  var(--var-js-wd-move-edge);
-	height: var(--var-js-wd-move-edge);
-	border: 2px solid red;
-	background: white;
-	/*border-radius: calc(var(--var-js-wd-move-edge) / 2);*/
-}
-.css-wd-move-nw {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: nw-resize;
-}
-.css-wd-move-ne {
-	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: ne-resize;
-}
-.css-wd-move-sw {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: sw-resize;
-}
-.css-wd-move-se {
-	right:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	bottom:  calc(-1 * var(--var-js-wd-move-edge) / 2);
-	cursor: se-resize;
-}
-.css-wd-move-c {
-	left:   calc(var(--var-js-wd-move-edge) / 2);
-	top:    calc(var(--var-js-wd-move-edge) / 2);
-	right:  calc(var(--var-js-wd-move-edge) / 2);
-	bottom: calc(var(--var-js-wd-move-edge) / 2);
-	cursor: move;
-	color: black;
-	background: rgba(255,255,255,0.7);
-}`)-1,
 	/**. '{number delta}: Espaço entre as movimentaçoes do teclado.**/
 	delta: Math.min(window.screen.height, window.screen.width)/100,
 	/**. '{array sides}: Identificação dos lados do manipulador com relação à posição relativa (ordem de focalização).**/
@@ -133,7 +48,7 @@ const __MOVE = {
 			window.removeEventListener("click", this);
 		return;
 	},
-	/**. '{object size(node node, object data)}: Define ou retorna os valores dimensionais do nó ('{height, width, left, right, top, bottom, fontSize}).**/
+	/**. '{object size(node node, object data)}: Define ou retorna os valores dimensionáveis do nó ('{height, width, left, right, top, bottom, fontSize}).**/
 	size: function(node, data) {
 		const read = !(data !== null && typeof data === "object");
 		const info = read ? {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0, fontSize: 0} : this.size(node);
@@ -301,3 +216,87 @@ const __MOVE = {
 		return;
 	},
 };
+__CSS.push(`/*-- MOVE/RESIZE --*/
+.css-wd-move {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 999;
+	border: 2px dashed red;
+	font-size: var(--var-js-wd-font-size);
+	font-family: var(--var-js-wd-font-type);
+}
+.css-wd-move > * {
+	position: absolute;
+	border: 0;
+	background: transparent;
+	font-family: inherit;
+	font-size: inherit;
+}
+/*-- resize vertical --*/
+.css-wd-move-n, .css-wd-move-s {
+	height: var(--var-js-wd-move-edge);
+	left:   calc(var(--var-js-wd-move-edge) / 2);
+	right:  calc(var(--var-js-wd-move-edge) / 2);
+}
+.css-wd-move-n {
+	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: n-resize;
+}
+.css-wd-move-s {
+	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: s-resize;
+}
+/*-- resize horizontal --*/
+.css-wd-move-w, .css-wd-move-e {
+	width:  var(--var-js-wd-move-edge);
+	top:    calc(var(--var-js-wd-move-edge) / 2);
+	bottom: calc(var(--var-js-wd-move-edge) / 2);
+}
+.css-wd-move-w {
+	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: w-resize;
+}
+.css-wd-move-e {
+	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: e-resize;
+}
+/*-- resize bidimensional --*/
+.css-wd-move-nw, .css-wd-move-ne, .css-wd-move-sw, .css-wd-move-se {
+	width:  var(--var-js-wd-move-edge);
+	height: var(--var-js-wd-move-edge);
+	border: 2px solid red;
+	background: white;
+	/*border-radius: calc(var(--var-js-wd-move-edge) / 2);*/
+}
+.css-wd-move-nw {
+	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
+	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: nw-resize;
+}
+.css-wd-move-ne {
+	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
+	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: ne-resize;
+}
+.css-wd-move-sw {
+	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
+	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: sw-resize;
+}
+.css-wd-move-se {
+	right:   calc(-1 * var(--var-js-wd-move-edge) / 2);
+	bottom:  calc(-1 * var(--var-js-wd-move-edge) / 2);
+	cursor: se-resize;
+}
+.css-wd-move-c {
+	left:   calc(var(--var-js-wd-move-edge) / 2);
+	top:    calc(var(--var-js-wd-move-edge) / 2);
+	right:  calc(var(--var-js-wd-move-edge) / 2);
+	bottom: calc(var(--var-js-wd-move-edge) / 2);
+	cursor: move;
+	color: black;
+	background: rgba(255,255,255,0.7);
+}`);

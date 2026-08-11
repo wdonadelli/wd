@@ -2,7 +2,6 @@
 #3 Filtrando Resultados
 O objeto '{__FILTER} exibe os nós que casam com determinado valor inibindo os demais irmãos. O argumento '{size} indica o número mínimo
 **/
-
 const __FILTER = {
 	/**. '{node mark(string text)}: Retorna a tag de marcação com o texto a ser renderizado.**/
 	mark: function(text) {return __HTML("mark", {className: "css-wd-filter", textContent: text});},

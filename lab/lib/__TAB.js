@@ -3,45 +3,6 @@
 O objeto '{__TAB} organiza um container em forma de abas.
 **/
 const __TAB = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- TAB --*/
-.css-wd-tab {
-	display: flex;
-	align-items: stretch;
-	justify-content: center;
-	padding: 0;
-}
-.css-wd-tab [role=tablist] {
-	display: flex;
-	align-items: stretch;
-	justify-content: start;
-	margin: 0;
-	font-size: var(--var-js-wd-font-size);
-	font-family: var(--var-js-wd-font-type);
-}
-.css-wd-tab [role=tablist][aria-orientation=horizontal] {
-	flex: 1 1 auto;
-	flex-flow: row wrap;
-}
-.css-wd-tab [role=tablist][aria-orientation=vertical]   {
-	flex: 0 1 25%;
-	flex-flow: column nowrap;
-}
-.css-wd-tab [role=tab] {
-	margin: 3px;
-	flex: 1 1 auto;
-}
-.css-wd-tab  [role=tab][aria-selected=true] {
-	outline-width: thin;
-	outline-style: solid;
-}
-.css-wd-tab [role=tabpanel] {
-	flex: 1 1 auto;1F82C
-	margin: 0;
-}
-.css-wd-tab [role=tablist][aria-orientation=vertical] ~ [role=tabpanel] {
-	flex: 1 1 75%;
-}`),
 	/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 	label: function(panel, index) {
 		const query = panel.querySelector("h1, h2, h3, h4, h5, h6, [role=heading]");
@@ -151,3 +112,41 @@ const __TAB = {
 		return;
 	},
 };
+__CSS.push(`/*-- TAB --*/
+.css-wd-tab {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	padding: 0;
+}
+.css-wd-tab [role=tablist] {
+	display: flex;
+	align-items: stretch;
+	justify-content: start;
+	margin: 0;
+	font-size: var(--var-js-wd-font-size);
+	font-family: var(--var-js-wd-font-type);
+}
+.css-wd-tab [role=tablist][aria-orientation=horizontal] {
+	flex: 1 1 auto;
+	flex-flow: row wrap;
+}
+.css-wd-tab [role=tablist][aria-orientation=vertical]   {
+	flex: 0 1 25%;
+	flex-flow: column nowrap;
+}
+.css-wd-tab [role=tab] {
+	margin: 3px;
+	flex: 1 1 auto;
+}
+.css-wd-tab  [role=tab][aria-selected=true] {
+	outline-width: thin;
+	outline-style: solid;
+}
+.css-wd-tab [role=tabpanel] {
+	flex: 1 1 auto;1F82C
+	margin: 0;
+}
+.css-wd-tab [role=tablist][aria-orientation=vertical] ~ [role=tabpanel] {
+	flex: 1 1 75%;
+}`);

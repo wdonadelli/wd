@@ -3,17 +3,6 @@
 O objeto '{__ICON} define plano de fundo estilizado por i{dingbats}/'{symbols} em unicode.
 **/
 const __ICON = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- ICON --*/
-.css-wd-icon-circle, .css-wd-icon-square {
-		font-family: monospace;
-		height:  1em;
-		width:   1em;
-		padding: 0;
-		border:  none;
-		margin:  auto;
-	}
-	.css-wd-icon-circle {border-radius: 0.5em;}`),
 	/**. '{string image(object data)}: Retorna o valor para o atributo '{background-image}. Propriedade do argumento '{data}:
 	|Nome|Tipo|Descrição|Padrão|
 	|x|string|Posição horizontal do caractere|50%|
@@ -116,3 +105,14 @@ const __ICON = {
 		return this.style(node, {code: code}, size);
 	}
 };
+__CSS.push(`/*-- ICON --*/
+.css-wd-icon-circle, .css-wd-icon-square {
+		font-family: monospace;
+		height:  1em;
+		width:   1em;
+		padding: 0;
+		border:  none;
+		margin:  auto;
+	}
+	.css-wd-icon-circle {border-radius: 0.5em;}
+`);

@@ -26,23 +26,39 @@ Object.defineProperties(WD, {
 	info: {value: Object.assign({}, __INFO)},
 	/**. '{string device}: Retorna o tipo de tela de acordo com a biblioteca.**/
 	device:  {get: function() {return __DEVICE.device;}},
+	/**. '{string lang}: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
+	lang: {
+		get: function()  {return __LANG.user;},
+		set: function(x) {__LANG.user = x;}
+	},
+	/**. '{object $(string css, node root)}: Define o nó HTML especificado pelo seletor i{css} como argumento de '{WD}. O valor padrão de i{root} é '{document}.**/
+	$: {
+		value: function(css, root) {
+			root = root instanceof HTMLElement ? root : document;
+			try      {return WD(document.querySelector(css, root));}
+			catch(e) {return WD(document.querySelectorAll("#_._", root));}
+		}
+	},
+	/**. '{object $$(string css, node root)}: Define a lista de nós HTML especificado pelo seletor i{css} como argumento de '{WD}. O valor padrão de i{root} é '{document}.**/
+	$$: {
+		value: function(css, root) {
+			root = root instanceof HTMLElement ? root : document;
+			try      {return WD(document.querySelectorAll(css, root));}
+			catch(e) {return WD(document.querySelectorAll("#_._", root));}
+		}
+	},
+
+
+
+
 	/**. '{object now}: Retorna a instância do objeto do tipo tempo com o valor atual.**/
 	now: {get: function() {return WD(new __DateTime().toTimeString());}},
 	/**. '{object today}: Retorna a instância do objeto do tipo data com o valor atual.**/
 	today: {get: function() {return WD(new __DateTime().toDateString());}},
 	/**. '{object already}: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
 	already: {get: function() {return WD(__DateTime().toString());}},
-	/**. '{string lang}: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
-	lang: {
-		get: function()  {return __LANG.user;},
-		set: function(x) {__LANG.user = x;}
-	},
-	/**. '{object $(string css, node root)}: Retorna um objeto do tipo nó conforme seletor i{css} individual. O argumento opcional i{root} é o elemento pai a ser consultado cujo valor padrão é i{document}.**/
-	$: {value: function(css, root) {return WD(__Query(css, root).$);}},
-	/**. '{object $$(string css, node root)}: Retorna um objeto do tipo nó conforme seletor i{css} múltiplo. O argumento opcional i{root} é o elemento pai a ser consultado cujo valor padrão é i{document}.**/
-	$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
-	/**. '{void signal(object options)}: Produz uma interação (ver i{__SIGNAL.signal}).**/
-	signal:  {value: function(options) {return __SIGNAL.signal(options);}},
+
+
 	/**. '{object matrix(any input)}: Retorna um objeto do tipo matriz conforme '{input} (table, array, csv)**/
 	matrix:  {value: function(input) {return new WDmatrix(input);}},
 

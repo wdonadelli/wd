@@ -5,7 +5,7 @@ O objeto '{__CODE} renderiza um código para o formato HTML.
 **/
 const __CODE = {
 	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- CODE --*/
+	CSS: __CSS.push(`/*-- CODE --*/
 .css-wd-code {
 	display:  block;
 	position: relative;

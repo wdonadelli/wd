@@ -33,83 +33,6 @@ Características:
 	|'{submit}|Janela removida por submissão de formulário|Sim|Sim|Sim|
 	|""Tabela dos estados da janela""|**/
 const __WINDOW = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- WINDOW --*/
-:root {
-	--var-js-wd-window-zindex-0: 9999;
-	--var-js-wd-window-zindex-1: 9998;
-	--var-js-wd-window-zindex-2: 9997;
-}
-@keyframes js-wd-window-modal {
-	from {opacity: 0; transform: scale(0);}
-	to   {opacity: 1; transform: scale(1);}
-}
-@keyframes js-wd-window-float {
-	from {opacity: 0; max-height: 0;}
-	to   {opacity: 1;}
-}
-@keyframes js-wd-window-frame {
-	from {opacity: 0; transform: translate(-100%);}
-	to   {opacity: 1;}
-}
-.js-wd-freeze {overflow: hidden !important;}
-[data-js-wd-window] {
-	position:   fixed !important;
-	top:        0 !important;
-	left:       0 !important;
-	right:      0 !important;
-	bottom:     0 !important;
-	margin:     0 !important;
-	margin:     0 !important;
-	padding:    0 !important;
-	background: tranparent !important;
-}
-[data-js-wd-window="modal"] > * {animation: js-wd-window-modal 0.5s ease;}
-[data-js-wd-window="float"] > * {animation: js-wd-window-float 0.5s ease;}
-[data-js-wd-window="frame"] > * {animation: js-wd-window-frame 0.5s ease;}
-[data-js-wd-window="frame"] {
-	top:            initial !important;
-	display:        flex !important;
-	flex-direction: column !important;
-	margin:         0.5em !important;
-	padding-right:  10px !important;
-	max-height:     calc(100vh - 1em) !important;
-	overflow-y:     auto !important;
-	z-index:        var(----var-js-wd-window-zindex-3) !important;
-}
-@media screen and (min-width: 768px) {
-	[data-js-wd-window="frame"] {
-		right: initial !important;
-		width: 25vw !important;
-	}
-}
-[data-js-wd-window="frame"] > * ~ * {
-	margin-top: 0.5em !important;
-}
-[data-js-wd-window="float"] {
-	display: block !important;
-	z-index: var(--var-js-wd-window-zindex-2) !important;
-}
-[data-js-wd-window="float"] > * {
-	position: absolute !important;
-	display:  block !important;
-	overflow: auto !important;
-}
-[data-js-wd-window="modal"] {
-	padding: 0.5em !important;
-	z-index: var(--var-js-wd-window-zindex-1);
-	background: rgb(50,50,50) !important;
-	background: rgba(50,50,50,0.3) !important;
-	display:         flex !important;
-	flex-direction:  row !important;
-	justify-content: center !important;
-	align-items:     center !important;
-}
-[data-js-wd-window="modal"] > * {
-	max-width:  90vw;
-	max-height: 90vh;
-	overflow-y: auto !important;
-}`),
 	/**. '{array heap}: Estabelece a fila de janelas anexadas com as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|'{open}|boolean|Informa se a janela foi exibida|
@@ -361,3 +284,79 @@ const __WINDOW = {
 		return;
 	},
 };
+__CSS.push(`/*-- WINDOW --*/
+:root {
+	--var-js-wd-window-zindex-0: 9999;
+	--var-js-wd-window-zindex-1: 9998;
+	--var-js-wd-window-zindex-2: 9997;
+}
+@keyframes js-wd-window-modal {
+	from {opacity: 0; transform: scale(0);}
+	to   {opacity: 1; transform: scale(1);}
+}
+@keyframes js-wd-window-float {
+	from {opacity: 0; max-height: 0;}
+	to   {opacity: 1;}
+}
+@keyframes js-wd-window-frame {
+	from {opacity: 0; transform: translate(-100%);}
+	to   {opacity: 1;}
+}
+.js-wd-freeze {overflow: hidden !important;}
+[data-js-wd-window] {
+	position:   fixed !important;
+	top:        0 !important;
+	left:       0 !important;
+	right:      0 !important;
+	bottom:     0 !important;
+	margin:     0 !important;
+	margin:     0 !important;
+	padding:    0 !important;
+	background: tranparent !important;
+}
+[data-js-wd-window="modal"] > * {animation: js-wd-window-modal 0.5s ease;}
+[data-js-wd-window="float"] > * {animation: js-wd-window-float 0.5s ease;}
+[data-js-wd-window="frame"] > * {animation: js-wd-window-frame 0.5s ease;}
+[data-js-wd-window="frame"] {
+	top:            initial !important;
+	display:        flex !important;
+	flex-direction: column !important;
+	margin:         0.5em !important;
+	padding-right:  10px !important;
+	max-height:     calc(100vh - 1em) !important;
+	overflow-y:     auto !important;
+	z-index:        var(----var-js-wd-window-zindex-3) !important;
+}
+@media screen and (min-width: 768px) {
+	[data-js-wd-window="frame"] {
+		right: initial !important;
+		width: 25vw !important;
+	}
+}
+[data-js-wd-window="frame"] > * ~ * {
+	margin-top: 0.5em !important;
+}
+[data-js-wd-window="float"] {
+	display: block !important;
+	z-index: var(--var-js-wd-window-zindex-2) !important;
+}
+[data-js-wd-window="float"] > * {
+	position: absolute !important;
+	display:  block !important;
+	overflow: auto !important;
+}
+[data-js-wd-window="modal"] {
+	padding: 0.5em !important;
+	z-index: var(--var-js-wd-window-zindex-1);
+	background: rgb(50,50,50) !important;
+	background: rgba(50,50,50,0.3) !important;
+	display:         flex !important;
+	flex-direction:  row !important;
+	justify-content: center !important;
+	align-items:     center !important;
+}
+[data-js-wd-window="modal"] > * {
+	max-width:  90vw;
+	max-height: 90vh;
+	overflow-y: auto !important;
+}`);

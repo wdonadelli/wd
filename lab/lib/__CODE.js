@@ -3,75 +3,6 @@
 O objeto '{__CODE} renderiza um código para o formato HTML.
 **/
 const __CODE = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- CODE --*/
-.css-wd-code {
-	display:  block;
-	position: relative;
-	width:    auto;
-	height:   auto;
-	padding:  0;
-	overflow: hidden;
-	border:   thin solid #000000;
-	border-radius: 0.2em;
-}
-.css-wd-code-root, .css-wd-code-edit {
-	display:         block;
-	width:           auto;
-	height:          auto;
-	margin:          0;
-	padding:         1em 1em 1em 3em;
-	overflow:        hidden;
-	border:          none;
-	font-family:     var(--var-js-wd-font-code);
-	font-size:       16px;/*var(--var-js-wd-font-size);*/
-	font-style:      normal;
-	font-weight:     normal;
-	text-align:      left;
-	text-decoration: none;
-	white-space:     pre-wrap;
-	letter-spacing:  normal;
-	word-break:      break-all;
-	tab-size: 4;
-}
-.css-wd-code-root {
-	position: relative;
-	z-index:  0;
-	counter-reset: line;
-}
-.css-wd-code-edit {
-	position: absolute;
-	top:      0;
-	bottom:   0;
-	right:    0;
-	left:     0;
-	z-index:  1;
-	resize:   none;
-	-webkit-text-fill-color: transparent;
-}
-.css-wd-code-line:before {
-	counter-increment: line;
-  content: counter(line);
-  display: inline-block;
-  width: 2.5em;
-  margin-left: -3em;
-  text-align: right;
-  opacity: 0.3;
-}
-
-/*-- cores --*/
-.css-wd-code-edit    {color: white; background-color: transparent;}
-.css-wd-code-root    {color: white; background-color: #202020;}
-.css-wd-code-base    {color: white;}
-.css-wd-code-line    {color: lightsteelblue;}
-.css-wd-code-comment {color: darkseagreen;}
-.css-wd-code-flag    {color: violet;}
-.css-wd-code-name    {color: deepskyblue;}
-.css-wd-code-value   {color: gold;}
-.css-wd-code-string  {color: lime;}
-.css-wd-code-rule    {color: orange;}
-.css-wd-code-scope   {color: cyan;}
-`),
 	/**. '{string swap(string str)}: Retorna a string transformada em formato HTML (caracteres especiais).**/
 	swap: function(str) {
 		return str
@@ -368,3 +299,71 @@ const __CODE = {
 		return;
 	},
 };
+__CSS.push(`/*-- CODE --*/
+.css-wd-code {
+	display:  block;
+	position: relative;
+	width:    auto;
+	height:   auto;
+	padding:  0;
+	overflow: hidden;
+	border:   thin solid #000000;
+	border-radius: 0.2em;
+}
+.css-wd-code-root, .css-wd-code-edit {
+	display:         block;
+	width:           auto;
+	height:          auto;
+	margin:          0;
+	padding:         1em 1em 1em 3em;
+	overflow:        hidden;
+	border:          none;
+	font-family:     var(--var-js-wd-font-code);
+	font-size:       16px;/*var(--var-js-wd-font-size);*/
+	font-style:      normal;
+	font-weight:     normal;
+	text-align:      left;
+	text-decoration: none;
+	white-space:     pre-wrap;
+	letter-spacing:  normal;
+	word-break:      break-all;
+	tab-size: 4;
+}
+.css-wd-code-root {
+	position: relative;
+	z-index:  0;
+	counter-reset: line;
+}
+.css-wd-code-edit {
+	position: absolute;
+	top:      0;
+	bottom:   0;
+	right:    0;
+	left:     0;
+	z-index:  1;
+	resize:   none;
+	-webkit-text-fill-color: transparent;
+}
+.css-wd-code-line:before {
+	counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5em;
+  margin-left: -3em;
+  text-align: right;
+  opacity: 0.3;
+}
+
+/*-- cores --*/
+.css-wd-code-edit    {color: white; background-color: transparent;}
+.css-wd-code-root    {color: white; background-color: #202020;}
+.css-wd-code-base    {color: white;}
+.css-wd-code-line    {color: lightsteelblue;}
+.css-wd-code-comment {color: darkseagreen;}
+.css-wd-code-flag    {color: violet;}
+.css-wd-code-name    {color: deepskyblue;}
+.css-wd-code-value   {color: gold;}
+.css-wd-code-string  {color: lime;}
+.css-wd-code-rule    {color: orange;}
+.css-wd-code-scope   {color: cyan;}
+`);

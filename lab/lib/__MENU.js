@@ -28,94 +28,6 @@
 	- A propriedade '{path} retornará os rótulos dos menus/submenus, dos grupos e do item interagido, da raiz ao item; e
 	- O caminho fornecido em '{path} é idêntico aos rótulos informados na lista, incluindo os caracteres especiais.**/
 const __MENU = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- MENU --*/
-:root {
-	--var-js-wd-menu-fg: #202020;
-	--var-js-wd-menu-bg: #f9f9f9;
-	--var-js-wd-menu-hv: #eeeeee;
-}
-.css-js-wd-menu {
-	/*display: inline-block;*/
-	list-style: none;
-	padding: 0.5em;
-	margin: 0;
-	color: var(--var-js-wd-menu-fg);
-	background: var(--var-js-wd-menu-bg);
-	border-radius: 0.2em;
-	border: thin solid black;
-	font-size: 14px;
-	font-family: Lucida Sans, sans-serif;
-	box-shadow: 0.25em 0.25em 0 0 #cccccc;
-}
-.css-js-wd-menu [role="menu"] {
-	list-style: none;
-	padding: 0;
-	margin: 0
-}
-.css-js-wd-menu li {
-	padding: 0;
-	margin: 0;
-}
-.css-js-wd-menu [role="separator"] {
-	border-bottom: thin solid #bbbbbb;
-}
-.css-js-wd-menu [role="heading"][aria-level="1"],
-.css-js-wd-menu [role="menuitem"],
-.css-js-wd-menu [role="menuitemcheckbox"],
-.css-js-wd-menu [role="menuitemradio"] {
-	position: relative;
-	padding: 0.2em 1.5em;
-	margin: 0;
-	border-radius: 0.2em;
-	text-align: left;
-	cursor: pointer;
-}
-.css-js-wd-menu [role="menuitem"]:focus,
-.css-js-wd-menu [role="menuitemcheckbox"]:focus,
-.css-js-wd-menu [role="menuitemradio"]:focus {
-	background: var(--var-js-wd-menu-hv);
-}
-.css-js-wd-menu [role="heading"][aria-level="1"],
-.css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
-	font-weight: bold;
-	text-align: center;
-	margin-bottom: 0.5em;
-	background: var(--var-js-wd-menu-hv);
-}
-.css-js-wd-menu [role="heading"][aria-level="2"] {
-	font-style: italic;
-	font-size: smaller;
-	opacity: 0.8;
-}
-.css-js-wd-menu [role="menuitem"]         > span:first-child,
-.css-js-wd-menu [role="menuitemradio"]    > span:first-child,
-.css-js-wd-menu [role="menuitemcheckbox"] > span:first-child,
-.css-js-wd-menu [role="menuitem"]         > span:last-child,
-.css-js-wd-menu [role="menuitemradio"]    > span:last-child,
-.css-js-wd-menu [role="menuitemcheckbox"] > span:last-child {
-	position: absolute;
-	display: inline-block;
-	top:    0.2em;
-	bottom: 0.2em;
-	width:  1.5em;
-	text-align: center;
-}
-.css-js-wd-menu [role="menuitem"]         > span:first-child,
-.css-js-wd-menu [role="menuitemradio"]    > span:first-child,
-.css-js-wd-menu [role="menuitemcheckbox"] > span:first-child {left: 0;}
-.css-js-wd-menu [role="menuitem"]         > span:last-child,
-.css-js-wd-menu [role="menuitemradio"]    > span:last-child,
-.css-js-wd-menu [role="menuitemcheckbox"] > span:last-child {right: 0;}
-.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="true"]  > span:first-child:before {content: "\\25A3";}
-.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="false"] > span:first-child:before {content: "\\25A1\\ ";}
-.css-js-wd-menu [role="menuitemradio"][aria-checked="true"]     > span:first-child:before {content: "\\25C9";}
-.css-js-wd-menu [role="menuitemradio"][aria-checked="false"]    > span:first-child:before {content: "\\25CB\\ ";}
-.css-js-wd-menu [role="menuitem"][aria-expanded="true"]         > span:first-child:before {content: "\\276E";}
-.css-js-wd-menu [role="menuitem"][aria-expanded="false"]        > span:last-child:before  {content: "\\276F\\ ";}
-.css-js-wd-menu-open[aria-expanded="true"]:after  {content: "\\ \\25BE";}
-.css-js-wd-menu-open[aria-expanded="false"]:after {content: "\\ \\25B8";}
-`),
 	/**. '{object heap}: Registra os dados dos menus criados:
 	|Nome|Tipo|Descrição|
 	|'{type}|string|Tipo do menu ('{menu} ou '{menuButton})|
@@ -418,3 +330,90 @@ const __MENU = {
 	/**. '{void handleEvent(object ev)}: Disparador do menu chamado durante os eventos '{keydown}, '{click}, e {mouseover}.**/
 	handleEvent: function(ev) {return this[ev.type](ev);},
 };
+__CSS.push(`/*-- MENU --*/
+:root {
+	--var-js-wd-menu-fg: #202020;
+	--var-js-wd-menu-bg: #f9f9f9;
+	--var-js-wd-menu-hv: #eeeeee;
+}
+.css-js-wd-menu {
+	/*display: inline-block;*/
+	list-style: none;
+	padding: 0.5em;
+	margin: 0;
+	color: var(--var-js-wd-menu-fg);
+	background: var(--var-js-wd-menu-bg);
+	border-radius: 0.2em;
+	border: thin solid black;
+	font-size: 14px;
+	font-family: Lucida Sans, sans-serif;
+	box-shadow: 0.25em 0.25em 0 0 #cccccc;
+}
+.css-js-wd-menu [role="menu"] {
+	list-style: none;
+	padding: 0;
+	margin: 0
+}
+.css-js-wd-menu li {
+	padding: 0;
+	margin: 0;
+}
+.css-js-wd-menu [role="separator"] {
+	border-bottom: thin solid #bbbbbb;
+}
+.css-js-wd-menu [role="heading"][aria-level="1"],
+.css-js-wd-menu [role="menuitem"],
+.css-js-wd-menu [role="menuitemcheckbox"],
+.css-js-wd-menu [role="menuitemradio"] {
+	position: relative;
+	padding: 0.2em 1.5em;
+	margin: 0;
+	border-radius: 0.2em;
+	text-align: left;
+	cursor: pointer;
+}
+.css-js-wd-menu [role="menuitem"]:focus,
+.css-js-wd-menu [role="menuitemcheckbox"]:focus,
+.css-js-wd-menu [role="menuitemradio"]:focus {
+	background: var(--var-js-wd-menu-hv);
+}
+.css-js-wd-menu [role="heading"][aria-level="1"],
+.css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
+	font-weight: bold;
+	text-align: center;
+	margin-bottom: 0.5em;
+	background: var(--var-js-wd-menu-hv);
+}
+.css-js-wd-menu [role="heading"][aria-level="2"] {
+	font-style: italic;
+	font-size: smaller;
+	opacity: 0.8;
+}
+.css-js-wd-menu [role="menuitem"]         > span:first-child,
+.css-js-wd-menu [role="menuitemradio"]    > span:first-child,
+.css-js-wd-menu [role="menuitemcheckbox"] > span:first-child,
+.css-js-wd-menu [role="menuitem"]         > span:last-child,
+.css-js-wd-menu [role="menuitemradio"]    > span:last-child,
+.css-js-wd-menu [role="menuitemcheckbox"] > span:last-child {
+	position: absolute;
+	display: inline-block;
+	top:    0.2em;
+	bottom: 0.2em;
+	width:  1.5em;
+	text-align: center;
+}
+.css-js-wd-menu [role="menuitem"]         > span:first-child,
+.css-js-wd-menu [role="menuitemradio"]    > span:first-child,
+.css-js-wd-menu [role="menuitemcheckbox"] > span:first-child {left: 0;}
+.css-js-wd-menu [role="menuitem"]         > span:last-child,
+.css-js-wd-menu [role="menuitemradio"]    > span:last-child,
+.css-js-wd-menu [role="menuitemcheckbox"] > span:last-child {right: 0;}
+.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="true"]  > span:first-child:before {content: "\\25A3";}
+.css-js-wd-menu [role="menuitemcheckbox"][aria-checked="false"] > span:first-child:before {content: "\\25A1\\ ";}
+.css-js-wd-menu [role="menuitemradio"][aria-checked="true"]     > span:first-child:before {content: "\\25C9";}
+.css-js-wd-menu [role="menuitemradio"][aria-checked="false"]    > span:first-child:before {content: "\\25CB\\ ";}
+.css-js-wd-menu [role="menuitem"][aria-expanded="true"]         > span:first-child:before {content: "\\276E";}
+.css-js-wd-menu [role="menuitem"][aria-expanded="false"]        > span:last-child:before  {content: "\\276F\\ ";}
+.css-js-wd-menu-open[aria-expanded="true"]:after  {content: "\\ \\25BE";}
+.css-js-wd-menu-open[aria-expanded="false"]:after {content: "\\ \\25B8";}
+`);

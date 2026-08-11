@@ -3,82 +3,6 @@
 O objeto '{__SIGNAL} renderiza mensagens e notificações.
 **/
 const __SIGNAL = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- SIGNAL --*/
-:root {
-	--var-js-wd-signal-fg: #303030;
-	--var-js-wd-signal-bg: #f1f1f1;
-}
-.css-js-wd-signal {
-	position: relative;
-	padding: 0.5em;
-	font-size: 14px;
-	font-family: sans-serif;
-	background: var(--var-js-wd-signal-bg);
-	color: var(--var-js-wd-signal-fg);
-	border: thin solid black;
-	border-radius: 0.25em;
-}
-.css-js-wd-signal > .css-js-wd-signal-quit {
-	font-size: inherit;
-	position: absolute;
-	top: 0.5em;
-	right: 0.5em;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	background: none;
-	color: var(--var-js-wd-signal-bg);
-	cursor: pointer;
-}
-.css-js-wd-signal > .css-js-wd-signal-head {
-	margin: -0.5em -0.5em 0 -0.5em;
-	padding: 0.5em 2em 0.5em 0.5em;
-	font-size: inherit;
-	font-weight: bold;
-	color: var(--var-js-wd-signal-bg);
-	background: var(--var-js-wd-signal-fg);
-	border-radius: 0.25em 0.25em 0 0;
-}
-.css-js-wd-signal > .css-js-wd-signal-body {
-	margin: 1em 0;
-}
-.css-js-wd-signal > .css-js-wd-signal-form {
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-  justify-content: space-around;
-}
-.css-js-wd-signal > .css-js-wd-signal-form > button {
-	font-size: inherit;
-	font-family: inherit;
-	border: thin solid black;
-	border-radius: 0.25em;
-	cursor: pointer;
-	margin: 0.25em 0;
-	padding: 0.25em 0.5em;
-	color: #000000;
-	background: #d9d9d9;
-	appearance: none;
-}
-.css-js-wd-signal > .css-js-wd-signal-form > button:hover {
-	background: #c0c0c0;
-}
-.css-js-wd-signal > .css-js-wd-signal-form > button:focus {
-	outline: 0.2em solid dodgerblue;
-}
-@media screen and (min-width: 768px) {
-	.css-js-wd-signal > .css-js-wd-signal-form {
-		flex-direction: row;
-		align-items: center;
-	}
-	.css-js-wd-signal > .css-js-wd-signal-form > button {
-		margin: 0 0.5em;
-	}
-}
-`) - 1,
 	/**. '{object struct()}: Retorna a estrutura para alertas e diálogos:
 	|Nome|Descrição|
 	|'{quit}|Botão padrão para fechar diálogo|
@@ -231,3 +155,77 @@ const __SIGNAL = {
 		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
 };
+__CSS.push(`/*-- SIGNAL --*/
+:root {
+	--var-js-wd-signal-fg: #303030;
+	--var-js-wd-signal-bg: #f1f1f1;
+}
+.css-js-wd-signal {
+	position: relative;
+	padding: 0.5em;
+	font-size: 14px;
+	font-family: sans-serif;
+	background: var(--var-js-wd-signal-bg);
+	color: var(--var-js-wd-signal-fg);
+	border: thin solid black;
+	border-radius: 0.25em;
+}
+.css-js-wd-signal > .css-js-wd-signal-quit {
+	font-size: inherit;
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--var-js-wd-signal-bg);
+	cursor: pointer;
+}
+.css-js-wd-signal > .css-js-wd-signal-head {
+	margin: -0.5em -0.5em 0 -0.5em;
+	padding: 0.5em 2em 0.5em 0.5em;
+	font-size: inherit;
+	font-weight: bold;
+	color: var(--var-js-wd-signal-bg);
+	background: var(--var-js-wd-signal-fg);
+	border-radius: 0.25em 0.25em 0 0;
+}
+.css-js-wd-signal > .css-js-wd-signal-body {
+	margin: 1em 0;
+}
+.css-js-wd-signal > .css-js-wd-signal-form {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+  justify-content: space-around;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > button {
+	font-size: inherit;
+	font-family: inherit;
+	border: thin solid black;
+	border-radius: 0.25em;
+	cursor: pointer;
+	margin: 0.25em 0;
+	padding: 0.25em 0.5em;
+	color: #000000;
+	background: #d9d9d9;
+	appearance: none;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > button:hover {
+	background: #c0c0c0;
+}
+.css-js-wd-signal > .css-js-wd-signal-form > button:focus {
+	outline: 0.2em solid dodgerblue;
+}
+@media screen and (min-width: 768px) {
+	.css-js-wd-signal > .css-js-wd-signal-form {
+		flex-direction: row;
+		align-items: center;
+	}
+	.css-js-wd-signal > .css-js-wd-signal-form > button {
+		margin: 0 0.5em;
+	}
+}`);

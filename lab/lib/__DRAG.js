@@ -4,10 +4,6 @@ O objeto '{__DRAG} define elemento de arrasto, de soltura e o respectivo comport
 **/
 //FIXME borda pequena ao acionar o drop e borda grande ao entrar
 const __DRAG = {
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- DRAG --*/
-[draggable]:hover  {cursor: grab;}
-[draggable]:active {cursor: grabbing;}`),
 	/**. '{object data}: Guarda as informações sobre o arrasto '{DRAG.id -> DROP.id -> (effect, call)}**/
 	data: {},
 	/**. '{node fake}: Registra o container falso que indica a posição da queda.**/
@@ -236,3 +232,7 @@ const __DRAG = {
 		return this[ev.type](ev);
 	},
 };
+__CSS.push(`/*-- DRAG --*/
+[draggable]:hover  {cursor: grab;}
+[draggable]:active {cursor: grabbing;}
+`);

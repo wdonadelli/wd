@@ -3,23 +3,6 @@
 	O objeto '{__PROGRESS} registra a barra de progresso das requisições da biblioteca.**/
 const __PROGRESS = {
 	//TODO https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/progress#describing_a_particular_region
-
-	/**. '{integer CSS}: Registra o CSS do elemento do módulo.**/
-	CSS: __CSS.data.push(`/*-- PROGRESS --*/
-.css-wd-progress {
-	padding: 0.25em 0.5em;
-	border: thin solid black;
-	border-radius: 0.25em;
-	background-color: white;
-	color: black;
-	text-align: right;
-	opacity: 0.75;
-	font-family: var(--var-js-wd-font-type);
-	font-size: var(--var-js-wd-font-size);
-}
-.css-wd-progress * {
-	width: 100%;
-}`),
 	/**. '{object heap}: Pilha de processos em andamento.**/
 	heap: {},
 	/**. '{node box}: Container da caixa de progress.**/
@@ -86,3 +69,18 @@ const __PROGRESS = {
 		return;
 	},
 };
+__CSS.push(`/*-- PROGRESS --*/
+.css-wd-progress {
+	padding: 0.25em 0.5em;
+	border: thin solid black;
+	border-radius: 0.25em;
+	background-color: white;
+	color: black;
+	text-align: right;
+	opacity: 0.75;
+	font-family: var(--var-js-wd-font-type);
+	font-size: var(--var-js-wd-font-size);
+}
+.css-wd-progress * {
+	width: 100%;
+}`);
