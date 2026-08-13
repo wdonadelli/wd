@@ -9,21 +9,22 @@ function biblioteca(url) {
 	}});
 }
 
-function menu() {
+/*-- Menu Principal --*/
+WD.attach("menu", function () {
 	const code = "&#x1F4DD;";
 	const list = Array.from(document.querySelectorAll("[data-library]")).map(function(v,i,a) {
 		return code + v.getAttribute("src").match(/lib\/(\w+)\.js/)[1];
 	}).sort();
 	list.unshift("WD Lab Menu");
-	__MENU.attach(document.getElementById("menu"), list, function(x) {
-		const item = x.path[x.path.length - 1];
-		biblioteca(`lib/${item.replace(code, "")}.js`);
-	});
-}
 
-
-window.addEventListener("load", function(ev) {
-	menu();
-	__CSS.handleEvent();
-
+	return {
+		list: list,
+		call: function(x) {
+			const item = x.path[x.path.length - 1];
+			biblioteca(`lib/${item.replace(code, "")}.js`);
+		}
+	};
 });
+
+
+//window.addEventListener("load", function(ev) {menu();});

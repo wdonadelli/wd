@@ -43,7 +43,7 @@ const __HASH = {
 		return data;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{resize}, '{hashchange} e '{wdreload}.**/
-	handleEvent: function(ev) {
+	handleEvent: function(ev) {console.log("__HASH chamado");
 		const data = this.max;
 		const body = window.getComputedStyle(document.body, null);
 		const side = {marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0};

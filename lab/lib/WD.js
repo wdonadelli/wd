@@ -26,7 +26,11 @@ Object.defineProperties(WD, {
 	info: {value: Object.assign({}, __INFO)},
 	/**. '{string device}: Retorna o tipo de tela de acordo com a biblioteca.**/
 	device:  {get: function() {return __DEVICE.device;}},
-	/**. '{string lang}: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
+	/**. '{object now}: Retorna a instância do objeto do tipo tempo com o valor atual.**/
+	now: {get: function() {return WD(new Date().toISOString().split("T")[1].replace(/[^0-9:.]/g, ""));}},
+	/**. '{object today}: Retorna a instância do objeto do tipo data com o valor atual.**/
+	today: {get: function() {return WD(new Date().toISOString().split("T")[0]);}},
+	/**. '{string lang}: Define ou retorna a linguagem em ordem de preferência da biblioteca.**/
 	lang: {
 		get: function()  {return __LANG.user;},
 		set: function(x) {__LANG.user = x;}
@@ -47,43 +51,17 @@ Object.defineProperties(WD, {
 			catch(e) {return WD(document.querySelectorAll("#_._", root));}
 		}
 	},
+	/**. '{void attach(string name, any data)}: Vincula os valores dos atributos HTML da biblioteca a um id (ver '{WDDATASET}).**/
+	attach: {
+		value: function(name, data) {WDDATASET.attach(name, data);},
+	},
 
 
 
 
-	/**. '{object now}: Retorna a instância do objeto do tipo tempo com o valor atual.**/
-	now: {get: function() {return WD(new __DateTime().toTimeString());}},
-	/**. '{object today}: Retorna a instância do objeto do tipo data com o valor atual.**/
-	today: {get: function() {return WD(new __DateTime().toDateString());}},
-	/**. '{object already}: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
-	already: {get: function() {return WD(__DateTime().toString());}},
 
 
 	/**. '{object matrix(any input)}: Retorna um objeto do tipo matriz conforme '{input} (table, array, csv)**/
 	matrix:  {value: function(input) {return new WDmatrix(input);}},
-
-
-
-
-
-
-
 	copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
-
-
-
-
-
-
-	/**. '{object datetime(any input)}: Retorna um objeto WD de data/tempo a partir dos valores:
-	|input|Descrição|
-	|Padrão|O valor atual de data/tempo|
-	|Tempo|O tempo com data definida em 000-01-01|
-	|Data|A data com tempo definido em 00:00:00|
-	|Data/Tempo|Conforme definido|
-	|Número|A quantidade de segundos desde 0000-01-01T00:00:00|
-	|Semana|O primeiro dia da semana com tempo definido em 00:00:00|
-	|Mês|Primeiro dia do mês com tempo definido em 00:00:00|
-	|Objeto|As propriedades definidas alteram o valor atual da data/tempo|**/
-	datetime: {value: function(input) {return WD(new __DateTime(input).toString());}},
 });

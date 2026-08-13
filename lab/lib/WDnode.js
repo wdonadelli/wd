@@ -51,9 +51,15 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 			return this.forEach(function(v,i,a) {__LOADER.urlHTML(v, data, outer);});
 		}
 	},
+	/**. '{self filter(any find, integer size)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __FILTER.search)**/
+	filter: {
+		value: function(find, size) {
+			return this.forEach(function(v,i,a) {__FILTER.search(v, find, size);});
+		}
+	},
 
 
-	//FIXME full só funciona a partir de manipulador de eventos
+	//FIXME full só funciona a partir de manipulador de eventos: colocar nos atributos
 	/**. '{void full()}: Alterna a exibição do nó em tela cheia.**/
 	//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 	full: {
@@ -66,22 +72,16 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 				const full = document.fullscreenElement;
 				const attr = full === this._data.value[0] ? "exit" : "open";
 				const node = attr === "exit" ? document : this._data.value[0];
-				for (let i = 0; i < name[attr].length; i++) {
-					if (name[attr][i] in node)
-						try {return node[name[attr][i]]();} catch(e) {}
+				const call = (node[name[attr][0]] || node[name[attr][1]] || node[name[attr][2]]).name;
+				const fire = function(ev) {ev.currentTarget[call]();};
+				if (attr === "open") {
+					node.addEventListener("dblclick", fire);
+					node.click();
+					node.removeEventListener("dblclick", fire);
+					return;
 				}
+				return node[call]();
 			}
-			return;
-
-
-/*
-			const act  = full === this.node ? "exit" : "open";
-			const node = act === "exit" ? document : this.node;
-			for (let i = 0; i < attr[act].length; i++) {
-				if (attr[act][i] in node)
-					try {return node[attr[act][i]]();} catch(e) {}
-			}
-			return;*/
 		}
 	},
 
@@ -144,54 +144,6 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 	},
 
 
-	/**. '{self display(string act)}: Exibe os elementos conforme especificado:
-	|Ação|Descrição|
-	|show|Exibe o elemento|
-	|hide|Esconde o elemento|
-	|toggle|Alterna a exibição do elemento|
-	|full|Alterna a exibição do elemento em tela cheia|
-	|alone|Exibe o elemento e esconde os nós irmãos|
-	|missing|Esconde o elemento e exibe os nós irmãos|
-	|all|Exibe o elemento e os nós irmãos|
-	|none|Esconde o elemento e os nós irmãos|
-	|asc|Ordena os nós filhos em ordem ascendente|
-	|desc|Ordena os nós filhos em ordem descendente|
-	|sort|Alterna a ordenação dos nós filhos|**/
-	display: {
-		value: function(act) {
-			act = String(act).toLowerCase();
-			for (let i = 0; i < this._main.length; i++) {
-				if (act === "show" || act === "hide" || act === "toggle")
-					this._main[i].show = act === "toggle" ? !this._main[i].show : act === "show";
-				else if (act === "alone" || act === "missing")
-					this._main[i].only(act === "missing");
-				else if (act === "all" || act === "none")
-					this.display(act === "all" ? "missing" : "alone").display(act === "all" ? "show" : "hide");
-				else if (act === "sort" || act === "asc" || act === "desc")
-					this._main[i].sort(act === "sort" ? null : act === "asc");
-				else if (act === "full") {
-					this._main[i].show = true;
-					this._main[i].full();
-				}
-			}
-			return this;
-		}
-	},
-	/**. '{self slice(integer init, integer last)}: Fatia os elementos filhos Exibe os elementos, exceto se '{visible} for falso.**/
-	slice: {
-		value: function(init, last) {
-			for (let i = 0; i < this._main.length; i++)
-				this._main[i].slice(init, last);
-			return this;
-		}
-	},
-
-
-
-
-
-
-
 	/**. '{self display(string action)}: Organiza a exibição dos elementos filhos conforme argumento '{action}. Quanto ao elemento:
 	|Ação|Descrição|
 	. Quanto à organização dos filhos:
@@ -244,21 +196,4 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 
 
 
-	/**. '{self filter(any search, integer width)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __Node.filter)**/
-	filter: {
-		value: function(search, width) {
-			for (let i = 0; i < this._main.length; i++)
-				this._main[i].filter(search, width);
-			return this;
-		}
-	},
-	/**. '{self jump(node spaces)}: Alterna a posição dos nós entre os elementos informados em '{spaces} (ver __Node.jump)**/
-	jump: {
-		value: function(spaces) {
-			if (__Type(spaces).node)
-				for (let i = 0; i < this._main.length; i++)
-					this._main[i].jump(spaces);
-			return this;
-		}
-	},
 });

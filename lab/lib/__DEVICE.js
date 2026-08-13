@@ -33,10 +33,10 @@ const __DEVICE = {
 		return false;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador que provoca o evento '{wddataset} para os nós que contêm o atributo '{data-wd-device} a cada mudança de dispositivo (vincular ao evento '{rezise} de '{window}).**/
-	handleEvent: function(ev) {
+	handleEvent: function(ev) {console.log("__DEVICE chamado");
 		if (this.changeDevice) {
 			const query = document.querySelectorAll("[data-wd-device]");
-			const event = new CustomEvent("wddataset", {detail: "wdDevice", bubbles: false});
+			const event = new CustomEvent("wddataset", {detail: "wdDevice", bubbles: true});
 			for (let i = 0; i < query.length; i++)
 				query[i].dispatchEvent(event);
 		}

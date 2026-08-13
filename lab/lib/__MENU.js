@@ -124,7 +124,7 @@ const __MENU = {
 		this.heap[menu.id] = {type: "menu", trigger: null, menu: menu, call: typeof call === "function" ? call : null};
 		return menu;
 	},
-	/**. '{void attach(node trigger, string name, array list, function call)}: Atribui um menu a um nó HTML ('{trigger})**/
+	/**. '{void attach(node trigger, array list, function call)}: Atribui um menu a um nó HTML ('{trigger})**/
 	attach: function(trigger, list, call) {
 		/*-- checando condições --*/
 		if (!(trigger instanceof HTMLElement) || !Array.isArray(list)) return null;

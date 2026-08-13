@@ -19,7 +19,7 @@
 			data-library="true"  pertence à versão em produção da biblioteca
 			data-library="false" pertence à versão de homologação da biblioteca
 		-->
-		<script src="lab.js"></script>
+
 		<script data-library="true" defer="true" src="lib/__INFO.js"></script>
 		<script data-library="true" defer="true" src="lib/__ID.js"></script>
 		<script data-library="true" defer="true" src="lib/__CSS.js"></script>
@@ -77,20 +77,20 @@
 		<script data-library="true" defer="true" src="lib/WDboolean.js"></script>
 		<script data-library="true" defer="true" src="lib/WDregexp.js"></script>
 		<script data-library="true" defer="true" src="lib/WDnode.js"></script>
-
-
 		<script data-library="true" defer="true" src="lib/WD.js"></script>
-
+		<script data-library="true" defer="true" src="lib/WDDATASET.js"></script>
 
 
 		<!-- FIXME FALTA __DETAIL __TABLE __SLIDE __MANUAL -->
-		<script data-library="true" defer="true" src="lib/__.js"></script>
+		<!--<script data-library="true" defer="true" src="lib/__.js"></script>-->
 		<script defer="false" src="lib/__TEST.js"></script>
+
+		<script src="lab.js" defer="true"></script>
 	</head>
 
 <body>
 	<header class="wd-header-fixed">
-		<h2 id="menu">WD Web Library Lab</h2>
+		<h2 id="menu" data-wd-menu="menu">WD Web Library Lab</h2>
 	</header>
 
 	<main>
