@@ -25,6 +25,3 @@ WD.attach("menu", function () {
 		}
 	};
 });
-
-
-//window.addEventListener("load", function(ev) {menu();});
