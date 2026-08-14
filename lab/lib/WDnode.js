@@ -41,8 +41,7 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 	/**. '{self urlRepeat(object data, string model)}: Repete elementos a partir de um modelo via arquivo externo (ver '{__LOADER.urlRepeat}.**/
 	urlRepeat: {
 		value: function(data, model) {
-			if (typeof model === "string") this.repeat([], model);
-			return this.forEach(function(v,i,a) {__LOADER.urlRepeat(v, data);});
+			return this.forEach(function(v,i,a) {__LOADER.urlRepeat(v, data, model);});
 		}
 	},
 	/**. '{self urlHTML(object data, boolean outer)}: Carrega o conteúdo de um arquivo externo aos nós (ver '{__LOADER.urlHTML}.**/

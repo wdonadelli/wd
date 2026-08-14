@@ -39,19 +39,19 @@ const __LOADER = {
 		node.setAttribute("aria-busy", "false");
 		return;
 	},
-	/**. '{object urlRepeat(node elem, object data)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
-	urlRepeat: function(elem, data) {
+	/**. '{object urlRepeat(node elem, object data, string model)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
+	urlRepeat: function(elem, data, model) {
 		if (!__Type(data).object) return;
 		data.type = "text";
 		data.call = function(x) {
 			if (x.ok && x.result !== null) try {
 				const mime = x.mime.split(";")[0].trim().toLowerCase();
 				if (mime === "text/csv")
-					return __LOADER.repeat(elem, __CSV.parseList(x.result));
+					return __LOADER.repeat(elem, __CSV.parseList(x.result), model);
 				if (mime === "application/json")
-					return __LOADER.repeat(elem, JSON.parse(x.result));
+					return __LOADER.repeat(elem, JSON.parse(x.result), model);
 			} catch(e) {
-				return __LOADER.repeat(elem, []);
+				return __LOADER.repeat(elem, [], model);
 			}
 		};
 		__REQUEST.make(data);
