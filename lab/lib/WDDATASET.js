@@ -62,7 +62,7 @@ const WDDATASET = {
 	wdTab: function(ev) {
 		const data = this.attr(ev.target.dataset.wdTab);
 		delete ev.target.dataset.wdTab;
-		if (data) __TAB.create(ev.target, data.vertical)
+		if (data) __TAB.create(ev.target, data.type === "vertical")
 		return;
 	},
 

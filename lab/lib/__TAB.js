@@ -1,7 +1,5 @@
-/**
-#3 Abas
-O objeto '{__TAB} organiza um container em forma de abas.
-**/
+/**#3 Abas
+O objeto '{__TAB} organiza um container em forma de abas.**/
 const __TAB = {
 	/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 	label: function(panel, index) {
@@ -44,9 +42,6 @@ const __TAB = {
 	},
 	/**. '{void create(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
 	create: function(node, vertical) {
-		node.style.flexDirection = vertical === true ? "row" : "column";
-		node.className = "css-wd-tab";
-		/*-- definindo abas e configurando paineis --*/
 		const data = node.children;
 		const list = {tag: "div", child: [], attr: {
 			tabIndex: -1,
@@ -54,13 +49,21 @@ const __TAB = {
 			"aria-orientation": vertical === true ? "vertical" : "horizontal",
 			addEventListener: {click: this, keydown: this}
 		}};
-		for (let i = 0; i < data.length; i++)
+		/*-- configurando paineis --*/
+		let val, max = 0;
+		for (let i = 0; i < data.length; i++) {
 			list.child.push(this.design(data[i], i));
+			val = data[i].getBoundingClientRect().height;
+			max = val > max ? val : max;
+		}
 		/*-- adicionando a lista ao container (topo) --*/
+		node.style.flexDirection = vertical === true ? "row" : "column";
+		node.style.height = (max === 0 || max > 0.9 * window.innerHeight ? 0.9 * window.innerHeight : max)+"px";
+		node.className = "css-wd-tab";
 		node.insertBefore(__DOM(list).tag, node.firstElementChild);
 		return;
 	},
-	/**. '{void open(node tab)}: Abre o paineil a partir da aba.**/
+	/**. '{void open(node tab)}: Abre o painel a partir da aba.**/
 	open: function(tab) {
 		const list   = tab.parentElement;
 		const tabs   = list.children;
@@ -112,41 +115,79 @@ const __TAB = {
 		return;
 	},
 };
+
+//FIXME o container principal precisa de uma altura máxima; melhorar essa feiura.
+
 __CSS.push(`/*-- TAB --*/
+/*-- container principal -----------------------------------------------------*/
 .css-wd-tab {
 	display: flex;
 	align-items: stretch;
 	justify-content: center;
 	padding: 0;
 }
+/*-- lista de abas -----------------------------------------------------------*/
 .css-wd-tab [role=tablist] {
-	display: flex;
-	align-items: stretch;
-	justify-content: start;
+	order: 0;
+	font-size: 14px;
 	margin: 0;
-	font-size: var(--var-js-wd-font-size);
-	font-family: var(--var-js-wd-font-type);
+}
+.css-wd-tab [role=tablist][aria-orientation=vertical] {
+	flex: 0 0 15%;
+	padding: 0 0.5em;
+	overflow-y: auto;
 }
 .css-wd-tab [role=tablist][aria-orientation=horizontal] {
-	flex: 1 1 auto;
-	flex-flow: row wrap;
+	flex: 0 0 auto;
+	padding: 0.5em 0;
+	overflow-x: auto;
 }
-.css-wd-tab [role=tablist][aria-orientation=vertical]   {
-	flex: 0 1 25%;
-	flex-flow: column nowrap;
-}
+/*-- abas --------------------------------------------------------------------*/
 .css-wd-tab [role=tab] {
-	margin: 3px;
-	flex: 1 1 auto;
+	appearance: none;
+	padding: 0.5em 1em;
+	font-size: inherit;
+	font-family: Lucida Sans, sans-serif;
+	color: inherit;
+	background-color: inherit;
+	border-radius: 0.3em;
+	border: 1px solid transparent;
+	cursor: pointer;
 }
-.css-wd-tab  [role=tab][aria-selected=true] {
-	outline-width: thin;
-	outline-style: solid;
+.css-wd-tab [role=tab]:hover,
+.css-wd-tab [role=tab]:focus {
+	background: rgba(204,204,204,0.3);
 }
+.css-wd-tab [role=tablist] [role=tab][aria-selected=true] {
+	border: 1px solid;
+}
+/*-- aba vertical ------------------------------------------------------------*/
+.css-wd-tab [role=tablist][aria-orientation=vertical] [role=tab] {
+	display: block;
+	width: 100%;
+	margin: 0.25em 0;
+	text-align: left;
+}
+.css-wd-tab [role=tablist][aria-orientation=vertical] [role=tab][aria-selected=true] {
+	box-shadow: inset 0.25em 0;
+}
+/*-- aba horizontal -----------------------------------------------------------*/
+.css-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab] {
+	display: inline-block;
+	width: auto;
+	margin: 0 0.25em;
+	text-align: center;
+}
+.css-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab][aria-selected=true] {
+	box-shadow: inset 0 0.25em;
+}
+/*-- painel de conteúdo ------------------------------------------------------*/
 .css-wd-tab [role=tabpanel] {
-	flex: 1 1 auto;1F82C
+	flex: 1 1 auto;
+	order: 1;
 	margin: 0;
-}
-.css-wd-tab [role=tablist][aria-orientation=vertical] ~ [role=tabpanel] {
-	flex: 1 1 75%;
+	padding: 0em;
+	border: 1px solid rgba(204,204,204,0.3);
+	border-radius: 0.3em;
+	overflow-y: auto;
 }`);
