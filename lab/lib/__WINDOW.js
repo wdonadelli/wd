@@ -179,7 +179,7 @@ const __WINDOW = {
 		if (wcolor.background === "none") {
 			const bcolor = window.getComputedStyle(document.body);
 			const empty  = bcolor.background === "none";
-			heap.win.style.background = empty ? "#f9f9f9" : bcolor.background;
+			heap.win.style.background = empty ? "#ffffff" : bcolor.background;
 			heap.win.style.color = empty || bcolor.color === "none" ? "#202020" : bcolor.color;
 		}
 		/*-- acionar disparador --*/
@@ -312,7 +312,7 @@ __CSS.push(`/*-- WINDOW --*/
 	margin:     0 !important;
 	margin:     0 !important;
 	padding:    0 !important;
-	background: tranparent !important;
+	background: transparent !important;
 }
 [data-js-wd-window="modal"] > * {animation: js-wd-window-modal 0.5s ease;}
 [data-js-wd-window="float"] > * {animation: js-wd-window-float 0.5s ease;}

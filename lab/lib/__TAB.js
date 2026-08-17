@@ -1,66 +1,94 @@
 /**#3 Abas
 O objeto '{__TAB} organiza um container em forma de abas.**/
 const __TAB = {
+	/**. '{object heap}: Registra o elemento que recebeu a configuração de abas.**/
+	heap: {},
 	/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 	label: function(panel, index) {
 		const query = panel.querySelector("h1, h2, h3, h4, h5, h6, [role=heading]");
 		const label = panel.hasAttribute("aria-label")      ? panel.getAttribute("aria-label").trim()      : null;
 		const outer = panel.hasAttribute("aria-labelledby") ? panel.getAttribute("aria-labelledby").trim() : null;
 		const text  = panel.innerText.trim().split("\n")[0].replace(/\s+/g, " ").replace(/^\W+|\W+$/, "");
-		if (label !== null && label !== "")
-			return label;
 		if (outer !== null && document.getElementById(outer) !== null)
 			return document.getElementById(outer).textContent.trim();
+		if (label !== null && label !== "")
+			return label;
 		if (query !== null)
 			return query.textContent.trim();
 		if (text.length > 0)
 			return text.split(" ").slice(0,5).join(" ");
 		return null;
 	},
-	/**. '{object design(node panel, integer index)}: Retorna a estrutura da aba e configura o painel.**/
-	design: function(panel, index) {
-		const text = this.label(panel);
-		const data = {panel: __ID.id(panel), tab: __ID.value, label: text ===  null ? `Tab ${index}` : text};
-		/*-- preparando painel --*/
-		__HTML(panel, {
-			id: data.panel,
-			tabIndex: -1,
-			role: "tabpanel",
-			"aria-labelledby": data.tab,
-			hidden: index !== 0,
-		});
-		/*-- retornando a aba --*/
-		return {tag: "button", child: [], attr: {
-			type: "button",
-			innerHTML: data.label,
-			tabIndex: index === 0 ? 0 : -1,
-			id: data.tab,
-			role: "tab",
-			"aria-controls": data.panel,
-			"aria-selected": index === 0 ? "true" : "false"
-		}};
-	},
-	/**. '{void create(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
-	create: function(node, vertical) {
-		const data = node.children;
-		const list = {tag: "div", child: [], attr: {
+	/**. '{void attach(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
+	attach: function(node, vertical) {
+		const height  = {max: 0.9* window.innerHeight, min: 0.5 * window.innerHeight, val: 0};
+		const tablist = {tag: "div", child: [], attr: {
 			tabIndex: -1,
 			role: "tablist",
 			"aria-orientation": vertical === true ? "vertical" : "horizontal",
 			addEventListener: {click: this, keydown: this}
 		}};
-		/*-- configurando paineis --*/
-		let val, max = 0;
-		for (let i = 0; i < data.length; i++) {
-			list.child.push(this.design(data[i], i));
-			val = data[i].getBoundingClientRect().height;
-			max = val > max ? val : max;
-		}
-		/*-- adicionando a lista ao container (topo) --*/
-		node.style.flexDirection = vertical === true ? "row" : "column";
-		node.style.height = (max === 0 || max > 0.9 * window.innerHeight ? 0.9 * window.innerHeight : max)+"px";
-		node.className = "css-wd-tab";
-		node.insertBefore(__DOM(list).tag, node.firstElementChild);
+		/*-- redefinindo e registrando container principal --*/
+		this.detach(node);
+		this.heap[node.id] = node;
+		/*-- configurando paineis e contruindo abas --*/
+		tablist.child = Array.from(node.children).map(function(v,i,a) {
+			const tab  = __ID.value;
+			const text = this.label(v);
+			const rect = v.getBoundingClientRect().height;
+			height.val = rect > height.val ? rect : height.val;
+			/*-- configurando painel --*/
+			__HTML(v, {
+				id: __ID.id(v),
+				role: "tabpanel",
+				tabIndex: -1,
+				hidden: i > 0
+			});
+			/*-- definindo rótulo do painel, se inexistente, na aba --*/
+			if (!v.hasAttribute("aria-labelledby") && !v.hasAttribute("aria-label"))
+				v.setAttribute("aria-labelledby", tab);
+			/*-- retornando aba --*/
+			return {tag: "button", child: [], attr: {
+				type: "button",
+				textContent: text === null ? `Tab ${index}` : text,
+				tabIndex: i === 0 ? 0 : -1,
+				id: tab,
+				role: "tab",
+				"aria-controls": v.id,
+				"aria-selected": i === 0 ? "true" : "false"
+			}};
+		}, this);
+		/*-- configurando o container de abas --*/
+		__HTML(node, {classList: {add: `css-js-wd-tab css-js-wd-${vertical === true ? "v" : "h"}tab`}});
+		node.insertBefore(__DOM(tablist).tag, node.firstElementChild);
+		/*-- calculando altura ideal --*/
+		const rect = tablist.tag.getBoundingClientRect().height;
+		height.val = rect > height.val ? rect : height.val;
+		node.style.height = (height.val < height.min ? height.min : (height.val > height.max ? height.max : height.val))+"px";
+		return;
+	},
+	/**. '{void detach(node node)}: Desvincula uma caixa de abas dos elementos referenciados.**/
+	detach: function(node) {
+		if (!(__ID.id(node) in this.heap)) return;
+		delete this.heap[node.id];
+		__HTML(node, {
+			style:     {height: null},
+			classList: {remove: "css-js-wd-tab css-js-wd-htab css-js-wd-vtab"},
+		});
+		let tablist = null;
+		Array.from(node.children).forEach(function(v,i,a) {
+			if (String(v.getAttribute("role")).toLowerCase() === "tablist") {
+				tablist = v;
+				return;
+			}
+			const label = v.hasAttribute("aria-labelledby") ? document.getElementById(v.getAttribute("aria-labelledby")) : null;
+			v.removeAttribute("role");
+			v.removeAttribute("tabindex");
+			v.hidden = false;
+			if (label !== null && label.getAttribute("role") === "tab")
+				v.removeAttribute("aria-labelledby");
+		});
+		if (tablist !== null) tablist.remove();
 		return;
 	},
 	/**. '{void open(node tab)}: Abre o painel a partir da aba.**/
@@ -115,35 +143,34 @@ const __TAB = {
 		return;
 	},
 };
-
-//FIXME o container principal precisa de uma altura máxima; melhorar essa feiura.
-
 __CSS.push(`/*-- TAB --*/
 /*-- container principal -----------------------------------------------------*/
-.css-wd-tab {
+.css-js-wd-tab {
 	display: flex;
 	align-items: stretch;
 	justify-content: center;
 	padding: 0;
 }
+.css-js-wd-tab.css-js-wd-htab {flex-direction: column;}
+.css-js-wd-tab.css-js-wd-vtab {flex-direction: row;}
 /*-- lista de abas -----------------------------------------------------------*/
-.css-wd-tab [role=tablist] {
+.css-js-wd-tab [role=tablist] {
 	order: 0;
 	font-size: 14px;
 	margin: 0;
 }
-.css-wd-tab [role=tablist][aria-orientation=vertical] {
-	flex: 0 0 15%;
+.css-js-wd-tab [role=tablist][aria-orientation=vertical] {
+	flex: 0 0 25%;
 	padding: 0 0.5em;
 	overflow-y: auto;
 }
-.css-wd-tab [role=tablist][aria-orientation=horizontal] {
+.css-js-wd-tab [role=tablist][aria-orientation=horizontal] {
 	flex: 0 0 auto;
 	padding: 0.5em 0;
 	overflow-x: auto;
 }
 /*-- abas --------------------------------------------------------------------*/
-.css-wd-tab [role=tab] {
+.css-js-wd-tab [role=tab] {
 	appearance: none;
 	padding: 0.5em 1em;
 	font-size: inherit;
@@ -154,35 +181,35 @@ __CSS.push(`/*-- TAB --*/
 	border: 1px solid transparent;
 	cursor: pointer;
 }
-.css-wd-tab [role=tab]:hover,
-.css-wd-tab [role=tab]:focus {
-	background: rgba(204,204,204,0.3);
+.css-js-wd-tab [role=tab]:hover,
+.css-js-wd-tab [role=tab]:focus {
+	background: rgba(204,204,204,0.2);
 }
-.css-wd-tab [role=tablist] [role=tab][aria-selected=true] {
+.css-js-wd-tab [role=tablist] [role=tab][aria-selected=true] {
 	border: 1px solid;
 }
 /*-- aba vertical ------------------------------------------------------------*/
-.css-wd-tab [role=tablist][aria-orientation=vertical] [role=tab] {
+.css-js-wd-tab [role=tablist][aria-orientation=vertical] [role=tab] {
 	display: block;
 	width: 100%;
 	margin: 0.25em 0;
 	text-align: left;
 }
-.css-wd-tab [role=tablist][aria-orientation=vertical] [role=tab][aria-selected=true] {
+.css-js-wd-tab [role=tablist][aria-orientation=vertical] [role=tab][aria-selected=true] {
 	box-shadow: inset 0.25em 0;
 }
 /*-- aba horizontal -----------------------------------------------------------*/
-.css-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab] {
+.css-js-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab] {
 	display: inline-block;
 	width: auto;
 	margin: 0 0.25em;
 	text-align: center;
 }
-.css-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab][aria-selected=true] {
+.css-js-wd-tab [role=tablist][aria-orientation=horizontal] [role=tab][aria-selected=true] {
 	box-shadow: inset 0 0.25em;
 }
 /*-- painel de conteúdo ------------------------------------------------------*/
-.css-wd-tab [role=tabpanel] {
+.css-js-wd-tab [role=tabpanel] {
 	flex: 1 1 auto;
 	order: 1;
 	margin: 0;

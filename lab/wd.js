@@ -472,81 +472,6 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**.  '{node plot(object options)}: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em '{options} (ver __Plot2D.add) ou nulo:
-		|Nome|Tipo|Descrição|
-		|xLabel|string|Rótulo do eixo i{x}.|
-		|yLabel|string|Rótulo do eixo i{y}.|
-		|title|string|Título do gráfico.|
-		|xAxis|string|Define a formatação da escala do eixo i{x}, se i{number}, i{date}, i{time}, i{datetime} ou i{percent}.|
-		|yAxis|string|Define a formatação da escala do eixo i{y} (ver xAxis).|
-		|plot|string|Tipo de gráfico, i{plan}, i{cols} ou i{pie}.|
-		|data|array|Uma lista de objetos com os parâmetros da plotagem.|
-		. Os itens da propriedade '{data} são objetos com os seguintes especificações:
-		|Nome|Tipo|Descrição|
-		|x|any|Valores do eixo i{x}: um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
-		|y|any|Valores do eixo i{y}, pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
-		|label|string|Rótulo do gráfico.|
-		|fit|string|Especifica o tipo do gráfico cartesiano.|
-		. Os valores permitidos para o atributo '{fit} são:
-		|Valor|Descrição|Valores de Y|
-		|sum|Exibe a soma aproximada da área dentro da curva.|function, constante, array, matrix|
-		|avg|Exibe a média aproximada da curva.|function, array, matrix|
-		|line|Liga os pontos do gráfico com um seguimento de reta.||
-		|link|Liga os pontos do gráfico com um seguimento de reta lincado por um ponto.|array, matrix|
-		|dots|Exibe os pontos do gráfico.|array, matrix|
-		|linear|Executa um ajuste linear aproximado.||
-		|exponential|Executa um ajuste exponencial aproximado.||
-		|geometric|Executa um ajuste geométrico aproximado.||
-		|logarithmic|Executa um ajuste logarítmo aproximado.||
-		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
-		plot: {
-			value: function(options) {
-				if (!__Type(options).object) return null;
-				const chart = new __Plot2D(options.plot);
-				const isCol = /^\#(\d+)$/;
-				const data  = __Type(options.data).array ? options.data : [];
-				/*-- propriedades principais --*/
-				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
-				for (let i = 0; i < names.length; i++) {
-					if (names[i] in options)
-						chart[names[i]] = options[names[i]];
-				}
-				/*-- parâmetros de plotagem --*/
-				for (let i = 0; i < data.length; i++) {
-					if (!__Type(data[i]).object) continue;
-					let struct = {x: data[i].x, y: data[i].y, label: data[i].label, fit: data[i].fit};
-					let col, arr, cell;
-					/*-- x faz referência à coluna --*/
-					if (isCol.test(struct.x)) {
-						col  = struct.x.replace(isCol, "$1");
-						cell = `1,${col}:*,${col}`;
-						arr  = this.cells(cell, function(v,r,c) {return v.innerText;});
-						struct.x = arr;
-					}
-					/*-- y faz referência à coluna --*/
-					if (isCol.test(struct.y)) {
-						col = Number(struct.y.replace(isCol, "$1"));
-						cell = `0,${col}:*,${col}`;
-						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
-						struct.y     = arr.slice(1);
-						struct.label = arr[0];
-					}
-					chart.add(struct.x, struct.y, struct.label, struct.fit);
-				}
-				return chart.plot();
-			}
-		},
-	});
-
-
-
-
-
-
-
-
-
-
 
 //FIXME copy como fazer?
 /*----------------------------------------------------------------------------*/
@@ -589,51 +514,10 @@ const wd = (function() {
 
 
 
-
-
-
 /*============================================================================*/
 /**#3 Atributos HTML dataset**/
 /*============================================================================*/
 
-	/**#4 Dispositivo: Design Responsivo
-	''function void data_wd_device(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-size|
-	|Objetivo|Manipular atributo '{class} conforme tamanho da tela (design responsivo via javascript)|
-	|Eventos|load wdreload wddataset resize|
-	|Alvos|Elemento|
-	|Grupos|Único|
-	|Referências|__DEVICE|
-	span{ }
-	|Propriedades|Tipo|Descrição|
-	|desktop|string|Estilos CSS aplicados à tela desktop.|
-	|tablet|string|Estilos aplicados à tela tablet.|
-	|phone|string|Estilos aplicados à tela phone.|
-	|mobile|string|Estilos aplicados à tela tablet ou phone.|
-	Observações:
-	- Não há propriedade obrigatória; e
-	- O estilos CSS devem estar separados por espaços em branco.**/
-	function data_wd_device(target, event, wdArray) {
-		const query  = WD(target);
-		const data   = wdArray[0];
-		const device = __DEVICE.device;
-		const types  = { /* 0: elimina css, 1: adiciona css */
-			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
-			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
-			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
-		};
-		if (device in types) {
-			let type = types[device];
-			/* 1) removendo css dos dispositivos incompatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
-			/* 2) adicionando css dos dispositivos compatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
-		}
-		return;
-	};
 
 
 /*----------------------------------------------------------------------------*/
@@ -731,90 +615,7 @@ const wd = (function() {
 		return data_wd_send(target, event, [data]);
 	}
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Carregamentos
-	''function void data_wd_load(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-load|
-	|Objetivo|Carregar conteúdos externos ao documento|
-	|Eventos|load wdreload wddataset|
-	|Alvos|Elemento|
-	|Grupos|Único|
-	|Referências|__Node.innerHTML/outerHTML/attribute|
-	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{type}, acrescida da seguinte propriedade:
-	|Propriedades|Tipo|Descrição|
-	|serialization|string|Comportamento da serialização outer/innerHTML/Text (__Node.attribute)|
-	span{ }
-	Observações:
-	- Se o arquivo for CSV e a propriedade for inner/outerHTML, uma tabela com dados será adicionada ao documento;
-	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz (array de duas dimensões) de dados;
-	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a '{value}.**/
-	function data_wd_load(target, event, wdArray) {
-		const data   = wdArray[0];
-		const node   = new __Node(target);
-		data.type    = "text";
-		data.trigger = function(x) {
-			if (x.ok) {
-				const mime = __MIME[x.contentType];
-				const find = /^(inner|outer)(HTML|Text)$/;
-				const attr = find.test(data.serialization) ? data.serialization : "innerHTML";
-				const html = (/HTML$/).test(attr);
-				let   text = x.response;
-				if (html) {
-					const parser = new __Parser(text);
-					let test;
-					if (mime === "html") {
-						test = parser.stringHTML.get();
-						text = test === null ? text : test.body.innerHTML;
-					}
-					else if (mime === "csv") {
-						test = parser.csvTable.get();
-						text = test === null ? text : test.outerHTML;
-					}
-					else if (mime === "json") {
-						test = parser.stringJSON.matrixCSV.csvTable.get();
-						text = test === null ? text : test.outerHTML;
-					}
-				}
-				/*-- definir --*/
-				if (attr === "innerText" && node.form && !node.ftext)
-					node.attribute("value", text);
-				else
-					node.attribute(attr, text);
-			}
-		}
-		return data_wd_send(target, event, [data]);
-	}
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Repetições
-	''function void data_wd_repeat(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-repeat|
-	|Objetivo|Replicar cópias de elementos os filhos com conteúdo configurável a partir de um arquivo externo.|
-	|Eventos|load wdreload wddataset|
-	|Alvos|Elemento|
-	|Grupos|Único|
-	|Referências|__Node.repeat|
-	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{type}.
-	Os arquivos permitidos devem estar em formato CSV ou JSON (array de objetos);	**/
-	function data_wd_repeat(target, event, wdArray) {
-		const data   = wdArray[0];
-		data.type    = "text";
-		data.trigger = function(x) {
-			if (x.ok)  {
-				const mime = __MIME[x.contentType];
-				let   list = null;
-				if (mime === "json" || mime === "csv") {
-					const parser = new __Parser(x.response);
-					const value  = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-					list = value.get();
-				}
-				WD(target).repeat(list === null ? [] : list);
-			}
-		}
-		return data_wd_send(target, event, [data]);
-	}
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Atribuição de Valores
@@ -999,45 +800,6 @@ const wd = (function() {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Filtro Textual FIXME continuar a partir daqui a arrumar a descrição e trocar $$ por propriedade
-	''function void data_wd_tabs(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-filter|
-	|Objetivo|Filtrar elementos de acordo com seu conteúdo textual|
-	|Eventos|load wdreload wddataset input|
-	|Alvos|Elementos que possam receber digitação|
-	|Grupos|Único|
-	|Referências|__Node.filter|
-	span{ }
-	|Propriedades|Tipo|Descrição|
-	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
-	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
-
-	function data_wd_tabs(target, event, wdArray) {
-		//TODO ver __TAB
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**''function void data_wd_mask(node target, object event, array wdArray)''
-	Função com o propósito de definir máscaras por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-mask|load wdreload wddataset focusout|Único|Múltiplos|__Node.display|Elemento que possa receber conteúdo|
-	Possui as seguintes propriedades opcionais:
-	|Nome|Tipo|Descrição|
-	|model|string|Modelo da máscara|
-	|check|function|Função a ser checada se a máscara casar ou não for informada|**/
-	function data_wd_mask(target, event, wdArray) {
-		const data  = wdArray[0];
-		const node  = new __Node(target);
-		const model = "model" in data ? String(data.model) : null;
-		const check = __Type(data.check).function ? data.check : null;
-		const mask  = model === null ? true : node.mask(model);
-		if (mask && check !== null)
-			node.fvalidity = check(node.form ? node.fvalue : target.textContent);
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wd_edit(node target, object event, array wdArray)''

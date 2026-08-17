@@ -1,5 +1,5 @@
 /**
-#3 Tipos de Dispositivo
+#3 Dispositivos e Design Responsivo
 O objeto '{__DEVICE} controla as alterações da tela atribuida a um tipo de dispositivo.
 **/
 const __DEVICE = {
@@ -23,6 +23,14 @@ const __DEVICE = {
 	},
 	/**. '{boolean mobile}: Informa se dispositivo não é do tamanho desktop.**/
 	get mobile() {return this.device !== "desktop";},
+	/**. '{object rules}: Retorna as regras para adicionar ou remover propriedades de acordo com o tipo de dispositivo (0 elimina e 1 adiciona)**/
+	get rules() {
+		return {
+			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
+			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
+			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
+		}[this.device];
+	},
 	/**. '{boolean change}: Informa se o dispositivo foi alterado desde a última consulta.**/
 	get changeDevice() {
 		const device = this.device;
@@ -32,14 +40,38 @@ const __DEVICE = {
 		}
 		return false;
 	},
-	/**. '{void handleEvent(object ev)}: Disparador que provoca o evento '{wddataset} para os nós que contêm o atributo '{data-wd-device} a cada mudança de dispositivo (vincular ao evento '{rezise} de '{window}).**/
-	handleEvent: function(ev) {console.log("__DEVICE chamado");
-		if (this.changeDevice) {
-			const query = document.querySelectorAll("[data-wd-device]");
-			const event = new CustomEvent("wddataset", {detail: "wdDevice", bubbles: true});
-			for (let i = 0; i < query.length; i++)
-				query[i].dispatchEvent(event);
+
+
+	/**#4 Dispositivo: Design Responsivo
+	''function void data_wd_device(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-size|
+	|Objetivo|Manipular atributo '{class} conforme tamanho da tela (design responsivo via javascript)|
+	|Eventos|load wdreload wddataset resize|
+	|Alvos|Elemento|
+	|Grupos|Único|
+	|Referências|__DEVICE|
+	span{ }
+	|Propriedades|Tipo|Descrição|
+	|desktop|string|Estilos CSS aplicados à tela desktop.|
+	|tablet|string|Estilos aplicados à tela tablet.|
+	|phone|string|Estilos aplicados à tela phone.|
+	|mobile|string|Estilos aplicados à tela tablet ou phone.|
+	Observações:
+	- Não há propriedade obrigatória; e
+	- O estilos CSS devem estar separados por espaços em branco.**/
+//device="@phone{a1 a2 a3}desktop{b1 b2}"
+	css: function(node, data) {
+		data = __Type(data).object ? data : {};
+		const rules = this.rules;
+		/*-- removendo css --*/
+		for (let i in rules) {
+			if (rules[i] === 0 && i in data) __HTML(node, {classList: {remove: data[i]}});
+		}
+		/*-- adcionando css --*/
+		for (let i in rules) {
+			if (rules[i] === 1 && i in data) __HTML(node, {classList: {add: data[i]}});
 		}
 		return;
-	}
+	},
 };

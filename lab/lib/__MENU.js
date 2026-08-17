@@ -331,23 +331,18 @@ const __MENU = {
 	handleEvent: function(ev) {return this[ev.type](ev);},
 };
 __CSS.push(`/*-- MENU --*/
-:root {
-	--var-js-wd-menu-fg: #202020;
-	--var-js-wd-menu-bg: #f9f9f9;
-	--var-js-wd-menu-hv: #eeeeee;
-}
 .css-js-wd-menu {
 	/*display: inline-block;*/
 	list-style: none;
 	padding: 0.5em;
 	margin: 0;
-	color: var(--var-js-wd-menu-fg);
-	background: var(--var-js-wd-menu-bg);
+	color: inherit;
+	background: inherit;
 	border-radius: 0.2em;
-	border: thin solid black;
+	border: 1px solid;
 	font-size: 14px;
 	font-family: Lucida Sans, sans-serif;
-	box-shadow: 0.25em 0.25em 0 0 #cccccc;
+	box-shadow: 0.25em 0.25em 0 0;
 }
 .css-js-wd-menu [role="menu"] {
 	list-style: none;
@@ -375,14 +370,14 @@ __CSS.push(`/*-- MENU --*/
 .css-js-wd-menu [role="menuitem"]:focus,
 .css-js-wd-menu [role="menuitemcheckbox"]:focus,
 .css-js-wd-menu [role="menuitemradio"]:focus {
-	background: var(--var-js-wd-menu-hv);
+	background: rgba(204,204,204,0.3);
 }
 .css-js-wd-menu [role="heading"][aria-level="1"],
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
 	font-weight: bold;
 	text-align: center;
 	margin-bottom: 0.5em;
-	background: var(--var-js-wd-menu-hv);
+	background: rgba(204,204,204,0.3);
 }
 .css-js-wd-menu [role="heading"][aria-level="2"] {
 	font-style: italic;

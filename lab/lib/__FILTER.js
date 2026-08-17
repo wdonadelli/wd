@@ -183,13 +183,4 @@ const __FILTER = {
 		}, this);
 		return;
 	},
-
-
-	//FIXME colocar isso no data_wd_filter
-	handleEvent: function(ev) {
-		const field = __FORMDATA.type(ev.target) !== null;
-		const regex = /^\/(.+)\/([gim]+)?$/;
-		const value = ev.target[field ? "value" : "innerText"];
-		const find  = !regex.test(value) ? value : new RegExp(value.replace(regex, "$1"), value.replace(regex, "$2"));
-	}
 };

@@ -4,7 +4,7 @@ O objeto '{__FORMDATA} define um conjunto de métodos para obter as propriedades
 const __FORMDATA = {
 	/**. '{string tag(node node)}: Informa a tag do elemento.**/
 	tag: function(node) {return node.tagName.toLowerCase();},
-	/**. '{string tag(node node)}: Informa o tipo de campo ou nulo.**/
+	/**. '{string type(node node)}: Informa o tipo de campo ou nulo.**/
 	type: function(node) {
 		const tag  = this.tag(node);
 		const list = {input: 1, button: 1, textarea: 0, select: 0};
@@ -24,6 +24,11 @@ const __FORMDATA = {
 			return clone.value !== error;
 		}
 		return false;
+	},
+	/**. '{boolean freeEdit(node node)}: Informa se o elemento possui edição livre.**/
+	freeEdit: function(node) {
+		if (this.type(node) === null) return node.isContentEditable;
+		return !(node.readOnly || node.disabled || this.hasMask(node));
 	},
 	/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} do nó**/
 	value: function(node, value) {

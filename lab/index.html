@@ -86,19 +86,31 @@
 		<script defer="false" src="lib/__TEST.js"></script>
 
 		<script src="lab.js" defer="true"></script>
+
+		<style>
+			.azul  {color: blue;}
+			.verde {color: green;}
+			.rosa  {color: pink;}
+			.sub   {font-style: italic; font-size: small;}
+		</style>
+
 	</head>
 
 <body>
-	<header class="wd-header-fixed">
+	<header class="wd-header-fixed" data-wd-device="@desktop{azul}mobile{sub verde}">
 		<h2 id="menu" data-wd-menu="menu">WD Web Library Lab</h2>
 	</header>
 
+	<input data-wd-filter="@target{[role=tablist]}size{3}" />
+
 	<main>
-		<section data-wd-tab="@type{vertical}">
+		<section data-wd-tab="@orientation{vertical}">
 			<article id="manual" aria-label="Manual"></article>
 			<pre id="codigo" aria-label="Código"></pre>
 		</section>
 	</main>
+	<p data-wd-mask="@model{###.###.###-##}" tabindex="0">03477893905</p>
+	<input type="" data-wd-mask="@model{##/##/####}"/>
 
 	<footer class="wd-footer-fixed wd-bg-black">
 		<!--<button type="button" id="menu">&#x2637;</button>-->
