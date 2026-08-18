@@ -117,9 +117,9 @@ const WDDATASET = {
 	|Demais propriedades|Any|Não|Ver objeto '{__REQUEST}|
 	|""Tabela de configuração do atributo wdLoad""|**/
 	wdLoad: function(ev) {
-		const data = this.attr(ev.target.dataset.wdLoad);
+		const data = this.attr(ev.target.dataset.wdLoad);console.log(data)
 		delete ev.target.dataset.wdLoad;
-		if (data) __LOADER.urlHTML(ev.target, data.source, data.outer);
+		if (data) __LOADER.urlHTML(ev.target, data, data.outer);
 		return;
 	},
 	/**. '{void wdRepeat(object ev)}: Cria elementos filhos a partir de um modelo conforme especificado em um arquivo externo:

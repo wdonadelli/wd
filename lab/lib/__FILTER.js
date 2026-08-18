@@ -3,10 +3,12 @@
 O objeto '{__FILTER} exibe os nós que casam com determinado valor inibindo os demais irmãos. O argumento '{size} indica o número mínimo
 **/
 const __FILTER = {
+	id: "css-js-wd-filter",
+
 	/**. '{node mark(string text)}: Retorna a tag de marcação com o texto a ser renderizado.**/
-	mark: function(text) {return __HTML("mark", {className: "css-wd-filter", textContent: text});},
+	mark: function(text) {return __HTML("mark", {className: "css-js-wd-filter", textContent: text});},
 	/**. '{node marks(node node)}: Retorna todas as tags de marcação dentro do nó.**/
-	marks: function(node) {return Array.from(node.querySelectorAll(".css-wd-filter"));},
+	marks: function(node) {return Array.from(node.querySelectorAll(".css-js-wd-filter"));},
 	/**. '{array textNodes(node node)}: Retorna uma lista de nós de texto.**/
 	textNodes: function(node) {
 		const list = node.childNodes;
@@ -21,13 +23,86 @@ const __FILTER = {
 		}
 		return data;
 	},
+
+
+	marca: function(node, open, stop) {
+		let next  = 0;
+		this.textNodes(node).forEach(function(v,i,a) {
+			const text = v.nodeValue.normalize("NFC");
+			const size = text.length;
+			const init = next;
+			const last = init + size - 1;
+			const info = {item: -1, text: [], type: null};
+			next += size;
+			/*-- excluir nodeText vazio --*/
+			if (size === 0) return v.remove();
+			/*-- fora de captura --*/
+			if (open > last || stop < init) return;
+			/*-- totalmente contido: text+node+text --*/
+			if (open > init && stop < last) {
+				info.item = 1;
+				info.type = "inside";
+				info.text = [text.slice(0, open - init), text.slice(open - init, stop - last), text.slice(stop - last)]
+			}
+			/*-- totalmente ocupado: node --*/
+			else if (open <= init && stop >= last) {
+				info.item = 0;
+				info.type = "total";
+				info.text = [text];
+			}
+			/*-- parcialmente contido à direita: text+node --*/
+			else if (open > init && stop >= last) {
+				info.item = 1;
+				info.type = "right";
+				info.text = [text.slice(0, open - init), text.slice(open - init)];
+			}
+			/*-- parcialmente contido à esquerda: node+text --*/
+			else if (open <= init && stop < last) {
+				info.item = 0;
+				info.type = "left";
+				info.text = [text.slice(0, stop - last), text.slice(stop - last)];
+			}
+			/*-- definindo as marcações no texto --*/
+			info.text.forEach(function(text,item,TXT) {
+				const mark = info.item === item;
+				const node = mark ? __HTML("mark", {className: this.id, textContent: text}) : document.createTextNode(text);
+				v.parentNode.insertBefore(node, v);
+			}, this);
+			v.remove();
+		}, this);
+		return;
+	},
+
+
+	desmarca: function(node) {
+		/*-- substituido elemento por texto --*/
+		Array.from(node.querySelectorAll(`mark.${this.id}`)).forEach(function(v,i,a) {
+			const text = document.createTextNode(v.textContent);
+			v.parentElement.replaceChild(text, v);
+		}, this);
+		/*-- eliminando texto em sequência --*/
+		//FIXME tem que pegar nextSibling e não childNodes direto (começar com firstChild com um while)
+
+		Array.from(node.childNodes).forEach(function(v,i,a) {
+			if (v.nodeType === 1) return this.desmarca(v);//FIXME mudar o nome
+			if (i > 0 && a[i-1].nodeType === 3 && v.nodeType === 3) {
+				v.textContent = a[i-1].textContent + v.textContent;
+				a[i-1].remove();
+			}
+		}, this);
+		return;
+	},
+
+
+
+
 	/**. '{array textNodesData()}: Retorna uma lista de objetos contendo as seguintes propriedades:
-	|nome|Descrição|
-	|node|O nó textual|
-	|text|O texto normalizado em NFC|
-	|init|O primeiro índice em relação ao primeiro caracteres do primeiro nó|
-	|last|O último índice em relação ao primeiro caracteres do primeiro nó|
-	|size|O tamanho de '{text}|**/
+	|´{nome}|Descrição|
+	|´{node}|O nó textual|
+	|´{text}|O texto normalizado em NFC|
+	|´{init}|O primeiro índice em relação ao primeiro caracteres do primeiro nó|
+	|´{last}|O último índice em relação ao primeiro caracteres do primeiro nó|
+	|´{size}|O tamanho de '{text}|**/
 	textNodesData: function(node) {
 		const list = this.textNodes(node);
 		const data = [];
