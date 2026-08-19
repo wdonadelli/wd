@@ -53,7 +53,7 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 	/**. '{self filter(any find, integer size)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __FILTER.search)**/
 	filter: {
 		value: function(find, size) {
-			return this.forEach(function(v,i,a) {__FILTER.search(v, find, size);});
+			return this.forEach(function(v,i,a) {__FILTER.filter(v, find, size);});
 		}
 	},
 

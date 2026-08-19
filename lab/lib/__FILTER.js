@@ -3,12 +3,10 @@
 O objeto '{__FILTER} exibe os nós que casam com determinado valor inibindo os demais irmãos. O argumento '{size} indica o número mínimo
 **/
 const __FILTER = {
+	/**. '{string id}: Classe identificadora do elemento de marcação.**/
 	id: "css-js-wd-filter",
-
-	/**. '{node mark(string text)}: Retorna a tag de marcação com o texto a ser renderizado.**/
-	mark: function(text) {return __HTML("mark", {className: "css-js-wd-filter", textContent: text});},
-	/**. '{node marks(node node)}: Retorna todas as tags de marcação dentro do nó.**/
-	marks: function(node) {return Array.from(node.querySelectorAll(".css-js-wd-filter"));},
+	/**. '{object heap}: Registra os dados dos elementos atrelado ao mecanismo.**/
+	heap: {},
 	/**. '{array textNodes(node node)}: Retorna uma lista de nós de texto.**/
 	textNodes: function(node) {
 		const list = node.childNodes;
@@ -23,9 +21,12 @@ const __FILTER = {
 		}
 		return data;
 	},
-
-
-	marca: function(node, open, stop) {
+	/**. '{void mark(node node, integer open, integer stop)}: Efetua destaque nos nós textuais do nós do índice '{open} a '{close}:
+	|Nome|Descrição|
+	|´{node}|O nó a receber o destaque textual|
+	|´{open}|Índice inicial do texto no nó|
+	|´{stop}|Índice final do texto no nó|**/
+	mark: function(node, open, stop) {
 		let next  = 0;
 		this.textNodes(node).forEach(function(v,i,a) {
 			const text = v.nodeValue.normalize("NFC");
@@ -72,190 +73,111 @@ const __FILTER = {
 		}, this);
 		return;
 	},
-
-
-	desmarca: function(node) {
+	/**. '{void unmark(node node)}: Remove o destaque efetuado pelo método '{mark}.**/
+	unmark: function(node) {
 		/*-- substituido elemento por texto --*/
 		Array.from(node.querySelectorAll(`mark.${this.id}`)).forEach(function(v,i,a) {
 			const text = document.createTextNode(v.textContent);
 			v.parentElement.replaceChild(text, v);
 		}, this);
-		/*-- eliminando texto em sequência --*/
-		//FIXME tem que pegar nextSibling e não childNodes direto (começar com firstChild com um while)
-
-		Array.from(node.childNodes).forEach(function(v,i,a) {
-			if (v.nodeType === 1) return this.desmarca(v);//FIXME mudar o nome
-			if (i > 0 && a[i-1].nodeType === 3 && v.nodeType === 3) {
+		/*-- eliminando nós textuais em sequência --*/
+		this.textNodes(node).forEach(function(v,i,a) {
+			if (i > 0 && a[i-1].nextSibling === v) {
 				v.textContent = a[i-1].textContent + v.textContent;
 				a[i-1].remove();
 			}
-		}, this);
+		});
 		return;
 	},
-
-
-
-
-	/**. '{array textNodesData()}: Retorna uma lista de objetos contendo as seguintes propriedades:
-	|´{nome}|Descrição|
-	|´{node}|O nó textual|
-	|´{text}|O texto normalizado em NFC|
-	|´{init}|O primeiro índice em relação ao primeiro caracteres do primeiro nó|
-	|´{last}|O último índice em relação ao primeiro caracteres do primeiro nó|
-	|´{size}|O tamanho de '{text}|**/
-	textNodesData: function(node) {
-		const list = this.textNodes(node);
-		const data = [];
-		const re    = /[\u0300-\u036f]/g;
-		let elem, text, size, last, init = 0;
-		for (let i = 0; i < list.length; i++) {
-			elem = list[i];
-			text = elem.nodeValue.normalize("NFC");
-			size = text.length;
-			last = init + size - 1;
-			data.push({node: elem, text: text, init: init, last: last, size: size});
-			init += size;
-		}
-		return data;
-	},
-	/**. '{void tagText(node node)}: Transforma o nó HTML em nó textual (remove as tags internas e externas).**/
-	tagText: function(node) {
-		const width = node.textContent.length;
-		const text  = document.createTextNode(node.textContent)
-		if (width === 0)
-			node.remove();
-		else
-			node.parentElement.replaceChild(text, node);
-		return;
-	},
-	/**. '{void textTag(node node, string|node tag, integer init, integer last)}: Insere uma '{tag} HTML entre os índices '{init} e '{last} do conteúdo textual do nó. strong{Método destrutivo}, não utilizar se houver conteúdo editável no nó.**/
-	textTag: function(node, tag, init, last) {
-		/*-- acertando argumentos --*/
-		init: init >= 0 ? init : 0;
-		last: last >= 0 ? last : Infinity;
-		if (init > last) {
-			const temp = init;
-			init = last;
-			last = temp;
-		}
-		/*-- percorrer nós de texto --*/
-		const data = this.textNodesData(node);
-		for (let i = 0; i < data.length; i++) {
-			let item  = data[i];
-			let elem  = item.node;
-			let text  = elem.nodeValue;
-			let group = [];
-			let index = function(trim) {return trim - item.init;}
-			/*-- não iniciado ou encerrado --*/
-			if (init > item.last || last < item.init) {
-				if (last < item.init) return;
-				continue;
-			}
-			/*-- totalmente contido: text+node+text --*/
-			else if (init > item.init && last < item.last) {
-				group.push({text: text.slice(0, index(init)), type: "text"});
-				group.push({text: text.slice(index(init), index(last)+1), type: "elem"});
-				group.push({text: text.slice(index(last)+1), type: "text"});
-			}
-			/*-- totalmente ocupado: node --*/
-			else if (init <= item.init && last >= item.last) {
-				group.push({text: text, type: "elem"});
-			}
-			/*-- parcialmente contido à direita: text+node --*/
-			else if (init > item.init && last >= item.last) {
-				group.push({text: text.slice(0, index(init)), type: "text"});
-				group.push({text: text.slice(index(init)),    type: "elem"});
-			}
-			/*-- parcialmente contido à esquerda: node+text --*/
-			else if (init <= item.init && last < item.last) {
-				group.push({text: text.slice(0, index(last)+1), type: "elem"});
-				group.push({text: text.slice(index(last)+1),    type: "text"});
-			}
-			/*-- adicionar novos nós e excluir o original --*/
-			group.forEach(function(g) {
-				const swap = g.type === "elem" ? this.mark(g.text) : document.createTextNode(g.text);
-				elem.parentNode.insertBefore(swap, elem);
-				return;
-			}, this);
-			elem.parentNode.removeChild(elem);
-		}
-		return;
-	},
-	/**. '{object textMatch(node node, regexp|string find)}: Retorna os dados do posicionamento do conteúdo de '{find} no nó ou nulo:
-	|Nome|Tipo|Descrição|
-	|value|string|Valor textual capturado|
-	|length|integer|Comprimento do valor textual|
-	|init|integer|Índice inicial da captura|
-	|last|integer|Índice final da captura|**/
-	textMatch: function(node, find) {
-		const view = node.innerText.replace(/\u00A0/g, " ").normalize("NFC");
+	/**. '{boolean find(node node, any data)}: Localiza e marca as ocorrências textuais no nó e retorna falso se não encontrar:
+	|Argumento|Descrição|
+	|'{node}|Nó HTML a ser aplicado o procedimento|
+	|'{data}|Fragmento a ser encontrado, '{string} ou expressão regular|**/
+	find: function(node, data) {
 		const text = node.textContent.replace(/\u00A0/g, " ").normalize("NFC");
-		let   data = null;
-		/*-- localizar fragmento no texto renderizado --*/
-		if (typeof find !== "string") {
-			data = find.test(view) ? view.match(find)[0] : null;
-		}
-		else if (find !== "") {
-			const clean = find.replace(/\u00A0/g, " ").normalize("NFC");
-			if (view.indexOf(clean) >= 0)
-				data = clean;
-			else if (view.toUpperCase().indexOf(clean.toUpperCase()) >= 0)
-				data = clean.toUpperCase();
-			else if (view.toLowerCase().indexOf(clean.toLowerCase()) >= 0)
-				data = clean.toLowerCase();
-		}
-		/*-- localizar fragmento no texto do nó --*/
-		if (data !== null) {
-			/*-- transformar o fragmento encontrado em uma expressão regular (textual, barra dupla) --*/
-			let re;
-			re = data.replace(/\s+/g, " ").trim();
-			re = re.replace(/([^0-9a-zA-Z\ ])/gi, "\\$1");
-			re = re.replace(/\s+/g, "\\s+");
-			const regexp = new RegExp(re, "i");
-			const match  = regexp.test(text) ? text.match(regexp)[0] : null;
-			console.log(match);
-			return match === null ? null : {
-				value:  match,
-				init:   text.indexOf(match),
-				last:   text.indexOf(match) + match.length - 1,
-				length: match.length,
-			};
-		}
-		return null;
-	},
-	/**. '{boolean search(node node, any find, integer size)}: Localiza o conteúdo e exibe os filhos do nó  ('{node}) que o contém:
-	|Argumento|Tipo|Descrição|
-	|node|node|Container dos elementos a efetuar o filtro|
-	|find|string|Texto a ser utilizado para busca|
-	|find|regexp|Empressão a ser utilizada para busca|
-	|size|Integer|(Opcional) Descreve e limita a maneira de filtragem|
-	. O argumento '{size} possui o seguinte mecanismo:
-	- Se '{find} for uma expressão regular, nenhum efeito será aplicado;
-	- Se positivo, só executará o filtro quando a mesma quantidade de caracteres for informada em '{find};
-	- Se negativo, terá o mesmo comportamento acima, mas não exibirá os filhos enquanto o filtro não ocorrer.**/
-	search: function(node, find, size) {
-		/*-- checando dados --*/
-		const test  = {find: new __Type(find), size: new __Type(size)}
-		find = test.find.regexp  ? test.find.value : (test.find.nonempty ? find : "");
-		size = test.size.integer ? test.size.value : 0;
-		/*-- apagar todos os destaques e localizar fragmentos nos descendentes --*/
-		const empty = size === 0 && find === "";
-		const short = typeof find === "string" && find.length < Math.abs(size);
-		this.marks(node).forEach(function(v,i,a) {return this.tagText(v);}, this);
-		Array.from(node.children).forEach(function(v,i,a) {
-			v.hidden = empty ? false : (short ? size < 0 : false);
-			if (empty) {
-				v.hidden = false;
-			} else if (short) {
-				v.hidden = size < 0;
-			} else {
-				const index = this.textMatch(v, find);
-				if (index === null)
-					v.hidden = true;
-				else
-					this.textTag(v, this.mark, index.init, index.last);
+		const find = __Type(data).regexp ? data : String(data).replace(/\u00A0/g, " ").normalize("NFC");
+		const list = [];
+		let char, open, stop, item = 0
+		/*-- desmarcar dados --*/
+		this.unmark(node);
+		/*-- localizar por string --*/
+		if (typeof find === "string") {
+			if (find.length === 0) return true;
+			while (text.slice(item).indexOf(find) >= 0) {
+				open = item + text.slice(item).indexOf(find);
+				stop = open + find.length - 1;
+				item = open + find.length;
+				list.push({init: open, last: stop})
 			}
+		}
+		/*-- localizar por expressão regular --*/
+		else {
+			while (find.test(text.slice(item))) {
+				char = text.slice(item).match(find)[0];
+				open = item + text.slice(item).indexOf(char);
+				stop = open + char.length - 1;
+				item = open + char.length;
+				list.push({init: open, last: stop})
+			}
+		}
+		/*-- aplicar destaques --*/
+		list.forEach(function(v,i,a) {this.mark(node, v.init, v.last);}, this);
+		return list.length > 0;
+	},
+	/**. '{void filter(node node, any data, integer size)}: Exibe os filhos do nó que contenham a expressão em '{data}:
+	- Quanto aos argumentos '{node} e '{data}, ver método '{find};
+	- O argumento '{size} é opcional, sendo seu valor padrão zero;
+	- O argumento '{size} não tem efeito se '{data} for uma expressão regular;
+	- O argumento '{size} tem o objetivo de estabelecer uma quantidade mínima de caracteres para efetuar a busca;
+	- Se '{size} for positivo, executará o filtro se a quantidade de caracteres a ser localizada for maior ou igual ao valor definido;
+	- Se '{size} for negativo, terá o mesmo comportamento anterior, mas esconderá os filhos enquanto o filtro não ocorrer.**/
+	filter: function(node, data, size) {
+		size = __Type(size).integer ? Number(size) : 0;
+		data = __Type(size).regexp  ? data : String(data);
+		const stop = typeof data === "string" && size !== 0;
+		const hide = !stop || size === 0 || data.length >= Math.abs(size) ? null : size < 0;
+		Array.from(node.children).forEach(function(v,i,a) {
+			v.hidden = hide === null ? !this.find(v, data) : hide;
 		}, this);
+		return;
+	},
+	/**. '{void attach(node input, node list, integer size)}: Fixa o mecanismo ao elemento de entrada de texto:
+	|Argumento|Descrição|
+	|'{input}|Elemento de entrada de texto|
+	|'{list}|Elemento alvo da ação|
+	|'{size}|Ver método '{filter}|
+	|""Tabela de argumento da ferramenta '{__FILTER}""|**/
+	attach: function(input, list, size) {
+		//FIXME falta os atributos de acessibilidade!!!!!!!!!!!!!!!
+		if (!(input instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
+		this.detach(input);
+		this.heap[__ID.id(input)] = {list: list, size: size};
+		input.addEventListener("input", this);
+		return this.handleEvent({currentTarget: input});
+	},
+	/**. '{void detach(node input)}: Remove o mecanismo do elemento de entrada de texto.**/
+	detach: function(input) {
+		if (!(input instanceof HTMLElement) || !(input.id in this.heap) ) return;
+		const heap = this.heap[input.id];
+		this.filter(heap.list, "", 0);
+		input.removeEventListener("input", this);
+		delete this.heap[input.id];
+		return;
+	},
+	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante o evento '{inpu}.**/
+	handleEvent: function(ev) {
+		const heap = this.heap[ev.currentTarget.id];
+		const form = __FORMDATA.type(ev.currentTarget) !== null;
+		const text = ev.currentTarget[form ? "value" : "textContent"];
+		const rexp = /^\/(.+)\/([gim]+)?$/;
+		const data = !rexp.test(text) ? text : new RegExp(text.replace(rexp, "$1"), text.replace(rexp, "$2"));
+		console.log(data);
+		if (heap) this.filter(heap.list, data, heap.size);
 		return;
 	},
 };
+__CSS.push(`/*-- FILTER --*/
+.css-js-wd-filter {
+	color: white;
+	background: yellowgreen;
+}`);

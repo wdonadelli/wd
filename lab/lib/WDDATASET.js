@@ -68,30 +68,6 @@ const WDDATASET = {
 		}
 		return;
 	},
-	/**. '{object onfocusout(object ev)}: Define os procedimentos durante o evento '{focusout} (alvo).**/
-	onfocusout: function(ev) {
-		const tool = {
-			wdMask: "wdMask" in ev.target.dataset && __FORMDATA.freeEdit(ev.target),
-		};
-		for (let name in tool) {
-			if (!tool[name]) continue;
-			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
-			ev.target.dispatchEvent(event);
-		}
-		return;
-	},
-	/**. '{object oninput(object ev)}: Define os procedimentos durante o evento '{input} (alvo).**/
-	oninput: function(ev) {
-		const tool = {
-			wdFilter: "wdFilter" in ev.target.dataset,
-		};
-		for (let name in tool) {
-			if (!tool[name]) continue;
-			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
-			ev.target.dispatchEvent(event);
-		}
-		return;
-	},
 
 
 
@@ -153,6 +129,7 @@ const WDDATASET = {
 	|Nome|Tipo|Opcional|Descrição|
 	|'{model}|string|Não|Modelo da máscara (ver '{__STRING})|
 	|""Tabela de configuração do atributo wdMask""|**/
+	//FIXME criar __MASK com métodos attach e detach
 	wdMask: function(ev) {
 		const data = this.attr(ev.target.dataset.wdMask);
 		const form = __FORMDATA.type(ev.target) !== null;
@@ -162,6 +139,16 @@ const WDDATASET = {
 		if (data) ev.target[form ? "value" : "textContent"] = mask;
 		return;
 	},
+	wdFilter: function(ev) {console.log("------------------------------------FILTER")
+		const data = this.attr(ev.target.dataset.wdFilter);
+		data.list  = typeof data.list === "string" ? document.querySelector(data.list) : data.list;
+		delete ev.target.dataset.wdFilter;
+		console.log(ev.target, data)
+
+		if (data) __FILTER.attach(ev.target, data.list, data.size);
+		return;
+	},
+
 
 
 
@@ -183,15 +170,7 @@ const WDDATASET = {
 	},
 
 
-	wdFilter: function(ev) {
-		const data = this.attr(ev.target.dataset.wdFilter);console.log("filter-------------------------", data)
-		const form = __FORMDATA.type(ev.target) !== null;
-		const text = ev.target[form ? "value" : "textContent"];
-		const rexp = /^\/(.+)\/([gim]+)?$/;
-		const find  = !rexp.test(text) ? text : new RegExp(text.replace(rexp, "$1"), text.replace(rexp, "$2"));
-		if (data) WD.$$(data.target).filter(find, Number(data.size));
-		return;
-	},
+
 
 
 
@@ -203,8 +182,6 @@ const WDDATASET = {
 		if (ev.type === "load")      return this.onload(ev);
 		if (ev.type === "resize")    return this.onresize(ev);
 		if (ev.type === "click")     return this.onclick(ev);
-		if (ev.type === "focusout")  return this.onfocusout(ev);
-		if (ev.type === "input")     return this.oninput(ev);
 		if (ev.type === "wdreload")  return this.onwdreload(ev);
 		if (ev.type === "wddataset") return this.onwddataset(ev);
 		return;
@@ -218,7 +195,5 @@ window.addEventListener("hashchange", __HASH);
 window.addEventListener("wdreload",   __HASH);
 window.addEventListener("load",        WDDATASET);
 window.addEventListener("resize",      WDDATASET);
-document.addEventListener("focusout",  WDDATASET);
-document.addEventListener("input",     WDDATASET);
 document.addEventListener("wddataset", WDDATASET);
 document.addEventListener("wdreload",  WDDATASET);
