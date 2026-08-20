@@ -3,51 +3,6 @@
 O objeto '{__STRING} apresenta algumas ferramentas de manipulação de texto.
 **/
 const __STRING = {
-	/**. '{string mask(string str, string model)}: Retorna o resultado do casamento de '{str} com o modelo '{model} ou uma string vazia. O modelo de máscara utiliza a seguinte codificação:
-	|Manipulador|Descrição|
-	|#|Exige um dígito.|
-	|@|Exige um não dígito.|
-	|*|Exige um valor qualquer.|
-	|?|Separa modelos alternativos caso o anterior não case.|
-	|%|Anula o efeito do caractere que o precede.|**/
-	mask: function(str, model) {
-		const list = String(model).normalize().split("")
-		const data = {
-			i: 0,
-			data: String(str).normalize().split(""),
-			list: [],
-			get char() {return this.data[this.i];},
-			get last() {return this.i === this.data.length;},
-			get mask() {return this.list.join("");},
-			get none() {return this.i === 0 && this.list.length === 0;},
-			init: function()  {this.i = 0; this.list = [];},
-			push: function()  {this.add(this.char); this.i++;},
-			add:  function(x) {this.list.push(x);},
-		};
-		for (let i = 0; i < list.length; i++) {
-			/*-- caracter coringa, casa tudo --*/
-			     if (list[i] === "*") data.push();
-			/*-- dígito, casa ou reinicia --*/
-			else if (list[i] === "#") (/\d/).test(data.char)  ? data.push() : data.init();
-			/*-- não dígito, casa ou reinicia --*/
-			else if (list[i] === "@") (/\D/).test(data.char)  ? data.push() : data.init();
-			/*-- caracter anulador, registrar ou adicionar próximo caracter --*/
-			else if (list[i] === "%") list[++i] === data.char ? data.push() : data.add(list[i]);
-			/*-- modelo encerrado com sucesso, retornar --*/
-			else if (list[i] === "?" && data.last) return data.mask;
-			/*-- modelo encerrado sem sucesso, reanalisar --*/
-			else if (list[i] === "?") data.init();
-			/*-- caracter qualquer, registrar ou adicionar caracter --*/
-			else  list[i] === data.char ? data.push() : data.add(list[i]);
-			/*-- checar se houve erro ao capturar caracter da máscara --*/
-			//console.log("saída", i, list[i], data.mask);
-			if (data.none) {
-				let next = list.slice(i).indexOf("?");
-				i += next < 0 ? list.length : next;
-			}
-		}
-		return data.last ? data.mask : "";
-	},
 	/**. '{string case(string str, string type}: Retorna a string de acordo com o tipo ('{upper, lower, invert, capitalize, kebab, snake, screaming, pascal, camel}).**/
 	case: function(str, type) {
 		str  = str.normalize();

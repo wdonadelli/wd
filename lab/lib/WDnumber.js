@@ -13,7 +13,7 @@ WDnumber.prototype = Object.create(WDmain.prototype, {
 	/**. '{string bytes}: Ver o método de mesmo nome em '{__MATH}.**/
 	bytes: {get: function() {return __MATH.bytes(this._input);}},
 	/**. '{string mask(string model)}: Retorna o valor formatado pela máscara definida em '{model}.**/
-	mask: {value: function(model) {return __STRING.mask(this._input, model);}},
+	mask: {value: function(model) {return __MASK.mask(this._input, model);}},
 	/**. '{Promise boolean prime}: Retorna uma promessa informando se o número é primo.**/
 	prime: {get: async function() {return __MATH.isPrime(this._input);}},
 	/**. '{Promise array primes}: Retorna uma promessa contendo a lista de primos divisores do número.**/

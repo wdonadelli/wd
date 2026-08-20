@@ -6,11 +6,30 @@ const WDDATASET = {
 	|'{name}|Identificador a ser utilizado como valor dos atributos HTML|
 	|'{data}|Valor que determina a configuração do atributo  HTML|**/
 	attach: function(name, data) {this.data[name] = data;},
-	/**. '{object attr(string value)}: Retorna o valor do atributo anexado a '{data} ou conforme nomenclatura específica (ver '{__DOCODE.attr}), caso contrário, nulo.**/
-	attr: function(value) {
-		const data = typeof this.data[value] === "function" ? this.data[value]() : this.data[value];
+	/**. '{object attr(string value, object parser)}: Retorna o valor do atributo anexado a '{data} ou conforme nomenclatura específica (ver '{__DOCODE.attr}), caso contrário, nulo:
+	|Argumento|Opcional|Descrição|
+	|'{value}|Não|Valor declarado no atributo|
+	|'{parser}|Sim|Objeto contendo os tipos de dados de cada propriedade para fins de transformação|
+	|""Tabela dos argumentos de '{attr}""|**/
+	attr: function(value, parser) {
+		parser = __Type(parser).object ? parser : {};
+		const data = __Type(this.data[value]).function ? this.data[value]() : this.data[value];
 		const text = __DOCODE.attr(value);
-		return typeof data === "object" && data !== null ? data : (text.find !== "" ? text.json : null);
+		const attr = __Type(data).object ? data : (text.find !== "" ? text.json : null);
+		if (attr === null) return null;
+		for (let i in parser) {
+			if (!(i in attr)) continue;
+			let val = new __Type(attr[i]);
+			if (parser[i] === "node")
+				attr[i] = val.node ? val.value[0] : document.querySelector(String(attr[i]));
+			else if (parser[i] === "nodes")
+				attr[i] = val.node ? attr[i] : document.querySelectorAll(String(attr[i]));
+			else if (parser[i] === "boolean")
+				attr[i] = attr[i] === "false" || attr[i] == false ? false : true;
+			else if (parser[i] === "number")
+				attr[i] = val.number ? val.value : attr[i];
+		}
+		return attr;
 	},
 	/**. '{object onload(object ev)}: Define os procedimentos durante o evento '{load} (documento).**/
 	onload: function(ev) {
@@ -69,6 +88,33 @@ const WDDATASET = {
 		return;
 	},
 
+	/*---------------------------NOVO MODELO HEAP-------------------------------*/
+	/**. '{void wdMask(object ev)}: Aplica uma máscara ao conteúdo textual do elemento a partir de um modelo, se casado:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{model}|string|Não|Modelo da máscara|
+	|""Tabela de configuração do atributo wdMask""|**/
+	wdMask: function(ev) {
+		const data = this.attr(ev.target.dataset.wdMask);
+		delete ev.target.dataset.wdMask;
+		if (data) __MASK.attach(ev.target, data.model);
+		return;
+	},
+	/**. '{void wdFilter(object ev)}: Estabelece um localizador de palavras no texto exibindo o elemento filho que contém o fragmento procurado:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{list}|node|Não|Elemento a procurar pelos fragmento|
+	|'{size}|integer|Sim|Quantidade mínima de caracteres para executar o filtro|
+	|""Tabela de configuração do atributo wdFilter""|**/
+	wdFilter: function(ev) {
+		const data = this.attr(ev.target.dataset.wdFilter, {list: "node", size: "number"});
+		delete ev.target.dataset.wdFilter;console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaa", data)
+		if (data) __FILTER.attach(ev.target, data.list, data.size);
+		return;
+	},
+
+
+
+
+
 
 
 
@@ -125,29 +171,8 @@ const WDDATASET = {
 		if (data) __DEVICE.css(ev.target, data);
 		return;
 	},
-	/**. '{void wdMask(object ev)}: Aplica uma máscara ao conteúdo textual do elemento a partir de um model, se casado:
-	|Nome|Tipo|Opcional|Descrição|
-	|'{model}|string|Não|Modelo da máscara (ver '{__STRING})|
-	|""Tabela de configuração do atributo wdMask""|**/
-	//FIXME criar __MASK com métodos attach e detach
-	wdMask: function(ev) {
-		const data = this.attr(ev.target.dataset.wdMask);
-		const form = __FORMDATA.type(ev.target) !== null;
-		const text = ev.target[form ? "value" : "textContent"];
-		const mask = form && __FORMDATA.hasMask(ev.target) ? text : __STRING.mask(text, data ? data.model : "");
-		ev.target.placeholder = data.model;
-		if (data) ev.target[form ? "value" : "textContent"] = mask;
-		return;
-	},
-	wdFilter: function(ev) {console.log("------------------------------------FILTER")
-		const data = this.attr(ev.target.dataset.wdFilter);
-		data.list  = typeof data.list === "string" ? document.querySelector(data.list) : data.list;
-		delete ev.target.dataset.wdFilter;
-		console.log(ev.target, data)
 
-		if (data) __FILTER.attach(ev.target, data.list, data.size);
-		return;
-	},
+
 
 
 
@@ -178,7 +203,7 @@ const WDDATASET = {
 
 
 	handleEvent: function(ev) {
-		console.log(ev);
+		//console.log(ev);
 		if (ev.type === "load")      return this.onload(ev);
 		if (ev.type === "resize")    return this.onresize(ev);
 		if (ev.type === "click")     return this.onclick(ev);

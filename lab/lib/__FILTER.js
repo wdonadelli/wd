@@ -5,8 +5,6 @@ O objeto '{__FILTER} exibe os nós que casam com determinado valor inibindo os d
 const __FILTER = {
 	/**. '{string id}: Classe identificadora do elemento de marcação.**/
 	id: "css-js-wd-filter",
-	/**. '{object heap}: Registra os dados dos elementos atrelado ao mecanismo.**/
-	heap: {},
 	/**. '{array textNodes(node node)}: Retorna uma lista de nós de texto.**/
 	textNodes: function(node) {
 		const list = node.childNodes;
@@ -117,6 +115,7 @@ const __FILTER = {
 				open = item + text.slice(item).indexOf(char);
 				stop = open + char.length - 1;
 				item = open + char.length;
+				if (char.length === 0) break;
 				list.push({init: open, last: stop})
 			}
 		}
@@ -133,7 +132,7 @@ const __FILTER = {
 	- Se '{size} for negativo, terá o mesmo comportamento anterior, mas esconderá os filhos enquanto o filtro não ocorrer.**/
 	filter: function(node, data, size) {
 		size = __Type(size).integer ? Number(size) : 0;
-		data = __Type(size).regexp  ? data : String(data);
+		data = __Type(data).regexp  ? data : String(data);
 		const stop = typeof data === "string" && size !== 0;
 		const hide = !stop || size === 0 || data.length >= Math.abs(size) ? null : size < 0;
 		Array.from(node.children).forEach(function(v,i,a) {
@@ -148,32 +147,51 @@ const __FILTER = {
 	|'{size}|Ver método '{filter}|
 	|""Tabela de argumento da ferramenta '{__FILTER}""|**/
 	attach: function(input, list, size) {
-		//FIXME falta os atributos de acessibilidade!!!!!!!!!!!!!!!
 		if (!(input instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
-		this.detach(input);
-		this.heap[__ID.id(input)] = {list: list, size: size};
+		const data = {
+			iAttr: __HEAP.getAttr(input, "role", "aria-controls"),
+			lAttr: __HEAP.getAttr(list,  "role", "aria-atomic", "aria-live"),
+			list:  list,
+			size:  size,
+		};
+		__HEAP.attach(input, data, this);
+		/*-- construindo o elemento --*/
+		input[__FORMDATA.type(input) === "search" ? "removeAttribute" : "setAttribute"]("role", "searchbox");
+		input.setAttribute("aria-controls", __ID.id(list));
+		list.setAttribute("role", "region");
+		list.setAttribute("aria-live", "polite");
+		list.setAttribute("aria-atomic", "true");
 		input.addEventListener("input", this);
-		return this.handleEvent({currentTarget: input});
+		this.input({currentTarget: input});
+		return;
 	},
 	/**. '{void detach(node input)}: Remove o mecanismo do elemento de entrada de texto.**/
 	detach: function(input) {
-		if (!(input instanceof HTMLElement) || !(input.id in this.heap) ) return;
-		const heap = this.heap[input.id];
-		this.filter(heap.list, "", 0);
+		if (__HEAP.data(input) === null) return;
+		const data = __HEAP.data(input);
+		const list = document.getElementById(input.getAttribute("aria-controls"));
+		__HEAP.resetAttr(data.iAttr);
+		__HEAP.resetAttr(data.lAttr);
 		input.removeEventListener("input", this);
-		delete this.heap[input.id];
+		this.filter(list, "", 0);
 		return;
 	},
-	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante o evento '{inpu}.**/
-	handleEvent: function(ev) {
-		const heap = this.heap[ev.currentTarget.id];
+	/**. '{void input(object ev)}: Disparador ao digitar.**/
+	input: function(ev) {
+		const data = __HEAP.data(ev.currentTarget);
+		if (data === null) return;
 		const form = __FORMDATA.type(ev.currentTarget) !== null;
 		const text = ev.currentTarget[form ? "value" : "textContent"];
-		const rexp = /^\/(.+)\/([gim]+)?$/;
-		const data = !rexp.test(text) ? text : new RegExp(text.replace(rexp, "$1"), text.replace(rexp, "$2"));
-		console.log(data);
-		if (heap) this.filter(heap.list, data, heap.size);
+		const find = text.match(/^\/(.+)\/([gim]+)?$/);
+		const look = find === null ? text : new RegExp(find[1], find[2] ? find[2] : "");
+		const list = document.getElementById(ev.currentTarget.getAttribute("aria-controls"));
+		this.filter(list, look, data.size);
 		return;
+	},
+	/**. '{void handleEvent(object ev)}: Disparador principal do objeto.**/
+	handleEvent: function(ev) {
+		if (ev.type in this) this[ev.type](ev);
+		return
 	},
 };
 __CSS.push(`/*-- FILTER --*/

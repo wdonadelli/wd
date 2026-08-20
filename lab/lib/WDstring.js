@@ -17,7 +17,7 @@ WDstring.prototype = Object.create(WDmain.prototype, {
 	/**. '{boolean compare(string str)}: Retorna verdadeiro se as strings forem semelhantes.**/
 	compare: {value: function(str) {return __STRING.compare(this._input, str);}},
 	/**. '{string mask(string model)}: Retorna o valor formatado pela máscara definida em '{model}.**/
-	mask: {value: function(model) {return __STRING.mask(this._input, model);}},
+	mask: {value: function(model) {return __MASK.mask(this._input, model);}},
 	//FIXME parser? CODE, CSV, DOCODE
 	parse: {value: function(type) {return "";}},
 });
