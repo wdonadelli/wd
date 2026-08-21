@@ -19,20 +19,29 @@ const __TAB = {
 			return text.split(" ").slice(0,5).join(" ");
 		return null;
 	},
-	/**. '{void attach(node node, boolean vertical)}: Define uma caixa de abas para referenciar os filhos do nó.**/
-	attach: function(node, vertical) {
+	/**. '{void attach(node node, string orientation)}: Define uma caixa de abas para referenciar os filhos do nó.**/
+	attach: function(node, orientation) {
+		if (!(node instanceof HTMLElement)) return;
+		orientation = (/^\s*vertical\s*$/i).test(orientation) ? "vertical" : "horizontal";
+		/*-- lista de abas --*/
+		const data    = {orientation: orientation, root: __HEAP.getAttr(node, "style", "class"), panels: {}, tablist: __ID.value};
 		const height  = {max: 0.9* window.innerHeight, min: 0.5 * window.innerHeight, val: 0};
+		const panels  = Array.from(node.children);
 		const tablist = {tag: "div", child: [], attr: {
+			id: data.tablist,
 			tabIndex: -1,
 			role: "tablist",
-			"aria-orientation": vertical === true ? "vertical" : "horizontal",
+			"aria-orientation": orientation,
 			addEventListener: {click: this, keydown: this}
 		}};
-		/*-- redefinindo e registrando container principal --*/
-		this.detach(node);
-		this.heap[node.id] = node;
-		/*-- configurando paineis e contruindo abas --*/
-		tablist.child = Array.from(node.children).map(function(v,i,a) {
+		/*-- registrando dados dos elementos envolvidos --*/
+		data.tablist = tablist.attr.id;
+		panels.forEach(function(v,i,a) {
+			data.panels[__ID.id(v)] = __HEAP.getAttr(v, "role", "tabIndex", "hidden", "aria-labelledby");
+		});
+		__HEAP.attach(node, data, this);
+		/*-- paineis --*/
+		tablist.child = panels.map(function(v,i,a) {
 			const tab  = __ID.value;
 			const text = this.label(v);
 			const rect = v.getBoundingClientRect().height;
@@ -59,7 +68,7 @@ const __TAB = {
 			}};
 		}, this);
 		/*-- configurando o container de abas --*/
-		__HTML(node, {classList: {add: `css-js-wd-tab css-js-wd-${vertical === true ? "v" : "h"}tab`}});
+		__HTML(node, {classList: {add: `css-js-wd-tab css-js-wd-${orientation === "vertical" ? "vtab" : "htab"}`}});
 		node.insertBefore(__DOM(tablist).tag, node.firstElementChild);
 		/*-- calculando altura ideal --*/
 		const rect = tablist.tag.getBoundingClientRect().height;
@@ -69,26 +78,11 @@ const __TAB = {
 	},
 	/**. '{void detach(node node)}: Desvincula uma caixa de abas dos elementos referenciados.**/
 	detach: function(node) {
-		if (!(__ID.id(node) in this.heap)) return;
-		delete this.heap[node.id];
-		__HTML(node, {
-			style:     {height: null},
-			classList: {remove: "css-js-wd-tab css-js-wd-htab css-js-wd-vtab"},
-		});
-		let tablist = null;
-		Array.from(node.children).forEach(function(v,i,a) {
-			if (String(v.getAttribute("role")).toLowerCase() === "tablist") {
-				tablist = v;
-				return;
-			}
-			const label = v.hasAttribute("aria-labelledby") ? document.getElementById(v.getAttribute("aria-labelledby")) : null;
-			v.removeAttribute("role");
-			v.removeAttribute("tabindex");
-			v.hidden = false;
-			if (label !== null && label.getAttribute("role") === "tab")
-				v.removeAttribute("aria-labelledby");
-		});
-		if (tablist !== null) tablist.remove();
+		if (__HEAP.data(node) === null) return;
+		const data = __HEAP.data(node);
+		document.getElementById(data.tablist).remove();
+		__HEAP.resetAttr(data.root);
+		for (let i in data.panels) __HEAP.resetAttr(data.panels[i]);
 		return;
 	},
 	/**. '{void open(node tab)}: Abre o painel a partir da aba.**/

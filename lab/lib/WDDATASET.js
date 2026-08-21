@@ -31,6 +31,16 @@ const WDDATASET = {
 		}
 		return attr;
 	},
+
+	events: {
+		resize: {wdDevice: {target: "[data-wd-device]", delete: false}},
+
+
+	},
+
+
+
+	/*-- MÉTODOS DE EVENTO -----------------------------------------------------*/
 	/**. '{object onload(object ev)}: Define os procedimentos durante o evento '{load} (documento).**/
 	onload: function(ev) {
 		for (let name in this) {
@@ -60,6 +70,7 @@ const WDDATASET = {
 		return;
 	},
 	/**. '{object onresize(object ev)}: Define os procedimentos durante o evento '{resize} (documento).**/
+	//FIXME cuidado ao apagar
 	onresize: function(ev) {
 		const tool = {
 			wdDevice: __DEVICE.changeDevice,
@@ -73,23 +84,38 @@ const WDDATASET = {
 		}
 		return;
 	},
-	/**. '{object onclick(object ev)}: Define os procedimentos durante o evento '{click} (alvo).**/
-	onclick: function(ev) {//FIXME
-		const tool = {
-			//wdDevice: __DEVICE.changeDevice,
-		};
-		for (let name in tool) {
-			if (!tool[name]) continue;
-			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
-			let find  = `[data-${__STRING.case(name, "kebab")}]`;
-			let query = Array.from(document.querySelectorAll(find));
-			query.forEach(function(v,i,a) {query[i].dispatchEvent(event);}, this);
-		}
+
+	/*-- ATRIBUTOS SEM REGISTRO ------------------------------------------------*/
+	/**. '{void wdLoad(object ev)}: Carrega um conteúdo externo:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{replace}|boolean|Sim|Ver '{__LOADER}|
+	|Demais propriedades|Any|Não|Ver '{__REQUEST}|
+	|""Tabela de configuração do atributo wdLoad""|**/
+	wdLoad: function(ev) {
+		const data = this.attr(ev.target.dataset.wdLoad);console.log(data)
+		delete ev.target.dataset.wdLoad;
+		if (data) __LOADER.urlHTML(ev.target, data, data.outer);
 		return;
 	},
-
-	/*---------------------------NOVO MODELO HEAP-------------------------------*/
-	/**. '{void wdMask(object ev)}: Aplica uma máscara ao conteúdo textual do elemento a partir de um modelo, se casado:
+	/**. '{void wdRepeat(object ev)}: Cria elementos filhos a partir de um modelo conforme especificado em um arquivo externo:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{model}|string|Sim|Ver '{__LOADER}|
+	|Demais propriedades|Any|Não|Ver '{__REQUEST}|
+	|""Tabela de configuração do atributo wdRepeat""|**/
+	wdRepeat: function(ev) {
+		const data = this.attr(ev.target.dataset.wdRepeat);
+		delete ev.target.dataset.wdRepeat;
+		if (data) __LOADER.urlRepeat(ev.target, data, data.model);
+		return;
+	},
+	/*-- ATRIBUTOS COM REGISTRO ------------------------------------------------*/
+	/**. '{void wdDetach(object ev)}: Desvincula o elemento registrados retornando ao estado inicial.**/
+	wdDetach: function(ev) {
+		delete ev.target.dataset.wdDetach;
+		__HEAP.detach(ev.target);
+		return;
+	},
+	/**. '{void wdMask(object ev)}: Aplica uma máscara ao conteúdo textual do elemento a partir de um modelo.
 	|Nome|Tipo|Opcional|Descrição|
 	|'{model}|string|Não|Modelo da máscara|
 	|""Tabela de configuração do atributo wdMask""|**/
@@ -106,16 +132,20 @@ const WDDATASET = {
 	|""Tabela de configuração do atributo wdFilter""|**/
 	wdFilter: function(ev) {
 		const data = this.attr(ev.target.dataset.wdFilter, {list: "node", size: "number"});
-		delete ev.target.dataset.wdFilter;console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaa", data)
+		delete ev.target.dataset.wdFilter;
 		if (data) __FILTER.attach(ev.target, data.list, data.size);
 		return;
 	},
-
-
-
-
-
-
+	/**. '{void wdTab(object ev)}: Transforma o elemento num conjunto de paineis controlados por abas:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{orientation}|string|Não|Disposição das abas: '{horizontal} (padrão) ou '{vertical}|
+	|""Tabela de configuração do atributo wdTab""|**/
+	wdTab: function(ev) {
+		const data = this.attr(ev.target.dataset.wdTab);
+		delete ev.target.dataset.wdTab;
+		if (data) __TAB.attach(ev.target, data.orientation);
+		return;
+	},
 
 
 
@@ -133,54 +163,7 @@ const WDDATASET = {
 		if (data) __MENU.attach(ev.target, data.list, data.call);
 		return;
 	},
-	/**. '{void wdLoad(object ev)}: Carrega um conteúdo externo:
-	|Nome|Tipo|Opcional|Descrição|
-	|'{outer}|boolean|Sim|Ver '{replace} em '{__LOADER}|
-	|Demais propriedades|Any|Não|Ver objeto '{__REQUEST}|
-	|""Tabela de configuração do atributo wdLoad""|**/
-	wdLoad: function(ev) {
-		const data = this.attr(ev.target.dataset.wdLoad);console.log(data)
-		delete ev.target.dataset.wdLoad;
-		if (data) __LOADER.urlHTML(ev.target, data, data.outer);
-		return;
-	},
-	/**. '{void wdRepeat(object ev)}: Cria elementos filhos a partir de um modelo conforme especificado em um arquivo externo:
-	|Nome|Tipo|Opcional|Descrição|
-	|'{model}|string|Sim|Ver '{__LOADER}|
-	|Demais propriedades|Any|Não|Ver objeto '{__REQUEST}|
-	|""Tabela de configuração do atributo wdRepeat""|**/
-	wdRepeat: function(ev) {
-		const data = this.attr(ev.target.dataset.wdRepeat);
-		delete ev.target.dataset.wdRepeat;
-		if (data) __LOADER.urlRepeat(ev.target, data, data.model);
-		return;
-	},
-	/**. '{void wdTab(object ev)}: Transforma o elemento num conjunto de paineis controlados por abas:
-	|Nome|Tipo|Opcional|Descrição|
-	|'{orientation}|string|Não|Disposição das abas: '{horizontal} (padrão) ou '{vertical}|
-	|""Tabela de configuração do atributo wdTab""|**/
-	wdTab: function(ev) {
-		const data = this.attr(ev.target.dataset.wdTab);
-		delete ev.target.dataset.wdTab;
-		if (data) __TAB.attach(ev.target, data.orientation === "vertical");
-		return;
-	},
-	/**. '{void wdDevice(object ev)}: Manipula classes de estilos conforme tipo de dispositivo (ver '{__DEVICE.css}).**/
-	wdDevice: function(ev) {
-		const data = this.attr(ev.target.dataset.wdDevice);
-		if (data) __DEVICE.css(ev.target, data);
-		return;
-	},
-
-
-
-
-
-
-
-
-
-	/**. '{void wdDrag(object ev)}: Define elementos arrastáveis e de queda (ver '{__DRAG}):
+		/**. '{void wdDrag(object ev)}: Define elementos arrastáveis e de queda (ver '{__DRAG}):
 	|Nome|Tipo|Opcional|Descrição|
 	|'{drop}|string|Não|Seletor CSS para definir os elementos de queda|
 	|'{effect}|string|Não|Efeito do arrasto|
@@ -198,10 +181,17 @@ const WDDATASET = {
 
 
 
+	/*-- ATRIBUTOS PERMANENTES -------------------------------------------------*/
+	/**. '{void wdDevice(object ev)}: Manipula classes de estilos conforme tipo de dispositivo (ver '{__DEVICE.css}).**/
+	wdDevice: function(ev) {
+		const data = this.attr(ev.target.dataset.wdDevice);
+		if (data) __DEVICE.css(ev.target, data);
+		return;
+	},
 
 
-
-
+	/*--------------------------------------------------------------------------*/
+	/**. '{void handleEvent(object ev)}: Manipular principal do objeto.**/
 	handleEvent: function(ev) {
 		//console.log(ev);
 		if (ev.type === "load")      return this.onload(ev);

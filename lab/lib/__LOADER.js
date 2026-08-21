@@ -36,7 +36,7 @@ const __LOADER = {
 		});
 		/*-- encerrando --*/
 		__HTML(node, {innerHTML: load.join("\n")});
-		node.setAttribute("aria-busy", "false");
+		node.removeAttribute("aria-busy");
 		return;
 	},
 	/**. '{object urlRepeat(node elem, object data, string model)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
@@ -78,10 +78,10 @@ const __LOADER = {
 					attr[html] = __STRING.parserDOM(x.result, x.mime).body.innerHTML;
 				else
 					attr[text] = x.result;
-				elem.setAttribute("aria-busy", "false");
+				elem.removeAttribute("aria-busy");
 				__HTML(elem, attr);
 			}
-			else if (x.done) elem.setAttribute("aria-busy", "false");
+			else if (x.done) elem.removeAttribute("aria-busy");
 			return;
 		};
 		__REQUEST.make(data);

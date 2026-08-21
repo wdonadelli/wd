@@ -140,7 +140,9 @@ const __FILTER = {
 		}, this);
 		return;
 	},
-	/**. '{void attach(node input, node list, integer size)}: Fixa o mecanismo ao elemento de entrada de texto:
+	/**. '{void attach(node input, node list, integer size)}: Fixa o mecanismo de filtragem ao elemento de entrada de texto:
+	- O filtro é executado durante a digitação do campo (evento '{oninput});
+	- Para buscar por expressão regular, o valor deve estar entre os caracteres ${#x2F};
 	|Argumento|Descrição|
 	|'{input}|Elemento de entrada de texto|
 	|'{list}|Elemento alvo da ação|
@@ -194,6 +196,7 @@ const __FILTER = {
 		return
 	},
 };
+//FIXME mudo a cor?
 __CSS.push(`/*-- FILTER --*/
 .css-js-wd-filter {
 	color: white;

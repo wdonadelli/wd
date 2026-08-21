@@ -47,7 +47,15 @@ const __MASK = {
 		}
 		return data.last ? data.mask : "";
 	},
-	/**. '{void attach(node node, string model)}: Atribui ao nó uma máscara textual a ser verificada ao perder o foco, exceto se o elemento for um campo de formulário com máscara nativa**/
+	/**. '{void attach(node node, string model)}: Atribui ao nó uma máscara textual:
+	- Se o valor informado no campo casar com a máscara, essa será aplicada;
+	- Se o valor não casar, uma string vazia será atribuída;
+	- A máscara é verificada na atribuição e ao perder o foco;
+	- Se a máscara não casar, o campo receberá o foco novamente, se aplicável; e
+	- Se o campo possuir máscara nativa, não será possível vinculá-lo à ferramenta.
+	|Argumento|Descrição|
+	|'{node}|Campo a receber a máscara|
+	|'{model}|Formato da máscará (ver '{mask})|**/
 	attach: function(node, model) {
 		/*-- não aceitar formulário com máscara nativa --*/
 		if (!(node instanceof HTMLElement) || __FORMDATA.hasMask(node)) return;

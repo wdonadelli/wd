@@ -1,0 +1,21 @@
+<div>
+	<h4>wdRepeat</h4>
+
+	<h5>JSON</h5>
+
+	<dl data-wd-repeat="@url{eg/lista.json}">
+		<dt>{{Autor}}</dt>
+		<dd>{{Frase}}</dd>
+	</dl>
+
+	<h5>CSV</h5>
+
+	<dl data-wd-repeat="@url{eg/lista.csv}">
+		<dt>{{Autor}}</dt>
+		<dd>{{Frase}}</dd>
+	</dl>
+
+	<h5>Com Modelo</h5>
+
+	<ul data-wd-repeat="@url{eg/lista.csv}model{<li><i>{{Frase\}\}</i>, {{Autor\}\}</li>}"></ul>
+</div>

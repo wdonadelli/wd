@@ -40,27 +40,10 @@ const __DEVICE = {
 		}
 		return false;
 	},
-
-
-	/**#4 Dispositivo: Design Responsivo
-	''function void data_wd_device(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-size|
-	|Objetivo|Manipular atributo '{class} conforme tamanho da tela (design responsivo via javascript)|
-	|Eventos|load wdreload wddataset resize|
-	|Alvos|Elemento|
-	|Grupos|Único|
-	|Referências|__DEVICE|
-	span{ }
-	|Propriedades|Tipo|Descrição|
-	|desktop|string|Estilos CSS aplicados à tela desktop.|
-	|tablet|string|Estilos aplicados à tela tablet.|
-	|phone|string|Estilos aplicados à tela phone.|
-	|mobile|string|Estilos aplicados à tela tablet ou phone.|
-	Observações:
-	- Não há propriedade obrigatória; e
-	- O estilos CSS devem estar separados por espaços em branco.**/
-//device="@phone{a1 a2 a3}desktop{b1 b2}"
+	/**. '{void css(node node, object data)}: Define atributos CSS ao nó conforme o tipo de dispositivo definidos em '{data}:
+	- As propriedades de '{data} correspondem ao tipo de dispositivo presente em '{rules};
+	- Os valores das propriedades devem ser strings contendo as classes separadas por espaço; e
+	- Não há propriedade obrigatória.**/
 	css: function(node, data) {
 		data = __Type(data).object ? data : {};
 		const rules = this.rules;

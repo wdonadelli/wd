@@ -7,7 +7,7 @@ function lista_biblioteca() {
 }
 
 function lista_exemplo() {
-	const list = ["Exemplos", "wdFilter", "wdMask"];
+	const list = ["Exemplos", "wdFilter", "wdMask", "wdRepeat"];
 	return list.map(function(v,i,a) {return i > 0 ? `eg/${v}.html` : v});
 }
 
