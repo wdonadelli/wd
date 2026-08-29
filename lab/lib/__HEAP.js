@@ -23,9 +23,10 @@ const __HEAP = {
 		}
 		return;
 	},
-	/**. '{any data(node node)}: Retorna os dados do elemento registrado ou nulo se não encontrado.**/
-	data: function(node) {
-		return node.id in this.heap ? this.heap[node.id].data : null;
+	/**. '{any data(node find)}: Retorna os dados do elemento registrado, ou seu '{id}, ou nulo se não encontrado.**/
+	data: function(find) {
+		find = find instanceof HTMLElement ? find.id : String(find);
+		return find in this.heap ? this.heap[find].data : null;
 	},
 	/**. '{void getAttr(node node, names...)}: Retorna um objeto contendo o nó e os valores dos atributos nomeados como argumentos.**/
 	getAttr: function(node) {

@@ -73,7 +73,7 @@ const WDDATASET = {
 	//FIXME cuidado ao apagar
 	onresize: function(ev) {
 		const tool = {
-			wdDevice: __DEVICE.changeDevice,
+			wdDevice: __DEVICE.changeDevice,//TODO importante
 		};
 		for (let name in tool) {
 			if (!tool[name]) continue;
@@ -146,21 +146,16 @@ const WDDATASET = {
 		if (data) __TAB.attach(ev.target, data.orientation);
 		return;
 	},
-
-
-
-
-
-
 	/**. '{void wdMenu(object ev)}: Define um menu suspenso:
 	|Nome|Tipo|Opcional|Descrição|
 	|'{list}|Array|Não|Ver objeto '{__MENU}|
+	|'{type}|String|Não|Ver objeto '{__MENU}|
 	|'{call}|Function|Sim|Ver objeto '{__MENU}|
 	|""Tabela de configuração do atributo wdMenu""|**/
 	wdMenu: function(ev) {
 		const data = this.attr(ev.target.dataset.wdMenu);
 		delete ev.target.dataset.wdMenu;
-		if (data) __MENU.attach(ev.target, data.list, data.call);
+		if (data) __MENU.attach(ev.target, data.list, data.type, data.call);
 		return;
 	},
 		/**. '{void wdDrag(object ev)}: Define elementos arrastáveis e de queda (ver '{__DRAG}):

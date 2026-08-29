@@ -1,8 +1,6 @@
 /**#3 Abas
 O objeto '{__TAB} organiza um container em forma de abas.**/
 const __TAB = {
-	/**. '{object heap}: Registra o elemento que recebeu a configuração de abas.**/
-	heap: {},
 	/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 	label: function(panel, index) {
 		const query = panel.querySelector("h1, h2, h3, h4, h5, h6, [role=heading]");
