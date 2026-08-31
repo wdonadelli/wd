@@ -263,10 +263,11 @@ const __REQUEST = {
 		else if (ev.target instanceof this.Fetch)
 			data = ev.data;
 		/*-- refinando respostas --*/
-		const head   = data.headers === null ? null : new __DataSet(data.headers);
+		const head   = data.headers === null ? null : new __DataSet(data.headers);//console.log(head.getAll("content-type"));
+		const mime   = head !== null && head.getAll("content-type").length > 0;
 		data.time    = Date.now() - heap.init;
 		data.headers = head === null ? null : head.toHeaders;
-		data.mime    = head === null ? null : head.getAll("content-type")[0].split(";")[0].replace(/\s+/g, "").toLowerCase();
+		data.mime    = mime ? head.getAll("content-type")[0].split(";")[0].replace(/\s+/g, "").toLowerCase() : "application/octet-stream";
 		data.url     = heap.url;
 		data.target  = ev.target;
 		/*-- exibindo progresso --*/

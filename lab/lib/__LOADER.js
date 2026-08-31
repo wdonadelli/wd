@@ -63,6 +63,7 @@ const __LOADER = {
 	|'{data}|Parâmetros da requisição ou leitura (ver __REQUEST).|
 	|'{replace}|Se verdadeiro, o elemento será substituído pelo conteúdo, caso contrário, o receberá.|**/
 	urlHTML: function(elem, data, replace) {
+		const docode = /^\s*\-\-docode\-\-\s*\n/i;
 		if (!__Type(data).object) return null;
 		elem.setAttribute("aria-busy", "true");
 		data.type  = "text";
@@ -76,12 +77,16 @@ const __LOADER = {
 					attr[html] = form ? x.result : __CSV.parseTable(x.result).outerHTML;
 				else if (x.mime === "text/html" || x.mime === "application/xml+html" || x.mime === "image/svg+xml")
 					attr[html] = __STRING.parserDOM(x.result, x.mime).body.innerHTML;
+				else if (docode.test(x.result.trim())) {
+					const div = __HTML("div");
+					__DOCODE.render(div, x.result.replace(docode, ""));
+					attr[html] = div.innerHTML;
+				}
 				else
 					attr[text] = x.result;
-				elem.removeAttribute("aria-busy");
 				__HTML(elem, attr);
 			}
-			else if (x.done) elem.removeAttribute("aria-busy");
+			if (x.done) elem.removeAttribute("aria-busy");
 			return;
 		};
 		__REQUEST.make(data);

@@ -1,32 +1,34 @@
 /**
 #3 Menu
-	O objeto '{__MENU} cria um menu a partir de uma lista (array):
-	- A lista é composta por rótulos (strings) ou sub-listas (array);
-	- Rótulos definem o nome e o tipo de item ou o nome do grupo;
-	- Sub-listas definem um submenu com as mesmas regras da lista principal;
-	- O primeiro rótulo da sub-lista define o rótulo do submenu;
-	- Itens podem ser do tipo '{item} (com ou sem ícone), '{checkbox} ou '{radio};
-	- O ícone, o tipo e o estado do item são definidos pelos caracteres que antecedem o valor de seu rótulo:
+	O objeto '{__MENU} cria um menu a partir de uma lista ('{array}):
+	- A lista é composta por rótulos ('{strings}) ou sublistas ('{array});
+	- Os rótulos definem um item (tipo e nome) ou a abertura de um grupo (nome);
+	- Uma sublista define um submenu com regras semelhantes à lista principal;
+	- Não é possível criar subgrupos, apenas submenus, a abertura de um novo grupo encerrará o anterior;
+	- O primeiro item da sublista deve ser um rótulo ('{string}) que identificará o submenu;
+	- Um item pode ser do tipo '{item}, '{checkbox} ou '{radio};
+	- Um item do tipo '{item} pode conter um ícone por meio de um caracteres i{unicode} em forma de figura;
+	- O ícone não é aplicável ao rótulo que identifica o submenu (primeiro item), pois possuirá comportamento próprio;
+	- O relacionamento entre os itens de '{radio} são estabelecidos entre aqueles dentro de um mesmo menu ou grupo;
+	- Os tipos de item e o grupos são definidos por caracteres especiais inseridos no início de cada rótulo;
+	- O caractere especial não participa do rótulo visível do item ou grupo, seu objetivo é definir a função da informação;
+	- A tabela abaixo apresenta os caracteres especiais que definem os itens ou grupos:
 	|Caractere|Tipo|Estado|
 	|&{#x002B}|'{checkbox}|Checado|
 	|&{#x002D}|'{checkbox}|Não Checado|
 	|&{#x002A}|'{radio}|Selecionado|
 	|&{#x002E}|'{radio}|Não Selecionado|
-	|'{&unicode;}|'{item}|Item com ícone definido pelo caracter unicode|
+	|'{&unicode;}|'{item}|Identificador do ícone (unicode em HTML)|
 	||'{item}|Item sem ícone|
 	|&{#x0023}|'{group}|Define a abertura de um grupo|
 	|""Tabela de caracteres para criação de itens de menu e grupos""|
-	- O caractere especial não será exibido no rótulo do item ou grupo;
-	- Não é possível criar subgrupos, mas é possível criar submenus;
-	- O relacionamento entre os itens de '{radio} são estabelecidos entre aqueles dentro de um mesmo menu ou grupo;
-	- Uma função opcional ('{call}) será retornará a cada interação com o menu recebendo como argumento um objeto:
+	Uma função disparadora opcional ('{call}) será chamara a cada interação com um item menu recebendo como argumento um objeto com as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|'{type}|string|O tipo de item: '{item}, '{checkbox} ou '{radio}|
 	|'{checked}|boolean|É verdadeiro se um '{checkbox} ou '{radio} tiver sido checado/selecionado|
-	|'{path}|array|Linha sucessória do menu principal ao item interagido|
+	|'{line}|array|Linha sucessória do item interagido ao menu principal (ver método '{line})|
 	|""Tabela das propriedades retornadas como argumento de '{call}""|
-	- A propriedade '{path} retornará os rótulos dos menus/submenus, dos grupos e do item interagido, da raiz ao item; e
-	- O caminho fornecido em '{path} é idêntico aos rótulos informados na lista, incluindo os caracteres especiais.**/
+	A lista retornada por '{line} conterá os rótulos do item interagido e dos submenus e grupos ancestrais, do item para o menu raiz. Os rótulos informados em '{line} corresponderão aos informados na lista que descreve o menu, excluídos os caracteres especiais.**/
 const __MENU = {
 	/**. '{node createItem(string str, boolean div)}: Cria e retorna um nó de item ('{li}) ou grupo de menu ('{div}).**/
 	createItem: function(str, div) {
@@ -140,7 +142,7 @@ const __MENU = {
 		__HEAP.attach(node, data, this);
 		/*-- definindo propriedades do elemento disparador (somente para float) --*/
 		if (type === "float") __HTML(node, {
-			"aria-haspopup": "true",
+			"aria-haspopup": "menu",
 			"aria-controls": menu.id,
 			"aria-expanded": "false",
 			classList: {add: "css-js-wd-menu-open"},
@@ -163,7 +165,7 @@ const __MENU = {
 		}
 		return;
 	},
-	/**. '{boolean openMenu(object ev)}: Retorna verdadeiro se o evento de clique for para abrir o menu.**/
+	/**. '{void openMenu(object ev)}: Disparador do botão que acionará o menu.**/
 	openMenu: function(ev) {
 		const keys = /^(\ |ArrowDown|Enter|\ )$/i;
 		const open = ev.type === "click" || (ev.type === "keydown" && keys.test(ev.key));
@@ -175,9 +177,14 @@ const __MENU = {
 					document.getElementById(data.menu.getAttribute("aria-activedescendant")).focus();
 			});
 		}
-		return false;
+		return;
 	},
-	/**. '{array path(node item)}: Retorna a lista de menus ancestrais a partir do item, da raiz para o atual.**/
+
+
+
+
+
+	/**. '{array path(node item)}: Retorna a lista de menus ancestrais a partir do item, u{da raiz para o atual}.**/
 	path: function(item) {
 		const path = [];
 		while(item !== null && !item.hasAttribute("aria-activedescendant")) {
@@ -188,19 +195,19 @@ const __MENU = {
 		path.unshift(item);
 		return path;
 	},
-	/**. '{array line(node item)}: Retorna a lista de rótulos dos menus e grupos ancestrais do item, inclusive, conforme especificado no array original.**/
+	/**. '{array line(node item)}: Retorna uma lista sucessória do item interagido.**/
 	line: function(item) {
 		const path = [item.getAttribute("data-label")];
 		while(item !== null && !item.hasAttribute("aria-activedescendant")) {
 			let role = item.getAttribute("role");
 			if (role === "menu" || role === "group")
-				path.unshift(item.getAttribute("data-label"));
+				path.push(item.getAttribute("data-label"));
 			item = item.parentElement;
 		}
-		path.unshift(item.getAttribute("data-label"));
+		//path.unshift(item.getAttribute("data-label"));
 		return path;
 	},
-	/**. '{array items(node box, boolean all)}: Retorna a u{lista de itens do menu/grupo} ou todos os visíveis se o argumento '{all} for verdadeiro.**/
+	/**. '{array items(node box, boolean all)}: Retorna a u{lista de itens do menu ou grupo} ou todos os visíveis se o argumento '{all} for verdadeiro.**/
 	items: function(box, all) {
 		const list = [];
 		Array.from(box.children).forEach(function(v,i,a) {
@@ -214,7 +221,7 @@ const __MENU = {
 		}, this);
 		return list;
 	},
-	/**. '{array siblings(node item)}: Retorna a u{lista de itens visíveis} do menu/submenu.**/
+	/**. '{array siblings(node item)}: Retorna a u{lista de itens focáveis} do menu/submenu.**/
 	siblings: function(item) {//ainda não funciona
 		const path = this.path(item);
 		const role = item.getAttribute("role");
@@ -240,6 +247,27 @@ const __MENU = {
 		while(elem !== null && !(/^(menu|group)$/i).test(elem.getAttribute("role")))
 			elem = elem.parentElement;
 		return elem;
+	},
+	/**. '{void scroll(string key, node item)}: Foca no próximo elemento não visível do menu (teclas '{PageUp} e '{PageDown}).**/
+	scroll: function(key, item) {
+		const items = this.siblings(item);
+		const index = items.indexOf(item);
+		const main  = this.path(item)[0].getBoundingClientRect();
+		if (key === "PageDown") {
+			for (let i = index; i < items.length; i++) {
+				let box = items[i].getBoundingClientRect();
+				if (box.top > main.bottom)
+					return items[i].focus();
+			}
+		}
+		if (key === "PageUp") {
+			for (let i = index; i >= 0; i--) {
+				let box = items[i].getBoundingClientRect();
+				if (box.bottom < main.top)
+					return items[i].focus();
+			}
+		}
+		return;
 	},
 	/**. '{void mouseenter(object ev)}: Manipulador para definir foco no item pelo mouse.**/
 	mouseenter: function(ev) {
@@ -269,7 +297,7 @@ const __MENU = {
 		const click = ev.key === "Enter" || ev.key === " ";
 		const role  = ev.currentTarget.getAttribute("role");
 		/*-- prevenir comportamento padrão --*/
-		if ((/^(Arrow(Down|Up|Left|Right)|Home|End|Enter|\ )$/).test(ev.key))
+		if ((/^(Arrow(Down|Up|Left|Right)|Home|End|Enter|\ |Page(Up|Down))$/).test(ev.key))
 			ev.preventDefault();
 		/*-- baixo --*/
 		if (ev.key === "ArrowDown")
@@ -280,7 +308,8 @@ const __MENU = {
 		/*-- primeiro/último --*/
 		if (ev.key === "Home" || ev.key === "End")
 			return items[ev.key === "Home" ? 0 : items.length - 1].focus();
-		//FIXME adicionar pageup e pagedown
+		if (ev.key === "PageUp" || ev.key === "PageDown")
+			return this.scroll(ev.key, item);
 		/*-- abrir submenu pelo controlador --*/
 		if (item.getAttribute("aria-expanded") === "false" && (ev.key === "ArrowRight" || click))
 			return item.click();
@@ -323,7 +352,7 @@ const __MENU = {
 			return;
 		}
 		/*-- acionamento de itens --*/
-		const data = {type: null, path: this.line(item), checked: false};
+		const data = {type: null, line: this.line(item), checked: false};
 		if (role === "menuitem") {
 			data.type = "item";
 		}

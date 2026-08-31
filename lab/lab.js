@@ -1,23 +1,19 @@
 
 /*-- Menu Principal --*/
-function lista_biblioteca() {
-	const query = Array.from(document.querySelectorAll("[data-library]"));
-	const list  = query.map(function(v,i,a) {return v.getAttribute("src");}).sort();
-	return ["Pacotes"].concat(list);
+function lista_menu() {
+	const re       = /(\w+)\.\w+/
+	const scripts  = Array.from(document.querySelectorAll("[data-library]"));
+	const pacotes  = scripts.map((v) => v.getAttribute("src").match(re)[1]);
+	const exemplos = ["wdFilter", "wdMask", "wdRepeat"];
+	return [["Pacotes"].concat(pacotes.sort()), ["Exemplos"].concat(exemplos.sort())];
 }
 
-function lista_exemplo() {
-	const list = ["Exemplos", "wdFilter", "wdMask", "wdRepeat"];
-	return list.map(function(v,i,a) {return i > 0 ? `eg/${v}.html` : v});
-}
+function carregar_menu(x) {
+	if (x.line[1] === "Exemplos")
+		return WD.$("#exemplo").set({dataset: {wdLoad: `@url{eg/${x.line[0]}.html}`}});
 
-function carregar(url) {
-	/*-- exemplos --*/
-	if ((/^eg\//).test(url))
-		return __HTML(document.getElementById("exemplo"), {dataset: {wdLoad: `@url{${url}}`}});
-	/*-- biblioteca --*/
-	if ((/^lib\//).test(url))
-		return __REQUEST.send({url: url, call: function(x) {
+	if (x.line[1] === "Pacotes")
+		return __REQUEST.send({url: `lib/${x.line[0]}.js`, call: function(x) {
 			if (x.ok) {
 				const split = __DOCODE.split(x.result, "/**", "**/");
 				document.getElementById("manual").innerHTML = "";
@@ -29,10 +25,4 @@ function carregar(url) {
 	return;
 }
 
-WD.attach("menu", function () {
-	const menu = ["WD Lab Menu", lista_exemplo(), lista_biblioteca()];
-	return {
-		list: menu,
-		call: function(x) {return carregar(x.path[x.path.length - 1])}
-	};
-});
+WD.attach("menu", function() {return {list: lista_menu(), call: carregar_menu};});

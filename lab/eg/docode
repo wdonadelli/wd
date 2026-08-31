@@ -1,0 +1,22 @@
+--docode--
+#1 Meu DOCODE
+	Olá, esse é um documento do tipo DOCODE.
+	Aqui em baixo temos uma tabela:
+|Coluna 1|Coluna 2|Coluna 3|
+|Célula 1.1|Célula 1.2|Célula 1.3|
+|Célula 2.1|Célula 2.2|Célula 2.3|
+	Agora nós teremos uma lista:
+- Item 1
+- Item 2
+- Item 3
+	Agora uma citação:
+""Isso é uma citação longa""
+	Agora um código:
+''function loko() {
+	return 123;
+}''
+	Esse é um b{negrito}, um i{itálico}, um u{sublinhado}, um s{riscado} e um mark{marcado}.
+	Agora outro tipo de lista:
+. Título 1: Valor 1
+. Título 2: Valor 2
+. Título 3: Valor 3
