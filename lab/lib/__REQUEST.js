@@ -39,10 +39,15 @@ const __REQUEST = {
 		if (name !== null)     data.append("content-disposition", `attachment; filename="${file.name}"; filename*=UTF-8''${name}`);
 		return data.toHeaders;
 	},
-	/**. '{object blob(string content, string type)}: Retorna um objeto do tipo '{Blob} com o conteúdo e tipo informado.**/
-	blob: function(content, type) {
-		return new Blob([content], {type: typeof type === "string" ? type.trim() : "application/octet-stream"});
+	/**. '{object blob(string content, string type, boolean url)}: Retorna um objeto do tipo '{Blob} com o conteúdo e tipo informado ou sua '{url} se o respectivo argumento for verdadeiro.**/
+	blob: function(content, type, url) {
+		const blob = new Blob([content], {type: typeof type === "string" ? type.trim() : "application/octet-stream"});
+		return url === true ? URL.createObjectURL(blob) : blob;
 	},
+
+
+
+
 
 
 

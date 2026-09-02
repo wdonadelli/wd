@@ -64,18 +64,6 @@ const __MENU = {
 		li.appendChild(span3);
 		return li;
 	},
-
-
-	//TODO retorna a quantidade de caracteres do item com mais caracteres para definir o tamanho do menu
-	char: function(list) {
-		let char = 0;
-		list.forEach(function(v,i,a) {
-			const len = Array.isArray(v) ? this.char(v) : String(v).trim().length;
-			char = char > len ? char : len;
-		}, this);
-		return char;
-	},
-
 	/**. '{node createMenu(array list)}: Cria e retornar menus/submenus a partir de uma lista.**/
 	createMenu: function(list) {
 		const menu = __HTML("menu", {id: __ID.value, role: "menu"});
@@ -116,6 +104,15 @@ const __MENU = {
 		}, this);
 		return menu;
 	},
+
+	ariaLabel: function(node, menu) {
+
+
+
+
+	},
+
+
 	/**. '{void attach(node node, array list, string type, function call)}: Atribui um menu vertical a um nó HTML:
 	|Argumento|Descrição|
 	|'{node}|Elemento HTML que acomodará ou acionará o menu|
@@ -129,11 +126,15 @@ const __MENU = {
 		call = typeof call === "function" ? call : null;
 		/*-- criando e configurando condições iniciais do menu --*/
 		const menu = this.createMenu(list);
-		const char = this.char(list); console.log({char:char});
+		//const char = this.char(list);
 		const init = menu.querySelector(`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`);
 		init.setAttribute("tabindex", "0");
 		//FIXME aria-labelled do menu (pegar do container agrupador)
 		__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": init.id});
+
+		__HTML(menu, node.hasAttribute("aria-label") ? {"aria-label": node.getAttribute("aria-label")} : {"aria-labelledby": __ID.id(node)});
+
+
 		/*-- definindo registro do anexação --*/
 		const data = {
 			attr: __HEAP.getAttr(node, "aria-haspopup", "aria-controls", "aria-expanded", "class", "tabindex"),
@@ -253,19 +254,11 @@ const __MENU = {
 		const items = this.siblings(item);
 		const index = items.indexOf(item);
 		const main  = this.path(item)[0].getBoundingClientRect();
-		if (key === "PageDown") {
-			for (let i = index; i < items.length; i++) {
-				let box = items[i].getBoundingClientRect();
-				if (box.top > main.bottom)
-					return items[i].focus();
-			}
-		}
-		if (key === "PageUp") {
-			for (let i = index; i >= 0; i--) {
-				let box = items[i].getBoundingClientRect();
-				if (box.bottom < main.top)
-					return items[i].focus();
-			}
+		const down  = key === "PageDown";
+		for (let i = index; down ? (i < items.length) : (i >= 0); i = i + (down ? 1 : -1)) {
+			let box = items[i].getBoundingClientRect();
+			if (down ? (box.top > main.bottom) : (box.bottom < main.top))
+				return items[i].focus();
 		}
 		return;
 	},

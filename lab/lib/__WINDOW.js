@@ -95,22 +95,19 @@ const __WINDOW = {
 	/**. '{void affix(node win, node src)}: Fixa a janela '{float} ao elemento que causou seu disparo, ou na posição '{sw}.**/
 	affix: function(win, src) {
 		/*-- dados gerais --*/
-		const p  = Math.min(window.screen.width, window.screen.height)*0.01;
-		const h  = window.innerWidth;
-		const v  = window.innerHeight;
+		const p = Math.min(window.screen.width, window.screen.height)*0.01;
+		const h = window.innerWidth;
+		const v = window.innerHeight;
 		/*-- acertando estilos --*/
-		win.style.left      = null;
-		win.style.bottom    = null;
-		win.style.top       = null;
-		win.style.right     = null;
-		win.style.maxHeight = null;
-		win.style.maxWidth  = `${h - 2*p}px`;
-		win.style.maxHeight = `${v - 2*p}px`;
-		win.style.width     = window.getComputedStyle(win).width;
+		const zero = ["top", "left", "bottom", "right", "height", "width", "minHeight", "maxHeight", "minWidth", "maxWidth"];
+		zero.forEach(function(v,i,a) {return win.style[v] = null;});
+		const style = window.getComputedStyle(win);
 		/*-- sem fonte --*/
 		if (src === null) {
 			win.style.left      = `${p}px`;
 			win.style.bottom    = `${p}px`;
+			win.style.maxWidth  = `${h - 2*p}px`;
+			win.style.maxHeight = `${v - 2*p}px`;
 			return;
 		}
 		/*-- com fonte --*/
@@ -124,7 +121,7 @@ const __WINDOW = {
 		const dw = bs.right - p > 0 ? bs.right - p : 0;
 		/*-- posicionamento --*/
 		const pv = bw.height <= ds ? "s" : (bw.height <= dn ? "n" : (dn > ds ? "n" : "s"));
-		const ph = bw.width  <= de ? "e" : (bw.width  <= dw ? "w" : (dw > de ? "left" : "right"));
+		const ph = bw.width  <= de ? "e" : (bw.width  <= dw ? "w" : (dw > de ? "w" : "e"));
 		/*-- fixar na vertical --*/
 		if (pv === "s")
 			win.style.top = (bs.bottom < p ? p : bs.bottom)+"px";
@@ -134,10 +131,9 @@ const __WINDOW = {
 		/*-- fixar na horizontal --*/
 		if (ph === "e")
 			win.style.left = (bs.left < p ? p : bs.left)+"px";
-		else if (ph === "w")
-			win.style.right = (bs.right > (h - p)? (h - p) : h - bs.right)+"px";
 		else
-			win.style[ph] = `${p}px`;
+			win.style.right = (bs.right > (h - p) ? (h - p) : h - bs.right)+"px";
+		win.style.maxWidth = (ph === "e" ? de : dw)+"px";
 		return;
 	},
 	/**. '{void open(integer index)}: Verifica a possibilidade de abertura da janela localizada no índice indicado.**/

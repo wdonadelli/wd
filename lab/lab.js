@@ -1,3 +1,55 @@
+/*-- Montar WD --*/
+function montar_wd(lista) {
+	const code = [];
+	const data = [];
+	for (let i = 0; i < lista.length; i++) {
+		if (lista[i].code === null || lista[i].data === null) return;
+		code.push(lista[i].code);
+		data.push(lista[i].data);
+	}
+	/*-- Arquivo Javascript --*/
+	const jsURL  = __REQUEST.blob("const wd = (function() {\n" + code.join("") + "\n}());", "text/javascript", true);
+	const jsLink = __HTML("a", {href: jsURL, textContent: `${__INFO.name}${__INFO.version}.js`, download: `${__INFO.name}.js`,});
+	document.body.appendChild(jsLink);
+	jsLink.click();
+	jsLink.remove();
+	URL.revokeObjectURL(jsURL);
+	/*-- Arquivo DOCODE --*/
+
+
+
+
+
+//document.getElementById("arquivos").innerHTML = "";
+	//__DOCODE.render(document.getElementById("manual_completo"), data.join("\n"));
+	return;
+}
+
+
+function obter_wd() {
+	const lista = Array.from(document.querySelectorAll(`[data-library=true]`)).map(function(v,i,a) {
+		return {src: v.src, code: null, data: null};
+	});
+	for (let i = 0; i < lista.length; i++)
+		__REQUEST.send({
+			url: lista[i].src,
+			call: function(x) {
+				if (x.ok) {
+					const split = __DOCODE.split(x.result, "/**", "**/");
+					lista[i].code = split.code;
+					lista[i].data = split.data;
+					montar_wd(lista);
+				}
+				else if (x.done)
+					throw new Error (`Erro na montagem da biblioteca: ${lista[i].src}`);
+			},
+	});
+	return;
+};
+
+
+
+
 
 /*-- Menu Principal --*/
 function lista_menu() {
@@ -5,10 +57,13 @@ function lista_menu() {
 	const scripts  = Array.from(document.querySelectorAll("[data-library]"));
 	const pacotes  = scripts.map((v) => v.getAttribute("src").match(re)[1]);
 	const exemplos = ["wdFilter", "wdMask", "wdRepeat"];
-	return [["Pacotes"].concat(pacotes.sort()), ["Exemplos"].concat(exemplos.sort())];
+	return [["Pacotes"].concat(pacotes.sort()), ["Exemplos"].concat(exemplos.sort()), "&#x1F4BE;Biblioteca"];
 }
 
 function carregar_menu(x) {
+	if (x.line[0] === "Biblioteca")
+		return obter_wd();
+
 	if (x.line[1] === "Exemplos")
 		return WD.$("#exemplo").set({dataset: {wdLoad: `@url{eg/${x.line[0]}.html}`}});
 
@@ -26,3 +81,6 @@ function carregar_menu(x) {
 }
 
 WD.attach("menu", function() {return {list: lista_menu(), call: carregar_menu};});
+
+
+
