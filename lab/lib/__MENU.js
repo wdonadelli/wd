@@ -104,15 +104,6 @@ const __MENU = {
 		}, this);
 		return menu;
 	},
-
-	ariaLabel: function(node, menu) {
-
-
-
-
-	},
-
-
 	/**. '{void attach(node node, array list, string type, function call)}: Atribui um menu vertical a um nó HTML:
 	|Argumento|Descrição|
 	|'{node}|Elemento HTML que acomodará ou acionará o menu|
@@ -126,15 +117,9 @@ const __MENU = {
 		call = typeof call === "function" ? call : null;
 		/*-- criando e configurando condições iniciais do menu --*/
 		const menu = this.createMenu(list);
-		//const char = this.char(list);
 		const init = menu.querySelector(`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`);
 		init.setAttribute("tabindex", "0");
-		//FIXME aria-labelled do menu (pegar do container agrupador)
-		__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": init.id});
-
-		__HTML(menu, node.hasAttribute("aria-label") ? {"aria-label": node.getAttribute("aria-label")} : {"aria-labelledby": __ID.id(node)});
-
-
+		__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": init.id, "aria-labelledby": __ID.id(node)});
 		/*-- definindo registro do anexação --*/
 		const data = {
 			attr: __HEAP.getAttr(node, "aria-haspopup", "aria-controls", "aria-expanded", "class", "tabindex"),
@@ -151,8 +136,9 @@ const __MENU = {
 			addEventListener: {click: this.openMenu, keydown: this.openMenu},
 		});
 		else {
-			node.innerHTML = "";
+			//node.innerHTML = "";
 			node.appendChild(menu);
+			__HTML(menu, {style: {bottom: 0, top: 0, overflowY: "auto", position: "relative"}});
 		}
 		return;
 	},
@@ -180,11 +166,6 @@ const __MENU = {
 		}
 		return;
 	},
-
-
-
-
-
 	/**. '{array path(node item)}: Retorna a lista de menus ancestrais a partir do item, u{da raiz para o atual}.**/
 	path: function(item) {
 		const path = [];

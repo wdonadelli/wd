@@ -1,0 +1,42 @@
+<div>
+	<h4>wdDrag</h4>
+
+	<table border="1" style="width: 100%">
+		<thead>
+			<tr>
+				<th>Arrastável</th>
+				<th>Copy</th>
+				<th>Move</th>
+				<th>Link</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><div data-wd-drag="@copy{#copy}link{#link}move{#move}">Arraste-me</div></td>
+				<td id="copy"></td>
+				<td id="move"></td>
+				<td id="link"></td>
+			</tr>
+		</tbody>
+
+
+
+
+
+
+
+	</table>
+
+
+
+
+
+	<ul id="lista">
+		<li>Só sei que nada sei - Sócrates</li>
+		<li>Penso, logo existo - René Descartes</li>
+		<li data-wd-drag="@move{#lista, #item}">Arrastável</li>
+		<li>O homem é um animal político - Aristóteles</li>
+		<li id="item">Só a <i>educação</i> <i>liberta</i> - Epíteto</li>
+		<li>Onde há poder, há resistência - Michel Foucault</li>
+	</ul>
+</div>

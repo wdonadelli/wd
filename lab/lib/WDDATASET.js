@@ -166,9 +166,10 @@ const WDDATASET = {
 	|""Tabela de configuração do atributo wdDrag""|**/
 	wdDrag: function(ev) {
 		//FIXME se o elemento puder ser jogado em mais de um buraco?
-		const data = this.attr(ev.target.dataset.wdDrag);
+		const data = this.attr(ev.target.dataset.wdDrag, {link: "nodes", copy: "nodes", move: "nodes", call: "function"});
+		console.log(data)
 		delete ev.target.dataset.wdDrag;
-		if (data) __DRAG.attach(ev.target, data.drop, data.effect, data.call);
+		if (data) __DRAG.attach(ev.target, data, data.call);
 		return;
 	},
 

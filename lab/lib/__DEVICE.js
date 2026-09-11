@@ -49,7 +49,8 @@ const __DEVICE = {
 		const rules = this.rules;
 		/*-- removendo css --*/
 		for (let i in rules) {
-			if (rules[i] === 0 && i in data) __HTML(node, {classList: {remove: data[i]}});
+			if (rules[i] === 0 && i in data)
+				__HTML(node, {classList: {remove: data[i]}});
 		}
 		/*-- adcionando css --*/
 		for (let i in rules) {

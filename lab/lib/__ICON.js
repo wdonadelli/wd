@@ -32,16 +32,18 @@ const __ICON = {
 	|position|string|a{backgroundPosition}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-position}|50% 50%|
 	|origin|string|a{backgroundOrigin}@href{https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin}|content-box|**/
 	style: function(node, image, size, repeat, position, origin) {
-		node.style.backgroundImage    = this.image(image);
-		node.style.backgroundSize     = typeof size     === "string" ? size     : "1em";
-		node.style.backgroundRepeat   = typeof repeat   === "string" ? repeat   : "no-repeat";
-		node.style.backgroundPosition = typeof position === "string" ? position : "50% 50%";
-		node.style.backgroundOrigin   = typeof origin   === "string" ? origin   : "content-box";
+		__HTML(node, {style: {
+			backgroundImage:    this.image(image),
+			backgroundSize:     typeof size     === "string" ? size     : "1em",
+			backgroundRepeat:   typeof repeat   === "string" ? repeat   : "no-repeat",
+			backgroundPosition: typeof position === "string" ? position : "50% 50%",
+			backgroundOrigin:   typeof origin   === "string" ? origin   : "content-box",
+		}});
 		return;
 	},
 	/**. '{void icon(node node, string code, boolean circle)}: Atribui ao nó um ícone quadrado sem conteúdo. O argumento '{circle} estabelece bordas arredondadas se verdadeiro.**/
 	icon: function(node, code, circle) {
-		node.className = `css-wd-icon-${circle === true ? "circle" : "square"}`;
+		__HTML(node, {classList: {add: circle === true ? "css-js-wd-icon-circle" : "css-js-wd-icon-square"}});
 		this.style(node, {code: code, y: "56%"}, "contain", "no-repeat", "50% 50%");
 		return;
 	},
@@ -56,7 +58,7 @@ const __ICON = {
 	button: function(node, code, locale) {
 		const data = {top: "div", bottom: "div", left: "span", right: "span"};
 		/*-- redefinir conteúdo textual do nó --*/
-		const kill = node.querySelectorAll(".css-wd-icon");
+		const kill = node.querySelectorAll(".css-js-wd-icon-circle, .css-js-wd-icon-square");
 		for (let i = 0; i < kill.length; i++) kill[i].remove();
 		const text = node.textContent.trim();
 		/*-- redefinindo características do nó --*/
@@ -106,7 +108,7 @@ const __ICON = {
 	}
 };
 __CSS.push(`/*-- ICON --*/
-.css-wd-icon-circle, .css-wd-icon-square {
+.css-js-wd-icon-circle, .css-js-wd-icon-square {
 		font-family: monospace;
 		height:  1em;
 		width:   1em;
@@ -114,5 +116,5 @@ __CSS.push(`/*-- ICON --*/
 		border:  none;
 		margin:  auto;
 	}
-	.css-wd-icon-circle {border-radius: 0.5em;}
+	.css-js-wd-icon-circle {border-radius: 0.5em;}
 `);
