@@ -65,25 +65,25 @@ const __MENU = {
 		return li;
 	},
 	/**. '{node createMenu(array list)}: Cria e retornar menus/submenus a partir de uma lista.**/
-	createMenu: function(list) {
+	createMenu: function(list, submenu) {
 		const menu = __HTML("menu", {id: __ID.value, role: "menu"});
 		(Array.isArray(list) ? list : []).forEach(function(v,i,a) {
+			/*-- ignorar o primeiro elemento do submenu --*/
+			if (i === 0 && submenu === true) return;
+			/*-- obter estrutura do menu --*/
 			const last  = menu.childElementCount > 0 ? menu.lastElementChild : null;
 			const child = last ? last.children : [];
 			const group = child.length > 1 && child[1].getAttribute("role") === "group" ? child[1] : null ;
 			/*-- submenu --*/
 			if (Array.isArray(v)) {
 				const li  = __HTML("li", {role: "none"});
-				const sub = this.createMenu(v);
+				const sub = this.createMenu(v, true);
 				const ctr = this.createItem(v[0], true);
 				__HTML(ctr, {"aria-haspopup": "true", "aria-controls": sub.id, "aria-expanded": "false"});
 				/*-- ajustes --*/
 				ctr.firstElementChild.innerHTML = "";
 				ctr.lastElementChild.innerHTML  = "";
-				sub.firstElementChild.remove();
-				sub.setAttribute("aria-labelledby", ctr.id);
-				sub.setAttribute("data-label", ctr.textContent);
-				sub.hidden = true;
+				__HTML(sub, {"aria-labelledby": ctr.id, "data-label": ctr.textContent, hidden: true});
 				li.appendChild(ctr);
 				li.appendChild(sub);
 				(group ? group : menu).appendChild(li);
@@ -102,6 +102,12 @@ const __MENU = {
 			(group ? group : menu).appendChild(li);
 			return;
 		}, this);
+		/*-- menu raiz: definir foco no primeiro item --*/
+		if (submenu !== true) {
+			const init = menu.querySelector(`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`);
+			init.setAttribute("tabindex", "0");
+			__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": init.id});
+		}
 		return menu;
 	},
 	/**. '{void attach(node node, array list, string type, function call)}: Atribui um menu vertical a um nó HTML:
@@ -117,9 +123,7 @@ const __MENU = {
 		call = typeof call === "function" ? call : null;
 		/*-- criando e configurando condições iniciais do menu --*/
 		const menu = this.createMenu(list);
-		const init = menu.querySelector(`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`);
-		init.setAttribute("tabindex", "0");
-		__HTML(menu, {className: "css-js-wd-menu", "aria-activedescendant": init.id, "aria-labelledby": __ID.id(node)});
+		menu.setAttribute("aria-labelledby", __ID.id(node));
 		/*-- definindo registro do anexação --*/
 		const data = {
 			attr: __HEAP.getAttr(node, "aria-haspopup", "aria-controls", "aria-expanded", "class", "tabindex"),
@@ -154,6 +158,8 @@ const __MENU = {
 	},
 	/**. '{void openMenu(object ev)}: Disparador do botão que acionará o menu.**/
 	openMenu: function(ev) {
+		/*-- retornar, caso o elemento já tenha clique nativo para evitar duplicidade --*/
+		if (__FORMDATA.nativeKeyClick(ev.currentTarget, ev.key)) return;
 		const keys = /^(\ |ArrowDown|Enter|\ )$/i;
 		const open = ev.type === "click" || (ev.type === "keydown" && keys.test(ev.key));
 		const data = __HEAP.data(ev.currentTarget);
@@ -436,6 +442,22 @@ __CSS.push(`/*-- MENU --*/
 .css-js-wd-menu [role="menuitemradio"][aria-checked="false"]    > span:first-child:before {content: "\\25CB\\ ";}
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"]         > span:first-child:before {content: "\\276E";}
 .css-js-wd-menu [role="menuitem"][aria-expanded="false"]        > span:last-child:before  {content: "\\276F\\ ";}
-.css-js-wd-menu-open[aria-expanded="true"]:after  {content: "\\ \\25BE";}
-.css-js-wd-menu-open[aria-expanded="false"]:after {content: "\\ \\25B8";}
-`);
+
+.css-js-wd-menu-open {cursor: pointer; color: inherit;}
+.css-js-wd-menu-open:after {
+	content: " ";
+	display: inline-block;
+	vertical-align: middle;
+	width: 1em;
+	height: 0.35em;
+	background-size: auto auto;
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	background-origin: content-box;
+}
+.css-js-wd-menu-open[aria-expanded="true"]:after {
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 H 100 L 50,100 Z' fill='gray' /></svg>");
+}
+.css-js-wd-menu-open[aria-expanded="false"]:after {
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 V 100 L 100,50 Z' fill='gray' /></svg>");
+}`);

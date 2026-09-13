@@ -30,6 +30,12 @@ const __FORMDATA = {
 		if (this.type(node) === null) return node.isContentEditable;
 		return !(node.readOnly || node.disabled || this.hasMask(node));
 	},
+	/**. '{boolean nativeKeyClick(node node, string key)}: Informa se o elemento possui clique nativo pela tecla informada.**/
+	nativeKeyClick: function(node, key) {
+		const bttn = (/^(button|reset|submit|image)$/i).test(this.type(node));
+		const link = this.tag(node) === "a" && node.hasAttribute("href")
+		return (link && key === "Enter") || (bttn && (key === "Enter" || key === " "));
+	},
 	/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} do nó**/
 	value: function(node, value) {
 		const type = this.type(node);

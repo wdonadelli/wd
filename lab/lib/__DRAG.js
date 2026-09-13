@@ -24,49 +24,21 @@ const __DRAG = {
 	fake: null,
 	/**. '{node grab}: Registra o elemento arrastado porque no Chromium não carrega '{dataTransfer} do drag no drop.**/
 	grab: null,
-
-
-
-
-
-
 	/**. '{void dragging(object data)}: Função de arrasto padrão quando não informada em '{attach}.**/
 	dragging: function(data) {
-		console.log(data);
-		function clearOver() {
-			const list = document.querySelectorAll(".css-js-wd-drag-over-start, .css-js-wd-drag-over-end");
-			for (let i = 0; i < list.length; i++)
-				__HTML(list[i], {classList: {remove: "css-js-wd-drag-over-start css-js-wd-drag-over-end"}});
-			return;
-		}
-		if (data.event === "dragleave") {
-			console.clear();
-			console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-
-		}
-
-
-
-		if (data.event === "dragstart") {
-			clearOver();
-			__HTML(data.drop, {classList: {add: `css-js-wd-drag-${data.effect}`}});
-			return;
-		}
-		if (data.event === "dragend") {
-			clearOver();
-			__HTML(data.drop, {classList: {remove: `css-js-wd-drag-${data.effect} css-js-wd-drag-enter`}});
-			return;
-		}
-		if (data.event === "dragenter") {
-			clearOver();
-			__HTML(data.drop, {classList: {add: "css-js-wd-drag-enter"}});
-			return;
-		}
-		if (data.event === "dragleave") {
-			clearOver();
-			__HTML(data.drop, {classList: {remove: "css-js-wd-drag-enter"}});
-			return;
-		}
+		/*-- apagar css de posicionamento --*/
+		const list = document.querySelectorAll(".css-js-wd-drag-over, .css-js-wd-drag-over-start, .css-js-wd-drag-over-end");
+		for (let i = 0; i < list.length; i++)
+			__HTML(list[i], {classList: {remove: "css-js-wd-drag-over css-js-wd-drag-over-start css-js-wd-drag-over-end"}});
+		/*-- analisar eventos --*/
+		if (data.event === "dragstart")
+			return __HTML(data.drop, {classList: {add: `css-js-wd-drag-${data.effect}`}});
+		if (data.event === "dragend")
+			return __HTML(data.drop, {classList: {remove: `css-js-wd-drag-${data.effect} css-js-wd-drag-enter`}});
+		if (data.event === "dragenter")
+			return __HTML(data.drop, {classList: {add: "css-js-wd-drag-enter"}});
+		if (data.event === "dragleave")
+			return __HTML(data.drop, {classList: {remove: "css-js-wd-drag-enter"}});
 		/*-- obter posição do mouse sobre o filho de drop para os eventos dragover e drop --*/
 		if (data.over === null) return;
 		let target = data.over;
@@ -76,77 +48,28 @@ const __DRAG = {
 		}
 		const rect = target.getBoundingClientRect();
 		const vect = {x: data.x - rect.left, y: data.y - rect.top};
-		const flow = vect.y >= rect.height * (1 - vect.x/rect.width);
-
-
-
-
+		const down = vect.y >= rect.height * (1 - vect.x/rect.width);
+		const flow = target === data.drop ? 0 : (down ? 1 : -1);
 		if (data.event === "dragover") {
-			clearOver();
-			__HTML(target, {classList: {add: `css-js-wd-drag-over-${flow ? "end" : "start"}`}});
+			const css = flow === 0 ? "" : (flow > 0 ? "-end" : "-start");
+			__HTML(target, {classList: {add: `css-js-wd-drag-over${css}`}});
 			return;
 		}
 		if (data.event === "drop") {
-			/*if (data.effect === "move")
-				data.drop.replaceChild(data.drag, __DRAG.fake);
-			if (data.effect === "copy")
-				data.drop.replaceChild(data.drag.cloneNode(true), __DRAG.fake);*/
+			const next = target.nextElementSibling;
+			const elem = {
+				copy: __HTML(data.drag.cloneNode(true), {removeAttribute: ["draggable", "id"]}),
+				move: data.drag,
+				link: __HTML("a", {href: "#"+__ID.id(data.drag), innerHTML: "&#x1F517;", "aria-labelledby": __ID.id(data.drag)}),
+			}[data.effect];
+			if (flow === 0 || (flow > 0 && next === null))
+				data.drop.appendChild(elem);
+			else
+				target.parentElement.insertBefore(elem, flow > 0 ? next : target);
 			return;
 		}
-
-
-
-
-
-
-
-
-		/*
-
-
-
-
-				if (data.effect === "copy") {
-			const clone = drag.cloneNode(true);
-			clone.id = __ID.value;
-			drop.insertBefore(clone, this.fake);
-		}
-		else if (data.effect === "move") {
-			drop.insertBefore(drag, this.fake);
-		}
-		else if (data.effect === "link") {
-			__ID.id(drag);
-			const text = __TAB.label(drag);
-			const link = __HTML("a", {
-				href: `#${drag.id}`,
-				textContent: text === null ? "Link" : text,
-				"aria-describedby": drag.id
-			});
-			console.log(link);
-			drop.insertBefore(link, this.fake);
-		}
-		/*-- remover fake e chamar o disparador, se existir --* /
-		this.makeFake();
-		if (typeof data.call === "function")
-			data.call(drag, drop, data.effect);
 		return;
-
-
-
-
-
-
-
-
-		*/
-
 	},
-
-
-
-
-
-
 	/**. '{void attach(node drag, object drop, function call)}: Vincula um elemento de arrasto a um ou mais elementos de queda vinculados a um efeito específico:
 	|Propriedade|Descrição|
 	|'{drag}|Elemento de arrasto|
@@ -380,14 +303,17 @@ const __DRAG = {
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		ev.dataTransfer.dropEffect = type === null ? "none" : type;
-		if (!this.grab.contains(ev.target) && data !== null && type !== null)
+		/*-- o elemento de arraste não pode ser jogado dentro dele mesmo */
+		if (!this.grab.contains(ev.target) && data !== null && type !== null) {
 			data.call({event: ev.type, drag: drag, drop: drop, over: ev.target, effect: type, x: ev.clientX, y: ev.clientY});
+			/*-- não pegar outro dropEvent ancestral --*/
+			ev.stopPropagation();
+		}
 		return;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
 	handleEvent: function(ev) {
-		if (ev.type in this) this[ev.type](ev);
-		return;
+		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
 };
 __CSS.push(`/*-- DRAG --*/
@@ -407,32 +333,25 @@ __CSS.push(`/*-- DRAG --*/
 .css-js-wd-drag-link.css-js-wd-drag-enter {
 	outline-style: solid;
 }
-
 .css-js-wd-drag-over-start,
-.css-js-wd-drag-over-end {
-	color: rgba(125,125,125,0.2);
+.css-js-wd-drag-over-end,
+.css-js-wd-drag-over {
+	color: rgba(125,125,125,0.1);
+	background-color: white;
+	background-size: 0.5em 0.5em;
+	background-repeat: no-repeat;
+	background-origin: content-box;
 }
-
+.css-js-wd-drag-over {
+	background-position: 50% 50%;
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,50 L 50,0 L 100,50 L 50,100 Z' fill='red'/></svg>");
+}
 .css-js-wd-drag-over-start {
-	background-size: auto auto;
-	background-repeat: no-repeat;
 	background-position: 0 0;
-	background-origin: content-box;
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='1' height='1em' width='1em' style='background-color: inherit;'><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='1em'>↖️</text></svg>");
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 H 100 L 0,100 Z' fill='red'/></svg>");
 }
 .css-js-wd-drag-over-end {
-	background-size: auto auto;
-	background-repeat: no-repeat;
 	background-position: 100% 100%;
-	background-origin: content-box;
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='1' height='1em' width='1em' style='background-color: inherit;'><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='1em'>↘️</text></svg>");
-}
-
-.css-js-wd-drag-link.css-js-wd-drag-over-start,
-.css-js-wd-drag-link.css-js-wd-drag-over-end,
-.css-js-wd-drag-link .css-js-wd-drag-over-start,
-.css-js-wd-drag-link .css-js-wd-drag-over-end{
-	border-color: inherit;
-
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,100 H 100 L 100,0 Z' fill='red'/></svg>");
 }
 `);
