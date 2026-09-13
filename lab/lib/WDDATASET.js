@@ -158,20 +158,30 @@ const WDDATASET = {
 		if (data) __MENU.attach(ev.target, data.list, data.type, data.call);
 		return;
 	},
-		/**. '{void wdDrag(object ev)}: Define elementos arrastáveis e de queda (ver '{__DRAG}):
+	/**. '{void wdDrag(object ev)}: Define elementos arrastáveis e de queda (ver '{__DRAG}):
 	|Nome|Tipo|Opcional|Descrição|
 	|'{drop}|string|Não|Seletor CSS para definir os elementos de queda|
-	|'{effect}|string|Não|Efeito do arrasto|
-	|'{call}|function|Sim|Função a ser disparada quando soltar o elemento|
+	|'{effect}|string|Não|Efeito de queda|
+	|'{call}|function|Sim|Função a ser disparada durante o procedimento|
 	|""Tabela de configuração do atributo wdDrag""|**/
 	wdDrag: function(ev) {
-		//FIXME se o elemento puder ser jogado em mais de um buraco?
 		const data = this.attr(ev.target.dataset.wdDrag, {link: "nodes", copy: "nodes", move: "nodes", call: "function"});
-		console.log(data)
 		delete ev.target.dataset.wdDrag;
 		if (data) __DRAG.attach(ev.target, data, data.call);
 		return;
 	},
+	/**. '{void wdDrop(object ev)}: Define elementos de soltura de arquivos (ver '{__DROP}):
+	|Nome|Tipo|Opcional|Descrição|
+	|'{effect}|string|Não|Efeito da queda|
+	|'{call}|function|Sim|Função a ser durante o procedimento|
+	|""Tabela de configuração do atributo wdDrop""|**/
+	wdDrop: function(ev) {
+		const data = this.attr(ev.target.dataset.wdDrop, {call: "function"});
+		delete ev.target.dataset.wdDrop;
+		if (data) __DROP.attach(ev.target, data.effect, data.call); //target ou currentTarget?
+		return;
+	},
+
 
 
 

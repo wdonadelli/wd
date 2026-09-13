@@ -1,12 +1,12 @@
 /**
 #3 Arrasto de Elementos
-	O objeto '{__DRAG} define ao elemento mecanismo de arrasto e seus respectivos elementos de soltura e o comportamento
+	O objeto '{__DRAG} atribuí um mecanismo de arrasto ao elemento e define os respectivos alvos de soltura:
 	- apenas um elemento sofrerá o efeito do arrasto por ação;
 	- cada elemento arrastável ('{drag}) poderá ser vinculados a vários elementos de queda ('{drop});
 	- cada elemento de queda deverá estar vinculado a um efeito;
 	- os efeitos possíveis são '{copy}, '{move} ou '{link};
 	- é possível vincular uma função a ser chamada durante o evento de queda;
-	- se não informada a função de queda, um comportamento padrão será adotado conforme efeito vinculado;
+	- se não informada a função de queda, um comportamento simplificado será adotado durante o processo conforme efeito definido;
 	- a função de queda receberá um argumento com as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|'{event}|string|Efeito vinculado ao arrasto: '{dragstart}, '{dragenter}, '{dragleave}, '{dragover}, '{drop} ou '{dragend}|
@@ -16,16 +16,22 @@
 	|'{effect}|string|Efeito vinculado ao elemento de queda|
 	|'{x}|integer|Posição horizontal do elemento de arrasto em relação ao i{viewport}|
 	|'{y}|integer|Posição vertical do elemento de arrasto em relação ao i{viewport}|
-	- Quando o evento não estiver relacionado ao elemento de queda, as propriedades a partir de '{drop} serão nulas.
-**/
-//FIXME borda pequena ao acionar o drop e borda grande ao entrar
+	|""Propriedades recepcionadas pela função disparadora de arraso""|
+	Os eventos correspondem às seguintes ocorrências:
+	. '{dragstart}: Iniciado o arrasto do elemento. A função será disparada para cada elemento de queda. A propriedade '{over} será nula.
+	. '{dragenter}: O elemento de arrasto entra no elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} será nula.
+	. '{dragleave}: O elemento de arrasto sai do elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} será nula.
+	. '{dragover}: O elemento de arrasto está sobre o elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} corresponderá ao elemento sobre o qual paira o elemento de arrasto.
+	. '{drop}: O elemento de arrasto caiu sobre o elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} corresponderá ao elemento sobre o qual o elemento de arrasto caiu.
+	. '{dragend}: Encerrado o procedimento. A função será disparada para cada elemento de queda. A propriedade '{over} será nula.
+	#4 Métodos e Propriedades
+	**/
 const __DRAG = {
-	/**. '{node fake}: Registra o container falso que indica a posição da queda para o método '{drabbin}.**/
-	fake: null,
 	/**. '{node grab}: Registra o elemento arrastado porque no Chromium não carrega '{dataTransfer} do drag no drop.**/
 	grab: null,
 	/**. '{void dragging(object data)}: Função de arrasto padrão quando não informada em '{attach}.**/
 	dragging: function(data) {
+		console.log(data);//FIXME
 		/*-- apagar css de posicionamento --*/
 		const list = document.querySelectorAll(".css-js-wd-drag-over, .css-js-wd-drag-over-start, .css-js-wd-drag-over-end");
 		for (let i = 0; i < list.length; i++)
@@ -74,7 +80,8 @@ const __DRAG = {
 	|Propriedade|Descrição|
 	|'{drag}|Elemento de arrasto|
 	|'{drop}|Objeto que vincula o efeito ao elemento de queda|
-	|'{call}|Função opcional a ser chamada após a queda do elemento|
+	|'{call}|Função opcional a ser chamada durante o procedimento|
+	|""Tabela de argumentos do método""|
 	. Os nomes aplicados ao objeto '{drop} (efeitos) são '{copy}, '{move} ou '{link} e seus valores são o elemento ou a lista de elementos de queda. Se o mesmo elemento de queda for atribuído a diferentes efeitos, apenas uma informação prevalecerá. Alguns navegadores podem apresentar problemas com o efeito '{link} (Chromium).**/
 	attach: function(drag, drop, call) {
 		if (!(drag instanceof HTMLElement) || !__Type(drop).object) return;
@@ -112,94 +119,6 @@ const __DRAG = {
 		__HTML(drag, {removeEventListener: {dragstart: this, dragend: this}});
 		return;
 	},
-
-
-
-
-
-
-
-
-	//TODO apagar toda essa porra
-	/**. '{void makeFake(string effect, node fake)}: Define o estilo do elemento falso conforme efeito de soltura:
-	- se '{fake} for indefinido, será resgatado o nó da propriedade da biblioteca;
-	- se '{fake} for um nó, a propriedade da biblioteca será definido como seu clone; e
-	- se '{effect} for diferente de "copy", "move" ou "link", '{fake} será removido do documento.**/
-	makeFake: function(effect, fake) {
-		if (fake !== undefined) {
-			this.fake    = fake.cloneNode(true);
-			this.fake.id = __ID.value;
-		}
-		const icon = {copy: "1F5B6", move: "1F588", link: "1F587"};
-		__HTML(this.fake, {style: {backgroundColor: "rgb(248, 248, 255)", opacity: "0.5"}});
-		(effect in icon ? __ICON.background(this.fake, icon[effect], "1.5em", "50% 50%") : this.fake.remove());
-		return;
-	},
-	//FIXME pensar melhor nisso aqui, porque o fake está meio estranho
-	/**. '{void appendFake(object ev)}: Manipulador que exibe o '{fake} conforme conteúdo de i{drop} .**/
-	appendFake: function(ev) {
-		const drop = ev.currentTarget;
-		let  child = ev.target;
-		/*-- o alvo é o fake: não fazer nada --*/
-		if (child.contains(this.fake)) return;
-		/*-- drop sem filhos: adicionar fake ao container --*/
-		if (drop.childElementCount === 0) {
-			drop.appendChild(this.fake);
-			return;
-		}
-		/*-- posicionar fake antes ou após o filho do alvo a depender da posição do mouse sobre o elemento --*/
-		if (ev.target === drop) return;
-		while (child.parentElement !== drop)
-			child = child.parentElement;
-		__CSS.temp(child, {display: {inline: "inline-block"}});
-		const size = __MOVE.size(child);
-		const flow = ev.offsetY >= size.height * (1 - ev.offsetX/size.width);
-		const bros = flow ? child.nextElementSibling : child.previousElementSibling;
-		if (flow && bros === null)
-			drop.appendChild(this.fake);
-		else if (flow && bros !== this.fake)
-			drop.insertBefore(this.fake, bros);
-		else if (!flow && bros !== this.fake)
-			drop.insertBefore(this.fake, child);
-		__CSS.temp(child);
-		return;
-	},
-	/**. '{object color}: Registra uma cor para cada efeito de soltura.**/
-	color: {move: "ForestGreen", copy: "MediumPurple", link: "DodgerBlue"},
-	/**. '{void dropZone(node drop, string effect, string event)}: Define o comportamento do estilo do elemento de soltura a depender do evento e do efeito. Se '{effect} for diferente de "copy", "move" ou "link" ou '{event} for diferente de "dragstart", "dragleave", "dragover" ou "dragenter", a configuração será removida do elemento de solutura.**/
-	dropZone: function(drop, effect, event) {
-		__CSS.temp(drop);
-		const line = {move: "ForestGreen", copy: "MediumPurple", link: "DodgerBlue"};
-		const temp = {minWidth: {"*": "1em"}, minHeight: {"*": "1em"}, display: {inline: "inline-block"}};
-		if (effect in this.color) {
-			if (event === "dragstart" || event === "dragleave")
-				temp.outline = {"*": `medium dashed ${this.color[effect]}`};
-			else if (event === "dragover" || event === "dragenter")
-				temp.outline = {"*": `medium solid  ${this.color[effect]}`};
-			if ("outline" in temp)
-				__CSS.temp(drop, temp);
-		}
-		return;
-	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/**. '{string effect(object drop)}: Recebe a informação de '{drop} e retorna o efeito do elemento arrastável.**/
 	effect: function(drop) {
 		if ("move" in drop && "copy" in drop && "link" in drop)
@@ -266,8 +185,10 @@ const __DRAG = {
 		const data = __HEAP.data(drag);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
-		if (data !== null && type !== null)
-			data.call({event: ev.type, drag: drag, drop: drop, over: drop, effect: type, x: ev.clientX, y: ev.clientY});
+		if (data !== null && type !== null) {
+			data.call({event: ev.type, drag: drag, drop: drop, over: null, effect: type, x: ev.clientX, y: ev.clientY});
+			ev.stopPropagation();
+		}
 		return;
 	},
 	/**. '{void dragleave(object ev)}: Manipulador ao tirar o drag sobre o drop (não carrega dataTransfer no chromium).**/
@@ -278,22 +199,24 @@ const __DRAG = {
 		const data = __HEAP.data(drag);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
-		if (data !== null && type !== null)
+		if (data !== null && type !== null) {
 			data.call({event: ev.type, drag: drag, drop: drop, over: null, effect: type, x: ev.clientX, y: ev.clientY});
+			ev.stopPropagation();
+		}
 		return;
 	},
 	/**. '{void dragover(object ev)}: Manipulador ao navegar o drag sobre o drop (não carrega dataTransfer no chromium).**/
 	dragover: function(ev) {
-		ev.preventDefault();
-		ev.stopPropagation();
-		/*-- registrar efeito de arrasto --*/
 		const drag = this.grab;
 		const data = __HEAP.data(drag);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		ev.dataTransfer.dropEffect = type === null ? "none" : type;
-		if (!this.grab.contains(ev.target) && data !== null && type !== null)
+		if (!this.grab.contains(ev.target) && data !== null && type !== null) {
 			data.call({event: ev.type, drag: drag, drop: drop, over: ev.target, effect: type, x: ev.clientX, y: ev.clientY});
+			ev.preventDefault();
+			ev.stopPropagation();
+		}
 		return;
 	},
 	/**. '{void drop(object ev)}: Manipulador ao soltar o drag sobre o drop.**/
@@ -305,9 +228,9 @@ const __DRAG = {
 		ev.dataTransfer.dropEffect = type === null ? "none" : type;
 		/*-- o elemento de arraste não pode ser jogado dentro dele mesmo */
 		if (!this.grab.contains(ev.target) && data !== null && type !== null) {
-			data.call({event: ev.type, drag: drag, drop: drop, over: ev.target, effect: type, x: ev.clientX, y: ev.clientY});
-			/*-- não pegar outro dropEvent ancestral --*/
+			ev.preventDefault();
 			ev.stopPropagation();
+			data.call({event: ev.type, drag: drag, drop: drop, over: ev.target, effect: type, x: ev.clientX, y: ev.clientY});
 		}
 		return;
 	},

@@ -1,191 +1,191 @@
 /**
 #3 Soltura de arquivos
-O objeto '{__DROP} define elemento e o comportamento para soltura de arquivos.
+	O objeto '{__DROP} define ao elemento um mecanismo de soltura de arquivos arrastados para seu interior:
+	- cada elemento de soltura ('{drop}) será vinculado a um efeito;
+	- os efeitos possíveis são '{copy}, '{move} ou '{link};
+	- os arquivos arrastados ('{drag}) poderão ser múltiplos;
+	- é possível vincular uma função a ser chamada durante o evento de queda dos arquivos;
+	- se não informada a função de queda, um comportamento simplificado será adotado durante o processo conforme efeito definido;
+	- a função de queda receberá um argumento com as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|'{event}|string|Efeito vinculado ao arrasto: '{dragstart}, '{dragenter}, '{dragleave}, '{dragover}, '{drop} ou '{dragend}|
+	|'{drag}|node|Lista de arquivos arrastados|
+	|'{drop}|node|Elemento de queda|
+	|'{over}|node|Alvo do elemento de arrasto ou nulo, se fora dele|
+	|'{effect}|string|Efeito vinculado ao elemento de queda|
+	|'{x}|integer|Posição horizontal do objeto de arrasto em relação ao i{viewport}|
+	|'{y}|integer|Posição vertical do objeto de arrasto em relação ao i{viewport}|
+	Os eventos correspondem às seguintes ocorrências:
+	. '{dragstart}: Os arquivos arrastados estão sobre o documento. A função será disparada para cada elemento de queda. As propriedades '{over} e '{drag} serão nulas.
+	. '{dragenter}: O objeto de arrasto entra no elemento de queda. A função será disparada apenas para o elemento de queda específico. As propriedades '{over} e '{drag} serão nulas.
+	. '{dragleave}: O objeto de arrasto sai do elemento de queda. A função será disparada apenas para o elemento de queda específico. As propriedades '{over} e '{drag} serão nulas.
+	. '{dragover}: O objeto de arrasto está sobre o elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} corresponderá ao elemento sobre o qual paira o elemento de arrasto e a propriedade '{drag} será nula.
+	. '{drop}: O objeto de arrasto caiu sobre o elemento de queda. A função será disparada apenas para o elemento de queda específico. A propriedade '{over} corresponderá ao elemento sobre o qual o elemento de arrasto caiu e a propriedade '{drag} conterá a lista de arquivos derrubados.
+	. '{dragend}: Encerrado o procedimento. A função será disparada para cada elemento de queda. As propriedades '{over} e '{drag} serão nulas.
+	#4 Métodos e Propriedades
 **/
 const __DROP = {
-	/**. '{object data}: Guarda as informações sobre o elemento de soltura '{DROP.id -> (effect, call)}.**/
-	data: {},
-	/**. '{boolean hasDrop}: Retorna se há elementos de soltura anexados.**/
-	get hasDrop() {
-		for (let i in this.data) return true;
-		return false;
-	},
-	/**. '{boolean enable}: Informa se o arrasto já foi implementado durante o dragover.**/
-	enabled: false,
-	/**. '{void attach(node drop, string effect, function call)}: Habilita o elemento para receber a soltura de arquivos:
-	|Argumento|Descrição|
-	|drop|Elemento a receber o arrasto de arquivos|
-	|effect|Efeito do arrasto.|
-	|call|Função a ser chamada na queda dos arquivos|
-	. A função '{call} receberá como argumentos a informação dos arquivos arrastados (objeto '{Files}), o elemento de soltura e o efeito aplicado. Se ausente, um comportamento padrão será aplicado:
-	|Efeito|Comportamento padrão|
-	|link|Adicionará um link para o arquivo no elemento de soltura (padrão).|
-	|copy|Copiará o conteúdo do arquivo para o elemento de soltura.|
-	|move|Tentará carregar o arquivo no elemento de soltura.|**/
-	attach: function(drop, effect, call) {
-		drop.id = __ID.id(drop);
-		effect  = (/^(copy|link|move)$/i).test(effect) ? String(effect).toLowerCase() : "link";
-		this.data[drop.id] = {effect: effect, call: call};
-		if (!this.enabled && this.hasDrop) {
-			window.addEventListener("dragenter", this);
-			this.enabled = true;
+	/**. '{array drops}: Registra os elementos de queda para fins de controle do evento '{drag} em '{window}.**/
+	drops: [],
+
+	/**. '{void dragging(object data)}: Função de arrasto padrão quando não informada em '{attach}.**/
+	dragging: function(data) {
+		console.log(data);//FIXME
+		/*-- analisar eventos --*/
+		if (data.event === "dragstart")
+			return __HTML(data.drop, {classList: {add: `css-js-wd-drag-${data.effect}`}});
+		if (data.event === "dragend")
+			return __HTML(data.drop, {classList: {remove: `css-js-wd-drag-${data.effect} css-js-wd-drag-enter css-js-wd-drag-over`}});
+		if (data.event === "dragenter")
+			return __HTML(data.drop, {classList: {add: "css-js-wd-drag-enter"}});
+		if (data.event === "dragleave")
+			return __HTML(data.drop, {classList: {remove: "css-js-wd-drag-enter css-js-wd-drag-over"}});
+		if (data.event === "dragover")
+			return __HTML(data.drop, {classList: {add: "css-js-wd-drag-over"}});
+		if (data.event !== "drop") return;
+		for (let i = 0; i < data.drag.length; i++) {
+			let elem;
+			let type = data.drag[i].type.split("/");
+			if (data.effect === "link")
+				elem = __HTML("a", {href: URL.createObjectURL(data.drag[i]), textContent: data.drag[i].name});
+			else if (type[0] === "audio")
+				elem = __HTML("audio", {src: URL.createObjectURL(data.drag[i]), controls: true});
+			else if (type[0] === "video")
+				elem = __HTML("video", {src: URL.createObjectURL(data.drag[i]), controls: true});
+			else if (type[0] === "image")
+				elem = __HTML("img", {src: URL.createObjectURL(data.drag[i]), alt: data.drag[i].name});
+			else
+				elem = __HTML("iframe", {src: URL.createObjectURL(data.drag[i])});
+			if (data.effect === "move" || data.effect === "link")
+				data.drop.appendChild(elem);
+			else {
+				data.drop.innerHTML = "";
+				data.drop.appendChild(elem);
+			}
 		}
 		return;
 	},
-	/**. '{void detach(node drop)}: Desabilita o elemento para receber a soltura de arqvuivos.**/
-	detach: function(drop) {
-		drop.id = __ID.id(drop);
-		if (drop.id in this.data)
-			delete this.data[drop.id];
-		if (this.enabled && !this.hasDrop) {
-			window.removeEventListener("dragenter", this);
-			this.enabled = false;
+	/**. '{void attach(node drop, string effect, function call)}: Vinculao um elemento de soltura para receber arquivos arrastados:
+	|Argumento|Descrição|
+	|'{drop}|Elemento a receber o arrasto de arquivos|
+	|'{effect}|Efeito do arrasto aplicado ao elemento|
+	|'{call}|Função opcional a ser chamada durante o procedimento|
+	|""Tabela de argumentos do método""|
+**/
+	attach: function(drop, effect, call) {
+		if (!(drop instanceof HTMLElement)) return;
+		effect  = (/^(copy|link|move)$/i).test(effect) ? effect.toLowerCase() : "link";
+		/*-- efetuar registros necessários --*/
+		const data = {
+			attr:  __HEAP.getAttr(drop),
+			drop:   drop,
+			effect: effect,
+			call:   typeof call === "function" ? call : this.dragging,
+		};
+		__HEAP.attach(drop, data, this);
+		this.drops.push(drop);
+		/*-- anexando eventos --*/
+		if (this.drops.length === 1) {
+			window.addEventListener("dragenter", this);
+			window.addEventListener("dragleave", this);
+			window.addEventListener("dragend",   this);
 		}
+		return;
+	},
+	/**. '{void detach(node drop)}: Desvincula o elemento para receber a soltura de arquivos.**/
+	detach: function(drop) {
+		if (__HEAP.data(drop) === null) return;
+		const data = __HEAP.data(drop);
+		this.drops = this.drops.filter(function(v,i,a) {return v !== drop;});
+		if (this.drops.length === 0) {
+			window.removeEventListener("dragenter", this);
+			window.removeEventListener("dragleave", this);
+			window.removeEventListener("dragend",   this);
+		}
+		__HTML(drop, {removeEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
 		return;
 	},
 	/**. '{void dragenter(object ev)}: Manipulador ao entrar com arquivos na janela i{window} ou sobre o elemento de soltura.**/
 	dragenter: function(ev) {
-		if (ev.currentTarget === window) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			window.removeEventListener("dragenter", this);
-			window.addEventListener("dragleave", this);
-			for (let i in this.data) {
-				let data = this.data[i];
-				let drop = document.getElementById(i);
-				drop.addEventListener("dragenter", this);
-				drop.addEventListener("dragover", this);
-				drop.addEventListener("dragleave", this);
-				drop.addEventListener("drop", this);
-				__DRAG.dropZone(drop, data.effect, "dragstart")
-			}
+		const drop = this.drops.length === 0 ? null : ev.currentTarget;
+		const data = __HEAP.data(drop);
+		/*-- arquivos entraram no window --*/
+		if (drop === window && ev.relatedTarget === null) {
+			this.drops.forEach(function(drop,i,a) {
+				const data = __HEAP.data(drop);
+				if (data !== null) {
+					__HTML(drop, {addEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
+					data.call({event: "dragstart", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
+				}
+			}, this);
+			//ev.stopPropagation();
+			return;
 		}
-		else {
-			const drop = ev.currentTarget;
-			__DRAG.dropZone(drop, this.data[drop.id].effect, ev.type)
+		/*-- arquivos entraram no drop --*/
+		if (data !== null && !drop.contains(ev.relatedTarget)) {
+			data.call({event: ev.type, drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
+			ev.stopPropagation();
+			return;
 		}
 		return;
 	},
-	/**. '{void dragleave(object ev)}: Manipulador ao sair com arquivos da janela i{window}.**/
-	dragleave: function(ev) {
-		if (ev.currentTarget === window) {
-			if (ev.relatedTarget === null) {
-				window.removeEventListener("dragleave", this);
-				window.addEventListener("dragenter", this);
-				for (let i in this.data) {
-					let data = this.data[i];
-					let drop = document.getElementById(i);
-					drop.removeEventListener("dragenter", this);
-					drop.removeEventListener("dragover", this);
-					drop.removeEventListener("dragleave", this);
-					drop.removeEventListener("drop", this);
-					__DRAG.dropZone(drop);
+	/**. '{void dragleave(object ev)}: Manipulador ao sair com arquivos da janela i{window} ou sobre o elemento de soltura.**/
+	dragleave: function(ev) {console.log(ev)
+		const drop = this.drops.length === 0 ? null : ev.currentTarget;
+		const data = __HEAP.data(drop);
+		/*-- arquivos saíram de window --*/
+		if (drop === window && ev.relatedTarget === null) {
+			this.drops.forEach(function(drop,i,a) {
+				const data = __HEAP.data(drop);
+				if (data !== null) {
+					__HTML(drop, {removeEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
+					data.call({event: "dragend", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
 				}
-			}
+			}, this);
+			return;
 		}
-		else if (ev.relatedTarget === null || !ev.currentTarget.contains(ev.relatedTarget)) {
-			const drop = ev.currentTarget;
-			__DRAG.dropZone(drop, this.data[drop.id].effect, ev.type);
+		/*-- arquivos saíram no drop --*/
+		if (data !== null && !drop.contains(ev.relatedTarget)) {
+			data.call({event: ev.type, drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
+			//ev.stopPropagation();
+			return;
 		}
 		return;
 	},
 	/**. '{void dragover(object ev)}: Manipulador ao navegar os arquivos sobre o elemento de queda.**/
 	dragover: function(ev) {
-		const drop = ev.currentTarget;
-		if (drop !== null && drop.id in this.data) {
+		const drop = this.drops.length === 0 ? null : ev.currentTarget;
+		const data = __HEAP.data(drop);
+		if (data !== null) {
 			ev.preventDefault();
 			ev.stopPropagation();
-			ev.dataTransfer.dropEffect = this.data[drop.id].effect;
+			ev.dataTransfer.dropEffect = data.effect;
+			data.call({event: ev.type, drag: null, drop: drop, over: ev.target, effect: data.effect, x: ev.clientX, y: ev.clientY});
 		}
 		return;
 	},
 	/**. '{void drop(object ev)}: Manipulador ao soltar o arquivo sobre o elemento de soltura.**/
 	drop: function(ev) {
-		const drop = ev.currentTarget;
-		if (drop !== null && drop.id in this.data) {
+		const drop = this.drops.length === 0 ? null : ev.currentTarget;
+		const data = __HEAP.data(drop);
+		if (data !== null) {
 			ev.preventDefault();
 			ev.stopPropagation();
-			const data   = this.data[drop.id];
-			const effect = ev.dataTransfer.dropEffect;
-			const files  = ev.dataTransfer.files;
-			/*-- ação personalizada --*/
-			if (typeof data.call === "function") {
-				data.call(files, drop, effect);
-			}
-			/*-- ação padrão --*/
-			else {
-				const attr = {copy: "text", link: "link", move: "frame"};
-
-
-
-
-
-
-				//FIXME trocar pelo método de URL e acabar com uso de __FILE
-				/*__REQUEST.read({url: files, type: effect === "copy" ? "text": "url", call: function(x) {
-					drop.setAttribute("aria-busy", "true");
-					if (x.ok) {
-						TODO ver método append
-					}
-					if (x.done) drop.setAttribute("aria-busy", "false");
-					return;
-				}});*/
-			}
-			/*-- zerar comportamento --*/
-			window.removeEventListener("dragleave", this);
-			window.addEventListener("dragenter", this);
-			for (let i in this.data) {
-				let data = this.data[i];
-				let drop = document.getElementById(i);
-				drop.removeEventListener("dragenter", this);
-				drop.removeEventListener("dragover", this);
-				drop.removeEventListener("dragleave", this);
-				drop.removeEventListener("drop", this);
-				__DRAG.dropZone(drop);
-			}
+			const files = ev.dataTransfer.files;
+			data.call({event: ev.type, drag: files, drop: drop, over: ev.target, effect: data.effect, x: ev.clientX, y: ev.clientY});
+			/*-- marcar como encerrado --*/
+			this.drops.forEach(function(drop,i,a) {
+				const data = __HEAP.data(drop);
+				if (data !== null) {
+					__HTML(drop, {removeEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
+					data.call({event: "dragend", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
+				}
+			}, this);
 		}
 		return;
 	},
-	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{dragstart}, '{dragend}, '{dragover}, '{dragleave} e '{drop}.**/
-	handleEvent: function(ev) {return this[ev.type](ev);},
-
-	//TODO eu estava tentando melhorar isso, mas o que esperar quando arrastar e soltar um arquivo na página?
-	//FIXME o input.file já faz isso, só não exibe a mídia.
-	//FIXME será que não é melhor não fazer nada?
-	append: function(file, drop, effect) {
-		if (!(file instanceof Blob)) return null;
-		const name = "name" in file ? file.name : "blob";
-		const type = ("type" in file ? file.type : "application/octet-stream").trim().toLowerCase().split(";")[0];
-		const main = type.split("/")[0];
-		const href = URL.createObjectURL(file);
-		const link = __HTML("a", {href: href, textContent: name, download: name, type: type});
-		if (effect === "link") {
-			drop.appendChild(link);
-			return;
-		}
-		if (main === "audio") {
-			drop.appendChild(__DOM({tag: "audio", attr: {src: href, controls: true}, child: [link]}).tag);
-			return;
-		}
-		if (main === "video") {
-			drop.appendChild(__DOM({tag: "video", attr: {src: href, controls: true}, child: [link]}).tag);
-			return;
-		}
-		if (main === "image") {
-			drop.appendChild(__DOM({tag: "img", attr: {src: href, alt: name}, child: [link]}).tag);
-			return;
-		}
-		if (main === "text") {
-			URL.revokeObjectURL(href);
-			__REQUEST.make({url: file, type: "text", call: function(x) {
-				if (x.ok && x.result !== null)
-					drop.appendChild(__HTML("pre", {innerText: x.result}));
-			}});
-			return;
-		}
-		drop.appendChild(__DOM({tag: "iframe", attr: {src: href}, child: [link]}).tag);
-		return;
+	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante o procedimento.**/
+	handleEvent: function(ev) {
+		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
-
-
 };

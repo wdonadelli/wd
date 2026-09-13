@@ -57,7 +57,7 @@ function lista_menu() {
 	const re       = /(\w+)\.\w+/
 	const scripts  = Array.from(document.querySelectorAll("[data-library]"));
 	const pacotes  = scripts.map((v) => v.getAttribute("src").match(re)[1]);
-	const exemplos = ["wdFilter", "wdMask", "wdRepeat", "wdDrag"];
+	const exemplos = ["wdFilter", "wdMask", "wdRepeat", "wdDrag", "wdDrop"];
 	return [["Pacotes"].concat(pacotes.sort()), ["Exemplos"].concat(exemplos.sort()), "&#x1F4BE;Biblioteca", "Manutenção"];
 }
 
