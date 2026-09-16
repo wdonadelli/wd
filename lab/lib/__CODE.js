@@ -367,3 +367,19 @@ __CSS.push(`/*-- CODE --*/
 .css-wd-code-rule    {color: orange;}
 .css-wd-code-scope   {color: cyan;}
 `);
+
+
+/* TODO o que acha disso?
+{
+	words:  {type: "keys", value: /(new|let|var|const)/, rule: [], high: ""}, //palavras chaves
+	var:    {type: "data", value: /(undefined|null)/,   rule: [], high: ""}, //dados
+	scape:  {type: "char", value: /\\\s/,                rule: [], high: ""}, //caracteres
+	quotes: {type: "cage", open: '"', close: '"',        rule: [scape], high: ""}, //gaiola
+	quote:  {type: "cage", open: "'", close: "'",        rule: [scape], high: ""},
+	inside: {type: "cage", open: "${", close: "}",       rule: [scape, main], high: ""},
+	aphos:  {type: "cage", open: "`", close: "`",        rule: [scape, inside], high: ""},
+	main:   {type: "none",                               rule: [words, var, quotes, quote], high: ""}, //nenhum
+
+
+
+*/

@@ -11,18 +11,69 @@ const __MOVE = {
 	mouse: null,
 	/**. '{array heap}: Registra os identificadores dos manipuladores abertos.**/
 	heap: [],
+
+
+	mover: function(target) {
+		const id   = __ID.id(target);
+		const wgcs = window.getComputedStyle(target);
+		const move = __DOM({
+			tag: "div",
+			attr: {
+				"aria-controls": id,
+				"aria-label": "Move",
+				tabindex: "0",
+				class: "css-js-wd-move-c",
+				addEventListener: {keydown: this, mousedown: this, focusout: this},
+			},
+			child: ("nw,n,ne,e,se,s,sw,w").split(",").map(function(v,i,a) {
+				return {tag: "div", attr: {
+					"aria-controls": id,
+					tabindex: 0,
+					class: `css-js-wd-move-${v}`,
+					"aria-label": `Resize ${v.toUpperCase}`,
+					addEventListener: {keydown: this, mousedown: this},
+				}};
+			}, this),
+		}).tag;
+		/*-- acertando posicionamento do alvo --*/
+		if (wgcs.position === "static") target.style.position = "relative";
+		if (wgcs.display  === "inline") target.style.display  = "inline-block";
+		target.appendChild(move);
+		move.focus();
+		return move;
+	},
+
+
 	/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
 	attach: function(target) {
+		if (!(drag instanceof HTMLElement) || !__Type(drop).object) return;
+		const data = {
+			attr:  __HEAP.getAttr(target, "class", "style", "tabindex"),
+			move: target,
+		};
+		__HEAP.attach(target, data, this);
+		/*-- definindo propriedades do alvo --*/
+		__HTML(target, {
+			tabindex: "0",
+			addEventListener: {keydown: this},
+
+		});
+
+
+
+
+
+
 		this.detach(target);
 		const view = __ID.value;
 		const ctrl = __ID.id(target);
 		const fire = {keydown: this, mousedown: this, focusin: this};
-		const move = {tag: "div", attr: {className: "css-wd-move", addEventListener: fire, id: __ID.value}, child: []};
+		const move = {tag: "div", attr: {className: "css-js-wd-move", addEventListener: fire, id: __ID.value}, child: []};
 		/*-- posicionamento --*/
 		__CSS.temp(target, {position: {static: "relative"}, display: {inline: "inline-block"}});
 		/*-- manipuladores específicos --*/
 		this.sides.forEach(function(v,i,a) {
-			const attr = {className: `css-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
+			const attr = {className: `css-js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
 			attr[v === "c" ? "id" : "aria-describedby"] = view;
 			move.child.push({tag: "button", attr: attr, child: []});
 		}, this);
@@ -176,7 +227,7 @@ const __MOVE = {
 		return;
 	},
 	/**. '{void click(object ev, object data)}: Manipulador Define o movimento a partir do mouse.**/
-	click: function(ev, data) {
+	/*click: function(ev, data) {
 		const heap = this.heap.slice();
 		for (let i = 0; i < heap.length; i++) {
 			let find = document.getElementById(heap[i]);
@@ -186,8 +237,103 @@ const __MOVE = {
 		}
 		return;
 	},
+	FIXME
+	/**. '{void click(object ev)}: Manipulador para fechar o movimentador.** /
+	click: function(ev) {
+		const type = this.anchor(ev.currentTarget);
+		if (ev.currentTarget === ev.target && type === "box")
+			ev.currentTarget.remove();
+		return;
+	},
+
+	*/
+
+	/**. '{string anchor(node elem)}: Retorna o tipo de âncora do elemento.**/
+	anchor: function(elem) {
+		const re  = /^css-js-wd-move-(nw|n|ne|e|se|s|sw|w|c|box)$/;
+		const css = elem.getAttribute("class");
+		return re.test(css) ? css.match(re)[1] : null;
+	},
+
+	focusout: function(ev) {
+		console.log(ev.currentTarget, ev.target, ev.relatedTarget)
+		if (!ev.currentTarget.contains(ev.relatedTarget)) {
+			ev.preventDefault();
+			ev.currentTarget.focus();
+		}
+		return;
+	},
+
+
+
+	/**. '{void keydown(object ev)}: Manipulador para mover e redimencionar com o i{mouse}.**/
+	keydown: function(ev) {
+		const type = this.anchor(ev.target);
+		const move = document.getElementById(ev.target.getAttribute("aria-controls"));
+		const attr = ["height", "width", "top", "bottom", "left", "right"];
+		const wgcs = window.getComputedStyle(move);
+		const rect = {};
+		const gap  = (ev.shiftKey ? 5 : 1) * Math.min(window.screen.height, window.screen.width)/100;
+		attr.forEach(function (v,i,a) {rect[v] = Number(wgcs[v].replace(/\D+$/, ""));});
+		/*-- sair --*/
+		if (ev.key === "Escape") {
+			(type === "c" ? ev.target : ev.target.parentElement).remove();
+			return;
+		}
+		/*-- horizontal superior --*/
+		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "nw" || type === "n" || type === "ne")) {
+				rect.top    += ev.key === "ArrowUp" ? -gap : +gap;
+				rect.height += ev.key === "ArrowUp" ? +gap : -gap;
+		}
+		/*-- horizontal inferior --*/
+		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "sw" || type === "s" || type === "se")) {
+				rect.bottom += ev.key === "ArrowUp" ? +gap : -gap;
+				rect.height += ev.key === "ArrowUp" ? -gap : +gap;
+		}
+		/*-- vertical esquerda --*/
+		else if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && (type === "nw" || type === "w" || type === "sw")) {
+				rect.left  += ev.key === "ArrowLeft" ? -gap : +gap;
+				rect.width += ev.key === "ArrowLeft" ? +gap : -gap;
+		}
+		/*-- vertical direita --*/
+		else if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && (type === "ne" || type === "e" || type === "se")) {
+				rect.right += ev.key === "ArrowLeft" ? +gap : -gap;
+				rect.width += ev.key === "ArrowLeft" ? -gap : +gap;
+		}
+		/*-- movimento vertical --*/
+		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && type === "c") {
+				rect.top    += ev.key === "ArrowUp" ? -gap : +gap;
+				rect.bottom += ev.key === "ArrowUp" ? +gap : -gap;
+		}
+		/*-- movimento horizontal --*/
+		else if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && type === "c") {
+				rect.left  += ev.key === "ArrowLeft" ? -gap : +gap;
+				rect.right += ev.key === "ArrowLeft" ? +gap : -gap;
+		}
+		else {
+			return;
+		}
+		console.log(rect)
+		for (let i in rect)
+			move.style[i] = `${rect[i]}px`;
+		return;
+	},
+
+
+
+
+
+
+
+
+
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focusin}.**/
 	handleEvent: function(ev) {
+		ev.stopPropagation();
+		return ev.type in this ? this[ev.type](ev) : undefined;
+
+
+		/*-- coisas antigas --*/
 		if (ev.target === ev.currentTarget) return;
 		ev.stopPropagation();
 		const data = ev.currentTarget === window ? null : this.data(ev);
@@ -217,86 +363,75 @@ const __MOVE = {
 	},
 };
 __CSS.push(`/*-- MOVE/RESIZE --*/
-.css-wd-move {
+/*-- move --*/
+.css-js-wd-move-c {
 	position: absolute;
+	z-index: 999;
 	top: 0;
-	left: 0;
 	bottom: 0;
 	right: 0;
-	z-index: 999;
-	border: 2px dashed red;
-	font-size: var(--var-js-wd-font-size);
-	font-family: var(--var-js-wd-font-type);
+	left: 0;
+	cursor: pointer;
+	font-size: 16px;
+	cursor: move;
+	border: 0.125em dashed red;
 }
-.css-wd-move > * {
+.css-js-wd-move-c * {
 	position: absolute;
 	border: 0;
-	background: transparent;
-	font-family: inherit;
-	font-size: inherit;
 }
 /*-- resize vertical --*/
-.css-wd-move-n, .css-wd-move-s {
-	height: var(--var-js-wd-move-edge);
-	left:   calc(var(--var-js-wd-move-edge) / 2);
-	right:  calc(var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-n, .css-js-wd-move-s {
+	height: 0.50em;
+	left:   0.25em;
+	right:  0.25em;
 }
-.css-wd-move-n {
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-n {
+	top:    -0.25em;
 	cursor: n-resize;
 }
-.css-wd-move-s {
-	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-s {
+	bottom: -0.25em;
 	cursor: s-resize;
 }
 /*-- resize horizontal --*/
-.css-wd-move-w, .css-wd-move-e {
-	width:  var(--var-js-wd-move-edge);
-	top:    calc(var(--var-js-wd-move-edge) / 2);
-	bottom: calc(var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-w, .css-js-wd-move-e {
+	width:  0.50em;
+	top:    0.25em;
+	bottom: 0.25em;
 }
-.css-wd-move-w {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-w {
+	left:   -0.25em;
 	cursor: w-resize;
 }
-.css-wd-move-e {
-	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-e {
+	right:  -0.25em;
 	cursor: e-resize;
 }
 /*-- resize bidimensional --*/
-.css-wd-move-nw, .css-wd-move-ne, .css-wd-move-sw, .css-wd-move-se {
-	width:  var(--var-js-wd-move-edge);
-	height: var(--var-js-wd-move-edge);
-	border: 2px solid red;
-	background: white;
-	/*border-radius: calc(var(--var-js-wd-move-edge) / 2);*/
+.css-js-wd-move-nw, .css-js-wd-move-ne, .css-js-wd-move-sw, .css-js-wd-move-se {
+	width:  0.50em;
+	height: 0.50em;
+	background: red;
 }
-.css-wd-move-nw {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-nw {
+	left:   -0.25em;
+	top:    -0.25em;
 	cursor: nw-resize;
 }
-.css-wd-move-ne {
-	right:  calc(-1 * var(--var-js-wd-move-edge) / 2);
-	top:    calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-ne {
+	right:  -0.25em;
+	top:    -0.25em;
 	cursor: ne-resize;
 }
-.css-wd-move-sw {
-	left:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	bottom: calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-sw {
+	left:   -0.25em;
+	bottom: -0.25em;
 	cursor: sw-resize;
 }
-.css-wd-move-se {
-	right:   calc(-1 * var(--var-js-wd-move-edge) / 2);
-	bottom:  calc(-1 * var(--var-js-wd-move-edge) / 2);
+.css-js-wd-move-se {
+	right:   -0.25em;
+	bottom:  -0.25em;
 	cursor: se-resize;
 }
-.css-wd-move-c {
-	left:   calc(var(--var-js-wd-move-edge) / 2);
-	top:    calc(var(--var-js-wd-move-edge) / 2);
-	right:  calc(var(--var-js-wd-move-edge) / 2);
-	bottom: calc(var(--var-js-wd-move-edge) / 2);
-	cursor: move;
-	color: black;
-	background: rgba(255,255,255,0.7);
-}`);
+`);
