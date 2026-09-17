@@ -12,33 +12,51 @@ const __MOVE = {
 	/**. '{array heap}: Registra os identificadores dos manipuladores abertos.**/
 	heap: [],
 
+	setRect: function(main, move) {
+		const rect = main.getBoundingClientRect();
+		const attr = ["top", "bottom", "left", "right", "width", "height"];
+		attr.forEach(function(v,i,a) {move.style[v] = `${rect[v]}px`;});
+		return;
+	},
 
-	mover: function(target) {
-		const id   = __ID.id(target);
-		const wgcs = window.getComputedStyle(target);
+
+	mover: function(main) {
+		const id   = __ID.id(main);
+		const wgcs = window.getComputedStyle(main);
 		const move = __DOM({
 			tag: "div",
 			attr: {
-				"aria-controls": id,
-				"aria-label": "Move",
-				tabindex: "0",
-				class: "css-js-wd-move-c",
-				addEventListener: {keydown: this, mousedown: this, focusout: this},
+				addEventListener: {click: this, mouseup: this, mousemove: this},
+				class: "css-js-wd-move-box"
 			},
-			child: ("nw,n,ne,e,se,s,sw,w").split(",").map(function(v,i,a) {
-				return {tag: "div", attr: {
+			child: [{
+				tag: "div",
+				attr: {
 					"aria-controls": id,
-					tabindex: 0,
-					class: `css-js-wd-move-${v}`,
-					"aria-label": `Resize ${v.toUpperCase}`,
+					"aria-label": "Move",
+					tabindex: "0",
+					class: "css-js-wd-move-c",
 					addEventListener: {keydown: this, mousedown: this},
-				}};
-			}, this),
+				},
+				child: ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map(function(v,i,a) {
+					return {
+						tag: "div",
+						attr: {
+							"aria-controls": id,
+							tabindex: 0,
+							class: `css-js-wd-move-${v}`,
+							"aria-label": `Resize ${v.toUpperCase}`,
+							addEventListener: {keydown: this, mousedown: this},
+						}
+					};
+				}, this),
+			}]
 		}).tag;
-		/*-- acertando posicionamento do alvo --*/
-		if (wgcs.position === "static") target.style.position = "relative";
-		if (wgcs.display  === "inline") target.style.display  = "inline-block";
-		target.appendChild(move);
+		/*-- acertando posicionamento do alvo e do movedor --*/
+		if (wgcs.position === "static") main.style.position = "relative";
+		if (wgcs.display  === "inline") main.style.display  = "inline-block";
+		document.body.appendChild(move);
+		this.setRect(main, move.firstElementChild);
 		move.focus();
 		return move;
 	},
@@ -238,15 +256,11 @@ const __MOVE = {
 		return;
 	},
 	FIXME
-	/**. '{void click(object ev)}: Manipulador para fechar o movimentador.** /
-	click: function(ev) {
-		const type = this.anchor(ev.currentTarget);
-		if (ev.currentTarget === ev.target && type === "box")
-			ev.currentTarget.remove();
-		return;
-	},
+
 
 	*/
+
+
 
 	/**. '{string anchor(node elem)}: Retorna o tipo de âncora do elemento.**/
 	anchor: function(elem) {
@@ -255,30 +269,36 @@ const __MOVE = {
 		return re.test(css) ? css.match(re)[1] : null;
 	},
 
-	focusout: function(ev) {
-		console.log(ev.currentTarget, ev.target, ev.relatedTarget)
-		if (!ev.currentTarget.contains(ev.relatedTarget)) {
-			ev.preventDefault();
-			ev.currentTarget.focus();
+	/**. '{void click(object ev)}: Manipulador para fechar o movimentador.**/
+	click: function(ev) {
+		const type = this.anchor(ev.currentTarget);
+		if (ev.currentTarget === ev.target && type === "box") {
+			ev.stopPropagation();
+			ev.currentTarget.remove();
 		}
 		return;
 	},
-
-
-
 	/**. '{void keydown(object ev)}: Manipulador para mover e redimencionar com o i{mouse}.**/
 	keydown: function(ev) {
 		const type = this.anchor(ev.target);
-		const move = document.getElementById(ev.target.getAttribute("aria-controls"));
+		const move = type === "c" ? ev.target : ev.target.parentElement
+		const main = document.getElementById(ev.target.getAttribute("aria-controls"));
 		const attr = ["height", "width", "top", "bottom", "left", "right"];
-		const wgcs = window.getComputedStyle(move);
+		const wgcs = window.getComputedStyle(main);
 		const rect = {};
 		const gap  = (ev.shiftKey ? 5 : 1) * Math.min(window.screen.height, window.screen.width)/100;
 		attr.forEach(function (v,i,a) {rect[v] = Number(wgcs[v].replace(/\D+$/, ""));});
+		/*-- foco --*/
+		if (ev.key === "Tab") {
+			if ((type === "w" && !ev.shiftKey) || (type === "c" && ev.shiftKey)) {
+				ev.preventDefault();
+				(type === "w" ? move : move.lastElementChild).focus();
+			}
+			return;
+		}
 		/*-- sair --*/
 		if (ev.key === "Escape") {
-			(type === "c" ? ev.target : ev.target.parentElement).remove();
-			return;
+			return move.parentElement.remove();
 		}
 		/*-- horizontal superior --*/
 		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "nw" || type === "n" || type === "ne")) {
@@ -313,9 +333,70 @@ const __MOVE = {
 		else {
 			return;
 		}
-		console.log(rect)
-		for (let i in rect)
-			move.style[i] = `${rect[i]}px`;
+		/*-- definindo posicionamento do alvo e do movimentador --*/
+		for (let i in rect) main.style[i] = `${rect[i]}px`;
+		this.setRect(main, move);
+		return;
+	},
+
+
+	mousedown: function(ev) {
+		const type = this.anchor(ev.target);
+		const move = type === "c" ? ev.target : ev.target.parentElement
+		const main = document.getElementById(ev.target.getAttribute("aria-controls"));
+		if (ev.button === 0)
+			this.mouse = {main: main, type: type, move: move};
+		return;
+	},
+
+	mouseup: function(ev) {
+		this.mouse = null;
+		return;
+	},
+
+	mousemove: function(ev) {
+		if (this.mouse === null) return;
+		const type = this.mouse.type;
+		const attr = ["height", "width", "top", "bottom", "left", "right"];
+		const vect = {x: ev.clientX, y: ev.clientY};
+		const gbcr = this.mouse.main.getBoundingClientRect();
+		const wgcs = window.getComputedStyle(this.mouse.main);
+		const rect = {};
+		attr.forEach(function (v,i,a) {rect[v] = Number(wgcs[v].replace(/\D+$/, ""));});
+		/*-- horizontal superior --*/
+		if (type === "nw" || type === "n" || type === "ne") {
+			rect.height += +gbcr.top - vect.y;
+			rect.top    += -gbcr.top + vect.y;
+		}
+		/*-- horizontal inferior --*/
+		if (type === "sw" || type === "s" || type === "se") {
+			rect.height += -gbcr.bottom + vect.y;
+			rect.bottom += +gbcr.bottom - vect.y;
+		}
+		/*-- horizontal esquerda --*/
+		if (type === "nw" || type === "w" || type === "sw") {
+			rect.width += +gbcr.left - vect.x;
+			rect.left  += -gbcr.left + vect.x;
+		}
+		/*-- horizontal direita --*/
+		if (type === "ne" || type === "e" || type === "se") {
+			rect.width += -gbcr.right + vect.x;
+			rect.right += +gbcr.right - vect.x;
+		}
+		/*-- movimento --*/
+		if (type === "c") {
+			rect.top    += -gbcr.top    + vect.y;
+			rect.bottom += +gbcr.top - vect.y;
+			rect.left   += -gbcr.left   + vect.x;
+			rect.right  += +gbcr.left  - vect.x;
+		}
+
+
+
+
+		/*-- definindo posicionamento do alvo e do movimentador --*/
+		for (let i in rect) this.mouse.main.style[i] = `${rect[i]}px`;
+		this.setRect(this.mouse.main, this.mouse.move);
 		return;
 	},
 
@@ -364,13 +445,17 @@ const __MOVE = {
 };
 __CSS.push(`/*-- MOVE/RESIZE --*/
 /*-- move --*/
-.css-js-wd-move-c {
+.css-js-wd-move-box {
 	position: absolute;
-	z-index: 999;
 	top: 0;
 	bottom: 0;
 	right: 0;
 	left: 0;
+	cursor: pointer;
+}
+.css-js-wd-move-c {
+	position: fixed;
+	z-index: 999;
 	cursor: pointer;
 	font-size: 16px;
 	cursor: move;
