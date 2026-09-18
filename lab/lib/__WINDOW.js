@@ -73,7 +73,7 @@ const __WINDOW = {
 			float: {submit: this, keydown: this, click: this}
 		};
 		for (let i in ev) {
-			let attr = {"data-js-wd-window": i, addEventListener: ev[i], tabindex: -1};
+			let attr = {"data-js-wd-window": i, addEventListener: ev[i], tabindex: -1, role: "presentation"};
 			this[i] = this[i] ? this[i] : __HTML("div", attr);
 		}
 		return;
