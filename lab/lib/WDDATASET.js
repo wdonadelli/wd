@@ -183,6 +183,21 @@ const WDDATASET = {
 	},
 
 
+	/**. '{void wdDrop(object ev)}: Define elementos de soltura de arquivos (ver '{__DROP}):
+	|Nome|Tipo|Opcional|Descrição|
+	|'{effect}|string|Não|Efeito da queda|
+	|'{call}|function|Sim|Função a ser durante o procedimento|
+	|""Tabela de configuração do atributo wdDrop""|**/
+	wdMove: function(ev) {
+		const data = this.attr(ev.target.dataset.wdMove, {});
+		delete ev.target.dataset.wdMove;
+		if (data) __MOVE.attach(ev.target);
+		return;
+	},
+
+
+
+
 
 
 

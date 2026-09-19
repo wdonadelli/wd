@@ -170,14 +170,29 @@ const __WINDOW = {
 				main.setAttribute("tabindex", auto === null ? -1 : 0);
 			main.focus();
 		}
-		/*-- adicionando cores --*/
+		/*-- herdar a cor de body se a janela não tiver uma cor predefinida --*/
+		/*const reopac = /^(none|transparent|rgba\(0\,\s*0\,\s*0\,\s*0\))$/i;
 		const wcolor = window.getComputedStyle(heap.win);
-		if (wcolor.background === "none") {
+		if (reopac.test(wcolor.backgroundColor)) {
 			const bcolor = window.getComputedStyle(document.body);
-			const empty  = bcolor.background === "none";
-			heap.win.style.background = empty ? "#ffffff" : bcolor.background;
-			heap.win.style.color = empty || bcolor.color === "none" ? "#202020" : bcolor.color;
-		}
+			const bgopac = reopac.test(bcolor.backgroundColor);
+			const fgopac = reopac.test(bcolor.color);
+			heap.win.style.backgroundColor = bgopac           ? "#ffffff" : bcolor.backgroundColor;
+			heap.win.style.color           = bgopac || fgopac ? "#202020" : bcolor.color;
+		}*/
+		//TODO igualar as coras da janela às cores de body sempre (abaixo) ou só quando a janela não tiver cor (acima)
+
+		const reopac = /^(none|transparent|rgba\(0\,\s*0\,\s*0\,\s*0\))$/i;
+		const bcolor = window.getComputedStyle(document.body);
+		const bgopac = reopac.test(bcolor.backgroundColor);
+		const fgopac = reopac.test(bcolor.color);
+		heap.win.style.backgroundColor = bgopac           ? "#ffffff" : bcolor.backgroundColor;
+		heap.win.style.color           = bgopac || fgopac ? "#202020" : bcolor.color;
+
+
+
+
+
 		/*-- acionar disparador --*/
 		if (heap.call !== null)
 			heap.call({signal: "attach", window: heap.win, close: false, open: true, submit: null});
@@ -250,34 +265,38 @@ const __WINDOW = {
 		const find = this.match({win: win});
 		return find < 0 ? undefined : this.close(find, this.heap[find].open ? "detach" : "cancelled");
 	},
-	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante os eventos '{click, keydown e submit}.**/
-	handleEvent: function(ev) {
-		/*-- submit: aplica-se às três paredes --*/
-		if (ev.type === "submit") {
-			ev.preventDefault();
-			const child = ev.currentTarget.children;
-			for (let i = 0; i < child.length; i++) {
-				if (child[i].contains(ev.target))
-					this.close(this.match({win: child[i]}), "submit", ev);
-			}
-			return;
-		}
-		/*-- click: aplica-se à parede float --*/
-		if (ev.type === "click" && ev.target === ev.currentTarget) {
-			return this.close(this.match({win: ev.currentTarget.firstElementChild}), "offtarget");
-		}
-		/*-- keydown: aplica-se às paredes float e modal --*/
-		if (ev.type === "keydown") {
-			const find = this.match({win: ev.currentTarget.firstElementChild});
-			if (ev.key === "Escape")
-				return this.close(find, "escape");
-			if (ev.key === "Tab" && find >= 0 && this.heap[find].type === "float") {
-				ev.preventDefault();
-				return this.close(find, "tab");
-			}
 
+
+	/**. '{void submit(object ev)}: Disparador ao submeter a janela (aplica-se às três paredes).**/
+	submit: function(ev) {
+		ev.preventDefault();
+		const child = ev.currentTarget.children;
+		for (let i = 0; i < child.length; i++) {
+			if (child[i].contains(ev.target))
+				this.close(this.match({win: child[i]}), "submit", ev);
 		}
 		return;
+	},
+	/**. '{void click(object ev)}: Disparador ao clicar fora da janela (aplica-se à paredes '{float}).**/
+	click: function(ev) {
+		if (ev.target === ev.currentTarget)
+			this.close(this.match({win: ev.currentTarget.firstElementChild}), "offtarget");
+		return;
+	},
+	/**. '{void keydown(object ev)}: Disparador ao clicar fora da janela (aplica-se à paredes '{float} e '{modal}).**/
+	keydown: function(ev) {
+		const find = this.match({win: ev.currentTarget.firstElementChild});
+		if (ev.key === "Escape")
+			return this.close(find, "escape");
+		if (ev.key === "Tab" && find >= 0 && this.heap[find].type === "float") {
+			ev.preventDefault();
+			return this.close(find, "tab");
+		}
+		return;
+	},
+	/**. '{void handleEvent(object ev)}: Disparador do objeto chamado durante as interações das janelas e pareder.**/
+	handleEvent: function(ev) {
+		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
 };
 __CSS.push(`/*-- WINDOW --*/

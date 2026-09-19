@@ -57,14 +57,17 @@ const __MOVE = {
 		if (wgcs.display  === "inline") main.style.display  = "inline-block";
 		document.body.appendChild(move);
 		this.setRect(main, move.firstElementChild);
-		move.focus();
+		move.firstElementChild.focus();
 		return move;
 	},
 
 
+
+
+
 	/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
 	attach: function(target) {
-		if (!(drag instanceof HTMLElement) || !__Type(drop).object) return;
+		if (!(target instanceof HTMLElement)) return;
 		const data = {
 			attr:  __HEAP.getAttr(target, "class", "style", "tabindex"),
 			move: target,
@@ -73,69 +76,58 @@ const __MOVE = {
 		/*-- definindo propriedades do alvo --*/
 		__HTML(target, {
 			tabindex: "0",
-			addEventListener: {keydown: this},
-
+			addEventListener: {keydown: this, dblclick: this},
 		});
-
-
-
-
-
-
-		this.detach(target);
-		const view = __ID.value;
-		const ctrl = __ID.id(target);
-		const fire = {keydown: this, mousedown: this, focusin: this};
-		const move = {tag: "div", attr: {className: "css-js-wd-move", addEventListener: fire, id: __ID.value}, child: []};
-		/*-- posicionamento --*/
-		__CSS.temp(target, {position: {static: "relative"}, display: {inline: "inline-block"}});
-		/*-- manipuladores específicos --*/
-		this.sides.forEach(function(v,i,a) {
-			const attr = {className: `css-js-wd-move-${v}`, "aria-controls": ctrl, "aria-label": v.toUpperCase()};
-			attr[v === "c" ? "id" : "aria-describedby"] = view;
-			move.child.push({tag: "button", attr: attr, child: []});
-		}, this);
-		/*-- anexando manipulador e focalizando --*/
-		__DOM(move, target).tag.children[this.sides.indexOf("c")].focus();
-		if (this.heap.length === 0)
-			window.addEventListener("click", this);
-		this.heap.push(move.attr.id);
 		return;
 	},
 	/**. '{void detach(node target)}: Desanexa o manipulador do alvo.**/
 	detach: function(target) {
-		this.heap = this.heap.filter(function(v,i,a) {
-			const find = document.getElementById(v);
-			if (find !== null && find.parentElement === target) {
-				find.remove();
-				target.focus();
-				return false;
-			}
-			return true;
-		});
-		if (this.heap.length === 0)
-			window.removeEventListener("click", this);
+		const data = __HEAP.data(target, this);
+		if (data !== null) {
+			__HEAP.resetAttr(data.attr);
+			__HTML(target, {removeEventListener: {keydown: this, dblclick: this}});
+		}
 		return;
 	},
-
-
 	/**. '{string anchor(node elem)}: Retorna o tipo de âncora do elemento.**/
 	anchor: function(elem) {
 		const re  = /^css-js-wd-move-(nw|n|ne|e|se|s|sw|w|c|box)$/;
 		const css = elem.getAttribute("class");
 		return re.test(css) ? css.match(re)[1] : null;
 	},
+
+	action: function(ev) {
+		const same = ev.currentTarget === ev.target;
+		const exec = (ev.type === "keydown" && ev.shiftKey && ev.key === "Escape") || ev.type === "dblclick";
+		console.log(this)
+		if (same && exec) {
+			ev.preventDefault();
+			this.mover(ev.currentTarget);
+		}
+		return;
+	},
+	/**. '{void dblclick(object ev)}: Manipulador para aplicar a caixa de movimentação ao alvo.**/
+	dblclick: function(ev) {
+		const data = __HEAP.data(ev.currentTarget, this);
+		const same = ev.currentTarget === ev.target;
+		if (data !== null && same) {
+			ev.preventDefault();
+			this.mover(ev.currentTarget);
+		}
+		return;
+	},
 	/**. '{void click(object ev)}: Manipulador para fechar o movimentador.**/
 	click: function(ev) {
-		const type = this.anchor(ev.currentTarget);
-		if (ev.currentTarget === ev.target && type === "box") {
+		if (ev.currentTarget === ev.target) {
 			ev.stopPropagation();
 			ev.currentTarget.remove();
+			document.getElementById(ev.currentTarget.firstElementChild.getAttribute("aria-controls")).focus();
 		}
 		return;
 	},
 	/**. '{void keydown(object ev)}: Manipulador para mover e redimencionar com o i{mouse}.**/
 	keydown: function(ev) {
+		ev.preventDefault();
 		const type = this.anchor(ev.target);
 		const move = type === "c" ? ev.target : ev.target.parentElement
 		const main = document.getElementById(ev.target.getAttribute("aria-controls"));
@@ -144,17 +136,29 @@ const __MOVE = {
 		const rect = {};
 		const gap  = (ev.shiftKey ? 5 : 1) * Math.min(window.screen.height, window.screen.width)/100;
 		attr.forEach(function (v,i,a) {rect[v] = Number(wgcs[v].replace(/\D+$/, ""));});
+		/*-- aplicar efeito ao elemento --*/
+		//TODO mudar a tecla para acionar o esquema
+		//TODO tem que limpar a seleção de texto no dblclick?
+		//TODO no attach, adicionar um botão acionador do esquema?
+		if (ev.key === "Escape" && ev.shiftKey && __HEAP.data(ev.currentTarget, this) !== null && ev.currentTarget === ev.target) {
+			this.mover(ev.currentTarget);
+			return;
+		}
 		/*-- foco --*/
 		if (ev.key === "Tab") {
-			if ((type === "w" && !ev.shiftKey) || (type === "c" && ev.shiftKey)) {
-				ev.preventDefault();
-				(type === "w" ? move : move.lastElementChild).focus();
+			const re = /^(c|[sn][ew])$/;
+			if (re.test(type)) {
+				const child = [move].concat(Array.from(move.children).filter(function(v,i,a) {return i%2 === 0;}));
+				const index = child.indexOf(ev.target);console.log(child)
+				child[(child.length + (index + (ev.shiftKey ? -1 : 1)))%child.length].focus();
+				return;
 			}
-			return;
 		}
 		/*-- sair --*/
 		if (ev.key === "Escape") {
-			return move.parentElement.remove();
+			move.parentElement.remove();
+			main.focus();
+			return
 		}
 		/*-- horizontal superior --*/
 		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "nw" || type === "n" || type === "ne")) {
