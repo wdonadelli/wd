@@ -76,8 +76,8 @@ const __TAB = {
 	},
 	/**. '{void detach(node node)}: Desvincula uma caixa de abas dos elementos referenciados.**/
 	detach: function(node) {
-		if (__HEAP.data(node) === null) return;
-		const data = __HEAP.data(node);
+		if (__HEAP.data(node, this) === null) return;
+		const data = __HEAP.data(node, this);
 		document.getElementById(data.tablist).remove();
 		__HEAP.resetAttr(data.root);
 		for (let i in data.panels) __HEAP.resetAttr(data.panels[i]);

@@ -52,7 +52,6 @@ Object.defineProperties(__SVG, {
 			const sml = svg.text(0.2*w, 0.4*h, txt, "hnw").attribute({"font-size": "smaller"}).last;
 			const lrg = svg.text(0.2*w, 0.6*h, txt, "hnw").attribute({"font-size": "larger"}).last;
 			const upp = Number(rec.getAttribute("width")) / rec.getBoundingClientRect().width;
-			console.log(upp, nor.getBoundingClientRect().width, nor.textContent.length)
 			const data = {
 				normal:  upp*nor.getBoundingClientRect().width/nor.textContent.length,
 				smaller: upp*sml.getBoundingClientRect().width/sml.textContent.length,

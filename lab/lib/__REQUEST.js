@@ -268,7 +268,7 @@ const __REQUEST = {
 		else if (ev.target instanceof this.Fetch)
 			data = ev.data;
 		/*-- refinando respostas --*/
-		const head   = data.headers === null ? null : new __DataSet(data.headers);//console.log(head.getAll("content-type"));
+		const head   = data.headers === null ? null : new __DataSet(data.headers);
 		const mime   = head !== null && head.getAll("content-type").length > 0;
 		data.time    = Date.now() - heap.init;
 		data.headers = head === null ? null : head.toHeaders;

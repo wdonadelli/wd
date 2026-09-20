@@ -1,62 +1,5 @@
 const wd = (function() {
 	const __CSS = `
-		/*-- Inert ---------------------------------------------------------------*/
-		${"inert" in document.body ? "" : "[inert] {display: none !important;}"}
-		/*-- Freeze --------------------------------------------------------------*/
-		.js-wd-freeze {overflow: hidden !important;}
-		/*-- Tip/Validity --------------------------------------------------------*/
-		.css-wd-form-error, .css-wd-tooltip {
-			display: inline-block;
-			padding: 0.25em;
-			margin: 0.25em 0;
-			font-size: var(--var-js-wd-font-size);
-			font-family: var(--var-js-wd-font-type);
-			border: thin solid;
-			border-radius: 0.2em;
-		}
-		.css-wd-tooltip {
-			display: none;
-			position: absolute;
-			top: 100%;
-			left: 0;
-		}
-		*:hover > .css-wd-tooltip {
-			display: inline-block;
-			animation: js-wd-animation-emerge 3s ease;
-		}
-		/*-- Tip -----------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*-- Signal: box --*/
-		[data-js-wd-signal] {
-			position: relative !important;
-			display: flex !important;
-			flex-direction: column !important;
-			padding: 0 !important;
-			margin: 0.25em 3px !important;
-			box-shadow: 2px 2px 2px rgba(0,0,0,0.5) !important;
-			animation: js-wd-animation-expand 0.5s ease !important;
-			font-size: 14px !important;
-			font-family: Tahoma, Verdana, sans-serif !important;
-			line-height: 1.2 !important;
-			border-radius: 0.3em !important;
-			background-repeat: no-repeat !important;
-			background-position: center !important;
-			background-size: cover !important;
-			background-origin: content-box !important;
-		}
-
 		[data-js-wd-signal="info"] {
 			color: rgb(50, 50, 50) !important;
 			background-color: rgb(140, 180, 255) !important;
@@ -86,67 +29,11 @@ const wd = (function() {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2BD1</text></svg>") !important;
 		}
 
-		@media screen and (min-width: 768px) {
-			[data-js-wd-signal="dialog"] {max-width: 75vw !important;}
-		}
-
-		.js-wd-signal-head {
-			padding: 0.5em 2em 0.5em 0.5em !important;
-			border-bottom: thin solid !important;
-			font-weight: bold !important;
-		}
-		.js-wd-signal-body {
-			padding: 0.5em !important;
-			white-space: pre-wrap !important;
-		}
-		.js-wd-signal-node {
-			padding: 0 0.5em !important;
-			display: flex !important;
-			flex-direction: column !important;
-		}
-		.js-wd-signal-fire {
-			display: flex !important;
-			flex-direction: column !important;
-			padding: 0.5em !important;
-		}
-		@media screen and (min-width: 768containspx) {
-			.js-wd-signal-fire {
-				flex-direction: row !important;
-				justify-content: space-evenly !important;
-				align-items: center !important;
-			}
-		}
-		.js-wd-signal-kill {
-			position: absolute !important;
-			top: 0 !important;
-			right: 0 !important;
-			margin:  0.4em !important;
-			height: 1em !important;
-			width: 1em !important;
-			border-radius: 0.5em !important;
-			line-height: calc(5 / 6) !important;
-			font-size: 1em !important;
-			text-align: center !important;
-			cursor: pointer !important;
-			z-index: 10 !important;
-		}
-    .js-wd-signal-kill:focus, .js-wd-signal-kill:hover {outline: 1px solid !important;}
-
-
-
 		/*-- dataset -------------------------------------------------------------*/
 		[data-wd-grid] [aria-sort] {cursor: pointer !important;}
 		[data-wd-grid] [aria-sort]:before {content: "\\2195 " !important;;}
 		[data-wd-grid] [aria-sort="descending"]:before {content: "\\2191 " !important;}
 		[data-wd-grid] [aria-sort="ascending"]:before  {content: "\\2193 " !important;}
-
-		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
-			cursor: pointer !important;
-		}
-
-		/*-- data-wd-float --------------------------------------------------------*/
-		[data-wd-float] {cursor: context-menu !important;}
-
 
 		[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden !important;}
 		[data-wd-slide] > * {animation: js-wd-animation-emerge 1s, js-wd-animation-shrink-out 0.5s !important;}
@@ -155,44 +42,12 @@ const wd = (function() {
 		wd-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
 
 
-		/*-- Códificação ---------------------------------------------------------*/
-
-		/*-- containers --*/
-
-
 
 		/*-- Importantes ---------------------------------------------------------*/
 		/*FIXME o que é isso*/
 		/*[data-js-wd-hide]:not([data-js-wd-show]) {
 			display: none !important;
 		}*/
-		[data-js-wd-hide] {display: none !important;}
-
-		[data-js-wd-cursor="move"],    [data-js-wd-cursor="move"]    * {cursor:     grab !important;}
-		[data-js-wd-cursor="moving"],  [data-js-wd-cursor="moving"]  * {cursor:     move !important;}
-		[data-js-wd-cursor="drag"],    [data-js-wd-cursor="drag"]    * {cursor:     grab !important;}
-		[data-js-wd-cursor="draging"], [data-js-wd-cursor="draging"] * {cursor: grabbing !important;}
-
-
-		[data-js-wd-area] {
-			position: fixed !important;
-			background-color: rgba(127,127,127,0.2) !important;
-			z-index: 9999 !important;
-		}
-		[data-js-wd-area="vertical"] {
-			top: 0 !important;
-			bottom: 0 !important;
-			height: 100vh !important;
-			border-left:  thin dashed rgb(128, 128, 128) !important;
-			border-right: thin dashed rgb(128, 128, 128) !important;
-		}
-		[data-js-wd-area="horizontal"] {
-			left: 0 !important;
-			right: 0 !important;
-			width: 100vw !important;
-			border-top:    thin dashed rgb(128, 128, 128) !important;
-			border-bottom: thin dashed rgb(128, 128, 128) !important;
-		}
 
 		.js-wd-mark-text {
 			background-color: lime !important;
@@ -512,14 +367,6 @@ const wd = (function() {
 	}
 
 
-
-
-/*============================================================================*/
-/**#3 Atributos HTML dataset**/
-/*============================================================================*/
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**#4 Requisições
 	''function void data_wd_send(node target, object event, array wdArray)''
@@ -638,7 +485,6 @@ const wd = (function() {
 			const test  = new __Type(group.query);
 			const query = test.node ? group.query : target;
 			const tools = WD(query);
-			console.log({query: query, type: tools.type})
 			/*-- looping pelos métodos --*/
 			for (let method in group) {
 				let check1 = new __Type(tools[method]);
@@ -770,38 +616,6 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**#4 Filtro Textual
-	''function void data_wd_filter(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-filter|
-	|Objetivo|Filtrar elementos de acordo com seu conteúdo textual|
-	|Eventos|load wdreload wddataset input|
-	|Alvos|Elementos que possam receber digitação|
-	|Grupos|Único|
-	|Referências|__Node.filter|
-	span{ }
-	|Propriedades|Tipo|Descrição|
-	|query|string|Seletor CSS que define os elementos que terão seus filhos filtrados|
-	|size|integer|Mesmo propósito do argumento de __Node.filter (opcional)|**/
-	function data_wd_filter(target, event, wdArray) {
-		const data   = wdArray[0];
-		const query  = WD(data.query);
-		const size   = data.size;
-		const node   = new __Node(target);
-		const regexp = /^\/(.+)\/([gim]+)?$/;
-		const value  = target[node.form && !node.ftext ? "value" : "innerText"];
-		const search = !regexp.test(value) ? value : (function() {
-			const arg1 = value.replace(regexp, "$1");
-			const arg2 = value.replace(regexp, "$2");
-			return new RegExp(arg1, arg2);
-		})();
-		if (query.type === "node")
-			query.filter(search, size);
-		return;
-	};
-
-
-/*----------------------------------------------------------------------------*/
 	/**''function void data_wd_edit(node target, object event, array wdArray)''
 	Função com o propósito de formatar textos em elementos editáveis por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
@@ -822,11 +636,6 @@ const wd = (function() {
 		}
 		return;
 	};
-
-
-
-
-
 
 
 /*----------------------------------------------------------------------------*/
@@ -866,25 +675,6 @@ const wd = (function() {
 		});
 		return;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -951,53 +741,6 @@ const wd = (function() {
 
 
 
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	/**''function void data_wd_move(node target, object event, array wdArray)''
-	Função com o propósito de mover o elemento por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|mousedown mousemove e mouseup|Único|Único|-|Elementos que possam ser movidos|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|$|node|Seletor CSS que define a o elemento a ser movido|
-	O atributo i{data-wd-move} deve ficar sobre o elemento âncora e a propriedade i{$} especificará o elemento que será movido. Para um movimento padrão, a âncora deve ser um filho do elemento a se mover, se não definido, será o próprio elemento. Elementos com posicionamento i{static} e i{sticky} não serão movimentados.**/
-	function data_wd_move(target, event, wdArray) {
-		const data = wdArray[0];
-		//FIXME aplicar __MOVE e estabelecer as teclas para acionar
-		return;
-	}
-
-/*----------------------------------------------------------------------------*/
-	/**''function void data_wd_drag(node target, object event, array wdArray)''
-	Função com o propósito de arrastar elementos por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-drag|mousemove, dragstart e dragend|Múltipla|Múltiplos|-|Nós de elementos que possam ser arrastados|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|effect|string|(obrigatório) Efeito do arrasto: move, copy ou link|
-	|drop|function|Função a ser executada ao derrubar o elemento|
-	|$ ou $$|String|(obrigatório) Seletores CSS que identifica os elementos receptores do arrasto para o efeito especificado|
-	Se o elemento arrastável tiver múltiplos efeitos, cada efeito deverá ser informado em um grupo diferente cuidando para que não haja concomitâncias de elementos receptores entre os grupos (o efeito do último grupo prevalecerá).
-	A função '{drop} receberá como argumentos o elemento drop, o elemento drag e o efeito aplicado. Se nenhum função for especificada, um comportamento padrão será executado de acordo com o efeito definido.
-	O elemento receptor não pode ser o elemento pai e nem o elemento arrastável ou estar contido nele.**/
-	function data_wd_drag(target, event, wdArray) {
-		const data = wdArray;
-		return;
-	}
-
-/*----------------------------------------------------------------------------*/
-	/**''function void data_wd_drop(node target, object event, array wdArray)''
-	Função com o propósito de definir o comportamento do elemento ao receber arquivos arrastáveis por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-drop|dragover, dragleave e drop|Único|Múltiplos|-|Nós que podem receber informações de arquivos.|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|drop|function|Função a ser chamada ao derrubar os arquivos|
-	A função i{drop} receberá como argumentos o elemento drop e os arquivos arrastáveis (FileList) e, se não informada, uma ação padrão será realizada. Nessa ação padrão, tentar-se-á carregar o arquivo na página (o primeiro arquivo de tamanho até 1000000 Bytes apenas).**/
-	function data_wd_drop(target, event, wdArray) {}
 /*----------------------------------------------------------------------------*/
 	/**''function void data_wdTsort(node  e, object event)''
 	Função vinculada ao atributo HTML '{data-wd-tsort} cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
@@ -1054,17 +797,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 /**''function void data_wd_float(node target, object event, array wdArray)''
-	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML i{data}.
+	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML i{data}.*/
 
-
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
-	Possui as seguintes propriedades:
-	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser i{drag}|
-	|effect|array|Efeitos do movimento: i{hide, move, copy e link}|**/
 	function data_wd_float(target, event, wdArray) {
-		console.log(wdArray[0])
 		const data  = wdArray[0];
 		const query = data.$ || data.$$ || null;
 		const check = new __Type(query);
@@ -1150,29 +885,17 @@ const wd = (function() {
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "[data-wd-repeat]", call: data_wd_repeat,  kill: true,  bind: {headers: {}}},
-				{name: "[data-wd-load]",   call: data_wd_load,    kill: true,  bind: {headers: {}}},
 				{name: "[data-wd-chart]",  call: data_wd_chart,   kill: true,  bind: {}},
 				{name: "[data-wd-code]",   call: data_wd_code,    kill: true,  bind: {}},
 				{name: "[data-wd-click]",  call: data_wd_click,   kill: false, bind: {}},
-				{name: "[data-wd-filter]", call: data_wd_filter,  kill: false, bind: {}},
-				{name: "[data-wd-mask]",   call: data_wd_mask,    kill: false, bind: {}},
-				{name: "[data-wd-device]", call: data_wd_device,  kill: false, bind: {}},
-				{name: "[data-wd-tabs]",   call: data_wd_tabs, kill: true,  bind: {}},
 			]
 		},
 		wddataset: {
 			target: document, preventDefault: false, extra: "wddatasetList",
 			data: [
-				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
-				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
 				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
 				{name: "wdCode",   call: data_wd_code,   kill: true,  bind: {}},
 				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {id: null}},
-				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {}},
-				{name: "wdMask",   call: data_wd_mask,   kill: false, bind: {}},
-				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
-				{name: "wdTabs",   call: data_wd_tabs,   kill: true,  bind: {}},
 			]
 		},
 		submit: {
@@ -1190,255 +913,5 @@ const wd = (function() {
 				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}},
 			]
 		},
-		input: {
-			target: document, preventDefault: false, extra: "checkTypingTime",
-			data: [
-				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {id: null}},
-				{name: null,       call: data_wd_output, kill: false, bind: {}}
-			]
-		},
-		focusout: {
-			target: document, preventDefault: false,
-			data: [
-				{name: "wdMask", call: data_wd_mask,   kill: false, bind: {}},
-				//{name: null,      call: data_wd_output, kill: false, bind: {}}
-			]
-		},
-		focusin: {
-			target: document, preventDefault: false,
-			data: [
-				//{name: null, call: wdOnFocusIn, kill: false, bind: {}}
-			]
-		},
-		drag: {
-			target: document, preventDefault: false,
-			data: []
-		},
-		dragstart: {
-			target: document, preventDefault: false,
-			data: [
-				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
-			]
-		},
-		dragend: {
-			target: document, preventDefault: false,
-			data: [
-				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
-			]
-		},
-		dragleave: {
-			target: document, preventDefault: true,
-			data: [
-				//{name: "html", call: data_wd_drop, kill: false, bind: {}}
-			]
-		},
-		dragover: {
-			target: document, preventDefault: true,
-			data: [
-				//{name: null, call: data_wd_drop, kill: false, bind: {}}
-			]
-		},
-		dragenter: {
-			target: document, preventDefault: true,
-			data: []
-		},
-		drop: {
-			target: document, preventDefault: true,
-			data: []
-		},
-		mousedown: {
-			target: document, preventDefault: false, extra: "leftClick",
-			data: []
-		},
-		mouseup: {
-			target: document, preventDefault: false, extra: "leftClick",
-			data: []
-		},
-		mousemove: {
-			target: document, preventDefault: false,
-			data: []
-		},
-		mouseenter: {
-			target: document, preventDefault: false,
-			data: [
-				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {effect: "all"}}
-			]
-		},
-		mouseleave: {
-			target: document, preventDefault: false,
-			data: []
-		},
-		mouseover: {
-			target: document, preventDefault: false,
-			data: [
-				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
-			]
-		},
-		mouseout: {
-			target: document, preventDefault: false,
-			data: []
-		},
-		dblclick: {
-			target: document, preventDefault: false, extra: "leftClick",
-			data: []
-		},
-		keydown: {
-			target: window, preventDefault: false,
-			data: [],
-		},
-	};
-
-	/**''function void eventManager(event)''
-	Disparador genérico da biblioteca, administra o conteúdo de __EVENTS.**/
-	function eventManager(event) {
-		/*-- Checar alvo do evento: elemento (1) ou documento (9) ----------------*/
-		const target = event.target === window ? document : event.target;
-		if ([1, 9].indexOf(target.nodeType) < 0) return;
-		/*-- obtendo dados iniciais --*/
-		const config    = __EVENTS[event.type];
-		const dataset   = config.data;
-		const wddataset = [];
-		const trigger   = [];
-		const search    = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;//TODO retirar o $ do fim da re?
-		const extra     = {
-			 /*-- tempo mínimo para digitação encerrar --*/
-			 typingTime: function(ev) {
-				const body = document.body;
-				if (!("wdTypingTime" in ev)) {
-					ev.wdTypingTime   = new Date().valueOf();
-					body.wdTypingTime = ev.wdTypingTime;
-					window.setTimeout(function() {eventManager(ev);}, 500);
-					return false;
-				}
-				if (ev.wdTypingTime === body.wdTypingTime) {
-					delete ev.wdTypingTime;
-					delete body.wdTypingTime;
-					return true;
-				}
-				return false;
-			},
-			/*-- clique com o botão esquerdo do mouse --*/
-			leftClick: function(ev) {
-				return event.which === 1;
-			},
-			/*-- capturar as propriedades definidas em dataset (wddataset = variável global) --*/
-			wddatasetList: function(ev) {
-				if (ev.target.nodeType === 1 && "wddataset" in ev.target.dataset) {
-					const list = ev.target.dataset.wddataset.split(" ");
-					list.forEach(function(v,i,a) {wddataset.push(v);});
-					delete ev.target.dataset.wddataset;
-				}
-				return true;
-			},
-		};
-
-		/*-- checar especifidades de cada evento ---------------------------------*/
-		if ("extra" in config && config.extra in extra)
-			if (!extra[config.extra](event)) return;
-
-		/*-- Lista de disparadores: elementos qua casam com o parâmetro ----------*/
-		let map, root, name, query;
-		for (let i = 0; i < dataset.length; i++) {
-			map = dataset[i];
-			/*-- Elementos descendentes com atributo HTML data: *[data-wd...] (wdArray) --*/
-			if (search.test(map.name)) {
-				root  = map.name[0] === "*" ? document : target;
-				name  = map.name.replace(search, "$1");
-				query = WD.$$(map.name, root);
-				query.forEach(function(node) {
-					trigger.push({
-						target:  node,                    /*-- nó alvo --*/
-						name:    map.name,                /*-- selector CSS --*/
-						call:    map.call,                /*-- função a ser chamada --*/
-						bind:    map.bind,                /*-- configurações iniciais do evento --*/
-						value:   node.getAttribute(name), /*-- valor do atributo --*/
-						wdArray: null,                    /*-- valor de wdArray --*/
-					});
-					if (map.kill) node.removeAttribute(name);
-				});
-			}
-			/*-- Elementos por nome da propriedade dataset: wdNome (wdArray) --*/
-			else if ("dataset" in target && map.name in target.dataset) {
-				trigger.push({
-					target:  target,
-					name:    map.name,
-					call:    map.call,
-					bind:    map.bind,
-					value:   target.dataset[map.name],
-					wdArray: null,
-				});
-				if (map.kill) delete target.dataset[map.name];
-			}
-			/*-- Busca genérica, independente da propriedade dataset ou atributo HTML data --*/
-			else {
-				query = typeof map.name === "string" ? WD.$$(map.name, document) : [target];
-				query.forEach(function(node) {
-					trigger.push({
-						target:  node,
-						name:    map.name,
-						call:    map.call,
-						bind:    map.bind,
-						value:   "",
-						wdArray: null,
-					});
-				});
-			}
-		}
-
-		/*-- Analisando e chamando disparadores ----------------------------------*/
-		const info = {};
-		let parser, wdarray, count = 0;
-		trigger.forEach(function(map,i,a) {
-			/*-- evento wddataset: verificar se a propriedade definida está prevista --*/
-			if (wddataset.length > 0 && wddataset.indexOf(map.name) < 0)
-				return;
-			/*-- verificar se o valor do atributo pode ser obtido --*/
-			parser  = new __Parser(map.value);console.log(map)
-			wdarray = parser.wdArray.get();
-			if (wdarray === null)
-				return;
-			if (wdarray.length === 0)
-				wdarray.push({});
-			/*-- verificar se há alguma propriedade obrigatória a definir --*/
-			for (let prop in map.bind) {
-				for (let j = 0; j < wdarray.length; j++) {
-					if (!(prop in wdarray[j]))
-						wdarray[j][prop] = map.bind[prop];
-				}
-			}
-			map.wdArray = wdarray;
-
-
-
-			/*-- log de manutenção--*/
-			info[event.type] = map.name;
-			info.call = map.call.name;
-			info.data = map.wdArray;
-			if (__UNDERMAINTENANCE) console.info(info);
-
-			/*-- chamar disparador --*/
-			if (config.preventDefault && count === 0)
-				event.preventDefault();
-			map.call(map.target, event, map.wdArray);
-			count++;
-		});
-		return;
-	};
-
-	/*-- defininir eventos e disparadores --*/ //FIXME desabilitei isso aqui, ligar depois
-	/*for (let ev in __EVENTS)
-		__EVENTS[ev].target.addEventListener(ev, eventManager, false);*/
-
-
-
-	window.addEventListener("resize", __DEVICE);
-	window.addEventListener("resize", __HASH);
-	window.addEventListener("hashchange", __HASH);
-	window.addEventListener("wdreload", __HASH);
-	window.addEventListener("load", function(ev) {
-		document.dispatchEvent(wdReloadEvent);
-		return;
-	});
-	/*-- retornar a função principal da biblioteca --*/
 	return WD;
 }());

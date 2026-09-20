@@ -148,7 +148,7 @@ const __MENU = {
 	},
 	/**. '{void dettach(node node)}: Desmontar o menu.**/
 	detach: function(node) {
-		const data = __HEAP.data(node);
+		const data = __HEAP.data(node, this);
 		if (data !== null) {
 			data.menu.remove();
 			__HEAP.resetAttr(data.attr);
@@ -162,7 +162,7 @@ const __MENU = {
 		if (__FORMDATA.nativeKeyClick(ev.currentTarget, ev.key)) return;
 		const keys = /^(\ |ArrowDown|Enter|\ )$/i;
 		const open = ev.type === "click" || (ev.type === "keydown" && keys.test(ev.key));
-		const data = __HEAP.data(ev.currentTarget);
+		const data = __HEAP.data(ev.currentTarget, __MENU);
 		if (open && data && data.type === "float") {
 			__WINDOW.attach(data.menu, "float", function(x) {
 				data.node.setAttribute("aria-expanded", x.close ? "false" : "true");
@@ -310,7 +310,7 @@ const __MENU = {
 		const item  = ev.currentTarget;
 		const path  = this.path(item);
 		const find  = document.querySelector(`[aria-controls="${path[0].id}"]`);
-		const heap  = __HEAP.data(find === null ? path[0].parentElement : find);
+		const heap  = __HEAP.data(find === null ? path[0].parentElement : find, this);
 		const role  = item.getAttribute("role");
 		const check = item.getAttribute("aria-checked") === "true";
 		/*-- submenu: abrir/fechar --*/
@@ -457,6 +457,7 @@ __CSS.push(`/*-- MENU --*/
 }
 .css-js-wd-menu-open[aria-expanded="true"]:after {
 	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 H 100 L 50,100 Z' fill='gray' /></svg>");
+	cursor: context-menu;
 }
 .css-js-wd-menu-open[aria-expanded="false"]:after {
 	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 V 100 L 100,50 Z' fill='gray' /></svg>");

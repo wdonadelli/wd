@@ -92,7 +92,7 @@ const WDDATASET = {
 	|Demais propriedades|Any|Não|Ver '{__REQUEST}|
 	|""Tabela de configuração do atributo wdLoad""|**/
 	wdLoad: function(ev) {
-		const data = this.attr(ev.target.dataset.wdLoad);console.log(data)
+		const data = this.attr(ev.target.dataset.wdLoad);
 		delete ev.target.dataset.wdLoad;
 		if (data) __LOADER.urlHTML(ev.target, data, data.outer);
 		return;
@@ -181,17 +181,14 @@ const WDDATASET = {
 		if (data) __DROP.attach(ev.target, data.effect, data.call); //target ou currentTarget?
 		return;
 	},
-
-
-	/**. '{void wdDrop(object ev)}: Define elementos de soltura de arquivos (ver '{__DROP}):
+	/**. '{void wdMove(object ev)}: Define elementos para fins de movimentação e redimensionamento (ver '{__MOVE}):
 	|Nome|Tipo|Opcional|Descrição|
-	|'{effect}|string|Não|Efeito da queda|
-	|'{call}|function|Sim|Função a ser durante o procedimento|
-	|""Tabela de configuração do atributo wdDrop""|**/
+	|'{key}|string|Não|Tecla para iniciar a ferramenta durante o foco|
+	|""Tabela de configuração do atributo wdMove""|**/
 	wdMove: function(ev) {
-		const data = this.attr(ev.target.dataset.wdMove, {});
+		const data = this.attr(ev.target.dataset.wdMove, {key: "string"});
 		delete ev.target.dataset.wdMove;
-		if (data) __MOVE.attach(ev.target);
+		if (data) __MOVE.attach(ev.target, data.key);
 		return;
 	},
 

@@ -169,8 +169,8 @@ const __FILTER = {
 	},
 	/**. '{void detach(node input)}: Remove o mecanismo do elemento de entrada de texto.**/
 	detach: function(input) {
-		if (__HEAP.data(input) === null) return;
-		const data = __HEAP.data(input);
+		if (__HEAP.data(input, this) === null) return;
+		const data = __HEAP.data(input, this);
 		const list = document.getElementById(input.getAttribute("aria-controls"));
 		__HEAP.resetAttr(data.iAttr);
 		__HEAP.resetAttr(data.lAttr);
@@ -180,7 +180,7 @@ const __FILTER = {
 	},
 	/**. '{void input(object ev)}: Disparador ao digitar.**/
 	input: function(ev) {
-		const data = __HEAP.data(ev.currentTarget);
+		const data = __HEAP.data(ev.currentTarget, this);
 		if (data === null) return;
 		const form = __FORMDATA.type(ev.currentTarget) !== null;
 		const text = ev.currentTarget[form ? "value" : "textContent"];

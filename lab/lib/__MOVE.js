@@ -1,15 +1,33 @@
 /**
 #3 Movimentação e Redimensionamento
-O objeto '{__MOVE} atribui ao elemento a posibilidade de movimentação e dimensionamento.
-**/
+	O objeto '{__MOVE} atribui ao elemento a posibilidade de movimentação e dimensionamento:
+	- o elemento a receber a ferramenta será focável;
+	- o comportamento dependerá dos atributos de estilo vinculados ao elemento;
+	- se o valor do atributo de estilo '{display} for '{inline}, será alterado para '{inline-block};
+	- se o valor do atributo de estilo '{position} for '{static}, será alterado para '{relative};
+	- a depender dos atributos de estilo aplicados ao elemento, poderá ocorrer comportamento inesperado;
+	- a ferramenta poderá ser iniciada por ação do '{mouse} ou do teclado;
+	- um duplo clique sobre o elemento aciona a ferramenta pelo '{mouse};
+	- o clique deve ocorrer sobre o elemento que recebeu a atribuição, não se propagará pelos descendentes;
+	- com o elemento focado, o acionamento da tecla definida iniciará a ferramenta pelo teclado;
+	- se nenhuma tecla for definida, adotar-se-a a tecla kbd{m};
+	- um clique fora da área de ação ou o uso da tecla kbd{Esc}, fechará a ferramenta;
+	- a manipulação dos cantos e laterais da área de ação permitá alterar as dimensões do elemento;
+	- a manipulação da parte central da área de ação permitá mover o elemento;
+	- a movimentação poderá ser feita com o '{mouse} (botão esquerdo) ou com as setas do teclado;
+	- a tecla kbd{Tab} mudará o foco da área de manipulação para fins de interação com o teclado; e
+	- a orientação quanto ao uso da ferramenta poderá constar no documento para fins de acessibilidade.
+#4 Propriedades e Métodos**/
 const __MOVE = {
 	/**. '{object mouse}: Registra dados para manipulação do mouse.**/
 	mouse: null,
 	/**. '{void setRect(node main, node move)}: Define as dimensões do movimentador (`{move}) conforme o elemento alvo ('{main}).**/
 	setRect: function(main, move) {
 		const rect = main.getBoundingClientRect();
+		const text = `[${Math.trunc(rect.width)} x ${Math.trunc(rect.height)}] (${Math.trunc(rect.left)}, ${Math.trunc(rect.top)})`
 		const attr = ["top", "bottom", "left", "right", "width", "height"];
 		attr.forEach(function(v,i,a) {move.style[v] = `${rect[v]}px`;});
+		move.parentElement.lastElementChild.textContent = text;
 		return;
 	},
 	/**. '{void mover(node main)}: Cria e estabele a caixa de movimento e redimensionamento ao elemento.**/
@@ -27,30 +45,36 @@ const __MOVE = {
 				class: "css-js-wd-move-box",
 				role: "presentation",
 			},
-			child: [{
-				tag: "div",
-				attr: {
-					role: "button",
-					"aria-controls": id,
-					"aria-label": "Move",
-					tabindex: "0",
-					class: "css-js-wd-move-c",
-					addEventListener: {keydown: this, mousedown: this},
+			child: [
+				{
+					tag: "div",
+					attr: {
+						role: "button",
+						"aria-controls": id,
+						"aria-label": "Move",
+						tabindex: "0",
+						class: "css-js-wd-move-c",
+						addEventListener: {keydown: this, mousedown: this},
+					},
+					child: ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map(function(v,i,a) {
+						return {
+							tag: "div",
+							attr: {
+								role: "separator",
+								"aria-controls": id,
+								tabindex: 0,
+								class: `css-js-wd-move-${v}`,
+								"aria-label": size[v],
+								addEventListener: {keydown: this, mousedown: this},
+							}
+						};
+					}, this),
 				},
-				child: ["nw", "n", "ne", "e", "se", "s", "sw", "w"].map(function(v,i,a) {
-					return {
-						tag: "div",
-						attr: {
-							role: "separator",
-							"aria-controls": id,
-							tabindex: 0,
-							class: `css-js-wd-move-${v}`,
-							"aria-label": size[v],
-							addEventListener: {keydown: this, mousedown: this},
-						}
-					};
-				}, this),
-			}]
+				{
+					tag: "span",
+					attr: {class: "css-js-wd-move-text"}
+				}
+			]
 		}).tag;
 		/*-- acertando posicionamento do alvo e do movedor --*/
 		if (wgcs.position === "static") main.style.position = "relative";
@@ -60,23 +84,19 @@ const __MOVE = {
 		move.firstElementChild.focus();
 		return move;
 	},
-
-
-
-
-
-	/**. '{void attach(node target)}: Anexa o manipulador ao alvo.**/
-	attach: function(target) {
+	/**. '{void attach(node target)}: Anexa o manipulador ao alvo e define a tecla ('{key}) que iniciará a ferramenta.**/
+	attach: function(target, key) {
 		if (!(target instanceof HTMLElement)) return;
 		const data = {
-			attr:  __HEAP.getAttr(target, "class", "style", "tabindex"),
+			attr:  __HEAP.getAttr(target, "style", "tabindex"),
 			move: target,
+			key: __Type(key).nonempty ? key.trim()[0] : "m",
 		};
 		__HEAP.attach(target, data, this);
 		/*-- definindo propriedades do alvo --*/
 		__HTML(target, {
 			tabindex: "0",
-			addEventListener: {keydown: this, dblclick: this},
+			addEventListener: {keyup: this, dblclick: this},
 		});
 		return;
 	},
@@ -95,22 +115,22 @@ const __MOVE = {
 		const css = elem.getAttribute("class");
 		return re.test(css) ? css.match(re)[1] : null;
 	},
-
-	action: function(ev) {
-		const same = ev.currentTarget === ev.target;
-		const exec = (ev.type === "keydown" && ev.shiftKey && ev.key === "Escape") || ev.type === "dblclick";
-		console.log(this)
-		if (same && exec) {
+	/**. '{void dblclick(object ev)}: Manipulador para aplicar a caixa de movimentação ao alvo pelo '{mouse}.**/
+	dblclick: function(ev) {
+		const data = __HEAP.data(ev.currentTarget, this);
+		if (data !== null && ev.currentTarget === ev.target) {
+			ev.stopPropagation();
 			ev.preventDefault();
+			window.getSelection().removeAllRanges();
 			this.mover(ev.currentTarget);
 		}
 		return;
 	},
-	/**. '{void dblclick(object ev)}: Manipulador para aplicar a caixa de movimentação ao alvo.**/
-	dblclick: function(ev) {
+	/**. '{void keyup(object ev)}: Manipulador para aplicar a caixa de movimentação ao alvo pelo teclado.**/
+	keyup: function(ev) {
 		const data = __HEAP.data(ev.currentTarget, this);
-		const same = ev.currentTarget === ev.target;
-		if (data !== null && same) {
+		if (data !== null && ev.currentTarget === ev.target && ev.key === data.key) {
+			ev.stopPropagation();
 			ev.preventDefault();
 			this.mover(ev.currentTarget);
 		}
@@ -127,7 +147,6 @@ const __MOVE = {
 	},
 	/**. '{void keydown(object ev)}: Manipulador para mover e redimencionar com o i{mouse}.**/
 	keydown: function(ev) {
-		ev.preventDefault();
 		const type = this.anchor(ev.target);
 		const move = type === "c" ? ev.target : ev.target.parentElement
 		const main = document.getElementById(ev.target.getAttribute("aria-controls"));
@@ -136,32 +155,25 @@ const __MOVE = {
 		const rect = {};
 		const gap  = (ev.shiftKey ? 5 : 1) * Math.min(window.screen.height, window.screen.width)/100;
 		attr.forEach(function (v,i,a) {rect[v] = Number(wgcs[v].replace(/\D+$/, ""));});
-		/*-- aplicar efeito ao elemento --*/
-		//TODO mudar a tecla para acionar o esquema
-		//TODO tem que limpar a seleção de texto no dblclick?
-		//TODO no attach, adicionar um botão acionador do esquema?
-		if (ev.key === "Escape" && ev.shiftKey && __HEAP.data(ev.currentTarget, this) !== null && ev.currentTarget === ev.target) {
-			this.mover(ev.currentTarget);
-			return;
-		}
+		ev.stopPropagation();
 		/*-- foco --*/
 		if (ev.key === "Tab") {
-			const re = /^(c|[sn][ew])$/;
-			if (re.test(type)) {
-				const child = [move].concat(Array.from(move.children).filter(function(v,i,a) {return i%2 === 0;}));
-				const index = child.indexOf(ev.target);console.log(child)
-				child[(child.length + (index + (ev.shiftKey ? -1 : 1)))%child.length].focus();
-				return;
-			}
+			ev.preventDefault();
+			const list = [move].concat(Array.from(move.children));
+			const walk = ev.shiftKey ? [1,5,1,1,1,0,5,5,5] : [5,0,5,5,5,1,1,1,1];
+			const item = list.indexOf(ev.target);
+			list[walk[item]].focus();
+			return;
 		}
 		/*-- sair --*/
 		if (ev.key === "Escape") {
+			ev.preventDefault();
 			move.parentElement.remove();
 			main.focus();
 			return
 		}
 		/*-- horizontal superior --*/
-		else if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "nw" || type === "n" || type === "ne")) {
+		if ((ev.key === "ArrowUp" || ev.key === "ArrowDown") && (type === "nw" || type === "n" || type === "ne")) {
 				rect.top    += ev.key === "ArrowUp" ? -gap : +gap;
 				rect.height += ev.key === "ArrowUp" ? +gap : -gap;
 		}
@@ -193,6 +205,7 @@ const __MOVE = {
 		else {
 			return;
 		}
+		ev.preventDefault();
 		/*-- definindo posicionamento do alvo e do movimentador --*/
 		for (let i in rect) main.style[i] = `${rect[i]}px`;
 		this.setRect(main, move);
@@ -254,6 +267,7 @@ const __MOVE = {
 		/*-- definindo posicionamento do alvo e do movimentador --*/
 		for (let i in rect) this.mouse.main.style[i] = `${rect[i]}px`;
 		this.setRect(this.mouse.main, this.mouse.move);
+		window.getSelection().removeAllRanges();
 		return;
 	},
 	/**. '{void handleEvent(object ev)}: Disparador de manipulação chamado durante os eventos '{keydown}, '{click}, '{mousedown}, '{mouseup}, '{mousemove} e '{focusin}.**/
@@ -263,15 +277,26 @@ const __MOVE = {
 	},
 };
 __CSS.push(`/*-- MOVE/RESIZE --*/
-/*-- move --*/
 .css-js-wd-move-box {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	bottom: 0;
 	right: 0;
 	left: 0;
 	font-size: 16px;
 }
+.css-js-wd-move-text {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	font-size: 12px;
+	font-family: sans0serif;
+	padding: 0.2em 0.5em;
+	color: white;
+	background: black;
+	border-top-left-radius: 0.2em;
+}
+/*-- move --*/
 .css-js-wd-move-c {
 	position: fixed;
 	z-index: 999;

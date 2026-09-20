@@ -37,7 +37,6 @@ Object.defineProperties(__DataSet.prototype, {
 			}
 			/*-- string search => ?name=value& --*/
 			if (search.test(input)) {
-				//console.log(input.split("?").slice(-1)[0])
 				input.split("?").slice(-1)[0].trim().replace(/\#.*$/, "").split("&").forEach(function(v,i,a) {
 					const find = v.match(/^([^=]+)\=(.*)$/);
 					this.append(find[1].trim(), find[2].trim());

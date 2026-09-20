@@ -39,7 +39,6 @@ const __MASK = {
 			/*-- caracter qualquer, registrar ou adicionar caracter --*/
 			else  list[i] === data.char ? data.push() : data.add(list[i]);
 			/*-- checar se houve erro ao capturar caracter da máscara --*/
-			//console.log("saída", i, list[i], data.mask);
 			if (data.none) {
 				let next = list.slice(i).indexOf("?");
 				i += next < 0 ? list.length : next;
@@ -78,15 +77,15 @@ const __MASK = {
 	},
 	/**. '{void detach(node node)}: Remove a máscara textual do elemento.**/
 	detach: function(node) {
-		if (__HEAP.data(node) === null) return;
-		const data = __HEAP.data(node);
+		if (__HEAP.data(node, this) === null) return;
+		const data = __HEAP.data(node, this);
 		__HEAP.resetAttr(data.attr);
 		node.removeEventListener("focusout", this);
 		return;
 	},
 	/**. '{void focusout(object ev)}: Disparador a ser chamado para aplicação da máscara.**/
 	focusout: function(ev) {
-		const data = __HEAP.data(ev.currentTarget);
+		const data = __HEAP.data(ev.currentTarget, this);
 		if (data === null) return;
 		const form = __FORMDATA.type(ev.currentTarget) !== null;
 		const attr = form ? "value" : "textContent";

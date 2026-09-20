@@ -113,8 +113,8 @@ const __DRAG = {
 	},
 	/**. '{void detach(node drag)}: Desvincula os efeitos de arrasto do elemento.**/
 	detach: function(drag) {
-		if (__HEAP.data(drag) === null) return;
-		const data = __HEAP.data(drag);
+		if (__HEAP.data(drag, this) === null) return;
+		const data = __HEAP.data(drag, this);
 		__HEAP.resetAttr(data.attr);
 		__HTML(drag, {removeEventListener: {dragstart: this, dragend: this}});
 		return;
@@ -133,7 +133,7 @@ const __DRAG = {
 	},
 	/**. '{string dropEffect(object drop)}: Recebe o elemento de queda e retorna o efeito vinculado ou nulo.**/
 	dropEffect: function(drop) {
-		const data = __HEAP.data(this.grab);
+		const data = __HEAP.data(this.grab, this);
 		if (data !== null) {
 			for (let i in data.drop)
 				if (data.drop[i].indexOf(drop) >= 0) return i;
@@ -143,7 +143,7 @@ const __DRAG = {
 	/**. '{void dragstart(object ev)}: Manipulador que inicializa o arrasto.**/
 	dragstart: function(ev) {
 		const drag = ev.currentTarget;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = data === null ? null : data.drop;
 		if (drop !== null) {
 			/*-- dataTransfer não funciona em todos navegadores, utilizar grab para referenciar o elemento arrastável --*/
@@ -163,7 +163,7 @@ const __DRAG = {
 	/**. '{void dragend(object ev)}: Manipulador que encerra o arrasto.**/
 	dragend: function(ev) {
 		const drag = ev.currentTarget;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = data === null ? null : data.drop;
 		if (drop !== null) {
 			this.grab = null;
@@ -182,7 +182,7 @@ const __DRAG = {
 		/*-- se o elemento de saída estiver no drop, desprezar evento --*/
 		if (ev.currentTarget.contains(ev.relatedTarget)) return;
 		const drag = this.grab;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		if (data !== null && type !== null) {
@@ -196,7 +196,7 @@ const __DRAG = {
 		/*-- se o elemento de entrada estiver no drop, desprezar evento --*/
 		if (ev.currentTarget.contains(ev.relatedTarget)) return;
 		const drag = this.grab;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		if (data !== null && type !== null) {
@@ -208,7 +208,7 @@ const __DRAG = {
 	/**. '{void dragover(object ev)}: Manipulador ao navegar o drag sobre o drop (não carrega dataTransfer no chromium).**/
 	dragover: function(ev) {
 		const drag = this.grab;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		ev.dataTransfer.dropEffect = type === null ? "none" : type;
@@ -222,7 +222,7 @@ const __DRAG = {
 	/**. '{void drop(object ev)}: Manipulador ao soltar o drag sobre o drop.**/
 	drop: function(ev) {
 		const drag = this.grab;
-		const data = __HEAP.data(drag);
+		const data = __HEAP.data(drag, this);
 		const drop = ev.currentTarget;
 		const type = this.dropEffect(drop);
 		ev.dataTransfer.dropEffect = type === null ? "none" : type;

@@ -94,8 +94,8 @@ const __DROP = {
 	},
 	/**. '{void detach(node drop)}: Desvincula o elemento para receber a soltura de arquivos.**/
 	detach: function(drop) {
-		if (__HEAP.data(drop) === null) return;
-		const data = __HEAP.data(drop);
+		if (__HEAP.data(drop, this) === null) return;
+		const data = __HEAP.data(drop, this);
 		this.drops = this.drops.filter(function(v,i,a) {return v !== drop;});
 		if (this.drops.length === 0) {
 			window.removeEventListener("dragenter", this);
@@ -108,11 +108,11 @@ const __DROP = {
 	/**. '{void dragenter(object ev)}: Manipulador ao entrar com arquivos na janela i{window} ou sobre o elemento de soltura.**/
 	dragenter: function(ev) {
 		const drop = this.drops.length === 0 ? null : ev.currentTarget;
-		const data = __HEAP.data(drop);
+		const data = __HEAP.data(drop, this);
 		/*-- arquivos entraram no window --*/
 		if (drop === window && ev.relatedTarget === null) {
 			this.drops.forEach(function(drop,i,a) {
-				const data = __HEAP.data(drop);
+				const data = __HEAP.data(drop, this);
 				if (data !== null) {
 					__HTML(drop, {addEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
 					data.call({event: "dragstart", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
@@ -130,13 +130,13 @@ const __DROP = {
 		return;
 	},
 	/**. '{void dragleave(object ev)}: Manipulador ao sair com arquivos da janela i{window} ou sobre o elemento de soltura.**/
-	dragleave: function(ev) {console.log(ev)
+	dragleave: function(ev) {
 		const drop = this.drops.length === 0 ? null : ev.currentTarget;
-		const data = __HEAP.data(drop);
+		const data = __HEAP.data(drop, this);
 		/*-- arquivos saíram de window --*/
 		if (drop === window && ev.relatedTarget === null) {
 			this.drops.forEach(function(drop,i,a) {
-				const data = __HEAP.data(drop);
+				const data = __HEAP.data(drop, this);
 				if (data !== null) {
 					__HTML(drop, {removeEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
 					data.call({event: "dragend", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
@@ -155,7 +155,7 @@ const __DROP = {
 	/**. '{void dragover(object ev)}: Manipulador ao navegar os arquivos sobre o elemento de queda.**/
 	dragover: function(ev) {
 		const drop = this.drops.length === 0 ? null : ev.currentTarget;
-		const data = __HEAP.data(drop);
+		const data = __HEAP.data(drop, this);
 		if (data !== null) {
 			ev.preventDefault();
 			ev.stopPropagation();
@@ -167,7 +167,7 @@ const __DROP = {
 	/**. '{void drop(object ev)}: Manipulador ao soltar o arquivo sobre o elemento de soltura.**/
 	drop: function(ev) {
 		const drop = this.drops.length === 0 ? null : ev.currentTarget;
-		const data = __HEAP.data(drop);
+		const data = __HEAP.data(drop, this);
 		if (data !== null) {
 			ev.preventDefault();
 			ev.stopPropagation();
@@ -175,7 +175,7 @@ const __DROP = {
 			data.call({event: ev.type, drag: files, drop: drop, over: ev.target, effect: data.effect, x: ev.clientX, y: ev.clientY});
 			/*-- marcar como encerrado --*/
 			this.drops.forEach(function(drop,i,a) {
-				const data = __HEAP.data(drop);
+				const data = __HEAP.data(drop, this);
 				if (data !== null) {
 					__HTML(drop, {removeEventListener: {dragenter: this, dragleave: this, dragover: this, drop: this}});
 					data.call({event: "dragend", drag: null, drop: drop, over: null, effect: data.effect, x: ev.clientX, y: ev.clientY});
