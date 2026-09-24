@@ -21,8 +21,8 @@ Object.defineProperties(WDmain.prototype, {
 	valueOf: {value: function() {return this._data.valueOf();}},
 	/**. '{string toString()}: Retorna o valor textual do dado (ver '{__Type}).**/
 	toString: {value: function() {return this._data.toString();}},
-	/**. '{string toLocaleString()}: Retorna o valor textual local do dado (ver '{__Type}).**/
-	toLocaleString: {value: function() {return this._data.toLocaleString();}},
+	/**. '{string toLocaleString(object opt)}: Retorna o valor textual local do dado (ver '{__Type}).**/
+	toLocaleString: {value: function(opt) {return this._data.toLocaleString(opt);}},
 	/**. '{boolean or(string type...)}: Retorna verdadeiro algum tipo informado em '{type} corresponder ao dado.**/
 	or: {
 		value: function(type) {

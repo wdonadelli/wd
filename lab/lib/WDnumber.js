@@ -6,8 +6,6 @@ function WDnumber(input, data) {
 }
 WDnumber.prototype = Object.create(WDmain.prototype, {
 	constructor: {value: WDnumber},
-	/**. '{string format(string type, string data, object extra)}: ver método '{locale} de '{__NUMBER}).**/
-	format: {value: function(type, data, extra) {return __NUMBER.locale(this._data.value, type, data, extra);}},
 	/**. '{object split}: Ver o método de mesmo nome em '{__MATH}.**/
 	split: {get: function(round) {return __MATH.split(this._input);}},
 	/**. '{string bytes}: Ver o método de mesmo nome em '{__MATH}.**/

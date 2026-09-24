@@ -22,8 +22,18 @@ Object.defineProperties(__Type.prototype, {
 	valueOf: {value: function() {return this._data.value;}},
 	/**. '{string toString()}: Método padrão.**/
 	toString: {value: function() {return this._data.string;}},
-	/**. '{string toLocaleString()}: Método padrão.**/
-	toLocaleString: {value: function() {return "locale" in this._data ? this._data.locale : this.toString();}},
+	/**. '{string toLocaleString(object opt)}: Método padrão. O argumento opcional '{opt} configura o formato númerico ou temporal.**/
+	toLocaleString: {
+		value: function() {
+			try {
+				if (arguments.length > 0 && this.type === "number")
+					return __NUMBER.locale(this.value, arguments[0]);
+				if (arguments.length > 0 && (/^(date|time|datetime)$/).test(this.type))
+					return __DATETIME.locale(this._data, arguments[0]);
+				return "locale" in this._data ? this._data.locale : this.toString();
+			} catch(e) {}
+			return "locale" in this._data ? this._data.locale : this.toString();
+	}},
 	/*-- Strings -------------------------------------------------------------*/
 	/**. '{boolean string}: Checa se o valor é uma string u{diferente de número, data ou tempo}.**/
 	string: {get: function() {return this.type === "string";}},

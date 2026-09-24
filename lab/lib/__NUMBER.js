@@ -56,53 +56,54 @@ const __NUMBER = {
 			data.type = "nan";
 		return data;
 	},
-	/**. '{string locale(number value, string type, string data, object extra)}: Retorna o número no a{formato local}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}target{_blank} conforme especificado:
-	|Argumento|Descrição|
-	|value|Valor a ser transformado|
-	|type|Tipo do formato|
-	|data|Especificação do formato|
-	|extra|Configurações adicionais e opcionais|
+
+	//string locale(number value, string type, string data, object extra)
+
+	/**. '{string locale(number value, object opt)}: Retorna o número ('{value}) no a{formato local}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}target{_blank} conforme especificado em '{opt}:
+	|Nome|Tipo|Descrição|Valores|Padrão|
+	|'{type}|string|Tipo do formato|Ver abaixo|'{decimal}|
+	|'{data}|string|Especificação do formato|Depende do tipo do formato||
+	|'{sign}|string|Exibição do sinal|'{auto}, '{always}, '{exceptZero}, '{negative} ou '{never}||
+	|'{group}|string ou boolean|Separadores de milhar|"'{auto}", "'{always}", "'{min2}", '{true} ou '{false}||
+	|'{minDigits}|integer|Quantidade mínima de dígitos significantes|De 1 a 22||
+	|'{maxDigits}|integer|Quantidade máxima de dígitos significantes|De 1 a 22||
+	|'{integer}|integer|Quantidade mínima de dígitos inteiros|De 1 a 22||
+	|'{minDecimal}|integer|Quantidade mínima de dígitos decimais|De 0 a 21||
+	|'{maxDecimal}|integer|Quantidade máxima de dígitos decimais|De 0 a 21||
 	. Tipos e suas especificações:
-	|'{type}|Descrição|'{data}|
-	|currency|Formato monetário|a{Código monetário}@href{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}target{_blank}|
-	|currencyNarrow|Formato monetário com símbolo estreito|Idem|
-	|currencyName|Formato monetário em texto|Idem|
-	|currencyCode|Formato monetário com código monetário|Idem|
-	|unit|Unidade de medida|a{Nome da unidade de medida}@href{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}target{_blank}|
-	|unitLong|Unidade de medida longa|Idem|
-	|unitNarrow|Unidade de medida estreita|Idem|
-	|compact|Valor textual compacto|Expressão longa ('{long}) ou curta ('{short})|
-	|decimal|Valor decimal|Formato dp valor: '{percent, scientific, engineering, short ou compact}|
-	. Informações complementares:
-	|Nome|Descrição|Valores|
-	|sign|Exibição do sinal|'{"auto", "always", "exceptZero", "negative", "never"}|
-	|group|Separadores de milhar|'{"auto", "always", "min2", true, false}|
-	|minDigits|Quantidade mínima de dígitos significantes|De 1 a 22|
-	|maxDigits|Quantidade máxima de dígitos significantes|De 1 a 22|
-	|integer|Quantidade mínima de dígitos inteiros|De 1 a 22|
-	|minDecimal|Quantidade mínima de dígitos decimais|De 0 a 21|
-	|maxDecimal|Quantidade máxima de dígitos decimais|De 0 a 21|**/
-	locale: function(value, type, data, extra) {
-		extra = typeof extra === "object" ? extra : {};
+	|Tipo|Descrição|Especificação|
+	|'{currency}|Formato monetário|a{Código monetário}@href{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}target{_blank}|
+	|'{currencyNarrow}|Formato monetário com símbolo estreito|Ver '{currency}|
+	|'{currencyName}|Formato monetário em texto|Ver '{currency}|
+	|'{currencyCode}|Formato monetário com código monetário|Ver '{currency}|
+	|'{unit}|Unidade de medida|a{Nome da unidade de medida}@href{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}target{_blank}|
+	|'{unitLong}|Unidade de medida longa|Ver '{unit}|
+	|'{unitNarrow}|Unidade de medida estreita|Ver '{unit}|
+	|'{compact}|Valor textual compacto|Expressão longa ('{long}) ou curta ('{short})|
+	|'{decimal}|Valor decimal|Formato do valor: '{percent}, '{scientific}, '{engineering}, '{short} ou '{compact}|
+	**/
+	//function(value, type, data, extra)
+	locale: function(value, opt) {
+		opt = typeof opt === "object" && opt !== null && !Array.isArray(opt) ? opt : {};
 		const base = {
-			percent:     {style: "percent"},
+			percent:     {style:    "percent"},
 			scientific:  {notation: "scientific"},
 			engineering: {notation: "engineering"},
 			short:       {notation: "compact", compactDisplay: "short"},
 			compact:     {notation: "compact", compactDisplay: "long"},
 		};
 		const types = {
-			currency:       {style: "currency", currency: data, currencyDisplay: "symbol"},
-			currencyNarrow: {style: "currency", currency: data, currencyDisplay: "narrowSymbol"},
-			currencyName:   {style: "currency", currency: data, currencyDisplay: "name"},
-			currencyCode:   {style: "currency", currency: data, currencyDisplay: "code"},
-			unit:           {style: "unit", unit: data, unitDisplay: "short"},
-			unitLong:       {style: "unit", unit: data, unitDisplay: "long"},
-			unitNarrow:     {style: "unit", unit: data, unitDisplay: "narrow"},
-			decimal:        data in base ? base[data] : {},
+			currency:       {style: "currency", currency: opt.data, currencyDisplay: "symbol"},
+			currencyNarrow: {style: "currency", currency: opt.data, currencyDisplay: "narrowSymbol"},
+			currencyName:   {style: "currency", currency: opt.data, currencyDisplay: "name"},
+			currencyCode:   {style: "currency", currency: opt.data, currencyDisplay: "code"},
+			unit:           {style: "unit",     unit:     opt.data, unitDisplay:     "short"},
+			unitLong:       {style: "unit",     unit:     opt.data, unitDisplay:     "long"},
+			unitNarrow:     {style: "unit",     unit:     opt.data, unitDisplay:     "narrow"},
+			decimal:        opt.data in base ? base[opt.data] : {},
 		};
-		const list = new Uint8Array(22);
-		for (let i = 0; i < list.length; i++) list[i] = i;
+		const conf = opt.type in types ? types[opt.type] : types.decimal;
+		const list = new Uint8Array(22).map(function(v,i,a) {return i;});
 		const extras = {
 			sign:       {attr: "signDisplay",              values: ["auto", "always", "exceptZero", "negative", "never"]},
 			group:      {attr: "useGrouping",              values: ["auto", "always", "min2", true, false]},
@@ -112,12 +113,10 @@ const __NUMBER = {
 			minDecimal: {attr: "minimumFractionDigits",    values: list.slice(0,21)},
 			maxDecimal: {attr: "maximumFractionDigits",    values: list.slice(0,21)},
 		};
-		/*-- capturando o tipo --*/
-		const conf = type in types ? types[type] : types.decimal;
 		/*-- capturando complementos --*/
-		for (let i in extra) {
-			if (i in extras && extras[i].values.indexOf(extra[i]) >= 0)
-				conf[extras[i].attr] = extra[i];
+		for (let i in extras) {
+			if (i in opt && extras[i].values.indexOf(opt[i]) >= 0)
+				conf[extras[i].attr] = opt[i];
 		}
 		return value.toLocaleString(__LANG.value, conf);
 	},

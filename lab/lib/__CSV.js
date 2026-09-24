@@ -1,6 +1,6 @@
 /**
-#3 Tabelas
-O objeto '{__CVS} tem por objetivo trabalhar com dados tabulares em texto ([CSV]<https://www.rfc-editor.org/rfc/rfc4180>):
+#3 Dados Tabelares
+	O objeto '{__CVS} tem por objetivo trabalhar com dados tabulares em texto ([CSV]<https://www.rfc-editor.org/rfc/rfc4180>):
 - cada linha representa um registro;
 - a quebra de linha pode ser no formato \r\n ou apenas \n;
 - não é necessário existir quebra de linha no último registro;
@@ -12,7 +12,22 @@ O objeto '{__CVS} tem por objetivo trabalhar com dados tabulares em texto ([CSV]
 - aspas simples em campo empacotados por aspas simples são representadas por duas aspas simples em sequência;
 - aspas duplas em campo empacotados por aspas duplas são representadas por duas aspas duplas em sequência;
 - o primeiro caractere após o primeiro campo do primeiro registro empacotado por aspas será o delimitador; e
-- na situação anterior, outros caracteres poderão ser utilizados como delimitadores de campo;**/
+- na situação anterior, outros caracteres poderão ser utilizados como delimitadores de campo;
+
+#4 Métodos e Propriedades
+
+|Método|Entrada|Saída|
+|'{parse}|CSV|Matriz|
+|'{parseMatrix}|CSV|Matriz|
+|'{parseList}|CSV|Lista de objetos|
+|'{parseTable}|CSV|Tabela|
+|'{stringify}|Matriz, tabela ou lista de objetos|CSV|
+|'{matrixCSV}|Matriz|CSV|
+|'{listMatrix}|Lista de objetos|CSV|
+|'{tableAdjust}|Tabela|Tabela (cópia)|
+|'{tableMatrix}|Tabela|Matriz|
+|""Resumo dos métodos do objeto '{__CSV}""|
+**/
 const __CSV = {
 	/**. '{array parse(string csv)}: Retorna o resultado do método '{parseMatrix}.**/
 	parse: function(csv) {return this.parseMatrix(csv);},
@@ -104,7 +119,7 @@ const __CSV = {
 		head = head !== false;
 		foot = foot === true;
 		line = line === true;
-		caption = typeof caption === "string" ? caption : null;
+		caption = typeof caption === "string" && caption.trim() !== "" ? caption.trim() : null;
 		/*-- constantes --*/
 		const grid  = this.parseMatrix(csv);
 		const table = document.createElement("table");
@@ -135,11 +150,11 @@ const __CSV = {
 		}
 		return table;
 	},
-	/**. '{string stringify(any data)}: Codifica uma matriz 2x2 ou uma tabela em código CSV.**/
+	/**. '{string stringify(any data)}: Codifica uma matriz 2x2 ('{array}) ou uma tabela ('{node}) em código CSV.**/
 	stringify: function(data) {
 		if (Array.isArray(data) && Array.isArray(data[0]))
 			return this.matrixCSV(data);
-		if (Array.isArray(data) && typeof data[0] === "object" && data[0] !== null)
+		if (Array.isArray(data) && __Type(data[0]).object)
 			return this.matrixCSV(this.listMatrix(data));
 		if (data instanceof HTMLTableElement)
 			return this.matrixCSV(this.tableMatrix(data));
@@ -167,7 +182,7 @@ const __CSV = {
 		const matrix = [[]];
 		/*-- capturando cabeçalho e filtrando objetos --*/
 		list.filter(function(v,i,a) {
-			if (typeof v === "object" && v !== null) {
+			if (__Type(v).object) {
 				for (let name in v) {
 					if (matrix[0].indexOf(name) < 0)
 						matrix[0].push(name);

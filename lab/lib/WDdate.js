@@ -24,15 +24,7 @@ WDdate.prototype = Object.create(WDmain.prototype, {
 		return __DATETIME.workDaysYear(this.year, this.month, this.day);
 	}},
 	/**. '{string delta(string walk)}: Desloca o tempo e retorna o tempo deslocado.**/
-	delta: {value: function(walk) {
-		return __DATETIME.delta(this._data._data, walk).string;
-	}},
-	/**. '{string toLocaleString(object opt)}: Retorna o valor local do tempo.**/
-	toLocaleString: {value: function(opt) {
-		return __DATETIME.locale(this._data._data, opt);
-	}},
+	delta: {value: function(walk) {return __DATETIME.delta(this._data._data, walk).string;}},
 	/**. '{string toISOWeekString()}: Retorna a semana do ano no padrão ISO.**/
-	toISOWeekString: {value: function() {
-		return __DATETIME.weekDate(this.year, this.month, this.day);
-	}},
+	toISOWeekString: {value: function() {return __DATETIME.weekDate(this.year, this.month, this.day);}},
 });

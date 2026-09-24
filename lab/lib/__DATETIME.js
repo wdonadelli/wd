@@ -453,7 +453,7 @@ const __DATETIME = {
 	},
 	/**. '{string locale(object flag, object cfg)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options}target{_blank} do objeto nativo '{Date}.**/
 	locale: function(flag, cfg) {
-		const data = typeof cfg === "object" && cfg !== null ? cfg : {};
+		const data = typeof cfg === "object" && cfg !== null && !Array.isArray(cfg) ? cfg : {};
 		const date = this.nativeDate(flag.Y, flag.M, flag.D, flag.H, flag.m, flag.s, flag.l);
 		const type = flag.type === "datetime" || flag.type === "time" ? flag.type : "date";
 		const attr = {date: "toLocaleDateString", time: "toLocaleTimeString", datetime: "toLocaleString"};

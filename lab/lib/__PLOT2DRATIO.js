@@ -51,19 +51,12 @@ const __PLOT2DRATIO = {
 	/**. '{object number(finite value, boolean ratio)}: Retona a configuração numérica a ser exibida.**/
 	number: function(value, ratio) {
 		const abs = Math.abs(value);
-		if (ratio) return __NUMBER.locale(value, "decimal", "percent", {maxDecimal: 0});
-		if (abs >= 1e15) return __NUMBER.locale(value, "decimal", "scientific", {maxDecimal: 2});
-		if (abs >= 1e5)  return __NUMBER.locale(value, "decimal", abs >= 1e13 ? "short" : "compact");
-		if (abs <= 1e-5) return __NUMBER.locale(value, "decimal", abs === 0 ? "decimal" : "scientific", {maxDecimal: 2});
-		return __NUMBER.locale(value, "decimal", "decimal", {maxDecimal: abs > 1 ? 2 : 4});
+		if (ratio)       return __NUMBER.locale(value, {type: "decimal", data: "percent",   maxDecimal: 0});
+		if (abs >= 1e15) return __NUMBER.locale(value, {type: "decimal", data: "scientific", maxDecimal: 2});
+		if (abs >= 1e5)  return __NUMBER.locale(value, {type: "decimal", data: abs >= 1e13 ? "short" : "compact"});
+		if (abs <= 1e-5) return __NUMBER.locale(value, {type: "decimal", data: abs === 0 ? "decimal" : "scientific", maxDecimal: 2});
+		return                  __NUMBER.locale(value, {type: "decimal", data: "decimal", maxDecimal: abs > 1 ? 2 : 4});
 	},
-
-
-
-
-
-
-
 	/**. '{void barDesc(object plot)}: Define a descrição inicial para o gŕafico de barras.**/
 	barDesc: function(plot) {
 		return [

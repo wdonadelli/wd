@@ -35,11 +35,12 @@ const __HEAP = {
 	},
 	/**. '{void detach(node node, object source)}: Destroi o elemento construído.**/
 	detach: function(node, source) {
-		this.heap = this.heap.filter(function(v,i,a) {
+		/*-- importante: o reverse é utilizado para desafixar do atual para a origem --*/
+		this.heap = this.heap.reverse().filter(function(v,i,a) {
 			const test = (v.target === node || v.target.id === node) && (source ? v.source === source : true);
 			if (test) v.source.detach(v.target);
 			return !test;
-		});
+		}).reverse();
 		return;
 	},
 	/**. '{void getAttr(node node, names...)}: Retorna um objeto contendo o nó e os valores dos atributos nomeados como argumentos.**/

@@ -89,16 +89,16 @@ const __DATA2D = {
 	/**. '{string numeric(finite x)}: Retorna a notação númerica local simplificada de '{x}.**/
 	numeric: function(x) {
 		const abs = Math.abs(x);
-		if (abs === 0)     return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
-		if (abs >= 1e100)  return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 0});
-		if (abs >= 1e10)   return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 1});
-		if (abs >= 1e3)    return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 2});
-		if (abs >= 1e2)    return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 1});
-		if (abs >= 1e1)    return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
-		if (abs <= 1e-100) return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 0});
-		if (abs <= 1e-10)  return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 1});
-		if (abs <= 1e-1)   return __NUMBER.locale(x, "decimal", "scientific", {maxDecimal: 2});
-		                   return __NUMBER.locale(x, "decimal", "decimal",    {maxDecimal: 2});
+		if (abs === 0)     return __NUMBER.locale(x, {type: "decimal", data: "decimal",    maxDecimal: 2});
+		if (abs >= 1e100)  return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 0});
+		if (abs >= 1e10)   return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 1});
+		if (abs >= 1e3)    return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 2});
+		if (abs >= 1e2)    return __NUMBER.locale(x, {type: "decimal", data: "decimal",    maxDecimal: 1});
+		if (abs >= 1e1)    return __NUMBER.locale(x, {type: "decimal", data: "decimal",    maxDecimal: 2});
+		if (abs <= 1e-100) return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 0});
+		if (abs <= 1e-10)  return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 1});
+		if (abs <= 1e-1)   return __NUMBER.locale(x, {type: "decimal", data: "scientific", maxDecimal: 2});
+		                   return __NUMBER.locale(x, {type: "decimal", data: "decimal",    maxDecimal: 2});
 	},
 	/**. '{void date(integer value)}: Retorna a data a partir de seu identificador (ver '{__DATETIME}).**/
 	date: function(value) {return __DATETIME.dateID(Math.trunc(value)).locale;},

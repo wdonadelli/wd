@@ -379,7 +379,5 @@ __CSS.push(`/*-- CODE --*/
 	inside: {type: "cage", open: "${", close: "}",       rule: [scape, main], high: ""},
 	aphos:  {type: "cage", open: "`", close: "`",        rule: [scape, inside], high: ""},
 	main:   {type: "none",                               rule: [words, var, quotes, quote], high: ""}, //nenhum
-
-
-
+}
 */
