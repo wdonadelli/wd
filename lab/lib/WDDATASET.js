@@ -194,6 +194,20 @@ const WDDATASET = {
 
 
 
+	/**. '{void wdSlide(object ev)}: Transforma o elemento num conjunto de paineis controlados por abas:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{orientation}|string|Não|Disposição das abas: '{horizontal} (padrão) ou '{vertical}|
+	|""Tabela de configuração do atributo wdTab""|**/
+	wdSlide: function(ev) {
+		const data = this.attr(ev.target.dataset.wdSlide, {time: "number"});
+		delete ev.target.dataset.wdSlide;
+		console.log(ev)
+		if (data) __SLIDE.attach(ev.target, data.time);
+		return;
+	},
+
+
+
 
 
 

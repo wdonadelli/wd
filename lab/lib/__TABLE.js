@@ -131,40 +131,48 @@ const __TABLE = {
 __CSS.push(`/*-- TABLE --*/
 .css-js-wd-table {
 	font-family: Verdana, sans-serif;
-	font-size: 14px;
+	font-size: smaller;
 	border-collapse: collapse;
 	border-spacing: 0;
 	border-radius: 0.5em;
 	border: thin solid;
 	margin: auto;
-}
-.css-js-wd-table tbody tr:hover {
-	border: thin dashed;
+	cursor: default;
 }
 
-
+.css-js-wd-table tbody tr:nth-of-type(2n+1) {background-color: transparent;}
+.css-js-wd-table tbody tr:nth-of-type(2n)   {background-color: rgba(125,125,125,0.1);}
+.css-js-wd-table tbody:hover tr             {background-color: rgba(125,125,125,0.1);}
+.css-js-wd-table tbody:hover tr:hover       {background-color: transparent;}
 .css-js-wd-table thead th,
 .css-js-wd-table tbody td {
 	border: 1px solid rgba(125,125,125,0.2);
 	padding: 0.2em 0.3em;
 }
-.css-js-wd-table thead th {text-align: center;}
-.css-js-wd-table tbody td {text-align: left;}
+.css-js-wd-table thead th {
+	text-align: center;
+	text-weight: bold;
+	border-bottom: thin solid;
+}
+.css-js-wd-table tbody td {
+	text-align: left;
+}
+
 .css-js-wd-table tbody td[data-wd-table-type="date"],
 .css-js-wd-table tbody td[data-wd-table-type="time"],
 .css-js-wd-table tbody td[data-wd-table-type="datetime"],
 .css-js-wd-table tbody td[data-wd-table-type="number"] {
 	text-align: right;
 }
-
 .css-js-wd-table thead th > button {
 	width: 100%;
-	/*padding: 0.2em 0.2em 0.2em 1em;*/
 	cursor: pointer;
 	background-color: transparent;
 	border: 0;
 	text-align: inherit;
 	font-family: inherit;
+	font-weight: inherit;
+	color: inherit;
 }
 .css-js-wd-table thead th > button:before,
 .css-js-wd-table thead th > button:after {

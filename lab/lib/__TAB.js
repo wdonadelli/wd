@@ -32,8 +32,9 @@ const __TAB = {
 			"aria-orientation": orientation,
 			addEventListener: {click: this, keydown: this}
 		}};
+		/*-- precisa arrumar isso aqui: tá bagunçado (ver __SLIDE) e acho que as abas deveriam receber o disparador e não o container tablist (tá estranho) */
 		/*-- registrando dados dos elementos envolvidos --*/
-		data.tablist = tablist.attr.id;
+		data.tablist = tablist.attr.id; //FIXME para que serve essa linha?
 		panels.forEach(function(v,i,a) {
 			data.panels[__ID.id(v)] = __HEAP.getAttr(v, "role", "tabIndex", "hidden", "aria-labelledby");
 		});
