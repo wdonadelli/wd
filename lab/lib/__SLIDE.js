@@ -1,21 +1,27 @@
 /**#3 Apresentação
 O objeto '{__SLIDE} organiza um container em forma de apresentação de '{slides}.**/
 const __SLIDE = {
-
-/**. '{void attach(node node, integer time)}: Define uma caixa de abas para referenciar os filhos do nó.**/
+	/**. '{void attach(node node, integer time)}: Define uma caixa de i{slides} com rotação automática com abas.**/
 	attach: function(node, time) {
 		if (!(node instanceof HTMLElement)) return;
-		/*-- obtendo informações iniciais --*/
+		time = Math.trunc(1000 * (__Type(time).finite && Math.abs(Number(time)) > 0 ? Math.abs(Number(time)) : 3));
+		/*-- informações iniciais --*/
 		const height  = {max: 0.9* window.innerHeight, min: 0.5 * window.innerHeight, val: 0};
 		const slides  = Array.from(node.children);
-		const tablist = {tag: "div", child: [], attr: {id: __ID.value, role: "tablist", "aria-label": "Slides",}};
+		const tablist = {tag: "div", child: [], attr: {
+			id: __ID.value,
+			role: "tablist",
+			"aria-label": "Slides",
+			"aria-orientation": "horizontal",
+		}};
 		/*-- registrando elementos --*/
 		const data = {
-			time:    Math.trunc(1000 * (__Type(time).finite ? Math.abs(Number(time)) : 3)),
-			root:    __HEAP.getAttr(node, "aria-roledescription", "class", "aria-live"),
+			time:    time,
+			timer:   window.setInterval(this.timer, time+5, node, time),
+			root:    __HEAP.getAttr(node, "aria-roledescription", "class", "aria-live", "style", "data-slide-time"),
 			tablist: tablist.attr.id,
 			slides:  slides.reduce(function(x,v,i,a) {
-				x[__ID.id(v)] = __HEAP.getAttr(v, "role", "aria-roledescription", "aria-label", "hidden");
+				x[__ID.id(v)] = __HEAP.getAttr(v, "role", "aria-roledescription", "aria-label", "tabIndex", "hidden");
 				return x;
 			}, {}),
 		};
@@ -26,6 +32,7 @@ const __SLIDE = {
 			__HTML(v, {
 				id: __ID.id(v),
 				role: "tabpanel",
+				tabIndex: 0,
 				"aria-roledescription": "slide",
 				"aria-label": `Slide ${i+1}/${slides.length}`,
 				hidden: i > 0
@@ -39,77 +46,94 @@ const __SLIDE = {
 				"aria-controls": v.id,
 				"aria-selected": i === 0 ? "true" : "false",
 				"aria-label": `Slide ${i+1}`,
-				addEventListener: {click: this, keydown: this}
+				/*-- o mecanismo copia o comportamento de abas --*/
+				addEventListener: {click: __TAB, keydown: __TAB},
 			}};
 		}, this);
 		/*-- configurando o container de abas --*/
-		__HTML(node, {classList: {add: "css-js-wd-slide"}, insertBefore:[__DOM(tablist).tag, node.firstElementChild]});
+		__HTML(node, {
+			classList: {add: "css-js-wd-slide"},
+			"aria-roledescription": "carousel",
+			"aria-live": "off",
+			"data-slide-time": Date.now(),
+			insertBefore:[__DOM(tablist).tag, node.firstElementChild],
+			addEventListener: {mouseenter: this, mouseleave: this, focusin: this, focusout: this}
+		});
 		/*-- calculando altura ideal --*/
 		//const rect = tablist.tag.getBoundingClientRect().height;
 		//height.val = rect > height.val ? rect : height.val;
 		//node.style.height = (height.val < height.min ? height.min : (height.val > height.max ? height.max : height.val))+"px";
-		console.log("AAAAAAAAAAAAAAAAAAAA")
 		return;
 	},
 	/**. '{void detach(node node)}: Desvincula uma caixa de abas dos elementos referenciados.**/
 	detach: function(node) {
 		if (__HEAP.data(node, this) === null) return;
 		const data = __HEAP.data(node, this);
+		window.clearInterval(data.timer);
 		document.getElementById(data.tablist).remove();
 		__HEAP.resetAttr(data.root);
+		__HTML(data.root, {removeEventListener: {mouseenter: this, mouseleave: this, focusin: this, focusout: this}});
 		for (let i in data.slides) __HEAP.resetAttr(data.slides[i]);
 		return;
 	},
-	/**. '{void open(node tab)}: Abre o painel a partir da aba.**/
-	open: function(tab) {
-		const list   = tab.parentElement;
-		const tabs   = list.children;
-		const panel  = document.getElementById(tab.getAttribute("aria-controls"));
-		const panels = panel.parentElement.children;
-		/*-- manipulado os paineis --*/
-		for (let i = 0; i < panels.length; i++) {
-			panels[i].hidden = panels[i] !== list && panels[i] !== panel;
+
+	timer: function(node, time) {
+		if (!node.hasAttribute("data-slide-time"))
+			return node.setAttribute("data-slide-time", Date.now());
+		if (node.getAttribute("aria-live") === "polite")
+			return;
+		const gap  = Number(node.getAttribute("data-slide-time"));
+		const tab  = node.querySelector(`[role="tab"][aria-selected="true"]`);
+		const tabs = tab.parentElement.children;
+		const next = tab.nextElementSibling === null ? tab.parentElement.firstElementChild : tab.nextElementSibling;
+		//console.log({node: node, time: time, gap: gap, tab: tab, delta: Date.now() - gap})
+		if (Date.now() - gap >= time) {
+			for (let i = 0; i < tabs.length; i++) {
+				let panel	= document.getElementById(tabs[i].getAttribute("aria-controls"));
+				panel.hidden = tabs[i] !== next;
+				tabs[i].tabIndex = panel.hidden ? -1 : 0;
+				tabs[i].setAttribute("aria-selected", panel.hidden ? "false" : "true");
+			}
+			node.setAttribute("data-slide-time", Date.now());
+			return;
 		}
-		/*-- manipulado as abas --*/
-		for (let i = 0; i < tabs.length; i++) {
-			tabs[i].tabIndex = tabs[i] === tab ? 0 : -1;
-			tabs[i].setAttribute("aria-selected", tabs[i] === tab ? "true" : "false");
-		}
-		tab.focus();
 		return;
 	},
- 	/**. '{void keydown(object ev)}: Manipulador para navegar pelas abas pelo teclado.**/
-	keydown: function (ev) {
-		const tabs = Array.from(ev.currentTarget.children);
-		const item = tabs.indexOf(ev.target);
-		const jump = {
-			ArrowDown:  item + 1, ArrowUp:   item - 1, Home: 0,
-			ArrowRight: item + 1, ArrowLeft: item - 1, End: tabs.length - 1
-		};
-		const next = (tabs.length + jump[ev.key])%tabs.length;
-		this.open(tabs[next]);
+
+	/* TODO
+		1) quando a rotação automática é desativada, aria-live é polite
+		2) quando a rotação automática é ativada, aria-live é off (para não ficar incomodando
+		3) mouseenter e focusin encerra a rotação automática
+		4) mouseleave e focusout retoma a rotação automática
+		5) adicionar uma função de período em data (registro) e desligar depois em detach
+	*/
+	/**. '{void focusin(object ev)}: Interrompe a rotação automática ao receber foco.**/
+	focusin: function(ev) {
+		if (!ev.currentTarget.contains(ev.relatedTarget))
+			ev.currentTarget.setAttribute("aria-live", "polite");
 		return;
- 	},
+	},
+	/**. '{void focusout(object ev)}: Retoma a rotação automática ao perder foco.**/
+	focusout: function(ev) {
+		if (!ev.currentTarget.contains(ev.relatedTarget))
+			ev.currentTarget.setAttribute("aria-live", "off");
+		return;
+	},
+	/**. '{void mouseenter(object ev)}: Interrompe a rotação automática ao passar o i{mouse}.**/
+	mouseenter: function(ev) {
+		if (!ev.currentTarget.contains(ev.relatedTarget))
+			ev.currentTarget.setAttribute("aria-live", "polite");
+		return;
+	},
+	/**. '{void mouseleave(object ev)}: Interrompe a rotação automática ao remover o i{mouse}.**/
+	mouseleave: function(ev) {
+		if (!ev.currentTarget.contains(ev.relatedTarget))
+			ev.currentTarget.setAttribute("aria-live", "off");
+		return;
+	},
  	/**. '{void handleEvent(object ev)}: Disparador de abas chamado durante os eventos '{keydown}, '{click}.**/
 	handleEvent: function(ev) {
-		if (ev.target.tagName.toLowerCase() !== "button") return;
-		const path = ev.currentTarget.getAttribute("aria-orientation");
-		const keys = path === "vertical" ? /^(ArrowUp|ArrowDown|Home|End)$/ : /^(ArrowRight|ArrowLeft|Home|End)$/;
-		const stop = {click: true, keydown: (ev.key === "Tab" && !ev.shiftKey) || keys.test(ev.key)};
-		if (ev.type in stop && stop[ev.type]) {
-			ev.stopPropagation();
-			ev.preventDefault();
-		}
-		if (ev.type === "click") {
-			this.open(ev.target);
-		}
-		else if (ev.type === "keydown" && stop.keydown) {
-			if (ev.key === "Tab")
-				document.getElementById(ev.target.getAttribute("aria-controls")).focus();
-			else
-				this.keydown(ev);
-		}
-		return;
+		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
 };
 __CSS.push(`/*-- TAB --*/

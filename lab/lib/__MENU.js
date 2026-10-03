@@ -443,22 +443,26 @@ __CSS.push(`/*-- MENU --*/
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"]         > span:first-child:before {content: "\\276E";}
 .css-js-wd-menu [role="menuitem"][aria-expanded="false"]        > span:last-child:before  {content: "\\276F\\ ";}
 
-.css-js-wd-menu-open {cursor: pointer; color: inherit;}
+.css-js-wd-menu-open {cursor: context-menu; color: inherit;}
 .css-js-wd-menu-open:after {
 	content: " ";
 	display: inline-block;
 	vertical-align: middle;
 	width: 1em;
-	height: 0.35em;
+	height: 0.75em;
 	background-size: auto auto;
 	background-repeat: no-repeat;
 	background-position: 50% 50%;
 	background-origin: content-box;
 }
-.css-js-wd-menu-open[aria-expanded="true"]:after {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 H 100 L 50,100 Z' fill='gray' /></svg>");
-	cursor: context-menu;
-}
 .css-js-wd-menu-open[aria-expanded="false"]:after {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 V 100 L 100,50 Z' fill='gray' /></svg>");
-}`);
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='M 33,25 V 75 L 83,50 Z' fill='black' /></svg>");
+
+	bbackground-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 V 100 L 100,50 Z' fill='black' stroke='white' stroke-width='3' /></svg>");
+
+
+}
+.css-js-wd-menu-open[aria-expanded="true"]:after {
+	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='rgb(48,48,48)'/><path d='M 25,33 H 75 L 50,83 Z' fill='white' /></svg>");
+}
+`);
