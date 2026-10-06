@@ -62,7 +62,7 @@ const __DATETIME = {
 		m:   /([0-5]?\d)/,               mm:   /([0-5]\d)/,
 		s:   /([0-5]?\d)/,               ss:   /([0-5]\d)/,
 		l:   /(\d{1,3})/,                ll:   /(\d\d\d)/,
-		p:   /([AP]M)/,                  P:   /([+\-]?)/
+		p:   /([AP]M)/,                P:   /([+\-]?)/
 	},
 	/**. '{array base}: Registra os modelos de tempo e suas configurações.**/
 	base: [

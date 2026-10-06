@@ -73,18 +73,27 @@ const __LOADER = {
 				const html = replace === true ? "outerHTML" : (form ? "value" : "innerHTML");
 				const text = replace === true ? "outerText" : (form ? "value" : "innerText");
 				const attr = {};
-				if (x.mime === "text/csv")
+				if (x.mime === "text/csv" && "table" in data) {
+					__TABLE.attach(elem, x.result, data.caption, data.table);
+				}
+				else if (x.mime === "text/csv") {
 					attr[html] = form ? x.result : __CSV.parseTable(x.result).outerHTML;
-				else if (x.mime === "text/html" || x.mime === "application/xml+html" || x.mime === "image/svg+xml")
+					__HTML(elem, attr);
+				}
+				else if (x.mime === "text/html" || x.mime === "application/xml+html" || x.mime === "image/svg+xml") {
 					attr[html] = __STRING.parserDOM(x.result, x.mime).body.innerHTML;
+					__HTML(elem, attr);
+				}
 				else if (docode.test(x.result.trim())) {
 					const div = __HTML("div");
 					__DOCODE.render(div, x.result.replace(docode, ""));
 					attr[html] = div.innerHTML;
+					__HTML(elem, attr);
 				}
-				else
+				else {
 					attr[text] = x.result;
-				__HTML(elem, attr);
+					__HTML(elem, attr);
+				}
 			}
 			if (x.done) elem.removeAttribute("aria-busy");
 			return;

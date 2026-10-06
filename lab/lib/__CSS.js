@@ -265,11 +265,51 @@ const __CSS = {
 		darkslategray: "2f4f4f",
 		black: "000000",
 	},
+	/*-- triângulo equilátero de lado l e altura a circunscrito num círculo de raio r --
+		l = sqrt(3)r
+		a = (sqrt(3)/2)l = (3/2)r
+
+
+		r: raio
+		s: lado
+		h: altura
+
+	--*/
+	arrow: function(r, cx, cy) {
+		cx = Number.isFinite(cx) ? cx : 50;
+		cy = Number.isFinite(cy) ? cy : 50;
+		r  = Number.isFinite(r)  ? r  : 50
+		const a = Math.sqrt(3)*r;
+		const H = 3*r/2;
+		const h = r/2;
+		return {
+			right:  `M ${cx+r},${cy} L ${cx-h},${cy-a/2} L ${cx-h},${cy+a/2} Z`,
+			left:   `M ${cx-r},${cy} L ${cx+h},${cy-a/2} L ${cx+h},${cy+a/2} Z`,
+			bottom: `M ${cx},${cy+r} L ${cx-a/2},${cy-h} L ${cx+a/2},${cy-h} Z`,
+			top:    `M ${cx},${cy-r} L ${cx-a/2},${cy+h} L ${cx+a/2},${cy+h} Z`,
+		};
+	},
+
+
 };
 //FIXME precisa disso?
 __CSS.push(`/*-- Padrão --*/
 /*-- Variáveis --*/
 :root {
+	--var-js-wd-font-family:  Lucida Sans, sans-serif;
+	--var-js-wd-font-size:    14px;
+	--var-js-wd-hover:        rgba(204,204,204,0.2);
+	--var-js-wd-panel-border: thin solid rgba(204,204,204,0.3);
+	--var-js-wd-panel-radius: 0.3em;
+	--var-js-wd-bg-rarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).right}' fill='black' /></svg>");
+	--var-js-wd-bg-larrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).left}' fill='black' /></svg>");
+	--var-js-wd-bg-tarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).top}' fill='black' /></svg>");
+	--var-js-wd-bg-barrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).bottom}' fill='black' /></svg>");
+
+
+
+
+
 	--var-js-wd-z-index-0: 9999;
 	--var-js-wd-z-index-1: 9998;
 	--var-js-wd-z-index-2: 9997;

@@ -43,7 +43,8 @@ const __TABLE = {
 		return data;
 	},
 
-	body: function(table) {
+	/**. '{void body(node table, function view)}: Configura o '{tbody} da tabela.**/
+	body: function(table, view) {
 		const head  = table.tHead.firstElementChild.children;
 		const rows  = table.tBodies[0].children;
 		table.className = "css-js-wd-table";
@@ -64,7 +65,7 @@ const __TABLE = {
 		}
 		return;
 	},
-
+	/**. '{void head(node table)}: Configura o '{thead} da tabela.**/
 	head: function(table) {
 		const head  = table.tHead.firstElementChild.children;
 		for (let i = 0; i < head.length; i++) {
@@ -76,14 +77,16 @@ const __TABLE = {
 		return;
 	},
 
-	attach: function(node, csv, title, view) {
-		const table = __CSV.parseTable(csv, true, false, false, title);
-		this.body(table);
+	attach: function(node, csv, caption, view) {
+		const table = __CSV.parseTable(csv, true, false, false, caption);
+		this.body(table, view);
 		this.head(table);
 		node.appendChild(__HTML(table));
 	},
 
 
+
+	/**. '{void click(object ev)}: Evento para ordenar a coluna quando clicada.**/
 	click: function(ev) {
 		const main = ev.currentTarget.parentElement;
 		const head = Array.from(main.parentElement.children);
@@ -111,22 +114,16 @@ const __TABLE = {
 				order = dataA < dataB ? -sort : sort;
 			else
 				order = line.indexOf(typeA) < line.indexOf(typeB) ? -sort : sort;
-			/*-- ordenar linhas --*/
-			(order === -1 ? body.insertBefore(trA, trB) : body.insertBefore(trB, trA));
 			return order;
 		});
+		/*-- ordenar linhas --*/
+		list.forEach(function(v,i,a) {body.appendChild(v);});
 		return;
 	},
-
-
-
+	/**. '{void handleEvent(object ev)}: Disparador do objeto.**/
 	handleEvent: function(ev) {
 		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
-
-
-
-
 };
 __CSS.push(`/*-- TABLE --*/
 .css-js-wd-table {
@@ -141,8 +138,8 @@ __CSS.push(`/*-- TABLE --*/
 }
 
 .css-js-wd-table tbody tr:nth-of-type(2n+1) {background-color: transparent;}
-.css-js-wd-table tbody tr:nth-of-type(2n)   {background-color: rgba(125,125,125,0.1);}
-.css-js-wd-table tbody:hover tr             {background-color: rgba(125,125,125,0.1);}
+.css-js-wd-table tbody tr:nth-of-type(2n)   {background-color: var(--var-js-wd-hover);}
+.css-js-wd-table tbody:hover tr             {background-color: var(--var-js-wd-hover);}
 .css-js-wd-table tbody:hover tr:hover       {background-color: transparent;}
 .css-js-wd-table thead th,
 .css-js-wd-table tbody td {
@@ -188,12 +185,12 @@ __CSS.push(`/*-- TABLE --*/
 }
 .css-js-wd-table thead th > button:focus:before,
 .css-js-wd-table thead th > button:hover:before {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 50,0 L 27.5,45 L 72.5,45 L 50,0 M 50,100 L 27.5,55 L 72.5,55 L 50,100' fill='gray' /></svg>");
+	background-image: var(--var-js-wd-bg-barrow);
 }
 .css-js-wd-table thead th[aria-sort="ascending"] > button:before {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 50,100 L 27.5,55 L 72.5,55 L 50,100' fill='gray' /></svg>");
+	background-image: var(--var-js-wd-bg-barrow);
 }
 .css-js-wd-table thead th[aria-sort="descending"] > button:before {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 50,0 L 27.5,45 L 72.5,45 L 50,0' fill='gray' /></svg>");
+	background-image: var(--var-js-wd-bg-tarrow);
 }
 `);

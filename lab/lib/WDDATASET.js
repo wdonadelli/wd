@@ -192,8 +192,10 @@ const WDDATASET = {
 		return;
 	},
 
+	//FIXME
 
 
+	//FIXME
 	/**. '{void wdSlide(object ev)}: Transforma o elemento num conjunto de paineis controlados por abas:
 	|Nome|Tipo|Opcional|Descrição|
 	|'{orientation}|string|Não|Disposição das abas: '{horizontal} (padrão) ou '{vertical}|

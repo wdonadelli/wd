@@ -368,16 +368,15 @@ const __MENU = {
 };
 __CSS.push(`/*-- MENU --*/
 .css-js-wd-menu {
-	/*display: inline-block;*/
 	list-style: none;
 	padding: 0.5em;
 	margin: 0;
 	color: inherit;
 	background: inherit;
-	border-radius: 0.2em;
+	border-radius: var(--var-js-wd-panel-radius);
 	border: 1px solid;
 	font-size: 14px;
-	font-family: Lucida Sans, sans-serif;
+	font-family: var(--var-js-wd-font-family);
 	box-shadow: 0.25em 0.25em 0 0;
 }
 .css-js-wd-menu ul, .css-js-wd-menu menu {
@@ -390,7 +389,7 @@ __CSS.push(`/*-- MENU --*/
 	margin: 0;
 }
 .css-js-wd-menu [role="separator"] {
-	border-bottom: thin solid #bbbbbb;
+	border-bottom: thin solid;
 	margin: 0.5em 0;
 }
 .css-js-wd-menu [role="menuitem"],
@@ -399,14 +398,14 @@ __CSS.push(`/*-- MENU --*/
 	position: relative;
 	padding: 0.2em 1.5em;
 	margin: 0;
-	border-radius: 0.2em;
+	border-radius: var(--var-js-wd-panel-radius);
 	text-align: left;
 	cursor: pointer;
 }
 .css-js-wd-menu [role="menuitem"]:focus,
 .css-js-wd-menu [role="menuitemcheckbox"]:focus,
 .css-js-wd-menu [role="menuitemradio"]:focus {
-	background: rgba(204,204,204,0.3);
+	background: var(--var-js-wd-hover);
 }
 .css-js-wd-menu [role="menuitem"][aria-expanded="true"] {
 	font-weight: bold;
@@ -456,13 +455,9 @@ __CSS.push(`/*-- MENU --*/
 	background-origin: content-box;
 }
 .css-js-wd-menu-open[aria-expanded="false"]:after {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='M 33,25 V 75 L 83,50 Z' fill='black' /></svg>");
-
-	bbackground-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 0,0 V 100 L 100,50 Z' fill='black' stroke='white' stroke-width='3' /></svg>");
-
-
+	background-image: var(--var-js-wd-bg-rarrow);
 }
 .css-js-wd-menu-open[aria-expanded="true"]:after {
-	background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='rgb(48,48,48)'/><path d='M 25,33 H 75 L 50,83 Z' fill='white' /></svg>");
+	background-image: var(--var-js-wd-bg-barrow);
 }
 `);
