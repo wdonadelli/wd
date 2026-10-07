@@ -67,13 +67,18 @@ const __TABLE = {
 	},
 	/**. '{void head(node table)}: Configura o '{thead} da tabela.**/
 	head: function(table) {
-		const head  = table.tHead.firstElementChild.children;
+		const head = table.tHead.firstElementChild.children;
+		const line = __HTML("tr");
 		for (let i = 0; i < head.length; i++) {
-			let events = {click: this};
-			let button = __HTML("button", {type: "button", textContent: head[i].textContent, addEventListener: events});
+			let cell   = __HTML("td");
+			let find   = __HTML("input", {type: "search", "aria-label": `Search column ${i+1}`, addEventListener: {input: this}})
+			let button = __HTML("button", {type: "button", textContent: head[i].textContent, addEventListener: {click: this}});
 			head[i].innerHTML = "";
 			head[i].appendChild(button);
+			cell.appendChild(find);
+			line.appendChild(cell);
 		}
+		table.tHead.appendChild(line);
 		return;
 	},
 
@@ -82,6 +87,93 @@ const __TABLE = {
 		this.body(table, view);
 		this.head(table);
 		node.appendChild(__HTML(table));
+	},
+
+
+
+	/**. '{object filter(string check)}: Retorna os dados do filtro para checagem:
+	FIXME fazer a tabela das propriedades
+
+	**/
+	filter: function(check) {
+		check = String(check).trim();
+		const reMath = /^([=!]\=|[<>]\=?)(.*)$/;
+		const reRExp = /^\/(.+)\/([gim]+)?$/i;
+		const reEnds = /^(\[|\])([^,]+)\,([^\[\]]+)(\[|\])$/;
+		/*-- testando condições --*/
+		if (check.length === 0) return null;
+		/*-- condicionais matemáticas --*/
+		if (reMath.test(check)) {
+			const find = check.match(reMath);
+			return find[2].trim().length > 0 ? {check: find[1], data: new __Type(find[2].trim())} : null;
+		}
+		/*-- expressão regular --*/
+		if (reRExp.test(check)) {
+			const find = check.match(reRExp);
+			return {check: "re", data: new RegExp(find[1], find[2] ? find[2] : "")};
+		}
+		/*-- intervalo --*/
+		if (reEnds.test(check)) {
+			const find = check.match(reEnds);
+			return {
+				check: [find[1] === "[" ? ">=" : ">", find[4] === "]" ? "<=" : "<"],
+				data: [new __Type(find[2].trim()), new __Type(find[3].trim())]};
+		}
+		return {check: "==", data: new __Type(check)};
+	},
+
+	//FIXME __Type("29/02/2020").toLocaleString() dá 01/03/2020
+
+
+	check: function(rule, cell) {
+		const type  = cell.dataset.wdTableType;
+		const value = type === "number" ? Number(cell.dataset.wdTableValue) : cell.dataset.wdTableValue;
+		console.log(value, rule.check, rule.data.value)
+		if (rule.check === "==") return value == rule.data.value;
+		if (rule.check === "!=") return value != rule.data.value;
+		if (rule.check === ">")  return value >  rule.data.value;
+		if (rule.check === "<")  return value <  rule.data.value;
+		if (rule.check === ">=") return value >= rule.data.value;
+		if (rule.check === "<=") return value <= rule.data.value;
+		if (rule.check === "re") return rule.data.test(value);
+		if (Array.isArray(rule.check)) {
+			const data1 = this.check({check: rule.check[0], data: rule.data[0]}, cell);
+			const data2 = this.check({check: rule.check[1], data: rule.data[1]}, cell);
+			return data1 && data2;
+		}
+		return false;
+	},
+
+
+
+
+
+
+
+
+
+
+
+
+	/**. '{void input(object ev)}: Evento para exibir as células que casam com os filtros.**/
+	input: function(ev) {
+		const cell = ev.currentTarget.parentElement;
+		const cols = Array.from(cell.parentElement.children);
+		const body = cell.parentElement.parentElement.parentElement.tBodies[0];
+		const rows = Array.from(body.children);
+		const rule = cols.map(function(v,i,a) {return this.filter(v.firstElementChild.value);},this);
+		/*-- looping pelas linhas --*/
+		rows.forEach(function(row,r,R) {
+			row.hidden = false;
+			const child = row.children;
+			/*-- looping pelas células --*/
+			for (let i = 0; i < child.length; i++) {
+				if (rule[i] === null) continue;
+				row.hidden = !this.check(rule[i], child[i]);
+				if (row.hidden) return;
+			}
+		}, this);
+		return;
 	},
 
 
