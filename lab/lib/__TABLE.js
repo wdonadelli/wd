@@ -6,42 +6,8 @@ O objeto '{__TABLE} controla as alterações da tela atribuida a um tipo de disp
 const __TABLE = {
 
 //FIXME mudei o __LANG.user e HTML.lang e não mudou o formato
+//FIXME __Type("29/02/2020").toLocaleString() dá 01/03/2020
 
-
-	/**. '{object view(string input, object config)}: Retorna os dados para fins de configuração da visualização da célula, onde '{input} é o conteúdo textual e '{config} a respectiva configuração:
-	|Propriedade|Tipo|Descrição|
-	|'{data}|object|Retorno do contrutor '{__Type} para '{input}|
-	|'{text}|string|Máscara de exibição da célula|
-	|'{class}|string|Valor do attributo '{class} da célula|**/
-	view: function(input, config) {
-		const text = new __Type(input);
-		const view = __Type(config).object ? config : {};
-		const data = {data: text, text: text.toLocaleString(), class: ""};
-		/*-- estilo vinculado a condicionais --*/
-		["eq", "ne", "gt", "ge", "lt", "le"].forEach(function(v,i,a) {
-			const check = new __Type(view[v]);
-			if (check.type === text.type && (v+"v") in view) {
-				if (v === "eq")
-					data.class += text.value === check.value ? " "+view[v+"v"] : "";
-				else if (v === "ne")
-					data.class += text.value !== check.value ? " "+view[v+"v"] : "";
-				else if (v === "gt")
-					data.class += text.value   > check.value ? " "+view[v+"v"] : "";
-				else if (v === "ge")
-					data.class += text.value  >= check.value ? " "+view[v+"v"] : "";
-				else if (v === "lt")
-					data.class += text.value   < check.value ? " "+view[v+"v"] : "";
-				else if (v === "le")
-					data.class += text.value  <= check.value ? " "+view[v+"v"] : "";
-			}
-		});
-		/*-- estilo vinculado à forma --*/
-		if ((/date|time|datetime/).test(text.type))
-			data.text = __DATETIME.locale(text._data, view);
-		else if (text.type === "number")
-			data.text = __NUMBER.locale(text.value, view);
-		return data;
-	},
 
 	/**. '{void body(node table, function view)}: Configura o '{tbody} da tabela.**/
 	body: function(table, view) {
@@ -122,7 +88,7 @@ const __TABLE = {
 		return {check: "==", data: new __Type(check)};
 	},
 
-	//FIXME __Type("29/02/2020").toLocaleString() dá 01/03/2020
+
 
 
 	check: function(rule, cell) {
@@ -135,6 +101,7 @@ const __TABLE = {
 		if (rule.check === "<")  return value <  rule.data.value;
 		if (rule.check === ">=") return value >= rule.data.value;
 		if (rule.check === "<=") return value <= rule.data.value;
+		//FIXME no caso de re, considerar o valor textual (textContent) ou valor real (wdTableValue)?
 		if (rule.check === "re") return rule.data.test(value);
 		if (Array.isArray(rule.check)) {
 			const data1 = this.check({check: rule.check[0], data: rule.data[0]}, cell);
@@ -234,15 +201,23 @@ __CSS.push(`/*-- TABLE --*/
 .css-js-wd-table tbody:hover tr             {background-color: var(--var-js-wd-hover);}
 .css-js-wd-table tbody:hover tr:hover       {background-color: transparent;}
 .css-js-wd-table thead th,
+.css-js-wd-table thead td,
 .css-js-wd-table tbody td {
-	border: 1px solid rgba(125,125,125,0.2);
+	border: var(--var-js-wd-panel-border);
 	padding: 0.2em 0.3em;
 }
+.css-js-wd-table thead tr {
+	border: thin solid;
+}
+
+
 .css-js-wd-table thead th {
 	text-align: center;
 	text-weight: bold;
-	border-bottom: thin solid;
 }
+
+
+
 .css-js-wd-table tbody td {
 	text-align: left;
 }
@@ -285,4 +260,27 @@ __CSS.push(`/*-- TABLE --*/
 .css-js-wd-table thead th[aria-sort="descending"] > button:before {
 	background-image: var(--var-js-wd-bg-tarrow);
 }
+
+.css-js-wd-table thead td {
+	position: relative;
+	min-width: 5em;
+	min-height: 2em;
+}
+.css-js-wd-table thead td > input {
+	/*position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;*/
+	appearance: none;
+	border: none;
+min-width: 5em;
+	min-height: 2em;
+	text-align: center;
+	font-size: smaller;
+}
+
+
+
+
 `);

@@ -439,16 +439,15 @@ const __DATETIME = {
 	},
 	/**. '{object nativeDate(integer Y, integer M...)}: Recebe os dados de data ou tempo e devolve a instância nativa de '{Date}.**/
 	nativeDate: function(Y, M, D, H, m, s, l) {
-		const date = new Date(Date.UTC(
-			1970,
-			Number.isInteger(M) ? M - 1 : 0,
-			Number.isInteger(D) ? D : 1,
-			Number.isInteger(H) ? H : 0,
-			Number.isInteger(m) ? m : 0,
-			Number.isInteger(s) ? s : 0,
-			Number.isInteger(l) ? l : 0
-		));
-		if (Number.isInteger(Y)) date.setUTCFullYear(Y);
+		console.log(Y, M, D, H, m, s, l)
+		const date = new Date(Date.UTC(1970,0,1,0,0,0));
+		date.setUTCFullYear(Number.isInteger(Y) ? Y : 1970);
+		date.setUTCMonth(Number.isInteger(M) ? M - 1 : 0);
+		date.setUTCDate(Number.isInteger(D) ? D : 1);
+		date.setUTCHours(Number.isInteger(H) ? H : 0);
+		date.setUTCMinutes(Number.isInteger(m) ? m : 0);
+		date.setUTCSeconds(Number.isInteger(s) ? s : 0);
+		date.setUTCMilliseconds(Number.isInteger(l) ? l : 0);
 		return isNaN(date.getDate()) ? null : date;
 	},
 	/**. '{string locale(object flag, object cfg)}: Recebe a i{flag} e retorna o valor local amparado pelos a{métodos}@href{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#locale_options}target{_blank} do objeto nativo '{Date}.**/
