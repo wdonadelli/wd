@@ -63,6 +63,7 @@ const __TABLE = {
 	**/
 	filter: function(check) {
 		check = String(check).trim();
+		const reLine = /^\s*\{\s*([1-9]\d*)([-/:])([1-9]\d*)\s*\}\s*$/;
 		const reMath = /^([=!]\=|[<>]\=?)(.*)$/;
 		const reRExp = /^\/(.+)\/([gim]+)?$/i;
 		const reEnds = /^(\[|\])([^,]+)\,([^\[\]]+)(\[|\])$/;
@@ -85,30 +86,42 @@ const __TABLE = {
 				check: [find[1] === "[" ? ">=" : ">", find[4] === "]" ? "<=" : "<"],
 				data: [new __Type(find[2].trim()), new __Type(find[3].trim())]};
 		}
+		/*-- linhas --*/
+		if (reLine.test(check)) {
+			const find = check.match(reLine);
+			return {check: find[2], data: [Number(find[1]), Number(find[3])]};
+		}
+		/*-- outras --*/
+		return null;
 		return {check: "==", data: new __Type(check)};
 	},
 
 
 
 
-	check: function(rule, cell) {
+	check: function(rule, cell, row, rows) {
 		const type  = cell.dataset.wdTableType;
 		const value = type === "number" ? Number(cell.dataset.wdTableValue) : cell.dataset.wdTableValue;
-		console.log(value, rule.check, rule.data.value)
+		console.log(value, rule.check, rule.data)
 		if (rule.check === "==") return value == rule.data.value;
 		if (rule.check === "!=") return value != rule.data.value;
 		if (rule.check === ">")  return value >  rule.data.value;
 		if (rule.check === "<")  return value <  rule.data.value;
 		if (rule.check === ">=") return value >= rule.data.value;
 		if (rule.check === "<=") return value <= rule.data.value;
-		//FIXME no caso de re, considerar o valor textual (textContent) ou valor real (wdTableValue)?
-		if (rule.check === "re") return rule.data.test(value);
+		if (rule.check === "re") return rule.data.test(cell.textContent.trim());
+		//TODO linha i até linha n {i-n}
+		if (rule.check === "-")  return (row+1 >= rule.data[0] && row+1 <= rule.data[1]);
+		//TODO grupo i de n linhas {i:n} (progressão aritimética)
+		if (rule.check === ":")  return (row >= (rule.data[0] - 1)*rule.data[1] && row < (rule.data[0])*rule.data[1]);
+		//TODO página i de n páginas {i/n}
+		if (rule.check === "/")  return this.check({check: ":", data: [rule.data[0], Math.ceil(rows/rule.data[1])]}, cell, row, rows);
 		if (Array.isArray(rule.check)) {
-			const data1 = this.check({check: rule.check[0], data: rule.data[0]}, cell);
-			const data2 = this.check({check: rule.check[1], data: rule.data[1]}, cell);
+			const data1 = this.check({check: rule.check[0], data: rule.data[0]}, cell, row, rows);
+			const data2 = this.check({check: rule.check[1], data: rule.data[1]}, cell, line, rows);
 			return data1 && data2;
 		}
-		return false;
+		return true;
 	},
 
 
@@ -136,7 +149,7 @@ const __TABLE = {
 			/*-- looping pelas células --*/
 			for (let i = 0; i < child.length; i++) {
 				if (rule[i] === null) continue;
-				row.hidden = !this.check(rule[i], child[i]);
+				row.hidden = !this.check(rule[i], child[i], r, rows.length);
 				if (row.hidden) return;
 			}
 		}, this);
