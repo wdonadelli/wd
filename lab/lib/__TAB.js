@@ -153,7 +153,7 @@ __CSS.push(`/*-- TAB --*/
 	appearance: none;
 	padding: 0.5em 1em;
 	font-size: inherit;
-	font-family: Lucida Sans, sans-serif;
+	font-family: var(--var-js-wd-font-family);
 	color: inherit;
 	background-color: inherit;
 	border-radius: var(--var-js-wd-panel-radius);
