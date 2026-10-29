@@ -38,16 +38,16 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 			return this.forEach(function(v,i,a) {__LOADER.repeat(v, list, model);});
 		}
 	},
-	/**. '{self urlRepeat(object data, string model)}: Repete elementos a partir de um modelo via arquivo externo (ver '{__LOADER.urlRepeat}.**/
-	urlRepeat: {
+	/**. '{self fRepeat(object data, string model)}: Repete elementos a partir de um modelo via arquivo externo (ver '{__LOADER.fRepeat}.**/
+	fRepeat: {
 		value: function(data, model) {
-			return this.forEach(function(v,i,a) {__LOADER.urlRepeat(v, data, model);});
+			return this.forEach(function(v,i,a) {__LOADER.fRepeat(v, data, model);});
 		}
 	},
-	/**. '{self urlHTML(object data, boolean outer)}: Carrega o conteúdo de um arquivo externo aos nós (ver '{__LOADER.urlHTML}.**/
-	urlHTML: {
+	/**. '{self fHTML(object data, boolean outer)}: Carrega o conteúdo de um arquivo externo aos nós (ver '{__LOADER.fHTML}.**/
+	fHTML: {
 		value: function(data, outer) {
-			return this.forEach(function(v,i,a) {__LOADER.urlHTML(v, data, outer);});
+			return this.forEach(function(v,i,a) {__LOADER.fHTML(v, data, outer);});
 		}
 	},
 	/**. '{self filter(any find, integer size)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __FILTER.search)**/

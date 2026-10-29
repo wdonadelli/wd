@@ -7,7 +7,7 @@ const __PLOT2D = {
 	RGB: ("deepSkyBlue lime hotPink gold khaki cornflowerBlue mediumSpringGreen orchid darkOrange beige aqua greenYellow salmon coral silver aquamarine mediumSeaGreen tomato peru lightBlue").split(" "),
 	/**. '{object heap}: Guarda os registros dos gráficos gerados.**/
 	heap: {},
-	/**. '{object curve(any y, string fit}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
+	/**. '{object curve(any y, string fit)}: Retorna um objeto que identifica o tipo ('{type}) de dado, o modelo da curva principal ('{curve}) e o modelo da curva do ajuste ('{fit}) ou nulo em casa de valores de '{y} diferentes de constante, função e lista. O argumento '{fit} é o valor informado pelo usuário (opcional):
 	|Curva|Descrição|Tipo de dado|
 	|'{dot}|Pontos representados por círculos|Lista|
 	|'{line}|Pontos ligados por linha|Lista, constante e função|
@@ -451,8 +451,11 @@ const __PLOT2D = {
 	plot: function(data) {
 		/*-- checando validade dos dados --*/
 		if (
-			typeof data !== "object" || typeof data.x !== "object" || typeof data.y !== "object" ||
-			!Array.isArray(data.x.data) || !Array.isArray(data.y.dataset)
+			!__Type(data).object       ||
+			!__Type(data.x).object     ||
+			!__Type(data.y).object     ||
+			!__Type(data.x.data).array ||
+			!__Type(data.y.dataset).array
 		) return null;
 		const plot  = {};
 		plot.title  = "title" in data ? data.title : "Title";

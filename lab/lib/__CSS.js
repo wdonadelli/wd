@@ -265,7 +265,7 @@ const __CSS = {
 		darkslategray: "2f4f4f",
 		black: "000000",
 	},
-	/**. '{object arrow(integer r, integer cx, integer cy)}: Retorna um objeto contendo o valor do atributo '{d} do elemento SVG '{path} para a construção de setas (triângulo equilátero de lado '{l} e altura '{h}) circunscritas em um círculo de raio '{r} e posição centrada em '{(cx, cy)}:
+	/**. '{object arrow(integer r, integer cx, integer cy)}: Retorna um objeto contendo o valor do atributo '{d} do elemento SVG '{path} para a construção de setas (triângulo equilátero de lado '{l} e altura '{h} circunscrito em um círculo de raio '{r} e posição centrada em '{(cx, cy)}):
 	|Propriedade|Descrição|
 	|'{right}|Seta para a direita|
 	|'{left}|Seta para a esquerda|
@@ -274,9 +274,9 @@ const __CSS = {
 	|""Propriedades do objeto retornado""|
 	''l = sqrt(3)r, h = r + a, a = (sqrt(3)/2)l = (3/2)r''**/
 	arrow: function(r, cx, cy) {
+		r  = Number.isFinite(r)  ? r  : 50
 		cx = Number.isFinite(cx) ? cx : 50;
 		cy = Number.isFinite(cy) ? cy : 50;
-		r  = Number.isFinite(r)  ? r  : 50
 		const a = Math.sqrt(3)*r;
 		const H = 3*r/2;
 		const h = r/2;
@@ -289,6 +289,8 @@ const __CSS = {
 	},
 };
 __CSS.push(`/*-- Padrão --*/
+/*-- Geral ---*/
+* {box-sizing: border-box !important;}
 /*-- Variáveis --*/
 :root {
 	--var-js-wd-font-family:  Helvetica, Arial, Lucida Sans, sans-serif;
@@ -296,11 +298,11 @@ __CSS.push(`/*-- Padrão --*/
 	--var-js-wd-hover:        rgba(204,204,204,0.2);
 	--var-js-wd-panel-border: thin solid rgba(204,204,204,0.3);
 	--var-js-wd-panel-radius: 0.3em;
-	--var-js-wd-bg-rarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).right}' fill='black' /></svg>");
-	--var-js-wd-bg-larrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).left}' fill='black' /></svg>");
-	--var-js-wd-bg-tarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).top}' fill='black' /></svg>");
-	--var-js-wd-bg-barrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><circle cx='50' cy='50' r='50' fill='white' stroke='black'/><path d='${__CSS.arrow(25).bottom}' fill='black' /></svg>");
-	--var-js-wd-bg-filter:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 10,10 L 90,10 L 90,20 L 60,50 L 60,90 L 40,80 L 40,50 L 10,20 Z' fill='black' /></svg>");
+	--var-js-wd-bg-rarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='${__CSS.arrow(100/3).right}' fill='black' stroke='white' stroke-width='2' /></svg>");
+	--var-js-wd-bg-larrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='${__CSS.arrow(100/3).left}' fill='black' stroke='white' stroke-width='2' /></svg>");
+	--var-js-wd-bg-tarrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='${__CSS.arrow(100/3).top}' fill='black' stroke='white' stroke-width='2' /></svg>");
+	--var-js-wd-bg-barrow:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='${__CSS.arrow(100/3).bottom}' fill='black' stroke='white' stroke-width='2' /></svg>");
+	--var-js-wd-bg-filter:    url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' ><path d='M 10,10 L 90,10 L 90,20 L 60,50 L 60,90 L 40,80 L 40,50 L 10,20 Z' fill='black' stroke='white' stroke-width='2' /></svg>");
 
 
 
@@ -330,6 +332,5 @@ __CSS.push(`/*-- Padrão --*/
 @keyframes js-wd-animation-shrink {
 	from {transform: scale(1);} to {transform: scale(0);}
 }
-/*-- Geral ---*/
-* {box-sizing: border-box !important;}
+
 `);

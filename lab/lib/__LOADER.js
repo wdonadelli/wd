@@ -39,8 +39,8 @@ const __LOADER = {
 		node.removeAttribute("aria-busy");
 		return;
 	},
-	/**. '{object urlRepeat(node elem, object data, string model)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
-	urlRepeat: function(elem, data, model) {
+	/**. '{object fRepeat(node elem, object data, string model)}: Semelhante ao método '{repeat}, mas utilizando arquivos externos (JSON/CSV). Os dados da requisição/leitura são definidos pelo argumento '{data}.**/
+	fRepeat: function(elem, data, model) {
 		if (!__Type(data).object) return;
 		data.type = "text";
 		data.call = function(x) {
@@ -57,12 +57,12 @@ const __LOADER = {
 		__REQUEST.make(data);
 		return;
 	},
-	/**. '{object urlHTML(node elem, object data, boolean replace)}: Carrega o código HTML ou o conteúdo textual, conforme o caso, a partir de fontes externas:
+	/**. '{object fHTML(node elem, object data, boolean replace)}: Carrega o código HTML ou o conteúdo textual, conforme o caso, a partir de fontes externas:
 	|Argumento|Descrição|
 	|'{elem}|Onde onde serão carregados o código ou o texto do arquivo externo.|
-	|'{data}|Parâmetros da requisição ou leitura (ver __REQUEST).|
-	|'{replace}|Se verdadeiro, o elemento será substituído pelo conteúdo, caso contrário, o receberá.|**/
-	urlHTML: function(elem, data, replace) {
+	|'{data}|Parâmetros da requisição/leitura (ver __REQUEST).|
+	|'{replace}|Se verdadeiro, o elemento será substituído pelo conteúdo, caso contrário, o receberá.|FIXME acabei com replace**/
+	fHTML: function(elem, data) {
 		const docode = /^\s*\-\-docode\-\-\s*\n/i;
 		if (!__Type(data).object) return null;
 		elem.setAttribute("aria-busy", "true");
@@ -70,26 +70,33 @@ const __LOADER = {
 		const form = ["textarea", "input"].indexOf(elem.tagName.toLowerCase()) >= 0;
 		data.call = function(x) {
 			if (x.ok && x.result !== null) {
-				const html = replace === true ? "outerHTML" : (form ? "value" : "innerHTML");
-				const text = replace === true ? "outerText" : (form ? "value" : "innerText");
+				const html = data.replace === true ? "outerHTML" : (form ? "value" : "innerHTML");
+				const text = data.replace === true ? "outerText" : (form ? "value" : "innerText");
 				const attr = {};
-				if (x.mime === "text/csv" && "table" in data) {
-					__TABLE.attach(elem, x.result, data.caption, data.table);
+				/*-- dados tabulares --*/
+				if (x.mime === "text/csv") {
+					console.log(x.mime, html, text)
+					if (html === "value") {
+						__HTML(elem, {value: x.result});
+					}
+					else {
+						const table = __TABLE.attach(x.result, data);console.log(table)
+						(html === "outerHTML" ? elem.parentElement.replaceChild(table, elem) : elem.appendChild(table));
+					}
 				}
-				else if (x.mime === "text/csv") {
-					attr[html] = form ? x.result : __CSV.parseTable(x.result).outerHTML;
-					__HTML(elem, attr);
-				}
+				/*-- html --*/
 				else if (x.mime === "text/html" || x.mime === "application/xml+html" || x.mime === "image/svg+xml") {
 					attr[html] = __STRING.parserDOM(x.result, x.mime).body.innerHTML;
 					__HTML(elem, attr);
 				}
+				/*-- docode --*/
 				else if (docode.test(x.result.trim())) {
 					const div = __HTML("div");
 					__DOCODE.render(div, x.result.replace(docode, ""));
 					attr[html] = div.innerHTML;
 					__HTML(elem, attr);
 				}
+				/*-- outros conteúdos textuais --*/
 				else {
 					attr[text] = x.result;
 					__HTML(elem, attr);

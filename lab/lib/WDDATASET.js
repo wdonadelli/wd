@@ -94,7 +94,7 @@ const WDDATASET = {
 	wdLoad: function(ev) {
 		const data = this.attr(ev.target.dataset.wdLoad);
 		delete ev.target.dataset.wdLoad;
-		if (data) __LOADER.urlHTML(ev.target, data, data.outer);
+		if (data) __LOADER.fHTML(ev.target, data);
 		return;
 	},
 	/**. '{void wdRepeat(object ev)}: Cria elementos filhos a partir de um modelo conforme especificado em um arquivo externo:
@@ -105,7 +105,7 @@ const WDDATASET = {
 	wdRepeat: function(ev) {
 		const data = this.attr(ev.target.dataset.wdRepeat);
 		delete ev.target.dataset.wdRepeat;
-		if (data) __LOADER.urlRepeat(ev.target, data, data.model);
+		if (data) __LOADER.fRepeat(ev.target, data, data.model);
 		return;
 	},
 	/*-- ATRIBUTOS COM REGISTRO ------------------------------------------------*/
