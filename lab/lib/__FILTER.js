@@ -136,7 +136,8 @@ const __FILTER = {
 		const stop = typeof data === "string" && size !== 0;
 		const hide = !stop || size === 0 || data.length >= Math.abs(size) ? null : size < 0;
 		Array.from(node.children).forEach(function(v,i,a) {
-			v.hidden = hide === null ? !this.find(v, data) : hide;
+			const hidden = hide === null ? !this.find(v, data) : hide;
+			v[hidden ? "setAttribute" : "removeAttribute"]("hidden", "");
 		}, this);
 		return;
 	},

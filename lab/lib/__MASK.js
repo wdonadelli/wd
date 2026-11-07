@@ -1,14 +1,25 @@
 /**
 #3 Máscaras de Texto
-	O objeto '{__MASK} destina-se a registrar os elementos HTML contruídos pela biblioteca, garantindo que os tipos de construção não se confundam ao evitar que o mesmo elemento seja atribuído a mais de um construtor.**/
+	O objeto '{__MASK} tem por objetivo aplicar uma máscara textual a campos, editáveis ou não:
+- A máscara é definida a partir de um modelo ('{string});
+- O modelo possui caracteres manipuladores que representam determinados tipos de dado;
+- Se o valor informado no campo/elemento casar com o modelo, a máscara será aplicada ao conteúdo;
+- Se o valor não casar, o campo/elemento ficará com seu conteúdo vazio;
+- Se o campo/elemento for editável, a modelo será verificado ao perder foco;
+- No caso de campo/elemento editável, se o modelo não casar, o foco retornará para o elemento;
+- Nos demais casos, o modelo será verificado ao definir o atributo ou ao carregar o documento;
+- Modelos alternativos podem ser definidos e serão verificados na sequência informada até casar com o conteúdo, se for o caso; e
+- Se o campo/elemento possuir máscara nativa, não será possível vincular um modelo.
+	Os seguintes caracteres manipuladores definer o modelo da máscara:
+|Manipulador|Descrição|
+|'{#}|Aguarda um dígito|
+|'{@}|Aguarda um não dígito|
+|'{*}|Aguarda um valor qualquer|
+|'{?}|Separa modelos alternativos|
+|'{%}|Anula o efeito do caractere manipulador que o precede.|
+|""Tabela de manipuladores para modelos de máscara""|**/
 const __MASK = {
-	/**. '{string mask(string str, string model)}: Retorna o resultado do casamento de '{str} com o modelo '{model} ou uma string vazia. O modelo de máscara utiliza a seguinte codificação:
-	|Manipulador|Descrição|
-	|#|Exige um dígito.|
-	|@|Exige um não dígito.|
-	|*|Exige um valor qualquer.|
-	|?|Separa modelos alternativos caso o anterior não case.|
-	|%|Anula o efeito do caractere que o precede.|**/
+	/**. '{string mask(string str, string model)}: Retorna o resultado do casamento de '{str} com o modelo '{model} ou uma string vazia.	**/
 	mask: function(str, model) {
 		const list = String(model).normalize().split("")
 		const data = {
@@ -47,11 +58,6 @@ const __MASK = {
 		return data.last ? data.mask : "";
 	},
 	/**. '{void attach(node node, string model)}: Atribui ao nó uma máscara textual:
-	- Se o valor informado no campo casar com a máscara, essa será aplicada;
-	- Se o valor não casar, uma string vazia será atribuída;
-	- A máscara é verificada na atribuição e ao perder o foco;
-	- Se a máscara não casar, o campo receberá o foco novamente, se aplicável; e
-	- Se o campo possuir máscara nativa, não será possível vinculá-lo à ferramenta.
 	|Argumento|Descrição|
 	|'{node}|Campo a receber a máscara|
 	|'{model}|Formato da máscará (ver '{mask})|**/

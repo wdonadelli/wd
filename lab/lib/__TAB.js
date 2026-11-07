@@ -1,5 +1,15 @@
 /**#3 Abas
-O objeto '{__TAB} organiza um container em forma de abas.**/
+	O objeto '{__TAB} organiza um container controlado por abas:
+- O container é composto por abas e paineis;
+- Os paineis são definidos pelos elementos filhos do container principal;
+- As abas são construídas automáticamente;
+- A aba controla o painel a ser exibido, cujo acionamento é feito por meio de clique;
+- Cada painel é referenciado por uma única aba;
+- Apenas um painel é exibido por vez;
+- O primeiro painel será definido para exibição inicial;
+- O rótulo da aba será obtido a partir do conteúdo do cabeçalho, dos atributos '{aria-label} ou '{aria-labelledby} ou pelas cinco primeiras palavras de cada painel;
+- Não identificando um rótulo válido, um valor padrão será atribuído conforme índice; e
+- As abas podem se distribuir verticalmente ou horizontalmente (padrão).**/
 const __TAB = {
 	/**. '{string label(node panel, integer index)}: Procura por cabeçalhos no painel e retorna o texto da aba ou nulo.**/
 	label: function(panel, index) {
@@ -21,12 +31,13 @@ const __TAB = {
 	attach: function(node, orientation) {
 		if (!(node instanceof HTMLElement)) return;
 		/*-- informações iniciais --*/
-		const height  = {max: 0.9* window.innerHeight, min: 0.5 * window.innerHeight, val: 0};
+		const height  = {max: 0.9 * window.innerHeight, min: 0.5 * window.innerHeight, val: 0};
 		const panels  = Array.from(node.children);
+		const config  = (/^\s*vertical\s*$/i).test(orientation) ? "vertical" : "horizontal";
 		const tablist = {tag: "div", child: [], attr: {
 			id: __ID.value,
 			role: "tablist",
-			"aria-orientation": (/^\s*vertical\s*$/i).test(orientation) ? "vertical" : "horizontal",
+			"aria-orientation": config,
 		}};
 		/*-- registrando ferramenta --*/
 		const data = {
@@ -44,14 +55,18 @@ const __TAB = {
 			const tab  = __ID.value;
 			const text = this.label(v);
 			const rect = v.getBoundingClientRect().height;
+			const size = v.style.width;
+			/*-- obtendo altura --*/
+			if (config === "vertical") v.style.width = "75%";
 			height.val = rect > height.val ? rect : height.val;
+			if (config === "vertical") v.style.width = size;
 			/*-- configurando painel --*/
 			__HTML(v, {
 				id: __ID.id(v),
 				role: "tabpanel",
 				tabIndex: 0,
-				hidden: i > 0
 			});
+			v[i > 0 ? "setAttribute" : "removeAttribute"]("hidden", "");
 			/*-- definindo rótulo do painel, se inexistente, na aba --*/
 			if (!v.hasAttribute("aria-labelledby") && !v.hasAttribute("aria-label"))
 				v.setAttribute("aria-labelledby", tab);
@@ -74,7 +89,7 @@ const __TAB = {
 		});
 		/*-- calculando altura ideal --*/
 		const rect = tablist.tag.getBoundingClientRect().height;
-		height.val = rect > height.val ? rect : height.val;
+		height.val = config === "vertical" ? (rect > height.val ? rect : height.val) : (height.val + rect);
 		node.style.height = (height.val < height.min ? height.min : (height.val > height.max ? height.max : height.val))+"px";
 		return;
 	},
@@ -93,9 +108,10 @@ const __TAB = {
 		const tabs = tab.parentElement.children;
 		for (let i = 0; i < tabs.length; i++) {
 			let panel	= document.getElementById(tabs[i].getAttribute("aria-controls"));
-			panel.hidden = tabs[i] !== tab;
-			tabs[i].tabIndex = panel.hidden ? -1 : 0;
-			tabs[i].setAttribute("aria-selected", panel.hidden ? "false" : "true");
+			let hide  = tabs[i] !== tab;
+			panel[hide ? "setAttribute" : "removeAttribute"]("hidden", "");
+			tabs[i].tabIndex = hide ? -1 : 0;
+			tabs[i].setAttribute("aria-selected", hide ? "false" : "true");
 		}
 		tab.focus();
 		return;
@@ -126,26 +142,26 @@ __CSS.push(`/*-- TAB --*/
 /*-- container principal -----------------------------------------------------*/
 .css-js-wd-tab {
 	display: flex;
-	align-items: stretch;
-	justify-content: center;
+	/*align-items: stretch;
+	justify-content: center;*/
 	padding: 0;
 }
 .css-js-wd-tab.css-js-wd-htab {flex-direction: column;}
 .css-js-wd-tab.css-js-wd-vtab {flex-direction: row;}
 /*-- lista de abas -----------------------------------------------------------*/
 .css-js-wd-tab > [role=tablist] {
-	order: 0;
+	order: 0 !important;
 	font-size: 14px;
 	margin: 0;
 }
 .css-js-wd-tab > [role=tablist][aria-orientation=vertical] {
-	flex: 0 0 25%;
-	padding: 0 0.5em;
+	flex: 0 1 25%;
+	padding: 0.25em 0.5em;
 	overflow-y: auto;
 }
 .css-js-wd-tab > [role=tablist][aria-orientation=horizontal] {
-	flex: 0 0 auto;
-	padding: 0.5em 0;
+	flex: 0 1 auto;
+	padding: 0.5em 0.25em;
 	overflow-x: auto;
 }
 /*-- abas --------------------------------------------------------------------*/
@@ -171,8 +187,10 @@ __CSS.push(`/*-- TAB --*/
 .css-js-wd-tab > [role=tablist][aria-orientation=vertical] > [role=tab] {
 	display: block;
 	width: 100%;
-	margin: 0.25em 0;
 	text-align: left;
+}
+.css-js-wd-tab > [role=tablist][aria-orientation=vertical] > [role=tab] ~ [role=tab] {
+	margin-top: 0.25em;
 }
 .css-js-wd-tab > [role=tablist][aria-orientation=vertical] > [role=tab][aria-selected=true] {
 	box-shadow: inset 0.25em 0;
@@ -181,18 +199,21 @@ __CSS.push(`/*-- TAB --*/
 .css-js-wd-tab > [role=tablist][aria-orientation=horizontal] > [role=tab] {
 	display: inline-block;
 	width: auto;
-	margin: 0 0.25em;
 	text-align: center;
+}
+.css-js-wd-tab > [role=tablist][aria-orientation=horizontal] > [role=tab] ~ [role=tab] {
+	margin-left: 0 0.25em;
 }
 .css-js-wd-tab > [role=tablist][aria-orientation=horizontal] > [role=tab][aria-selected=true] {
 	box-shadow: inset 0 0.25em;
 }
 /*-- painel de conteúdo ------------------------------------------------------*/
 .css-js-wd-tab > [role=tabpanel] {
-	flex: 1 1 auto;
-	order: 1;
-	margin: 0;
-	padding: 0em;
+	height: auto !important;
+	width:  auto !important;
+	flex:   1 1 auto !important;
+	order:  1 !important;
+	margin: 0 !important;
 	border: var(--var-js-wd-panel-border);
 	border-radius: var(--var-js-wd-panel-radius);
 	overflow-y: auto;

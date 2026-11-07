@@ -146,6 +146,16 @@ const WDDATASET = {
 		if (data) __TAB.attach(ev.target, data.orientation);
 		return;
 	},
+	/**. '{void wdSlide(object ev)}: Transforma o elemento num carrossel de paineis controlados por abas:
+	|Nome|Tipo|Opcional|Descrição|
+	|'{time}|integer|Não|Intervalo de tempo de transição dos i{slides} em segundos|
+	|""Tabela de configuração do atributo wdSlide""|**/
+	wdSlide: function(ev) {
+		const data = this.attr(ev.target.dataset.wdSlide, {time: "number"});
+		delete ev.target.dataset.wdSlide;
+		if (data) __SLIDE.attach(ev.target, data.time);
+		return;
+	},
 	/**. '{void wdMenu(object ev)}: Define um menu suspenso:
 	|Nome|Tipo|Opcional|Descrição|
 	|'{list}|Array|Não|Ver objeto '{__MENU}|
@@ -195,18 +205,7 @@ const WDDATASET = {
 	//FIXME
 
 
-	//FIXME
-	/**. '{void wdSlide(object ev)}: Transforma o elemento num conjunto de paineis controlados por abas:
-	|Nome|Tipo|Opcional|Descrição|
-	|'{orientation}|string|Não|Disposição das abas: '{horizontal} (padrão) ou '{vertical}|
-	|""Tabela de configuração do atributo wdTab""|**/
-	wdSlide: function(ev) {
-		const data = this.attr(ev.target.dataset.wdSlide, {time: "number"});
-		delete ev.target.dataset.wdSlide;
-		console.log(ev)
-		if (data) __SLIDE.attach(ev.target, data.time);
-		return;
-	},
+
 
 
 
