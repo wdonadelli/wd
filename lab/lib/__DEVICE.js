@@ -1,6 +1,17 @@
 /**
 #3 Dispositivos e Design Responsivo
-O objeto '{__DEVICE} controla as alterações da tela atribuida a um tipo de dispositivo.
+	O objeto '{__DEVICE} controla os nomes dos atributos CSS aplicados ao elemento (conteúdo do atributo HTML '{class}) conforme a tela do dispositivo (efeito responsivo fora da folha de estilos) a partir da definição dos seguintes tipos (tamanhos):
+	|Dispositivo|Descrição|Comprimento da Tela (px)|
+	|'{phone}|Telas pequenas|var{0 <= x < 600}|
+	|'{tablet}|Telas Medianas|var{600 <= x < 768}|
+	|'{desktop}|Telas maiores|var{768 <= x}|
+	|'{mobile}|Telas diferentes de '{desktop}|var{0 <= x < 768px}|
+	Os nomes dos atributos CSS atribuídos a cada dispositivo serão adicionados ou removidos da seguinte forma:
+	|Tela/Dispositivo|'{phone}|'{tablet}|'{mobile}|'{desktop}|
+	|'{phone}|Adiciona|Remove|Adiciona|Remove|
+	|'{tablet}|Remove|Adiciona|Adiciona|Remove|
+	|'{desktop}|Remove|Remove|Remove|Adiciona|
+	Os nomes dos atributos CSS devem ser strings contendo as classes separadas por espaço.
 **/
 const __DEVICE = {
 	/**. '{string log}: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
@@ -40,11 +51,8 @@ const __DEVICE = {
 		}
 		return false;
 	},
-	/**. '{void css(node node, object data)}: Define atributos CSS ao nó conforme o tipo de dispositivo definidos em '{data}:
-	- As propriedades de '{data} correspondem ao tipo de dispositivo presente em '{rules};
-	- Os valores das propriedades devem ser strings contendo as classes separadas por espaço; e
-	- Não há propriedade obrigatória.**/
-	css: function(node, data) {
+	/**. '{void attach(node node, object data)}: Define atributos CSS ao nó conforme os tipos de dispositivos definidos em '{data}**/
+	attach: function(node, data) {
 		data = __Type(data).object ? data : {};
 		const rules = this.rules;
 		/*-- removendo css --*/

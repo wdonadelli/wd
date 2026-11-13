@@ -58,31 +58,6 @@ WDnode.prototype = Object.create(WDmain.prototype, {
 	},
 
 
-	//FIXME full só funciona a partir de manipulador de eventos: colocar nos atributos
-	/**. '{void full()}: Alterna a exibição do nó em tela cheia.**/
-	//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
-	full: {
-		value: function() {
-			if (this.length > 0) {
-				const name = {
-					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-					exit: ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
-				};
-				const full = document.fullscreenElement;
-				const attr = full === this._data.value[0] ? "exit" : "open";
-				const node = attr === "exit" ? document : this._data.value[0];
-				const call = (node[name[attr][0]] || node[name[attr][1]] || node[name[attr][2]]).name;
-				const fire = function(ev) {ev.currentTarget[call]();};
-				if (attr === "open") {
-					node.addEventListener("dblclick", fire);
-					node.click();
-					node.removeEventListener("dblclick", fire);
-					return;
-				}
-				return node[call]();
-			}
-		}
-	},
 
 
 

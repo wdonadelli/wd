@@ -439,7 +439,6 @@ const __DATETIME = {
 	},
 	/**. '{object nativeDate(integer Y, integer M...)}: Recebe os dados de data ou tempo e devolve a instância nativa de '{Date}.**/
 	nativeDate: function(Y, M, D, H, m, s, l) {
-		console.log(Y, M, D, H, m, s, l)
 		const date = new Date(Date.UTC(1970,0,1,0,0,0));
 		date.setUTCFullYear(Number.isInteger(Y) ? Y : 1970);
 		date.setUTCMonth(Number.isInteger(M) ? M - 1 : 0);

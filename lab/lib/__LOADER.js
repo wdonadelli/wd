@@ -80,7 +80,7 @@ const __LOADER = {
 						__HTML(elem, {value: x.result});
 					}
 					else {
-						const table = __TABLE.attach(x.result, data);console.log(table)
+						const table = __TABLE.attach(x.result, data);
 						(html === "outerHTML" ? elem.parentElement.replaceChild(table, elem) : elem.appendChild(table));
 					}
 				}

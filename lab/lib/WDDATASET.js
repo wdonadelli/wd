@@ -28,23 +28,19 @@ const WDDATASET = {
 				attr[i] = attr[i] === "false" || attr[i] == false ? false : true;
 			else if (parser[i] === "number")
 				attr[i] = val.number ? val.value : attr[i];
+			else if (parser[i] === "array")
+				attr[i] = val.array ? val.value : attr[i].split(",");
+			else if (parser[i] === "function")
+				attr[i] = val.function ? val.value : __Type(window[attr[i]]).function ? window[attr[i]] : null;
 		}
 		return attr;
 	},
-
-	events: {
-		resize: {wdDevice: {target: "[data-wd-device]", delete: false}},
-
-
-	},
-
-
-
 	/*-- MÉTODOS DE EVENTO -----------------------------------------------------*/
 	/**. '{object onload(object ev)}: Define os procedimentos durante o evento '{load} (documento).**/
 	onload: function(ev) {
+		const re = /^wd[A-Z]/;
 		for (let name in this) {
-			if (!(/^wd[A-Z]/).test(name)) continue;
+			if (!re.test(name)) continue;
 			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
 			let find  = `[data-${__STRING.case(name, "kebab")}]`;
 			let query = Array.from(document.querySelectorAll(find));
@@ -54,8 +50,9 @@ const WDDATASET = {
 	},
 	/**. '{object onwdreload(object ev)}: Define os procedimentos durante o evento '{wdreload} (alvo e descendentes).**/
 	onwdreload: function(ev) {
+		const re = /^wd[A-Z]/;
 		for (let name in this) {
-			if (!(/^wd[A-Z]/).test(name)) continue;
+			if (!re.test(name)) continue;
 			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
 			let find  = `[data-${__STRING.case(name, "kebab")}]`;
 			let query = [ev.target].concat(Array.from(ev.target.querySelectorAll(find)));
@@ -70,21 +67,41 @@ const WDDATASET = {
 		return;
 	},
 	/**. '{object onresize(object ev)}: Define os procedimentos durante o evento '{resize} (documento).**/
-	//FIXME cuidado ao apagar
 	onresize: function(ev) {
-		const tool = {
-			wdDevice: __DEVICE.changeDevice,//TODO importante
-		};
-		for (let name in tool) {
-			if (!tool[name]) continue;
-			let event = new CustomEvent("wddataset", {detail: name, bubbles: true});
-			let find  = `[data-${__STRING.case(name, "kebab")}]`;
-			let query = Array.from(document.querySelectorAll(find));
-			query.forEach(function(v,i,a) {query[i].dispatchEvent(event);}, this);
-		}
+		["wdDevice"].forEach(function(name,i,a) {this[name](ev);}, this);
 		return;
 	},
+	/**. '{object onclick(object ev)}: Define os procedimentos durante o evento '{onclick} (alvo).**/
+	onclick: function(ev) {
+		["wdTools"].forEach(function(name,i,a) {
+			if ("dataset" in ev.target && name in ev.target.dataset) this[name](ev);
+		}, this);
+		return;
+	},
+	/*-- ATRIBUTOS PERMANENTES -------------------------------------------------*/
+	wdTools: function(ev) {
+		if (ev.type !== "click") return;
+		const data = this.attr(ev.target.dataset.wdTools, {query: "node"});
+		//FIXME consertar método attach de __TOOLS
 
+		//full (node), select (node), exec (object), copy (node), write (string)
+		//if (data) __TOOLS.attach(data);
+		console.log("wdTools", data)
+
+
+		return;
+	},
+	/**. '{void wdDevice(object ev)}: Manipula classes de estilos conforme tipo de dispositivo (ver '{__DEVICE}).**/
+	wdDevice: function(ev) {
+		if (ev.type !== "resize" && ev.type !== "wddataset") return;
+		if (ev.type === "resize" && !__DEVICE.changeDevice)  return;
+		const query = ev.type === "resize" ? Array.from(document.querySelectorAll("[data-wd-device]")) : [ev.target];
+		query.forEach(function(elem,i,a) {
+			const data = this.attr(elem.dataset.wdDevice);
+			if (data) __DEVICE.attach(elem, data);
+		}, this);
+		return;
+	},
 	/*-- ATRIBUTOS SEM REGISTRO ------------------------------------------------*/
 	/**. '{void wdLoad(object ev)}: Carrega um conteúdo externo:
 	|Nome|Tipo|Opcional|Descrição|
@@ -92,7 +109,7 @@ const WDDATASET = {
 	|Demais propriedades|Any|Não|Ver '{__REQUEST}|
 	|""Tabela de configuração do atributo wdLoad""|**/
 	wdLoad: function(ev) {
-		const data = this.attr(ev.target.dataset.wdLoad);
+		const data = this.attr(ev.target.dataset.wdLoad, {format: "function", plan: "array", pie: "array", bar: "array"});
 		delete ev.target.dataset.wdLoad;
 		if (data) __LOADER.fHTML(ev.target, data);
 		return;
@@ -201,47 +218,25 @@ const WDDATASET = {
 		if (data) __MOVE.attach(ev.target, data.key);
 		return;
 	},
-
-	//FIXME
-
-
-
-
-
-
-
-
-
-
-
-	/*-- ATRIBUTOS PERMANENTES -------------------------------------------------*/
-	/**. '{void wdDevice(object ev)}: Manipula classes de estilos conforme tipo de dispositivo (ver '{__DEVICE.css}).**/
-	wdDevice: function(ev) {
-		const data = this.attr(ev.target.dataset.wdDevice);
-		if (data) __DEVICE.css(ev.target, data);
-		return;
-	},
-
-
 	/*--------------------------------------------------------------------------*/
 	/**. '{void handleEvent(object ev)}: Manipular principal do objeto.**/
 	handleEvent: function(ev) {
-		//console.log(ev);
 		if (ev.type === "load")      return this.onload(ev);
-		if (ev.type === "resize")    return this.onresize(ev);
-		if (ev.type === "click")     return this.onclick(ev);
-		if (ev.type === "wdreload")  return this.onwdreload(ev);
 		if (ev.type === "wddataset") return this.onwddataset(ev);
+		if (ev.type === "wdreload")  return this.onwdreload(ev);
+		if (ev.type === "click")     return this.onclick(ev);
+		if (ev.type === "resize")    return this.onresize(ev);
 		return;
 	},
 };
 /*-- eventos da biblioteca --*/
 window.addEventListener("load",        __CSS);
 window.addEventListener("load",       __HASH);
+window.addEventListener("wdreload",   __HASH);
 window.addEventListener("resize",     __HASH);
 window.addEventListener("hashchange", __HASH);
-window.addEventListener("wdreload",   __HASH);
 window.addEventListener("load",        WDDATASET);
 window.addEventListener("resize",      WDDATASET);
+window.addEventListener("click",       WDDATASET);
 document.addEventListener("wddataset", WDDATASET);
 document.addEventListener("wdreload",  WDDATASET);

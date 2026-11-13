@@ -53,14 +53,10 @@ const __HASH = {
 		/*-- acertar margens de body --*/
 		for (let i in data) {
 			if (data[i] !== null) {
-				if      (i === "top"    && data[i].height > side.marginTop)
-					document.body.style.marginTop    = `${data[i].height}px`;
-				else if (i === "bottom" && data[i].height > side.marginBottom)
-					document.body.style.marginBottom = `${data[i].height}px`;
-				else if (i === "left"   && data[i].width  > side.marginLeft)
-					document.body.style.marginLeft   = `${data[i].width}px`;
-				else if (i === "right"  && data[i].width  > side.marginRight)
-					document.body.style.marginRight  = `${data[i].width}px`;
+				if      (i === "top"    && data[i].height > side.marginTop)    document.body.style.marginTop    = `${data[i].height}px`;
+				else if (i === "bottom" && data[i].height > side.marginBottom) document.body.style.marginBottom = `${data[i].height}px`;
+				else if (i === "left"   && data[i].width  > side.marginLeft)   document.body.style.marginLeft   = `${data[i].width}px`;
+				else if (i === "right"  && data[i].width  > side.marginRight)  document.body.style.marginRight  = `${data[i].width}px`;
 			}
 		}
 		/*-- acertar posicionamento do hash --*/

@@ -3,17 +3,18 @@
 
 	O objeto '{__TABLE} tem como objetivo trabalhar com dados tabulares para gerar tabelas ou gráficos:
 - A fonte de dados pode ser ser uma tabela HTML ou dados em CSV;
-- A tabela gerada possui mecanismo de ordenação e filtros nas colunas;
+- A identificação numérica das linhas e colunas iniciam em um (1);
+- A tabela gerada possui mecanismo de ordenação e filtragem das colunas;
 - A ordenação é definida mediante clique na célula que contém o nome da coluna (primeira linha do cabeçalho);
 - A coluna inicialmente é definida em ordem crescente, os cliques seguintes invertem a ordem anterior;
 - Os filtros estão dispostos logo abaixo do nome da coluna (segunda linha do cabeçalho);
 - Os filhos são caixas de entrada de texto que recebem determinados comandos;
-- Dados numéricos e de data/tempo, nos termos da biblioteca, serão adaptados à linguagem definida;
-- É possível evitar a adaptação à liguagem local para exibição dos dados brutos (propriedade '{raw});
-- É possível definir o formato dos valores das células da tabela e sua estilizaçãoda por meio de uma função ('{format});
-- A função '{format} pode definir tanto a exibição textual quanto o estilo CSS das células;
-- A função '{format} não terá efeito para definir a exibição textual se escolhida a exibição de dados brutos;
-- A formataçao da exibição textual é aplicada para valores numéricos e de data/tempo;
+- Dados numéricos e de data/tempo, nos termos da biblioteca, serão adaptados à linguagem definida pela biblioteca;
+- É possível evitar a adaptação à liguagem local para exibição dos dados brutos;
+- É possível definir o formato dos valores das células da tabela e sua estilização por meio da função '{format};
+- A função '{format} pode definir tanto a exibição textual quanto o estilo das células;
+- A função '{format} não terá efeito para definir a exibição textual no caso de exibição de dados brutos;
+- A formatação da exibição textual é aplicada para valores numéricos e de data/tempo;
 - Propriedades específicas definem o tipo de retorno e configurações complementares; e
 - Ao retornar um gráfico, nenhuma tabela será gerada ou estilizada se a fonte de dados for uma '{string} CSV.
 
@@ -39,44 +40,44 @@
 
 	A função '{format} recebe um objeto com as seguintes propriedades:
 |Propriedade|Tipo|Descrição|
-|'{row}|'{integer}|Número da linha a partir de 1|
-|'{col}|'{integer}|Número da coluna a partir de 1|
+|'{row}|'{integer}|Número da linha|
+|'{col}|'{integer}|Número da coluna|
 |'{text}|'{string}|Valor bruto da célula|
 |'{type}|'{string}|Tipo do dado conforme biblioteca (ver '{__Type.type})|
-|'{value}|'{any}|Valor do dado padrão convertido conforme biblioteca (ver '{__Type.value})|
-|'{name}|'{string}/'{integer}|Cabeçalho da coluna ou sua numeração|
+|'{value}|'{any}|Valor padrão do dado conforme biblioteca (ver '{__Type.value})|
+|'{name}|'{string}/'{integer}|Nome da coluna ou sua identificação numérica|
 |""Propriedades contendo os dados das células""|
 	A função '{format} deverá retornar um objeto contendo as propriedades para estilização do valor da célula conforme o método '{toLocaleString} de '{__Type} e tipo de dado (numérico ou data/tempo).
-	Para estilização da célula, a propriedade '{style} deverá ser definida no objeto retornado de '{format} contendo os estilos CSS a serem aplicados, podendo ser em forma de objeto ou '{string}.
+	Para estilização da célula, deverá ser definida a propriedade '{style} no objeto retornado de '{format} contendo os estilos CSS a serem aplicados, podendo ser em forma de objeto ou '{string}.
 
 #4 Tipos de Retorno
 
-	Um objeto defnirá o tipo de retorno e sua configurações complementares. A propriedade '{table} ('{string}) define o tipo de retorno:
+	Um objeto definirá o tipo de retorno e suas configurações complementares por meio da propriedade '{table} ('{string}):
 |Valor|Descrição|
-|'{table}|Retorna uma tabela com dados adaptados à linguagem local (padrão)|
+|'{local}|Retorna uma tabela com dados adaptados à linguagem local (padrão)|
 |'{raw}|Retorna uma tabela com os dados brutos|
 |'{plan}|Retorna um gráfico em plano cartesiano|
-|'{ratio}|Retorna um gráfico de setores ou de barras|
-	As seguintes propriedades abaixo definem configurações complementares conforme valor de '{table}:
-|Propriedade|Tipo|'{table}|Descrição|
-|'{format}|'{function}|Todos|Recebe os dados de cada célula e devolve a configuração de exibição|
-|'{title}|'{string}|Todos|Define o título da tabela ou do gráfico|
-|'{xlabel}|'{string}|'{plan}|Define o rótulo do eixo '{x}|
-|'{ylabel}|'{string}|'{plan}|Define o rótulo do eixo '{y}|
-|'{xcol}|'{integer}|'{plan}|Define a coluna da tabela a ser utilizada como dados do eixo '{x}|
-|'{ycols}|'{array}|'{plan}|Lista de inteiros definindo as colunas da tabela a serem utilizadas como dados do eixo '{y}|
-|'{fit}|'{array}|'{plan}|Lista de '{strings} definindo o tipo de curva ou ajuste para cada coluna definida em '{ycols}|
-
-xcol{1}ycols{2,3}fit{linear,dots}
-
-
-
-
-**/
+|'{pie}|Retorna um gráfico de setores|
+|'{bar}|Retorna um gráfico de barras|
+	Uma propriedade u{com o mesmo nome} do valor de '{table} deverá ser informada contendo os dados complementares.
+	Nos casos de '{local} e '{raw}, uma '{string} definirá o título da tabela.
+	No caso de '{plan}, uma lista definirá as propriedades do gráfico conforme segue:
+	|Item|Tipo|Descrição|
+	|0|'{string}|Título do gráfico|
+	|1|'{string}|Rótulo do eixo x|
+	|2|'{string}|Rótulo do eixo y|
+	|3|'{integer}|Número da coluna que contém os dados do eixo x|
+	|4|'{integer}|Número da coluna que contém os dados do eixo y|
+	|5|'{string}|Tipo de curva a ser aplicada ao conjunto de dados anterior|
+	Outras curvas podem ser adicionados acrescentando mais itens à lista com o mesmo padrão dos itens 4 e 5.
+	No caso de '{pie} ou '{bar}, uma lista definirá as propriedades do gráfico conforme segue:
+	|Item|Tipo|Descrição|
+	|0|'{string}|Título do gráfico|
+	|1|'{string}|Tipo de análise|
+	|2|'{integer}|Número da coluna que contém o conjunto de dados|
+	Outros conjuntos de dados podem ser adicionados acrescentando mais itens à lista com o mesmo padrão do item 3.**/
 
 const __TABLE = {
-
-	//FIXME mudei o __LANG.user e HTML.lang e não mudou o formato
 	/**. '{void body(node table, function format, boolean raw)}: Configura o '{tbody} da tabela:
 	|Argumento|Descrição|
 	|'{table}|Tabela HTML|
@@ -132,35 +133,50 @@ const __TABLE = {
 		table.tHead.appendChild(line);
 		return;
 	},
-	/**. '{node attach(any table, object data)}: Retorna uma tabela ou gráfico: FIXME mudar o nome do método
-	|Argumento|Descrição|
-	|'{table}|Uma tabela HTMl ou uma '{string} CSV contendo dados|
-	|'{data}|Parâmetros para o retorno da tabela ou gráfico|
-	|""Argumentos do método '{attach}""|
-
-
-	- Os índices das colunas são inteiro iniciado em 1;
-
-
-	, tipo de retorno, o argumento '{data} possui as seguintes propriedades:
-	|Propriedade|Tipo|Descrição|Aplicação|
-	|'{table}|'{string}|Define o tipo de retorno|'{local} (padrão), '{data}, ´{plan}, '{ratio}|
-	|'{format}|'{function}|Fornece os dados das células da tabela e permite aplicar formatação||
-	|'{labels}|'{array}|Define, nessa ordem, o título e os rótulos do eixo x e y do gráfico||
-
-
-	**/
-
-
-
-
-
+	/**. '{node attach(any table, object data)}: Retorna uma tabela ou gráfico.**/
 	attach: function(table, data) {
 		data  = __Type(data).object ? data : {};
-		table = table instanceof HTMLTableElement ? table : __CSV.parseTable(table, true, false, false, data.caption);
-		this.body(table, data.format);
-		this.head(table);
-		return table;
+		const caption = data.table in data ? data[data.table] : ("local" in data ? data.local : "");
+		const tabular = table instanceof HTMLTableElement ? table : __CSV.parseTable(table, true, false, false, caption);
+		this.body(tabular, data.format, data.table === "raw");
+		this.head(tabular);
+		if (data.table === "plan" && Array.isArray(data.plan)) {
+			const plot = {
+				title: data.plan[0],
+				x: {label: data.plan[1], data: this.column(tabular, data.plan[3]).value},
+				y: {label: data.plan[2], dataset: []},
+			};
+			for (let i = 4; i < data.plan.length; i = i + 2) {
+				let column = this.column(tabular, data.plan[i]);
+				plot.y.dataset.push({name: column.name, data: column.value, fit: data.plan[i + 1]});
+			}
+			return __PLOT2D.plot(plot);
+		}
+		else if ((data.table === "pie" || data.table === "bar") && Array.isArray(data[data.table])) {
+			const ratio = data.table === "pie" ? data.pie : data.bar;
+			const plot  = {title: ratio[0], type: ratio[1], view: data.table, dataset: []};
+			for (let i = 2; i < ratio.length; i++) {
+				let column = this.column(tabular, ratio[i]);
+				plot.dataset.push({name: column.name, data: column.value});
+			}
+			return __PLOT2DRATIO.plot(plot);
+		}
+		return tabular;
+	},
+
+	/**. '{object column(node table, integer col)}: Retorna os dados da coluna especificada da tabela. Se a coluna for menor que 1, os dados da primeira coluna serão retornados; se for maior que o número de colunas, o dados da última coluna serão retornados:
+	|Propriedade|Tipo|Descrição|
+	|'{name}|'{string}|Título da coluna|
+	|'{value}|'{array}|Valores da coluna|**/
+	column: function(table, col) {
+		col = isNaN(col) ? 1 : Number(col);
+		const head = table.tHead.firstElementChild.children;
+		const rows = Array.from(table.tBodies[0].children);
+		const find = col < 1 ? 0 : (col > head.length ? head.length - 1 : Math.trunc(col) - 1);
+		return {
+			name:  head[find].textContent,
+			value: rows.map(function(v,i,a) {return v.children[find].getAttribute("data-wd-table-value");})
+		};
 	},
 	/**. '{object filter(string check)}: Retorna os dados do filtro para checagem (ver método '{check}).**/
 	filter: function(check) {
@@ -201,7 +217,6 @@ const __TABLE = {
 	check: function(rule, cell, row, rows) {
 		const type  = cell.dataset.wdTableType;
 		const value = type === "number" ? Number(cell.dataset.wdTableValue) : cell.dataset.wdTableValue;
-		console.log(value, rule.check, rule.data)
 		if (rule.check === "=")  return value == rule.data.value;
 		if (rule.check === "!")  return value != rule.data.value;
 		if (rule.check === ">")  return value >  rule.data.value;
@@ -239,9 +254,6 @@ const __TABLE = {
 		}, this);
 		return;
 	},
-
-
-
 	/**. '{void click(object ev)}: Evento para ordenar a coluna quando clicada.**/
 	click: function(ev) {
 		const main = ev.currentTarget.parentElement;
@@ -280,18 +292,6 @@ const __TABLE = {
 	handleEvent: function(ev) {
 		return ev.type in this ? this[ev.type](ev) : undefined;
 	},
-
-
-	/*
-	@csv{table}filter{function}
-	@csv{plan}title{Título}labels{xLabel,yLabel}x{0}y{2:linear,3:avg,4:linear}
-
-	@csv{plan}title{Título}xlabel{xLabel}ylabel{yLabel}x{0}y{2,3,4}fit{line,linear,avg}
-	{csv: "plan", title: "Título", xlabel: "xLabel", ylabel: "yLabel", x: 0, y: [1,2,3], fit: ["line", "linear", "avg"]
-
-
-
-	*/
 };
 __CSS.push(`/*-- TABLE --*/
 .css-js-wd-table {
@@ -371,7 +371,7 @@ __CSS.push(`/*-- TABLE --*/
 }
 .css-js-wd-table thead > tr:last-child > th > input {
 	width: 100%;
-	text-align: right;
+	text-align: center;
 	font-family: var(--var-js-wd-font-family);
 	font-weight: normal;
 	border: thin solid;

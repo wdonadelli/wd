@@ -1,15 +1,13 @@
 <div>
-
 	<h4>wdLoad</h4>
-
-	<h5>Tabela Especial</h5>
-	<div data-wd-load="@url{eg/table.csv}table{}caption{Minha Tabela}"></div>
+	<h5>Tabela Local</h5>
+	<div data-wd-load="@url{eg/table.csv}local{Minha Tabela}"></div>
+	<hr/>
+	<h5>Tabela Bruta</h5>
+	<div data-wd-load="@url{eg/table.csv}table{raw}raw{Dados Brutos}"></div>
 	<hr/>
 	<h5>DoCode</h5>
 	<div data-wd-load="@url{eg/docode}"></div>
-	<hr/>
-	<h5>Tabela Simples</h5>
-	<div data-wd-load="@url{eg/table.csv}"></div>
 	<hr/>
 	<h5>Outros</h5>
 	<div data-wd-load="@url{eg/list1.xml}"></div>v
@@ -18,6 +16,15 @@
 	<textarea data-wd-load="@url{eg/lista.json}"></textarea>
 	<hr/>
 	<h5>Troca</h5>
-	<div data-wd-load="@url{eg/list1.xml}replace{true}"></div>v
+	<div data-wd-load="@url{eg/list1.xml}replace{true}"></div>
+	<hr/>
+	<h5>Gráfico Plano</h5>
+	<div data-wd-load="@url{eg/chart.csv}table{plan}plan{Meu Gráfico,Eixo X,Eixo Y,1,4,linFit,5,line}"></div>
+	<hr/>
+	<h5>Gráfico Pizza</h5>
+	<div data-wd-load="@url{eg/chart2.csv}table{pie}pie{População por Região,key,1,2}"></div>
+	<hr/>
+	<h5>Gráfico Barras</h5>
+	<div data-wd-load="@url{eg/chart2.csv}table{bar}bar{População por Região,key,1,2}"></div>
 	<hr/>
 </div>

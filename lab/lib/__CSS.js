@@ -289,6 +289,8 @@ const __CSS = {
 	},
 };
 __CSS.push(`/*-- Padrão --*/
+/*dialog   https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop
+fullscreen https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen*/
 /*-- Geral ---*/
 * {box-sizing: border-box !important;}
 /*-- Variáveis --*/
