@@ -25,12 +25,12 @@ Object.defineProperties(__DataSet.prototype, {
 		value: function(input) {
 			const check  = __Type(input);
 			const self   = this;
-			const header = /^([a-z\-]+\:\ [^\n]+\r\n)+$/;
+			const header = /^([a-zA-Z\-]+\:\s+.*?(\r\n))+$/;
 			const search = /^([^?]+\?|\?)?([^=]+\=(\&?|[^&]+\&?))+(\#.*)?$/;
 			/*-- string header => name: value\r\n --*/
 			if (header.test(input)) {
 				input.trim().split("\r\n").forEach(function(v,i,a) {
-					const find = v.match(/^([a-z\-]+)\:\ (.*)$/);
+					const find = v.match(/^([a-zA-Z\-]+)\:\s+(.*)$/);
 					this.append(find[1].trim(), find[2].trim());
 				}, this);
 				return;
@@ -254,7 +254,7 @@ Object.defineProperties(__DataSet.prototype, {
 	/**. '{object toSubmit(any action, string method)}: O argumento '{action} é a URL (string ou objeto URL) e o argumento '{method} é o método da requisição. O método retorna um objeto com as seguintes propriedades para fins de requisição XMLHttpRequest, devendo inicialmente povoar o objeto com os valores de formulário e depois chamar o método:
 	|Nome|Descrição|
 	|url|URL a ser utilizada na requisição|
-	|ctype|O content-type a ser informado no cabeçalho, dependendo do método|
+	|ctype|O '{content-type} a ser informado no cabeçalho, dependendo do método|
 	|body|O corpo da requisição, a depender do método|**/
 	toSubmit: {
 		value: function(action, method) {
@@ -265,9 +265,9 @@ Object.defineProperties(__DataSet.prototype, {
 			const check   = new __Type(action);
 			const ctype   = {post: "multipart/form-data", get: "application/x-www-form-urlencoded", text: "text/plain"};
 			const data    = {
-				url:     check.instanceOf("URL") ? action.href : (check.nonempty ? action : ""),
+				url:   check.instanceOf("URL") ? action.href : (check.nonempty ? action : ""),
 				ctype: hasBody[method] === 1 ? ctype.post : ctype.get,
-				body:    hasBody[method] === 1 ? this.toFormData : null
+				body:  hasBody[method] === 1 ? this.toFormData : null
 			};
 			if (hasBody[method] !== 1) {
 				const dataset = new this.constructor(data.url);

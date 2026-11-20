@@ -1,0 +1,13 @@
+<div>
+	<h4>wdSubmit</h4>
+
+	<form action="eg/target.php" data-wd-submit="@call{labRequisicao}">
+		<input type="email" multiple="true" name="EMAIL" value="wd@wd, loko@loko" />
+		<input type="file" name="ARQUIVO" />
+		<!-- FIXME post não está funcionando -->
+		<button type="submit" formmethod="POST" name="submit" value="POST">POST</button>
+		<button type="submit" formmethod="GET" name="submit" value="GET">GET</button>
+		<button type="submit" formnovalidate="true" name="submit" value="ANY">ANY</button>
+	</form>
+</div>
+

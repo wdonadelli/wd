@@ -36,45 +36,7 @@ const wd = (function() {
 		`;
 
 
-/*----------------------------------------------------------------------------*/
-	/**#4 Requisições
-	''function void data_wd_send(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-send|
-	|Objetivo|Efetuar requisições web|
-	|Eventos|click|
-	|Alvos|Conforme especificado|
-	|Grupos|Múltiplo|
-	|Referências|__Request.send, __Node.submit|
-	span{ }
-	|Propriedades|Tipo|Descrição|
-	|query|string|Seletor CSS dos campos de formulário a serem enviados|
-	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos.|
-	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
-	Observações:
-	- Demais propriedades seguem a definição de __Request.send, exceto i{body}, que será definido por '{query}; e
-	- O disparador deve estar contido no escopo de '{window} utilizando-se de '{var} ou '{function}.**/
-	function data_wd_send(target, event, wdArray) {
-		let test, data, query, submit, trigger, head;
-		for (let i = 0; i < wdArray.length; i++) {
-			data    = wdArray[i];
-			test    = new __Type(data.query);
-			query   = test.node ? data.query : document.body;
-			trigger = data.trigger;
-			submit  = WD(query).submit(data.url, data.method, data.noValidate);
-			/*-- cabeçalho --*/
-			data.headers = new __DataSet(data.headers);
-			/*-- Efetuar requisição se não encontrados erros --*/
-			if (submit !== null) {
-				data.url  = submit.url;
-				data.body = submit.body;
-				if (!data.headers.has("content-type"))
-					data.headers.set("content-type", submit.ctype);
-				WD(data).send(trigger);
-			}
-		}
-		return;
-	}
+
 
 
 /*----------------------------------------------------------------------------*/

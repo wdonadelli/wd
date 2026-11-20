@@ -78,6 +78,16 @@ const WDDATASET = {
 		}, this);
 		return;
 	},
+	/**. '{object onsubmit(object ev)}: Define os procedimentos durante o evento '{onsubmit} (alvo).**/
+	onsubmit: function(ev) {
+		ev.preventDefault();
+		["wdSubmit"].forEach(function(name,i,a) {
+			if ("dataset" in ev.target && name in ev.target.dataset) this[name](ev);
+		}, this);
+		return;
+	},
+
+
 	/*-- ATRIBUTOS PERMANENTES -------------------------------------------------*/
 	wdTools: function(ev) {
 		if (ev.type !== "click") return;
@@ -91,6 +101,32 @@ const WDDATASET = {
 
 		return;
 	},
+
+	/*
+	|'{url}|Sim|Sim|Sim|Dado obrigatório que define o alvo da requisição ou leitura.|
+	|'{call}|Sim|Sim|Sim|Disparador a ser chamado durante a interação.|
+	|'{type}|Sim|Sim|Sim|Define o tipo de resposta.|
+	|'{timeout}|Sim|Não|Sim|Inteiro que define o tempo máximo da interação em milissegundos, se implementado.|
+	|'{headers}|Sim|Não|Sim|Define o cabeçalho com as informações a enviar na interação.|
+	|'{body}|Sim|Não|Sim|Define os dados a serem enviados na interação.|
+	|'{method}|Sim|Não|Sim|Define a forma a realizar a interação (GET, POST, HEAD...).|
+	- a{async}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#async}target{_blank} (boolean);
+	- a{user}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#user}target{_blank} (string);
+	- a{password}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#password}target{_blank} (string);
+	- a{withCredentials}@href{https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials}target{_blank} (boolean);
+	- a{overrideMimeType}@href{https://developer.mozilla.org/pt-BR/docs/Web/API/XMLHttpRequest#overridemimetype}target{_blank}
+	*/
+
+	wdSubmit: function(ev) {
+		if (ev.type !== "submit") return;
+		const data = this.attr(ev.target.dataset.wdSubmit, {call: "function", timeout: "number", async: "boolean", withCredentials: "boolean"});
+		//console.log(__REQUEST.submit(ev, data))
+		__REQUEST.send(__REQUEST.submit(ev, data));
+		return;
+	},
+
+
+
 	/**. '{void wdDevice(object ev)}: Manipula classes de estilos conforme tipo de dispositivo (ver '{__DEVICE}).**/
 	wdDevice: function(ev) {
 		if (ev.type !== "resize" && ev.type !== "wddataset") return;
@@ -225,6 +261,7 @@ const WDDATASET = {
 		if (ev.type === "wddataset") return this.onwddataset(ev);
 		if (ev.type === "wdreload")  return this.onwdreload(ev);
 		if (ev.type === "click")     return this.onclick(ev);
+		if (ev.type === "submit")    return this.onsubmit(ev);
 		if (ev.type === "resize")    return this.onresize(ev);
 		return;
 	},
@@ -238,5 +275,6 @@ window.addEventListener("hashchange", __HASH);
 window.addEventListener("load",        WDDATASET);
 window.addEventListener("resize",      WDDATASET);
 window.addEventListener("click",       WDDATASET);
+window.addEventListener("submit",      WDDATASET);
 document.addEventListener("wddataset", WDDATASET);
 document.addEventListener("wdreload",  WDDATASET);

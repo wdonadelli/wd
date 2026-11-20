@@ -2,9 +2,9 @@
 #3 Campos de Formulários
 O objeto '{__FORMDATA} define um conjunto de métodos para obter as propriedades de campos de formulário HTML.**/
 const __FORMDATA = {
-	/**. '{string tag(node node)}: Informa a tag do elemento.**/
+	/**. '{string tag(node node)}: Informa a tag do elemento (minúsculo).**/
 	tag: function(node) {return node.tagName.toLowerCase();},
-	/**. '{string type(node node)}: Informa o tipo de campo ou nulo.**/
+	/**. '{string type(node node)}: Informa o tipo de campo (minúsculo) ou nulo (não formulário).**/
 	type: function(node) {
 		const tag  = this.tag(node);
 		const list = {input: 1, button: 1, textarea: 0, select: 0};
@@ -25,7 +25,7 @@ const __FORMDATA = {
 		}
 		return false;
 	},
-	/**. '{boolean freeEdit(node node)}: Informa se o elemento possui edição livre.**/
+	/**. '{boolean freeEdit(node node)}: Informa se o elemento possui edição livre (habilitado e sem máscara nativa).**/
 	freeEdit: function(node) {
 		if (this.type(node) === null) return node.isContentEditable;
 		return !(node.readOnly || node.disabled || this.hasMask(node));
@@ -36,7 +36,7 @@ const __FORMDATA = {
 		const link = this.tag(node) === "a" && node.hasAttribute("href")
 		return (link && key === "Enter") || (bttn && (key === "Enter" || key === " "));
 	},
-	/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} do nó**/
+	/**. '{any value(node node, any value)}: Define ou retorna o valor da propriedade/atributo '{value} do nó de formulário.**/
 	value: function(node, value) {
 		const type = this.type(node);
 		if (type in __FORMTYPES)
@@ -49,26 +49,33 @@ const __FORMDATA = {
 			node.setAttribute("value", value);
 		return this.value(node);
 	},
-	/**. '{boolean submit(node node)}: Informa se o campo está apto a ser submetido.**/
-	submit: function(node) {
-		const form = __DOM({tag: "form", child: [{tag: node.cloneNode(true)}]});
-		const data = new FormData(form.tag);
-		return data.get(node.name) !== null;
+	/**. '{array fields(node form)}: Retorna uma lista de objetos contendo os dados dos campos de formulário:
+	|Dado|Tipo|Descrição|
+	|'{field}|'{node}|Campo do formulário|
+	|'{tag}|'{string}|Tipo de elemento|
+	|'{type}|'{string}|Tipo de campo|
+	|'{name}|'{string}|Nome do campo|
+	|'{value}|'{any}|Valor do campo|
+	|'{error}|'{boolean}|Informa se o valor do campo contém erro|
+	|'{submit}|'{boolean}|Informa se o campo está adequado ao objeto '{FormData}|**/
+	fields: function(form, ignore) {
+		const data = new FormData(form);
+		return Array.from(form.elements).map(function(v,i,a) {
+			return {
+				field:  v,
+				tag:    this.tag(v),
+				type:   this.type(v),
+				name:   v.name.trim(),
+				value:  this.value(v),
+				error:  !v.checkValidity(),
+				submit: data.get(v.name) === v.value, //FIXME não funciona para file
+			};
+		}, this);
 	},
-	/**. '{object data(node node)}: Retorna o objeto '{__DataSet} com os campos a submeter ou nulo.**/
-	data: function(node) {
-		const form = this.tag(node) === "form" ? node : __DOM({tag: "form", child: [{tag: node.cloneNode(true)}]}).tag;
-		const data = new __DataSet();
-		for (let i = 0; i < form.length; i++) {
-			if (this.submit(form[i]))
-				if (this.error(form[i]))
-					return null;
-				else
-					data.append(form[i].name, this.value(form[i]));
-		}
-		return data;
-	},
-	/**. '{boolean error(node node)}: Define ou retorna se o campo de formulário é inválido.**/
+	/**. '{boolean error(node node, string text)}: Define ou retorna se o campo de formulário é inválido:
+	- se '{text} for indefinido, verificará se o valor do campo está incorreto;
+	- se '{text} for um conteúdo textual, uma mensagem de erro personalizada será atribuída; e
+	- se '{text} for nulo, a mensagem de erro personalizada será removida.**/
 	error: function(node, text) {
 		if (!("setCustomValidity" in node)) return false;
 		let data = null;
@@ -92,6 +99,7 @@ const __FORMDATA = {
 				label.id = label.id.trim() === "" ? __ID.value : label.id;
 				attr["aria-labelledby"] = label.id;
 			}
+			//FIXME que porra é essa?
 			__WINDOW.add(__DOM({tag: "div", attr: attr}).tag, "float", node);
 		}
 		return !node.checkValidity();
@@ -106,5 +114,33 @@ const __FORMDATA = {
 		for (let i in data)
 			data[i] = data[i].validationMessage;
 		return data;
+	},
+	/**. '{object data(node field)}: Retorna os dados do formulário a partir do nó de formulário e seu campo invocador:
+	|Propriedade|Tipo|Descrição|
+	|'{action}|'{string}|A URL definida no formulário|
+	|'{enctype}|'{string}|O tipo de conteúdo de dados|
+	|'{method}|'{string}|O método de envio|
+	|'{noValidate}|'{boolean}|Se é para verificar validade dos campos|
+	|'{submit}|'{object}|Uma instância de '{__DataSet} com os dados do campo a submeter|**/
+	data: function(form, submitter) {
+		const type = submitter ? __FORMDATA.type(submitter) : null;
+		const invk = (type === "submit" || type === "image") && submitter.form === form;
+		const attr = {action: "formAction", enctype: "formEnctype", method: "formMethod", noValidate: "formNoValidate"};
+		for (let i in attr) {
+			let base = [i.toLowerCase(), attr[i].toLowerCase()];
+			attr[i] = invk && submitter.hasAttribute(base[1]) ? submitter[attr[i]] : (form.hasAttribute(base[0]) ? form[i] : null);
+		}
+		attr.noValidate = attr.noValidate ? true : false;
+		attr.submit     = new __DataSet();
+		/*-- capturar campos para submeter --*/
+		this.fields(form).forEach(function(v,i,a) {
+			if (v.submit || (v.field === submitter && v.field.name.trim() !== "")) {
+				if (!v.error || attr.noValidate)
+					attr.submit.append(v.name, !v.error ? v.value : v.field.value);
+				else
+					return this.error(v.field);
+			}
+		});
+		return attr;
 	},
 };

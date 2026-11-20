@@ -106,7 +106,7 @@ const __REQUEST = {
 		request.responseType    = this.type.send[data.type in this.type.send ? data.type : "text"];
 		request.withCredentials = data.withCredentials === true;
 		request.timeout         = data.timeout;
-		data.headers.forEach(function(value,name,head) {
+		data.headers.forEach(function(value,name,head) {console.log("cabeçalho", name, value)
 			request.setRequestHeader(name, value);
 		});
 		if  (mime !== null) request.overrideMimeType(mime);
@@ -286,70 +286,20 @@ const __REQUEST = {
 		}
 		return;
 	},
-
-
-
-	//TODO pegar os dados do formulário para gerar a requisição
-	submit: function(form) {
-
-	/**#4 Requisições: formulários
-	''function void data_wd_submit(node target, object event, array wdArray)''
-	|Disparador|Descrição|
-	|Atributo|data-wd-submit|
-	|Objetivo|Efetuar requisições assícronas por submissão de formulário|
-	|Eventos|submit|
-	|Alvos|Campos do elemento formulário|
-	|Grupos|Único|
-	|Referências|__Request.send, __Node.submit|
-	Mecanismo semelhante à função '{data_wd_send} com as seguintes observações:
-	- A propriedade query não se aplica, o conteúdo de i{body} é definido pelos campos vinculados ao formulário;
-	- A propriedade i{url} é definida pelo atributo i{action} do formulário;
-	- A propriedade i{method} é definida pelo atributo i{method} do formulário;
-	- A propriedade i{noValidate} é definida pelo atributo i{noValidate} do formulário; e
-	- A propriedade i{content-type} em i{headers} é definida pelo atributo i{enctype} do formulário.**/
-	function data_wd_submit(target, event, wdArray) {
-		const data  = wdArray[0];
-		const form  = target;
-		const query = form.elements;
-		const html  = {method: null,	enctype: null, action: null, noValidate: null};
-		const enter = (function(){
-			const elem = document.activeElement;
-			const test = new __Type(elem);
-			const node = new __Node(test.node ? elem : form);
-			const type = /^(image|submit)$/;
-			return elem.form !== form || !type.test(node.ftype) ? null : elem;
-		})();
-		/*-- cabeçalho --*/
-			data.headers = new __DataSet(data.headers);
-		/*-- Informações do formulário: button ou form --*/
-		for (let i in html) {
-			/*-- 1) procurar atributo no elemento acionador --*/
-			if (enter !== null) {
-				const camel = "form"+(i.replace(i[0], i[0].toUpperCase()));
-				const lower = camel.toLowerCase();
-				const value = enter.hasAttribute(lower) ? enter[camel].trim() : "";
-				html[i] = value !== "" ? value : null;
-			}
-			/*-- 2) se não localizado, buscar no formulário --*/
-			if (html[i] === null) {
-				const valid = !__Type(form[i]).node;
-				const value = form.hasAttribute(i) ? form.getAttribute(i).trim() : "";
-				html[i] = valid ? form[i] : (value !== "" ? value : null);
-			}
-		}
-		/*-- Redefinindo atributos de configuração para envio à data_wd_send --*/
-		if (html.method     !== null) data.method = html.method;
-		if (html.action     !== null) data.url = html.action;
-		if (html.enctype    !== null) data.headers.set("content-type", html.enctype);
-		if (html.noValidate !== null) data.noValidate = html.noValidate;
-		data.query = query;
-		return data_wd_send(target, event, [data]);
-	}
-
-
-
-
-
+	/**. '{object submit(object ev, object data)}: Captura os dados do formulário a partir do evento '{submit} e concatena com os dados de '{data} para retornar um objeto contendo as definições para efetuar a requisição com o método '{send}.**/
+	submit: function(ev, data) {
+		data = __Type(data).object ? data : {};
+		const attr  = __FORMDATA.data(ev.target, ev.submitter || document.activeElement || null);
+		data.url    = attr.action ? attr.action : (data.url    ? data.url    : null);
+		data.method = attr.method ? attr.method : (data.method ? data.method : "get");
+		/*-- redefinir dados --*/
+		const info = attr.submit.toSubmit(data.url, data.method);
+		const head = data.headers ? new __DataSet(data.headers) : new __DataSet();
+		if (attr.enctype) head.append("Content-Type", attr.enctype);
+		//head.append("Content-Type", attr.enctype ? attr.enctype : info.ctype);
+		data.url     = info.url;
+		data.body    = info.body;
+		data.headers = head.toHeaders;
+		return data;
 	},
-
 };

@@ -4,8 +4,13 @@ header('Content-Type: text/plain');
 if (array_key_exists('sleep', $_REQUEST)) {
 	sleep((int) $_REQUEST["sleep"]);
 }
-echo "\nFILES: ";
+echo "-------------------------------------------\nFILES: ";
 print_r($_FILES);
-echo "\nREQUEST: ";
+echo "-------------------------------------------\nREQUEST: ";
 print_r($_REQUEST);
+echo "-------------------------------------------\nPOST: ";
+print_r($_POST);
+echo "-------------------------------------------\nGET: ";
+print_r($_GET);
+echo "-------------------------------------------";
 ?>
